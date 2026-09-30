@@ -13,7 +13,7 @@
   [![Supabase](https://img.shields.io/badge/Supabase-Realtime_PostgreSQL-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com/)
   [![Groq](https://img.shields.io/badge/Groq-LPU_420_tok%2Fs-F55036?logo=fastapi&logoColor=white)](https://groq.com/)
   [![Gemini](https://img.shields.io/badge/Gemini-2.0_Flash-4285F4?logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
-  [![Vercel](https://img.shields.io/badge/Vercel-Production_Ready-000000?logo=vercel&logoColor=white)](https://healthgrid.vercel.app)
+  [![Vercel Deployment](https://img.shields.io/badge/Vercel-healthgrid--app.vercel.app-000000?logo=vercel&logoColor=white)](https://healthgrid-app.vercel.app)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
   <p align="center">
@@ -272,15 +272,17 @@ The Spring Boot backend initializes on port `8080` with Project Loom virtual thr
 
 ---
 
-## 🌐 Vercel Deployment Guide
+## 🌐 Live Production Deployments
 
-Deploying HealthGrid to Vercel takes less than 2 minutes thanks to the pre-configured monorepo build rules.
+The platform is actively deployed on the Vercel Global Edge Network:
 
-### Option A: Via Vercel Web Dashboard (Recommended)
-1. Navigate to [vercel.com/new](https://vercel.com/new) and connect your GitHub account.
-2. Select the repository: `NullErrOR-404/Health-Grid`.
-3. In the project creation form:
-   - **Project Name:** Set to `healthgrid` (to claim `healthgrid.vercel.app`).
+- **Primary Production:** [https://healthgrid-app.vercel.app](https://healthgrid-app.vercel.app)
+- **Live Stream Edge:** [https://healthgrid-live.vercel.app](https://healthgrid-live.vercel.app)
+- **Global Network Radar:** [https://healthgrid-network.vercel.app](https://healthgrid-network.vercel.app)
+
+---
+
+## 🛠️ Vercel Deployment & Setup
    - **Framework Preset:** `Vite` (automatically detected).
    - **Root Directory:** Leave as `./` (or select `frontend`).
 4. Expand **Environment Variables** and add the following 5 keys:
