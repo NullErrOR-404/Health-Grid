@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Production Build Artifacts
+dist/
+frontend/dist/
+target/
+backend/target/
+
+# Local Environment & Secrets (NEVER push keys to GitHub)
+.env
+.env.local
+.env.*.local
+frontend/.env
+frontend/.env.local
+backend/.env
+
+# AI Agent Frameworks, Skills & Internal Metadata
+.agents/
+frontend/.agents/
+skills-lock.json
+frontend/skills-lock.json
+.system_generated/
+
+# Design Mockups, Screenshots & Raw UI References
+UI References/
+# Loose Screenshots & Temporary UI Captures (Keep frontend web assets)
+*.png
+*.jpg
+*.jpeg
+*.webp
+!frontend/public/**
+!frontend/src/assets/**
+
+# Working Documents & Design Prompts
+SIH25049_COMPREHENSIVE_ANALYSIS_AND_BLUEPRINT.md
+LANDING_PAGE_UI_PROMPT.md
+
+# Logs & Temporary Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS & Editor Metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

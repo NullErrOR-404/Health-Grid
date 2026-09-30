@@ -1,0 +1,16 @@
+# HealthGrid Robots.txt (2026)
+User-agent: *
+Allow: /
+Allow: /#services
+Allow: /#emergency
+Allow: /maps
+Allow: /chat
+Allow: /bulletins
+
+# Disallow private patient vaults and auth endpoints from public crawling
+Disallow: /profile
+Disallow: /auth/
+Disallow: /api/
+
+# Canonical Sitemap Declaration
+Sitemap: https://healthgrid.app/sitemap.xml
