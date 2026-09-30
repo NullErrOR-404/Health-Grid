@@ -19,11 +19,12 @@ import { ChatbotPage } from './components/ChatbotPage';
 import { ProfilePage } from './components/ProfilePage';
 import { FindCareNearYou } from './components/FindCareNearYou';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
+import { NotFoundPage } from './components/NotFoundPage';
 import { Siren, Mic } from 'lucide-react';
 import { lenisService } from './services/lenisService';
 import './App.css';
 
-export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy';
+export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'not-found';
 
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -73,13 +74,15 @@ export default function App() {
     lenisService.scrollTo(0, { immediate: true });
   }, [currentView]);
 
-  // Sync view state with browser routing (/privacy, /chat, /profile, /maps and hashes)
+  // Sync view state with browser routing (/privacy, /chat, /profile, /maps and custom 404s)
   useEffect(() => {
     const syncRoute = () => {
-      const pathname = window.location.pathname.toLowerCase();
+      const rawPath = window.location.pathname.toLowerCase();
+      // Strip trailing slashes, e.g. /privacy/ -> /privacy
+      const pathname = rawPath.replace(/\/+$/, '') || '/';
       const hash = window.location.hash.toLowerCase();
 
-      if (pathname === '/privacy' || pathname.startsWith('/privacy') || hash === '#privacy' || hash === '#/privacy') {
+      if (pathname === '/privacy' || hash === '#privacy' || hash === '#/privacy') {
         setCurrentView('privacy');
       } else if (pathname === '/chat' || hash === '#chat' || hash === '#/chat') {
         setCurrentView('chat');
@@ -87,8 +90,16 @@ export default function App() {
         setCurrentView('profile');
       } else if (pathname === '/maps' || hash === '#maps' || hash === '#/maps') {
         setCurrentView('maps');
+      } else if (pathname === '/' || pathname === '/index.html' || pathname === '') {
+        // If there is an unknown anchor hash like #unknown
+        if (hash && !['', '#', '#/', '#landing', '#home'].includes(hash) && !hash.startsWith('#section-') && !hash.startsWith('#guide-')) {
+          setCurrentView('not-found');
+        } else {
+          setCurrentView('landing');
+        }
       } else {
-        setCurrentView('landing');
+        // Any unknown path like /random, /admin, /test, /404, etc.
+        setCurrentView('not-found');
       }
     };
 
@@ -103,7 +114,7 @@ export default function App() {
 
   const navigateToView = (view: AppView) => {
     setCurrentView(view);
-    const path = view === 'landing' ? '/' : `/${view}`;
+    const path = view === 'landing' ? '/' : view === 'not-found' ? '/404' : `/${view}`;
     if (window.location.pathname !== path) {
       window.history.pushState({}, '', path);
     }
@@ -197,6 +208,7 @@ export default function App() {
             onOpenBabyShots={() => setIsBabyShotsOpen(true)}
             onOpenLogin={() => setIsLoginOpen(true)}
             onNavigateProfile={() => navigateToView('profile')}
+            onNavigateHome={() => navigateToView('landing')}
           />
         </header>
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -230,6 +242,55 @@ export default function App() {
     );
   }
 
+  // Render Custom 404 Telemetry / Not Found Page for any unknown route
+  if (currentView === 'not-found') {
+    return (
+      <>
+        <NotFoundPage
+          lang={lang}
+          setLang={setLang}
+          onNavigateHome={() => navigateToView('landing')}
+          onNavigateChat={() => navigateToView('chat')}
+          onNavigateMaps={() => navigateToView('maps')}
+          onNavigateProfile={() => navigateToView('profile')}
+          onOpenAmbulance={() => setIsAmbulanceOpen(true)}
+          onOpenPrescription={() => setIsPrescriptionOpen(true)}
+          onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+          onOpenPrivacy={() => navigateToView('privacy')}
+          onOpenLogin={() => setIsLoginOpen(true)}
+        />
+
+        {/* Global Modals Accessible within 404 Page */}
+        <AmbulanceModal
+          isOpen={isAmbulanceOpen}
+          onClose={() => setIsAmbulanceOpen(false)}
+          lang={lang}
+          onOpenHandover={() => setIsHandoverOpen(true)}
+        />
+        <PrescriptionModal
+          isOpen={isPrescriptionOpen}
+          onClose={() => setIsPrescriptionOpen(false)}
+          lang={lang}
+        />
+        <BabyShotsModal
+          isOpen={isBabyShotsOpen}
+          onClose={() => setIsBabyShotsOpen(false)}
+          lang={lang}
+        />
+        <DoctorHandoverModal
+          isOpen={isHandoverOpen}
+          onClose={() => setIsHandoverOpen(false)}
+          lang={lang}
+        />
+        <LoginModal
+          isOpen={isLoginOpen}
+          onClose={() => setIsLoginOpen(false)}
+          lang={lang}
+        />
+      </>
+    );
+  }
+
   // Default: Public Landing Page matching Landing page new.png & Footer ref.png
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500 selection:text-white">
@@ -250,6 +311,7 @@ export default function App() {
           onOpenBabyShots={() => setIsBabyShotsOpen(true)}
           onOpenLogin={() => setIsLoginOpen(true)}
           onNavigateProfile={() => navigateToView('profile')}
+          onNavigateHome={() => navigateToView('landing')}
         />
       </header>
 

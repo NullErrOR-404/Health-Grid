@@ -13,6 +13,7 @@ interface NavbarProps {
   onOpenBabyShots: () => void;
   onOpenLogin: () => void;
   onNavigateProfile?: () => void;
+  onNavigateHome?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -25,12 +26,24 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenBabyShots,
   onOpenLogin,
   onNavigateProfile,
+  onNavigateHome,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+
+  const handleHomeClick = () => {
+    if (onNavigateHome) {
+      onNavigateHome();
+    } else {
+      window.history.pushState({}, '', '/');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+    window.location.hash = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     return authService.subscribe((user) => {
@@ -46,10 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Left: Brand Logo */}
           <div 
             className="flex items-center gap-3 cursor-pointer select-none" 
-            onClick={() => {
-              window.location.hash = '';
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onClick={handleHomeClick}
           >
             <img 
               src="/Logo.png" 
@@ -61,10 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Center: Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-slate-700">
             <button 
-              onClick={() => {
-                window.location.hash = '';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} 
+              onClick={handleHomeClick} 
               className="relative text-teal-700 font-semibold py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-teal-600 after:rounded-full"
             >
               {lang === 'en' ? 'Home' : 'முகப்பு'}
