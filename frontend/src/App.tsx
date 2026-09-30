@@ -73,35 +73,40 @@ export default function App() {
     lenisService.scrollTo(0, { immediate: true });
   }, [currentView]);
 
-  // Sync view state with browser hash routing (#/, #chat, #profile, #maps)
+  // Sync view state with browser routing (/privacy, /chat, /profile, /maps and hashes)
   useEffect(() => {
-    const handleHash = () => {
+    const syncRoute = () => {
+      const pathname = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
-      if (hash === '#chat' || hash === '#/chat') {
-        setCurrentView('chat');
-      } else if (hash === '#profile' || hash === '#/profile') {
-        setCurrentView('profile');
-      } else if (hash === '#maps' || hash === '#/maps') {
-        setCurrentView('maps');
-      } else if (hash === '#privacy' || hash === '#/privacy' || window.location.pathname === '/privacy') {
+
+      if (pathname === '/privacy' || pathname.startsWith('/privacy') || hash === '#privacy' || hash === '#/privacy') {
         setCurrentView('privacy');
+      } else if (pathname === '/chat' || hash === '#chat' || hash === '#/chat') {
+        setCurrentView('chat');
+      } else if (pathname === '/profile' || hash === '#profile' || hash === '#/profile') {
+        setCurrentView('profile');
+      } else if (pathname === '/maps' || hash === '#maps' || hash === '#/maps') {
+        setCurrentView('maps');
       } else {
         setCurrentView('landing');
       }
     };
 
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+    syncRoute();
+    window.addEventListener('popstate', syncRoute);
+    window.addEventListener('hashchange', syncRoute);
+    return () => {
+      window.removeEventListener('popstate', syncRoute);
+      window.removeEventListener('hashchange', syncRoute);
+    };
   }, []);
 
   const navigateToView = (view: AppView) => {
     setCurrentView(view);
-    if (view === 'chat') window.location.hash = '#chat';
-    else if (view === 'profile') window.location.hash = '#profile';
-    else if (view === 'maps') window.location.hash = '#maps';
-    else if (view === 'privacy') window.location.hash = '#privacy';
-    else window.location.hash = '';
+    const path = view === 'landing' ? '/' : `/${view}`;
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, '', path);
+    }
   };
 
   const handleOpenVoiceChat = (sampleQuery?: string) => {
