@@ -15,6 +15,7 @@ interface FooterProps {
   onOpenPrescription?: () => void;
   onOpenDiseaseMap?: () => void;
   onOpenBabyShots?: () => void;
+  onOpenPrivacy?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ 
@@ -25,6 +26,7 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenPrescription,
   onOpenDiseaseMap,
   onOpenBabyShots,
+  onOpenPrivacy,
 }) => {
   return (
     <footer className="relative bg-white pt-14 pb-10 border-t border-slate-200/80 overflow-hidden">
@@ -313,9 +315,9 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs text-slate-600">
-            <span className="hover:text-slate-900 transition-colors cursor-pointer">Terms of Service</span>
+            <button onClick={onOpenPrivacy} className="hover:text-teal-700 transition-colors cursor-pointer">Terms of Service</button>
             <span className="text-slate-300">|</span>
-            <span className="hover:text-slate-900 transition-colors cursor-pointer">Privacy Policy</span>
+            <button onClick={onOpenPrivacy} className="hover:text-teal-700 font-semibold text-slate-800 transition-colors cursor-pointer">Privacy Policy</button>
             <span className="text-slate-300">|</span>
             <span className="hover:text-slate-900 transition-colors cursor-pointer">Disclaimer</span>
             <span className="text-slate-300">|</span>

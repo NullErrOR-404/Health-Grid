@@ -18,11 +18,12 @@ import { LoginModal } from './components/LoginModal';
 import { ChatbotPage } from './components/ChatbotPage';
 import { ProfilePage } from './components/ProfilePage';
 import { FindCareNearYou } from './components/FindCareNearYou';
+import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { Siren, Mic } from 'lucide-react';
 import { lenisService } from './services/lenisService';
 import './App.css';
 
-export type AppView = 'landing' | 'chat' | 'profile' | 'maps';
+export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy';
 
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -82,6 +83,8 @@ export default function App() {
         setCurrentView('profile');
       } else if (hash === '#maps' || hash === '#/maps') {
         setCurrentView('maps');
+      } else if (hash === '#privacy' || hash === '#/privacy' || window.location.pathname === '/privacy') {
+        setCurrentView('privacy');
       } else {
         setCurrentView('landing');
       }
@@ -97,6 +100,7 @@ export default function App() {
     if (view === 'chat') window.location.hash = '#chat';
     else if (view === 'profile') window.location.hash = '#profile';
     else if (view === 'maps') window.location.hash = '#maps';
+    else if (view === 'privacy') window.location.hash = '#privacy';
     else window.location.hash = '';
   };
 
@@ -205,8 +209,19 @@ export default function App() {
           onOpenPrescription={() => setIsPrescriptionOpen(true)}
           onOpenDiseaseMap={() => navigateToView('maps')}
           onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+          onOpenPrivacy={() => navigateToView('privacy')}
         />
       </div>
+    );
+  }
+
+  // Render Dedicated Privacy Policy & Data Sovereignty Page
+  if (currentView === 'privacy') {
+    return (
+      <PrivacyPolicyPage
+        lang={lang}
+        onBack={() => navigateToView('landing')}
+      />
     );
   }
 
@@ -271,6 +286,7 @@ export default function App() {
         onOpenPrescription={() => setIsPrescriptionOpen(true)}
         onOpenDiseaseMap={() => setIsDiseaseMapOpen(true)}
         onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+        onOpenPrivacy={() => navigateToView('privacy')}
       />
 
       {/* Mobile Floating Sticky Action Bar */}
