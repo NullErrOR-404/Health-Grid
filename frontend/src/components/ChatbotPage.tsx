@@ -11,8 +11,6 @@ import {
   User,
   CheckCircle2,
   Globe,
-  Sun,
-  Moon,
   Stethoscope,
   Building2,
   ShieldAlert,
@@ -107,7 +105,16 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       purgeAllTestArtifacts();
       const saved = localStorage.getItem('healthgrid_chat_sessions');
       if (saved) {
-        if (saved.toLowerCase().includes('murugan') || saved.includes('8841')) {
+        const lower = saved.toLowerCase();
+        if (
+          lower.includes('murugan') ||
+          lower.includes('8841') ||
+          lower.includes('fever') ||
+          lower.includes('vaccination') ||
+          lower.includes('diabetes') ||
+          lower.includes('stomach') ||
+          lower.includes('rash')
+        ) {
           localStorage.removeItem('healthgrid_chat_sessions');
           return [createFreshSession()];
         }
@@ -119,6 +126,11 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           s.id === 'diabetes-diet-plan' ||
           s.id === 'skin-rash' ||
           s.id === 'stomach-pain' ||
+          s.title?.toLowerCase().includes('fever') ||
+          s.title?.toLowerCase().includes('vaccination') ||
+          s.title?.toLowerCase().includes('diabetes') ||
+          s.title?.toLowerCase().includes('stomach') ||
+          s.title?.toLowerCase().includes('rash') ||
           JSON.stringify(s).toLowerCase().includes('murugan')
         );
         if (!hasLegacyMock && Array.isArray(parsed) && parsed.length > 0) {
@@ -138,10 +150,30 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [isThinking, setIsThinking] = useState(false);
   const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Proactively sweep and eliminate any legacy mock chat history on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('healthgrid_chat_sessions');
+      if (saved) {
+        const lower = saved.toLowerCase();
+        if (
+          lower.includes('murugan') ||
+          lower.includes('fever') ||
+          lower.includes('vaccination') ||
+          lower.includes('diabetes') ||
+          lower.includes('stomach') ||
+          lower.includes('rash')
+        ) {
+          localStorage.removeItem('healthgrid_chat_sessions');
+          setSessions([createFreshSession()]);
+        }
+      }
+    } catch {}
+  }, []);
 
   // Model & Realtime Usage State
   const [currentModel, setCurrentModel] = useState<ModelOption>(agiService.getCurrentModel());
@@ -705,7 +737,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   ];
 
   return (
-    <div className={`flex h-screen w-full overflow-hidden font-sans ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-800'}`}>
+    <div className="flex h-screen w-full overflow-hidden font-sans bg-white text-slate-800">
       
       {/* Hidden File Input for Paperclip */}
       <input
@@ -721,7 +753,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       {/* ========================================================= */}
       {/* 1. LEFT SIDEBAR (Matching Chatbot UI.png) */}
       {/* ========================================================= */}
-      <aside className={`w-64 sm:w-72 flex-shrink-0 flex flex-col border-r ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-[#FAFCFB] border-slate-200/90'}`}>
+      <aside className="w-64 sm:w-72 flex-shrink-0 flex flex-col border-r bg-[#FAFCFB] border-slate-200/90">
         
         {/* Brand Logo Header */}
         <div className="p-4 sm:p-5 flex items-center justify-between">
@@ -749,9 +781,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         <div className="px-3 py-1 space-y-0.5 text-xs font-medium">
           <button
             onClick={onNavigateHome}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
-              isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'
-            }`}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
           >
             <Home className="w-4 h-4 text-slate-500" />
             <span>{lang === 'en' ? 'Home' : 'முகப்பு'}</span>
@@ -768,9 +798,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
             onClick={() => {
               handleSendMessage(lang === 'en' ? 'Connect me with doctor telemedicine tele-triage.' : 'மருத்துவரை தொலைபேசியில் அழைக்கவும்.');
             }}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
-              isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'
-            }`}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
           >
             <Phone className="w-4 h-4 text-slate-500" />
             <span>{lang === 'en' ? 'Speak to Doctor' : 'மருத்துவரிடம் பேசு'}</span>
@@ -779,9 +807,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           {onOpenAmbulance && (
             <button
               onClick={onOpenAmbulance}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
-                isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'
-              }`}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
             >
               <Siren className="w-4 h-4 text-rose-500" />
               <span>{lang === 'en' ? 'Call Ambulance' : 'ஆம்புலன்ஸ் 108'}</span>
@@ -791,9 +817,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           {onOpenPrescription && (
             <button
               onClick={onOpenPrescription}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
-                isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'
-              }`}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
             >
               <Pill className="w-4 h-4 text-slate-500" />
               <span>{lang === 'en' ? 'Medicines' : 'மருந்துகள் (Jan Aushadhi)'}</span>
@@ -803,9 +827,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           {onOpenDiseaseMap && (
             <button
               onClick={onOpenDiseaseMap}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
-                isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'
-              }`}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
             >
               <Shield className="w-4 h-4 text-slate-500" />
               <span>{lang === 'en' ? 'Disease Map' : 'நோய் பரவல் வரைபடம்'}</span>
@@ -815,9 +837,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           {onOpenBabyShots && (
             <button
               onClick={onOpenBabyShots}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors ${
-                isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'
-              }`}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
             >
               <div className="flex items-center gap-3">
                 <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -883,8 +903,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                         className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer select-none ${
                           isActive
                             ? 'bg-[#E8F7F2] text-[#0A604D] font-bold'
-                            : isDarkMode
-                            ? 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-200'
                             : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
                         }`}
                       >
@@ -918,7 +936,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         </div>
 
         {/* Bottom Profile Footer (leads to /profile) */}
-        <div className={`p-3 border-t ${isDarkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-[#FAFCFB]'}`}>
+        <div className="p-3 border-t border-slate-200 bg-[#FAFCFB]">
           <button
             onClick={() => {
               if (currentUser) {
@@ -927,9 +945,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 setIsLoginOpen(true);
               }
             }}
-            className={`w-full p-2.5 rounded-2xl flex items-center justify-between text-xs transition-colors group cursor-pointer ${
-              isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
-            }`}
+            className="w-full p-2.5 rounded-2xl flex items-center justify-between text-xs transition-colors group cursor-pointer hover:bg-slate-100 text-slate-700"
             title={currentUser ? (lang === 'en' ? 'Open Profile Page' : 'சுயவிவரப் பக்கம்') : (lang === 'en' ? 'Click to Sign In' : 'உள்நுழைய கிளிக்')}
           >
             <div className="flex items-center gap-2.5">
@@ -941,10 +957,10 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 )}
               </div>
               <div className="text-left">
-                <div className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate max-w-[130px]">
+                <div className="font-bold text-xs text-slate-900 truncate max-w-[130px]">
                   {currentUser ? currentUser.name : (lang === 'en' ? 'Guest Patient' : 'விருந்தினர்')}
                 </div>
-                <div className="text-[10px] text-teal-600 dark:text-teal-400 font-medium">
+                <div className="text-[10px] text-teal-600 font-medium">
                   {currentUser ? (lang === 'en' ? 'My Health Profile' : 'என் சுயவிவரம்') : (lang === 'en' ? 'Click to Sign In' : 'உள்நுழைய கிளிக்')}
                 </div>
               </div>
@@ -960,9 +976,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         
         {/* Top Header Bar (Matching Chatbot UI.png) */}
-        <header className={`px-6 py-3.5 border-b flex items-center justify-between flex-shrink-0 z-20 ${
-          isDarkMode ? 'bg-slate-900/95 border-slate-800 backdrop-blur-sm' : 'bg-white border-slate-200/90'
-        }`}>
+        <header className="px-6 py-3.5 border-b flex items-center justify-between flex-shrink-0 z-20 bg-white border-slate-200/90">
           {/* Left: DocBot AI + Verified Badge */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-2xl bg-teal-50 border border-teal-200/60 p-1 flex items-center justify-center shadow-2xs">
@@ -981,17 +995,13 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
             </div>
           </div>
 
-          {/* Right: Language Dropdown + Theme Toggle + Profile Pill */}
+          {/* Right: Language Dropdown + Profile Pill (Clean Light Theme, No Toggle Icon) */}
           <div className="flex items-center gap-2.5">
             {/* Language Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setLang(lang === 'en' ? 'ta' : 'en')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
-                  isDarkMode
-                    ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
-                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs'
-                }`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs"
                 title="Toggle Language (English / Tamil)"
               >
                 <Globe className="w-3.5 h-3.5 text-teal-700" />
@@ -999,19 +1009,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
             </div>
-
-            {/* Light / Dark Mode Toggle */}
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`p-2 rounded-xl border text-slate-600 transition-colors ${
-                isDarkMode
-                  ? 'bg-slate-800 border-slate-700 text-amber-300 hover:bg-slate-700'
-                  : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700 shadow-2xs'
-              }`}
-              title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
-            >
-              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
 
             {/* Top Right Profile Round Pill */}
             <button
@@ -1022,11 +1019,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                   setIsLoginOpen(true);
                 }
               }}
-              className={`flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full border transition-all text-xs font-semibold cursor-pointer group ${
-                isDarkMode
-                  ? 'bg-slate-800 border-slate-700 text-slate-200 hover:border-teal-400'
-                  : 'bg-white border-slate-200 text-slate-800 hover:border-teal-400 shadow-2xs'
-              }`}
+              className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full border transition-all text-xs font-semibold cursor-pointer group bg-white border-slate-200 text-slate-800 hover:border-teal-400 shadow-2xs"
               title={currentUser ? (lang === 'en' ? `My Health Profile (${currentUser.name})` : 'என் சுயவிவரம்') : (lang === 'en' ? 'Sign In / Profile' : 'உள்நுழை / சுயவிவரம்')}
             >
               <div className="w-5 h-5 rounded-full bg-[#D0F0EC] text-[#00695C] flex items-center justify-center font-bold text-[10px] group-hover:scale-105 transition-transform">
@@ -1041,9 +1034,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         </header>
 
         {/* Messages Body */}
-        <div className={`flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 ${
-          isDarkMode ? 'bg-slate-950' : 'bg-[#FAFCFB]'
-        }`}>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 bg-[#FAFCFB]">
           {/* Welcome Screen when Session Has No Messages */}
           {(!activeSession || activeSession.messages.length === 0) && (
             <div className="max-w-2xl mx-auto pt-8 pb-4 text-center space-y-6 animate-in fade-in duration-300">
@@ -1124,8 +1115,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                     className={`rounded-2xl p-4 sm:p-5 text-xs sm:text-sm leading-relaxed shadow-2xs ${
                       isUser
                         ? 'bg-[#E8F7F2] border border-[#C6ECE0] text-slate-800 rounded-tr-sm max-w-lg'
-                        : isDarkMode
-                        ? 'bg-slate-900 border border-slate-800 text-slate-100 rounded-tl-sm w-full'
                         : 'bg-white border border-slate-200/90 text-slate-800 rounded-tl-sm w-full shadow-xs'
                     }`}
                   >
@@ -1213,9 +1202,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         {/* ========================================================= */}
         {/* 3. INPUT BAR & DOCKED CONTROLS */}
         {/* ========================================================= */}
-        <div className={`p-4 sm:p-5 border-t z-10 ${
-          isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200/90'
-        }`}>
+        <div className="p-4 sm:p-5 border-t z-10 bg-white border-slate-200/90">
           <div className="max-w-3xl mx-auto space-y-2.5">
             
             {/* Docked Model Selector & Realtime Quota Bar (Per Grill-me User Selection) */}
@@ -1226,11 +1213,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowModelDropdown(!showModelDropdown)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border text-[11px] font-semibold transition-all ${
-                    isDarkMode
-                      ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
-                      : 'bg-slate-50 border-slate-200/90 text-slate-700 hover:bg-slate-100 shadow-2xs'
-                  }`}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-xl border text-[11px] font-semibold transition-all bg-slate-50 border-slate-200/90 text-slate-700 hover:bg-slate-100 shadow-2xs"
                   title="Switch AGI Model"
                 >
                   {currentModel.provider === 'google' ? (
@@ -1354,11 +1337,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 e.preventDefault();
                 handleSendMessage();
               }}
-              className={`rounded-full border flex items-center gap-2 p-1.5 sm:p-2 shadow-xs transition-all ${
-                isDarkMode
-                  ? 'bg-slate-900 border-slate-700 focus-within:border-teal-500'
-                  : 'bg-white border-slate-300 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100'
-              }`}
+              className="rounded-full border flex items-center gap-2 p-1.5 sm:p-2 shadow-xs transition-all bg-white border-slate-300 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100"
             >
               {/* Paperclip Attachment Button */}
               <button
