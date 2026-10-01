@@ -11,6 +11,7 @@
 
 import { rateLimiter, RATE_LIMIT_CONFIGS } from './rateLimiter';
 import { agenticTools, type AgentToolCall, type JanAushadhiResult } from './agenticToolsService';
+import { healthMemoryService } from './healthMemoryService';
 
 export interface ModelOption {
   id: string;
@@ -496,6 +497,31 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       } catch (toolErr) {
         console.warn('Tool emergencySOSDispatch error:', toolErr);
       }
+    }
+
+    // Tool 5: Longitudinal Health Memory & Vitals Radar
+    try {
+      const extractedVitals = healthMemoryService.extractVitalsFromText(cleanQuery);
+      const synthesis = healthMemoryService.getClinicalTrendSynthesis();
+
+      if (extractedVitals.length > 0 || (synthesis.hasRecords && synthesis.hasAnomalies)) {
+        executedTools.push({
+          id: `tool-${Date.now()}-5`,
+          name: 'longitudinalHealthMemory',
+          label: 'Health Memory & Vitals Radar',
+          status: 'success',
+          resultSummary: extractedVitals.length > 0
+            ? `Logged ${extractedVitals.length} vital reading(s) to health memory`
+            : synthesis.summaryEn,
+          data: synthesis,
+        });
+
+        if (synthesis.contextPrompt) {
+          toolContextPrompt += synthesis.contextPrompt;
+        }
+      }
+    } catch (memErr) {
+      console.warn('Longitudinal health memory processing error:', memErr);
     }
 
     const model = overrideModelId

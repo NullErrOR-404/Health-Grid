@@ -62,6 +62,7 @@ import { supabase } from '../services/supabaseClient';
 import { authService, type AuthUser } from '../services/authService';
 import { LoginModal } from './LoginModal';
 import { LiveVisionDoctorModal } from './LiveVisionDoctorModal';
+import { VitalsTelemetryModal } from './VitalsTelemetryModal';
 
 export interface ChatMessage {
   id: string;
@@ -135,6 +136,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [loginNotice, setLoginNotice] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isLiveVisionOpen, setIsLiveVisionOpen] = useState(false);
+  const [isVitalsModalOpen, setIsVitalsModalOpen] = useState(false);
   const [activeCareLoops, setActiveCareLoops] = useState<CareLoopFollowUp[]>([]);
   const pendingActionRef = useRef<(() => void) | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
@@ -1322,6 +1324,26 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               </span>
             </button>
 
+            {/* Longitudinal Health Memory & Vitals Hub Button */}
+            <button
+              type="button"
+              onClick={() => {
+                ensureAuth(
+                  () => setIsVitalsModalOpen(true),
+                  lang === 'en'
+                    ? 'Sign in to access your Longitudinal Health Memory'
+                    : 'உங்கள் நீண்டகால மருத்துவ நினைவகத்தைக் காண உள்நுழையவும்'
+                );
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all bg-teal-50 border-teal-200/80 text-teal-800 hover:bg-teal-100 shadow-2xs group cursor-pointer"
+              title="Open Longitudinal Health Memory & Vitals Hub"
+            >
+              <Activity className="w-3.5 h-3.5 text-teal-600 group-hover:scale-110 transition-transform" />
+              <span className="font-extrabold hidden sm:inline">
+                {lang === 'en' ? 'Health Memory' : 'மருத்துவ நினைவகம்'}
+              </span>
+            </button>
+
             {/* Language Dropdown */}
             <div className="relative">
               <button
@@ -1505,6 +1527,9 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                             {tool.name === 'checkDiseaseOutbreaks' && <Activity className="w-3 h-3 text-amber-600" />}
                             {tool.name === 'emergencySOSDispatch' && <ShieldAlert className="w-3 h-3 text-rose-600" />}
                             {tool.name === 'readMedicalDocument' && <FileText className="w-3 h-3 text-[#0B7A75]" />}
+                            {tool.name === 'longitudinalHealthMemory' && <Activity className="w-3 h-3 text-teal-600" />}
+                            {tool.name === 'liveVisionDoctor' && <Video className="w-3 h-3 text-[#0B7A75]" />}
+                            {tool.name === 'careLoopRecoveryMonitor' && <Clock className="w-3 h-3 text-teal-600" />}
                             <span>{tool.label}</span>
                             <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 ml-0.5" />
                           </span>
@@ -1527,6 +1552,28 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                     )}
 
                     <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
+
+                    {/* Embedded Longitudinal Health Memory Insight Pill */}
+                    {!isUser && msg.executedTools && msg.executedTools.some((t) => t.name === 'longitudinalHealthMemory') && (
+                      <div className="mt-3 p-3 rounded-2xl bg-teal-50/70 border border-teal-200/90 text-xs space-y-2 animate-in fade-in duration-200">
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 font-bold text-teal-950">
+                            <Activity className="w-3.5 h-3.5 text-teal-600" />
+                            <span>{lang === 'en' ? 'Health Memory & Vitals Correlation' : 'மருத்துவ நினைவக ஒப்பீடு'}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setIsVitalsModalOpen(true)}
+                            className="text-[10px] text-teal-700 hover:text-teal-900 font-bold underline cursor-pointer"
+                          >
+                            {lang === 'en' ? 'Open Vitals Hub' : 'அளவீடுகளைக் காண்க'}
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-teal-900 leading-relaxed font-medium">
+                          {msg.executedTools.find((t) => t.name === 'longitudinalHealthMemory')?.resultSummary}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Interactive Jan Aushadhi Generic Medicine Comparison Cards */}
                     {!isUser && msg.genericMedicines && msg.genericMedicines.length > 0 && (
@@ -1964,6 +2011,13 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         lang={lang}
         userId={currentUser?.id || 'guest-patient'}
         onConsultationComplete={handleLiveConsultationComplete}
+      />
+
+      {/* Longitudinal Health Memory & Vitals Telemetry Modal */}
+      <VitalsTelemetryModal
+        isOpen={isVitalsModalOpen}
+        onClose={() => setIsVitalsModalOpen(false)}
+        lang={lang}
       />
 
     </div>
