@@ -15,7 +15,8 @@ import {
   Bell,
   ChevronRight,
   Check,
-  Settings
+  Settings,
+  Home
 } from 'lucide-react';
 import type { Language } from '../types';
 import { authService, type AuthUser } from '../services/authService';
@@ -104,11 +105,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   // Determine active nav index for underline positioning
-  // 0: Home, 1: Chat, 2: Call Ambulance, 3: Medicines, 4: Maps, 5: More
+  // 0: Home, 1: Chat, 2: Medicines, 3: Maps, 4: More
   const getActiveNavIndex = (): number => {
     if (activeView === 'landing') return 0;
     if (activeView === 'chat') return 1;
-    if (activeView === 'maps') return 4;
+    if (activeView === 'maps') return 3;
     return -1;
   };
 
@@ -144,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Center: Desktop Navigation Links with Equal Spacing & Dynamic Sliding Underline */}
           <nav className="hidden md:flex items-center justify-center relative text-sm font-medium text-slate-700 flex-1 px-2 lg:px-4">
             <div 
-              className="grid grid-cols-6 items-center text-center w-full max-w-[560px] lg:max-w-[660px] xl:max-w-[720px] relative select-none"
+              className="grid grid-cols-5 items-center text-center w-full max-w-[500px] lg:max-w-[580px] xl:max-w-[640px] relative select-none"
               onMouseLeave={() => setHoveredNavIndex(null)}
             >
               
@@ -190,14 +191,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
 
-              {/* Slot 2: Call Ambulance */}
+              {/* Slot 2: Medicines */}
               <div className="flex justify-center items-center w-full">
                 <button 
                   type="button"
                   onMouseEnter={() => setHoveredNavIndex(2)}
                   onClick={() => {
                     setHoveredNavIndex(null);
-                    onOpenAmbulance();
+                    onOpenPrescription();
                   }} 
                   className={`py-2 text-center transition-colors cursor-pointer w-full truncate ${
                     hoveredNavIndex === 2 
@@ -207,18 +208,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                       : 'text-slate-700 hover:text-[#2563EB]'
                   }`}
                 >
-                  {lang === 'en' ? 'Call Ambulance' : 'ஆம்புலன்ஸ் அழைப்பு'}
+                  {lang === 'en' ? 'Medicines' : 'மருந்துகள்'}
                 </button>
               </div>
 
-              {/* Slot 3: Medicines */}
+              {/* Slot 3: Maps */}
               <div className="flex justify-center items-center w-full">
                 <button 
                   type="button"
                   onMouseEnter={() => setHoveredNavIndex(3)}
                   onClick={() => {
                     setHoveredNavIndex(null);
-                    onOpenPrescription();
+                    onOpenDiseaseMap();
                   }} 
                   className={`py-2 text-center transition-colors cursor-pointer w-full truncate ${
                     hoveredNavIndex === 3 
@@ -228,41 +229,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                       : 'text-slate-700 hover:text-[#2563EB]'
                   }`}
                 >
-                  {lang === 'en' ? 'Medicines' : 'மருந்துகள்'}
-                </button>
-              </div>
-
-              {/* Slot 4: Maps */}
-              <div className="flex justify-center items-center w-full">
-                <button 
-                  type="button"
-                  onMouseEnter={() => setHoveredNavIndex(4)}
-                  onClick={() => {
-                    setHoveredNavIndex(null);
-                    onOpenDiseaseMap();
-                  }} 
-                  className={`py-2 text-center transition-colors cursor-pointer w-full truncate ${
-                    hoveredNavIndex === 4 
-                      ? 'text-[#2563EB] font-semibold' 
-                      : hoveredNavIndex === null && activeNavIndex === 4 
-                      ? 'text-[#00A896] font-semibold' 
-                      : 'text-slate-700 hover:text-[#2563EB]'
-                  }`}
-                >
                   {lang === 'en' ? 'Maps' : 'வரைபடம்'}
                 </button>
               </div>
 
-              {/* Slot 5: More Dropdown */}
+              {/* Slot 4: More Dropdown */}
               <div className="flex justify-center items-center w-full relative" ref={moreDropdownRef}>
                 <button 
                   type="button"
-                  onMouseEnter={() => setHoveredNavIndex(5)}
+                  onMouseEnter={() => setHoveredNavIndex(4)}
                   onClick={() => setMoreDropdownOpen(!moreDropdownOpen)} 
                   className={`flex items-center justify-center gap-1 py-2 text-center transition-colors cursor-pointer w-full ${
-                    moreDropdownOpen || hoveredNavIndex === 5
+                    moreDropdownOpen || hoveredNavIndex === 4
                       ? 'text-[#2563EB] font-semibold' 
-                      : hoveredNavIndex === null && activeNavIndex === 5 
+                      : hoveredNavIndex === null && activeNavIndex === 4 
                       ? 'text-[#00A896] font-semibold' 
                       : 'text-slate-700 hover:text-[#2563EB]'
                   }`}
@@ -322,7 +302,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }`}
                   style={{
                     width: '36px',
-                    left: `calc(${displayNavIndex} * (100% / 6) + ((100% / 6) - 36px) / 2)`,
+                    left: `calc(${displayNavIndex} * (100% / 5) + ((100% / 5) - 36px) / 2)`,
                   }}
                 />
               )}
@@ -676,11 +656,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
 
                 <button
-                  onClick={() => { onOpenAmbulance(); setMobileMenuOpen(false); }}
-                  className="flex flex-col items-center justify-center p-3 bg-red-50/80 hover:bg-red-100/80 text-red-800 rounded-xl border border-red-200/80 transition-colors"
+                  onClick={() => { handleHomeClick(); setMobileMenuOpen(false); }}
+                  className="flex flex-col items-center justify-center p-3 bg-teal-50/80 hover:bg-teal-100/80 text-teal-800 rounded-xl border border-teal-200/80 transition-colors"
                 >
-                  <Siren className="w-5 h-5 text-red-600 mb-1" />
-                  <span className="text-xs font-semibold text-center">{lang === 'en' ? 'Call Ambulance' : 'ஆம்புலன்ஸ்'}</span>
+                  <Home className="w-5 h-5 text-teal-600 mb-1" />
+                  <span className="text-xs font-semibold text-center">{lang === 'en' ? 'Home' : 'முகப்பு'}</span>
                 </button>
 
                 <button
