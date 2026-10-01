@@ -412,27 +412,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* User Profile Pill & Dropdown matching reference */}
-            <div className="relative" ref={userDropdownRef}>
+            {/* User Profile Pill & Dropdown - Strict Fixed 140px Footprint */}
+            <div className="relative w-[140px] flex-shrink-0" ref={userDropdownRef}>
               {currentUser ? (
                 <>
                   <button
                     type="button"
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full hover:bg-slate-50 text-slate-800 transition-colors cursor-pointer group flex-shrink-0"
+                    className="w-[140px] h-9 sm:h-10 flex items-center justify-between pl-1 pr-2 rounded-full hover:bg-slate-50 text-slate-800 transition-colors cursor-pointer group border border-slate-200/60 hover:border-slate-300 flex-shrink-0"
                     title={currentUser.name}
                   >
-                    <div className="w-8 h-8 rounded-full bg-[#00897B] text-white flex items-center justify-center font-bold text-sm shadow-2xs overflow-hidden flex-shrink-0">
-                      {currentUser.avatarUrl ? (
-                        <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
-                      ) : (
-                        userInitial
-                      )}
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#00897B] text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-2xs overflow-hidden flex-shrink-0">
+                        {currentUser.avatarUrl ? (
+                          <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                        ) : (
+                          userInitial
+                        )}
+                      </div>
+                      <span className="text-xs sm:text-[13px] font-semibold text-slate-800 truncate block text-left" title={currentUser.name}>
+                        {userFirstName}
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold text-slate-800 max-w-[85px] lg:max-w-[110px] truncate hidden sm:inline" title={currentUser.name}>
-                      {userFirstName}
-                    </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Dropdown Card matching reference screenshot exactly */}
@@ -546,7 +548,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={onOpenLogin}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                  className="w-[140px] h-9 sm:h-10 flex items-center justify-center gap-1.5 px-3 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-all shadow-2xs cursor-pointer flex-shrink-0"
                 >
                   <User className="w-3.5 h-3.5 text-teal-700" />
                   <span>{lang === 'en' ? 'Sign In' : 'உள்நுழைக'}</span>
@@ -554,11 +556,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* SOS Ambulance Button matching reference */}
+            {/* SOS Ambulance Button - Pinned to the Far Right Corner */}
             <button
               type="button"
               onClick={onOpenAmbulance}
-              className="flex items-center gap-1.5 sm:gap-2 bg-[#EF4444] hover:bg-[#DC2626] text-white px-3 sm:px-3.5 lg:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer select-none active:scale-95 flex-shrink-0"
+              className="flex items-center gap-1.5 sm:gap-2 bg-[#EF4444] hover:bg-[#DC2626] text-white px-3 sm:px-3.5 lg:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer select-none active:scale-95 flex-shrink-0 ml-1 sm:ml-2"
             >
               <Siren className="w-4 h-4 text-white flex-shrink-0" />
               <span className="tracking-wide whitespace-nowrap">SOS Ambulance</span>
