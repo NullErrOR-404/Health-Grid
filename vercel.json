@@ -15,11 +15,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://images.unsplash.com https://*.googleusercontent.com; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.groq.com https://generativelanguage.googleapis.com http://localhost:8080 ws://localhost:8080 http://127.0.0.1:8080 ws://127.0.0.1:8080; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel.live https://apis.google.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://vercel.live; font-src 'self' https://fonts.gstatic.com data: https://vercel.live https://assets.vercel.com; img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://images.unsplash.com https://*.googleusercontent.com https://vercel.live https://*.vercel.live https://vercel.com; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.groq.com https://generativelanguage.googleapis.com http://localhost:8080 ws://localhost:8080 http://127.0.0.1:8080 ws://127.0.0.1:8080 https://vercel.live https://*.vercel.live https://*.pusher.com wss://*.pusher.com; frame-src 'self' https://vercel.live; frame-ancestors 'self' https://vercel.live https://*.vercel.com; base-uri 'self'; form-action 'self';"
         },
         {
           "key": "X-Content-Type-Options",
