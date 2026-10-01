@@ -38,3 +38,6 @@ healthgrid:
     allowed-origins:
       - "http://localhost:5173"
       - "http://localhost:3000"
+      - "https://healthgrid-app.vercel.app"
+      - "https://healthgrid-live.vercel.app"
+      - "https://healthgrid-network.vercel.app"
