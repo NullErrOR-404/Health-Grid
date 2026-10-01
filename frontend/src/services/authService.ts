@@ -6,6 +6,8 @@
 
 import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { medicalRecordService } from './medicalRecordService';
+import { rateLimiter } from './rateLimiter';
 
 export type UserRole = 'PERSONAL' | 'HEALTHCARE_PROFESSIONAL';
 
@@ -88,10 +90,31 @@ const STORAGE_KEY = 'healthgrid_auth_user';
 class AuthService {
   private currentUser: AuthUser | null = null;
   private listeners: Array<(user: AuthUser | null) => void> = [];
+  private inactivityTimer: any = null;
+  private readonly INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutes for public health kiosks
 
   constructor() {
     this.loadFromStorage();
     this.initSupabaseListener();
+    this.setupInactivityTracker();
+  }
+
+  private setupInactivityTracker() {
+    if (typeof window === 'undefined') return;
+    const resetTimer = () => {
+      if (this.currentUser) {
+        if (this.inactivityTimer) clearTimeout(this.inactivityTimer);
+        this.inactivityTimer = setTimeout(() => {
+          console.warn('Session expired due to 30 minutes of inactivity. Logging out for kiosk privacy.');
+          this.logout();
+        }, this.INACTIVITY_LIMIT_MS);
+      }
+    };
+
+    ['mousemove', 'keydown', 'touchstart', 'scroll', 'click'].forEach((evt) => {
+      window.addEventListener(evt, resetTimer, { passive: true });
+    });
+    resetTimer();
   }
 
   private loadFromStorage() {
@@ -395,15 +418,27 @@ class AuthService {
   }
 
   /**
-   * Sign out
+   * Sign out with Zero-Trace Kiosk Clean Slate
+   * Purges all in-memory patient data, active medical records, and session tokens
    */
   async logout(): Promise<void> {
+    if (this.inactivityTimer) {
+      clearTimeout(this.inactivityTimer);
+      this.inactivityTimer = null;
+    }
     try {
       await supabase.auth.signOut();
     } catch (err) {
       console.warn('Sign out error:', err);
     }
     this.saveToStorage(null);
+    medicalRecordService.reset();
+    rateLimiter.reset();
+    try {
+      sessionStorage.clear();
+      localStorage.removeItem('healthgrid_chat_sessions');
+      localStorage.removeItem('healthgrid_ai_usage');
+    } catch {}
   }
 }
 

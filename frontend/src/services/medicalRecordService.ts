@@ -105,6 +105,23 @@ class MedicalRecordService {
   }
 
   /**
+   * Complete memory purge of all patient health records upon logout or session destruction.
+   * Guarantees zero residual patient data on shared kiosk terminals (Zero-Disk Isolation).
+   */
+  reset(): void {
+    this.profile = {
+      id: '',
+      name: '',
+      age: 0,
+      gender: '',
+      bloodGroup: '',
+      chronicConditions: [],
+      allergies: [],
+      records: [],
+    };
+  }
+
+  /**
    * Cross-checks a user query or symptom against saved patient records to prevent adverse events.
    * Grounded strictly in ICMR & National Formulary of India guidelines.
    */

@@ -45,7 +45,7 @@ import {
 } from '../services/aiService';
 import { medicalRecordService } from '../services/medicalRecordService';
 import { supabase } from '../services/supabaseClient';
-import { authService, purgeAllTestArtifacts, type AuthUser } from '../services/authService';
+import { authService, type AuthUser } from '../services/authService';
 import { LoginModal } from './LoginModal';
 
 export interface ChatMessage {
@@ -101,53 +101,11 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   onOpenBabyShots,
   initialQuery,
 }) => {
-  // Sessions state with LocalStorage persistence and legacy mock purging
-  const [sessions, setSessions] = useState<ChatSession[]>(() => {
-    try {
-      purgeAllTestArtifacts();
-      const saved = localStorage.getItem('healthgrid_chat_sessions');
-      if (saved) {
-        const lower = saved.toLowerCase();
-        if (
-          lower.includes('murugan') ||
-          lower.includes('8841') ||
-          lower.includes('fever') ||
-          lower.includes('vaccination') ||
-          lower.includes('diabetes') ||
-          lower.includes('stomach') ||
-          lower.includes('rash')
-        ) {
-          localStorage.removeItem('healthgrid_chat_sessions');
-          return [createFreshSession()];
-        }
-        const parsed = JSON.parse(saved);
-        // Purge legacy mock sessions if detected
-        const hasLegacyMock = Array.isArray(parsed) && parsed.some((s: any) =>
-          s.id === 'fever-headache' ||
-          s.id === 'child-vaccination' ||
-          s.id === 'diabetes-diet-plan' ||
-          s.id === 'skin-rash' ||
-          s.id === 'stomach-pain' ||
-          s.title?.toLowerCase().includes('fever') ||
-          s.title?.toLowerCase().includes('vaccination') ||
-          s.title?.toLowerCase().includes('diabetes') ||
-          s.title?.toLowerCase().includes('stomach') ||
-          s.title?.toLowerCase().includes('rash') ||
-          JSON.stringify(s).toLowerCase().includes('murugan')
-        );
-        if (!hasLegacyMock && Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        } else {
-          localStorage.removeItem('healthgrid_chat_sessions');
-        }
-      }
-    } catch {
-      // fallback
-    }
-    return [createFreshSession()];
-  });
+  // Zero-Disk Pure Cloud Storage: Sessions live strictly in memory and Supabase PostgreSQL RLS tables.
+  // Guarantees zero residual patient clinical data on shared clinic devices or public health kiosks.
+  const [sessions, setSessions] = useState<ChatSession[]>([createFreshSession()]);
 
-  const [activeSessionId, setActiveSessionId] = useState<string>(() => sessions[0]?.id || `chat-${Date.now()}`);
+  const [activeSessionId, setActiveSessionId] = useState<string>(() => `chat-${Date.now()}`);
   const [inputText, setInputText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
@@ -159,25 +117,16 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const pendingActionRef = useRef<(() => void) | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
 
-  // Proactively sweep and eliminate any legacy mock chat history on mount
+  // Sync auth state and enforce clean slate on logout
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('healthgrid_chat_sessions');
-      if (saved) {
-        const lower = saved.toLowerCase();
-        if (
-          lower.includes('murugan') ||
-          lower.includes('fever') ||
-          lower.includes('vaccination') ||
-          lower.includes('diabetes') ||
-          lower.includes('stomach') ||
-          lower.includes('rash')
-        ) {
-          localStorage.removeItem('healthgrid_chat_sessions');
-          setSessions([createFreshSession()]);
-        }
+    const unsub = authService.subscribe((user) => {
+      setCurrentUser(user);
+      if (!user) {
+        setSessions([createFreshSession()]);
+        setActiveSessionId(`chat-${Date.now()}`);
       }
-    } catch {}
+    });
+    return unsub;
   }, []);
 
   // Model & Realtime Usage State
@@ -204,15 +153,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Sync sessions to LocalStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('healthgrid_chat_sessions', JSON.stringify(sessions));
-    } catch {
-      // ignore
-    }
-  }, [sessions]);
 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
 
@@ -604,8 +544,12 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           onOpenAmbulance();
         }, 1200);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Chat error:', err);
+      if (err?.message && err.message.toLowerCase().includes('rate limit')) {
+        setToastMessage(err.message);
+        return;
+      }
       const fallbackAi: ChatMessage = {
         id: `a-${Date.now()}`,
         sender: 'ai',
