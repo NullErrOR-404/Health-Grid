@@ -104,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   // Determine active nav index for underline positioning
-  // 0: Home, 1: Speak to Doctor, 2: Call Ambulance, 3: Medicines, 4: Maps, 5: More
+  // 0: Home, 1: Chat, 2: Call Ambulance, 3: Medicines, 4: Maps, 5: More
   const getActiveNavIndex = (): number => {
     if (activeView === 'landing') return 0;
     if (activeView === 'chat') return 1;
@@ -169,7 +169,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
 
-              {/* Slot 1: Speak to Doctor */}
+              {/* Slot 1: Chat */}
               <div className="flex justify-center items-center w-full">
                 <button 
                   type="button"
@@ -186,7 +186,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       : 'text-slate-700 hover:text-[#2563EB]'
                   }`}
                 >
-                  {lang === 'en' ? 'Speak to Doctor' : 'மருத்துவரிடம் பேசு'}
+                  {lang === 'en' ? 'Chat' : 'உரையாடல்'}
                 </button>
               </div>
 
@@ -672,7 +672,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="flex flex-col items-center justify-center p-3 bg-teal-50/80 hover:bg-teal-100/80 text-teal-800 rounded-xl border border-teal-200/80 transition-colors"
                 >
                   <Stethoscope className="w-5 h-5 text-teal-600 mb-1" />
-                  <span className="text-xs font-semibold text-center">{lang === 'en' ? 'Speak to Doctor' : 'குரல் உதவி'}</span>
+                  <span className="text-xs font-semibold text-center">{lang === 'en' ? 'Chat' : 'உரையாடல்'}</span>
                 </button>
 
                 <button

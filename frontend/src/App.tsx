@@ -401,7 +401,7 @@ export default function App() {
           className="flex-1 bg-teal-700 hover:bg-teal-800 text-white font-bold py-3.5 px-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 border border-teal-600 active:scale-95 transition-all text-xs"
         >
           <Mic className="w-4 h-4 text-teal-200" />
-          <span>{lang === 'en' ? 'Speak to Doctor' : 'குரல் உதவி'}</span>
+          <span>{lang === 'en' ? 'Chat' : 'உரையாடல்'}</span>
         </button>
       </div>
 
