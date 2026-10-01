@@ -277,6 +277,7 @@ export default function App() {
           onClose={() => setIsPrescriptionOpen(false)}
           lang={lang}
           onOpenDiseaseMap={() => navigateToView('maps')}
+          onNavigateMedicines={() => navigateToView('medicines')}
         />
         <DiseaseMapModal
           isOpen={isDiseaseMapOpen}
@@ -454,6 +455,7 @@ export default function App() {
           onClose={() => setIsPrescriptionOpen(false)}
           lang={lang}
           onOpenDiseaseMap={() => navigateToView('maps')}
+          onNavigateMedicines={() => navigateToView('medicines')}
         />
         <DiseaseMapModal
           isOpen={isDiseaseMapOpen}
@@ -540,6 +542,7 @@ export default function App() {
           onClose={() => setIsPrescriptionOpen(false)}
           lang={lang}
           onOpenDiseaseMap={() => navigateToView('maps')}
+          onNavigateMedicines={() => navigateToView('medicines')}
         />
         <BabyShotsModal
           isOpen={isBabyShotsOpen}
@@ -685,6 +688,7 @@ export default function App() {
         onClose={() => setIsPrescriptionOpen(false)}
         lang={lang}
         onOpenDiseaseMap={() => navigateToView('maps')}
+        onNavigateMedicines={() => navigateToView('medicines')}
       />
 
       <DiseaseMapModal

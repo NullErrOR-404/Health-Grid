@@ -35,12 +35,15 @@ import type { Language } from '../types';
 import { prescriptionAiService, type PrescriptionAnalysisResult } from '../services/prescriptionAiService';
 import { speechEngine } from '../services/speechService';
 import { supabase } from '../services/supabaseClient';
+import { medicineStoreService } from '../services/medicineStoreService';
+import { authService } from '../services/authService';
 
 interface PrescriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
   lang: Language;
   onOpenDiseaseMap?: () => void;
+  onNavigateMedicines?: () => void;
 }
 
 interface RecentUploadItem {
@@ -56,6 +59,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   onClose,
   lang,
   onOpenDiseaseMap,
+  onNavigateMedicines,
 }) => {
   // Navigation & View State
   const [activeTab, setActiveTab] = useState<'upload' | 'gallery'>('upload');
@@ -97,6 +101,72 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       streamRef.current = null;
     }
     setIsCameraActive(false);
+  };
+
+  const handleAddAllToGenericCart = () => {
+    if (!analysisResult || !analysisResult.medicines || analysisResult.medicines.length === 0) return;
+
+    const count = medicineStoreService.addScannedMedicinesToCart(analysisResult.medicines);
+    window.dispatchEvent(
+      new CustomEvent('healthgrid:toast', {
+        detail: {
+          message: lang === 'en'
+            ? `Added ${count} generic medicines to cart! (Saving ₹${analysisResult.totalSavings})`
+            : `${count} மலிவு ஜெனரிக் மருந்துகள் கூடையில் சேர்க்கப்பட்டன! (₹${analysisResult.totalSavings} சேமிப்பு)`,
+        },
+      })
+    );
+
+    onClose();
+    if (onNavigateMedicines) {
+      onNavigateMedicines();
+    } else {
+      window.history.pushState({}, '', '/medicines');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  };
+
+  const handleCreateChronicRefillFromRx = () => {
+    if (!analysisResult || !analysisResult.medicines || analysisResult.medicines.length === 0) return;
+
+    const currentUser = authService.getCurrentUser();
+    const schedule = medicineStoreService.createRefillSchedule({
+      userId: currentUser?.id || 'patient-user',
+      medicalId: currentUser?.healthId || 'HG-600040-7821',
+      patientName: currentUser?.name || 'Verified Patient',
+      patientPhone: currentUser?.phone || '+91 98401 23456',
+      prescriptionId: 'RX-SCANNED',
+      prescriptionDate: analysisResult.date,
+      doctorName: analysisResult.doctorName,
+      items: analysisResult.medicines.map((m) => ({
+        brandName: m.brandName,
+        genericName: m.genericName,
+        dosage: m.dosage,
+        frequency: m.frequency,
+        timing: m.timing,
+        duration: m.duration,
+        brandPrice: m.brandPrice,
+        genericPrice: m.genericPrice,
+      })),
+    });
+
+    window.dispatchEvent(
+      new CustomEvent('healthgrid:toast', {
+        detail: {
+          message: lang === 'en'
+            ? `Activated 30-Day PMBJP Chronic Refill Schedule (#${schedule.id}) with Day-25 adherence alerts!`
+            : `தொடர் மறுவரவு திட்டம் (#${schedule.id}) தொடங்கப்பட்டது!`,
+        },
+      })
+    );
+
+    onClose();
+    if (onNavigateMedicines) {
+      onNavigateMedicines();
+    } else {
+      window.history.pushState({}, '', '/medicines');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
   };
 
   // Start device camera
@@ -1093,11 +1163,33 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-emerald-200">
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-emerald-200">
                       <div className="text-right">
                         <div className="text-xs text-slate-500 line-through">Brand: ₹{analysisResult.totalBrandCost}</div>
                         <div className="text-base font-black text-[#059669]">₹{analysisResult.totalGenericCost} only</div>
                       </div>
+
+                      {/* Breakthrough Action: Directly Auto-fill Generic Cart */}
+                      <button
+                        type="button"
+                        onClick={handleAddAllToGenericCart}
+                        className="py-2 px-3.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>{lang === 'en' ? 'Add All to Generic Cart' : 'கூடையில் சேர்க்க'}</span>
+                      </button>
+
+                      {/* Breakthrough Action: Auto-Schedule 30-Day Chronic Refill */}
+                      <button
+                        type="button"
+                        onClick={handleCreateChronicRefillFromRx}
+                        className="py-2 px-3 rounded-xl bg-teal-800 hover:bg-teal-900 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
+                        title="Set up automated 30-day refills with Day-25 WhatsApp and Calendar alerts"
+                      >
+                        <Clock className="w-3.5 h-3.5 text-teal-300" />
+                        <span>{lang === 'en' ? 'Start 30-Day Auto-Refill' : 'தொடர் மறுவரவு'}</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => {
@@ -1109,10 +1201,11 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                             window.dispatchEvent(new PopStateEvent('popstate'));
                           }
                         }}
-                        className="py-1.5 px-3 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                        className="py-2 px-2.5 rounded-xl border border-emerald-300 text-emerald-800 hover:bg-emerald-100/50 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer"
+                        title={lang === 'en' ? 'Find Nearest Jan Aushadhi Kendra' : 'மருந்தகம் காண்க'}
                       >
                         <MapPin className="w-3.5 h-3.5" />
-                        <span>{lang === 'en' ? 'Find Kendra' : 'மருந்தகம் காண்க'}</span>
+                        <span>{lang === 'en' ? 'Kendra Map' : 'வரைபடம்'}</span>
                       </button>
                     </div>
                   </div>
@@ -1157,6 +1250,25 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                             <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-md">
                               {med.savingsPct}% off
                             </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                medicineStoreService.addScannedMedicinesToCart([med]);
+                                window.dispatchEvent(
+                                  new CustomEvent('healthgrid:toast', {
+                                    detail: {
+                                      message: lang === 'en'
+                                        ? `Added ${med.genericName} to Generic Cart!`
+                                        : `${med.genericName} கூடையில் சேர்க்கப்பட்டது!`,
+                                    },
+                                  })
+                                );
+                              }}
+                              className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer border border-emerald-200/60"
+                              title="Add to generic cart"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
 
