@@ -55,12 +55,12 @@ function getBaselineVerified2026Bulletins(): BulletinItem[] {
   return [
     {
       id: 'tn-dph-2026-01',
-      tagEn: 'MONSOON HEALTH ALERT',
-      tagTa: 'பருவமழை சுகாதார எச்சரிக்கை',
-      textEn: 'Seasonal Dengue & Vector-Borne Alert: GCC & TN DPH deploy 200+ mobile clinics across Chennai, Coimbatore & Tiruvallur. Free NS1 & platelet tests at all PHCs.',
-      textTa: 'பருவகால டெங்கு தடுப்பு: சென்னை, கோவை, திருவள்ளூரில் 200+ நடமாடும் மருத்துவ முகாம்கள். அனைத்து ஆரம்ப சுகாதார நிலையங்களிலும் இலவச NS1 மற்றும் ரத்த தட்டுக்கள் பரிசோதனை.',
-      detailEn: 'Directorate of Public Health & Preventive Medicine (TN) directive: Strict elimination of stagnant water to curb Aedes breeding. All government hospitals and Urban Primary Health Centres (UPHCs) are stocked with IV fluids, Paracetamol, and Nilavembu Kudineer. Report severe fever lasting >48 hours immediately.',
-      detailTa: 'பொது சுகாதாரத்துறை உத்தரவு: ஏடிஸ் கொசு உற்பத்தியை தடுக்க தேங்கிய நீரை அகற்றவும். அனைத்து அரசு மருத்துவமனைகளிலும் தேவையான மருந்துகள் மற்றும் நிலவேம்பு குடிநீர் இருப்பு வைக்கப்பட்டுள்ளன. 48 மணி நேரத்திற்கு மேல் காய்ச்சல் நீடித்தால் உடனே மருத்துவரை அணுகவும்.',
+      tagEn: 'HEALTH ALERT',
+      tagTa: 'சுகாதார எச்சரிக்கை',
+      textEn: 'Seasonal Dengue Prevention: Eliminate stagnant water, use mosquito nets, and seek medical attention for fever lasting more than 2 days.',
+      textTa: 'பருவகால டெங்கு தடுப்பு: தேங்கிய நீரை அகற்றவும், கொசுவலைகளைப் பயன்படுத்தவும், 2 நாட்களுக்கு மேல் காய்ச்சல் இருந்தால் உடனே மருத்துவரை அணுகவும்.',
+      detailEn: 'Directorate of Public Health & Preventive Medicine directive: Strict elimination of stagnant water to curb Aedes breeding. All government hospitals and Urban Primary Health Centres (UPHCs) are stocked with IV fluids, Paracetamol, and Nilavembu Kudineer. Seek medical attention for fever lasting more than 2 days.',
+      detailTa: 'பொது சுகாதாரத்துறை உத்தரவு: ஏடிஸ் கொசு உற்பத்தியை தடுக்க தேங்கிய நீரை அகற்றவும். அனைத்து அரசு மருத்துவமனைகளிலும் தேவையான மருந்துகள் மற்றும் நிலவேம்பு குடிநீர் இருப்பு வைக்கப்பட்டுள்ளன. 2 நாட்களுக்கு மேல் காய்ச்சல் நீடித்தால் உடனே மருத்துவரை அணுகவும்.',
       date: getDynamicDateString(0), // Today
       actionType: 'maps',
       sourceAgency: 'Directorate of Public Health & Preventive Medicine, Tamil Nadu',

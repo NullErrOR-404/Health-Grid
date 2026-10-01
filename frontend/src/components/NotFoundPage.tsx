@@ -76,6 +76,7 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
         <Navbar
           lang={lang}
           setLang={setLang}
+          activeView="not-found"
           onOpenAmbulance={onOpenAmbulance}
           onOpenVoiceChat={onNavigateChat}
           onOpenPrescription={onOpenPrescription}

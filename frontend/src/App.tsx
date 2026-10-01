@@ -201,6 +201,7 @@ export default function App() {
           <Navbar
             lang={lang}
             setLang={setLang}
+            activeView="maps"
             onOpenAmbulance={() => setIsAmbulanceOpen(true)}
             onOpenVoiceChat={() => navigateToView('chat')}
             onOpenPrescription={() => setIsPrescriptionOpen(true)}
@@ -209,6 +210,19 @@ export default function App() {
             onOpenLogin={() => setIsLoginOpen(true)}
             onNavigateProfile={() => navigateToView('profile')}
             onNavigateHome={() => navigateToView('landing')}
+            onNavigateHealthRecords={() => {
+              navigateToView('profile');
+              setTimeout(() => {
+                const el = document.getElementById('health-information');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }, 250);
+            }}
+            onNavigateSettings={() => {
+              navigateToView('profile');
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('open-profile-edit'));
+              }, 250);
+            }}
           />
         </header>
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -304,6 +318,7 @@ export default function App() {
         <Navbar
           lang={lang}
           setLang={setLang}
+          activeView="landing"
           onOpenAmbulance={() => setIsAmbulanceOpen(true)}
           onOpenVoiceChat={() => navigateToView('chat')}
           onOpenPrescription={() => setIsPrescriptionOpen(true)}
@@ -312,6 +327,19 @@ export default function App() {
           onOpenLogin={() => setIsLoginOpen(true)}
           onNavigateProfile={() => navigateToView('profile')}
           onNavigateHome={() => navigateToView('landing')}
+          onNavigateHealthRecords={() => {
+            navigateToView('profile');
+            setTimeout(() => {
+              const el = document.getElementById('health-information');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }, 250);
+          }}
+          onNavigateSettings={() => {
+            navigateToView('profile');
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('open-profile-edit'));
+            }, 250);
+          }}
         />
       </header>
 

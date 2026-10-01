@@ -145,6 +145,28 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     setOpenDropdown(prev => (prev === key ? null : key));
   };
 
+  // Support direct deep-linking from navbar dropdown items
+  useEffect(() => {
+    const handleOpenEdit = () => {
+      setOpenDropdown('edit-profile');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (window.location.search.includes('edit=true') || window.location.hash === '#settings') {
+      handleOpenEdit();
+    }
+
+    if (window.location.hash === '#vault' || window.location.hash === '#health-records') {
+      setTimeout(() => {
+        const el = document.getElementById('health-information');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
+
+    window.addEventListener('open-profile-edit', handleOpenEdit);
+    return () => window.removeEventListener('open-profile-edit', handleOpenEdit);
+  }, []);
+
   // Sync profile and health records from Supabase live session
   useEffect(() => {
     let isMounted = true;
@@ -1059,7 +1081,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
 
         {/* Row 2: Health Information Container (4 Tiles - Allergies, Conditions, Medicines, Vaccinations) */}
-        <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-4">
+        <div id="health-information" className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-4 scroll-mt-24">
           <div className="flex items-center gap-2.5 pb-2">
             <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-700">
               <Heart className="w-4 h-4 fill-teal-700" />

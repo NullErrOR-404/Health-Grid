@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Megaphone, FileText, ChevronLeft, ChevronRight, X, ShieldCheck, ExternalLink, RefreshCw } from 'lucide-react';
+import { Megaphone, FileText, ChevronLeft, ChevronRight, X, ShieldCheck, ExternalLink } from 'lucide-react';
 import type { Language } from '../types';
 import { healthBulletinService, type BulletinItem } from '../services/healthBulletinService';
 
@@ -18,7 +18,6 @@ export const GovAlertMarquee: React.FC<GovAlertMarqueeProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [modalItem, setModalItem] = useState<BulletinItem | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPulledUp, setIsPulledUp] = useState(false);
 
   // Pull up marquee when scrolling down down the hero section; reveal when scrolling up or at top
@@ -97,14 +96,6 @@ export const GovAlertMarquee: React.FC<GovAlertMarqueeProps> = ({
     setCurrentIndex((prev) => (prev + 1) % bulletins.length);
   };
 
-  const handleManualRefresh = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsRefreshing(true);
-    const refreshed = healthBulletinService.refresh();
-    setBulletins(refreshed);
-    setTimeout(() => setIsRefreshing(false), 500);
-  };
-
   const handleAction = (item: BulletinItem) => {
     if (item.actionType === 'ambulance') {
       onOpenAmbulance?.();
@@ -178,21 +169,12 @@ export const GovAlertMarquee: React.FC<GovAlertMarqueeProps> = ({
             {activeBulletin.date}
           </span>
 
-          {/* Circular Previous / Next Control Buttons & Sync */}
-          <div className="flex items-center gap-1 ml-1 sm:ml-2">
-            <button
-              type="button"
-              onClick={handleManualRefresh}
-              className={`w-6 h-6 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90 ${isRefreshing ? 'animate-spin text-teal-400' : ''}`}
-              title="Sync real-time 2026 health updates"
-              aria-label="Sync real-time health updates"
-            >
-              <RefreshCw className="w-3 h-3" />
-            </button>
+          {/* Circular Previous / Next Control Buttons */}
+          <div className="flex items-center gap-1.5 ml-1 sm:ml-2">
             <button
               type="button"
               onClick={handlePrev}
-              className="w-6 h-6 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90"
+              className="w-6 h-6 rounded-full bg-[#152342] hover:bg-[#1E293B] border border-slate-700/60 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90"
               title="Previous bulletin"
               aria-label="Previous bulletin"
             >
@@ -201,7 +183,7 @@ export const GovAlertMarquee: React.FC<GovAlertMarqueeProps> = ({
             <button
               type="button"
               onClick={handleNext}
-              className="w-6 h-6 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90"
+              className="w-6 h-6 rounded-full bg-[#152342] hover:bg-[#1E293B] border border-slate-700/60 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90"
               title="Next bulletin"
               aria-label="Next bulletin"
             >
