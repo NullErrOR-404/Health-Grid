@@ -57,6 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [hoveredNavIndex, setHoveredNavIndex] = useState<number | null>(null);
 
   const langDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
@@ -112,10 +113,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const activeNavIndex = getActiveNavIndex();
+  const displayNavIndex = hoveredNavIndex !== null ? hoveredNavIndex : activeNavIndex;
+  const isHovering = hoveredNavIndex !== null;
 
   const userInitial = currentUser?.name
     ? currentUser.name.charAt(0).toUpperCase()
     : 'M';
+
+  const userFirstName = currentUser?.name
+    ? currentUser.name.trim().split(/\s+/)[0]
+    : 'User';
 
   return (
     <>
@@ -135,18 +142,27 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Center: Desktop Navigation Links with Equal Spacing & Dynamic Sliding Underline */}
-          <nav className="hidden md:flex items-center justify-center relative text-sm font-medium text-slate-700">
-            <div className="grid grid-cols-6 items-center text-center w-[630px] lg:w-[720px] xl:w-[760px] relative select-none">
+          <nav className="hidden md:flex items-center justify-center relative text-sm font-medium text-slate-700 flex-1 px-2 lg:px-4">
+            <div 
+              className="grid grid-cols-6 items-center text-center w-full max-w-[560px] lg:max-w-[660px] xl:max-w-[720px] relative select-none"
+              onMouseLeave={() => setHoveredNavIndex(null)}
+            >
               
               {/* Slot 0: Home */}
               <div className="flex justify-center items-center w-full">
                 <button 
                   type="button"
-                  onClick={handleHomeClick} 
+                  onMouseEnter={() => setHoveredNavIndex(0)}
+                  onClick={() => {
+                    setHoveredNavIndex(null);
+                    handleHomeClick();
+                  }} 
                   className={`py-2 text-center transition-colors cursor-pointer w-full truncate ${
-                    activeNavIndex === 0 
+                    hoveredNavIndex === 0 
+                      ? 'text-[#2563EB] font-semibold' 
+                      : hoveredNavIndex === null && activeNavIndex === 0 
                       ? 'text-[#00A896] font-semibold' 
-                      : 'text-slate-700 hover:text-[#00A896]'
+                      : 'text-slate-700 hover:text-[#2563EB]'
                   }`}
                 >
                   {lang === 'en' ? 'Home' : 'முகப்பு'}
@@ -157,11 +173,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex justify-center items-center w-full">
                 <button 
                   type="button"
-                  onClick={() => onOpenVoiceChat()} 
+                  onMouseEnter={() => setHoveredNavIndex(1)}
+                  onClick={() => {
+                    setHoveredNavIndex(null);
+                    onOpenVoiceChat();
+                  }} 
                   className={`py-2 text-center transition-colors cursor-pointer w-full truncate ${
-                    activeNavIndex === 1 
+                    hoveredNavIndex === 1 
+                      ? 'text-[#2563EB] font-semibold' 
+                      : hoveredNavIndex === null && activeNavIndex === 1 
                       ? 'text-[#00A896] font-semibold' 
-                      : 'text-slate-700 hover:text-[#00A896]'
+                      : 'text-slate-700 hover:text-[#2563EB]'
                   }`}
                 >
                   {lang === 'en' ? 'Speak to Doctor' : 'மருத்துவரிடம் பேசு'}
@@ -172,11 +194,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex justify-center items-center w-full">
                 <button 
                   type="button"
-                  onClick={onOpenAmbulance} 
+                  onMouseEnter={() => setHoveredNavIndex(2)}
+                  onClick={() => {
+                    setHoveredNavIndex(null);
+                    onOpenAmbulance();
+                  }} 
                   className={`py-2 text-center transition-colors cursor-pointer w-full truncate ${
-                    activeNavIndex === 2 
+                    hoveredNavIndex === 2 
+                      ? 'text-[#2563EB] font-semibold' 
+                      : hoveredNavIndex === null && activeNavIndex === 2 
                       ? 'text-[#00A896] font-semibold' 
-                      : 'text-slate-700 hover:text-red-600'
+                      : 'text-slate-700 hover:text-[#2563EB]'
                   }`}
                 >
                   {lang === 'en' ? 'Call Ambulance' : 'ஆம்புலன்ஸ் அழைப்பு'}
@@ -187,11 +215,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex justify-center items-center w-full">
                 <button 
                   type="button"
-                  onClick={onOpenPrescription} 
+                  onMouseEnter={() => setHoveredNavIndex(3)}
+                  onClick={() => {
+                    setHoveredNavIndex(null);
+                    onOpenPrescription();
+                  }} 
                   className={`py-2 text-center transition-colors cursor-pointer w-full truncate ${
-                    activeNavIndex === 3 
+                    hoveredNavIndex === 3 
+                      ? 'text-[#2563EB] font-semibold' 
+                      : hoveredNavIndex === null && activeNavIndex === 3 
                       ? 'text-[#00A896] font-semibold' 
-                      : 'text-slate-700 hover:text-[#00A896]'
+                      : 'text-slate-700 hover:text-[#2563EB]'
                   }`}
                 >
                   {lang === 'en' ? 'Medicines' : 'மருந்துகள்'}
@@ -202,11 +236,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex justify-center items-center w-full">
                 <button 
                   type="button"
-                  onClick={onOpenDiseaseMap} 
+                  onMouseEnter={() => setHoveredNavIndex(4)}
+                  onClick={() => {
+                    setHoveredNavIndex(null);
+                    onOpenDiseaseMap();
+                  }} 
                   className={`py-2 text-center transition-colors cursor-pointer w-full truncate ${
-                    activeNavIndex === 4 
+                    hoveredNavIndex === 4 
+                      ? 'text-[#2563EB] font-semibold' 
+                      : hoveredNavIndex === null && activeNavIndex === 4 
                       ? 'text-[#00A896] font-semibold' 
-                      : 'text-slate-700 hover:text-[#00A896]'
+                      : 'text-slate-700 hover:text-[#2563EB]'
                   }`}
                 >
                   {lang === 'en' ? 'Maps' : 'வரைபடம்'}
@@ -217,9 +257,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex justify-center items-center w-full relative" ref={moreDropdownRef}>
                 <button 
                   type="button"
+                  onMouseEnter={() => setHoveredNavIndex(5)}
                   onClick={() => setMoreDropdownOpen(!moreDropdownOpen)} 
                   className={`flex items-center justify-center gap-1 py-2 text-center transition-colors cursor-pointer w-full ${
-                    moreDropdownOpen ? 'text-[#00A896]' : 'text-slate-700 hover:text-[#00A896]'
+                    moreDropdownOpen || hoveredNavIndex === 5
+                      ? 'text-[#2563EB] font-semibold' 
+                      : hoveredNavIndex === null && activeNavIndex === 5 
+                      ? 'text-[#00A896] font-semibold' 
+                      : 'text-slate-700 hover:text-[#2563EB]'
                   }`}
                 >
                   <span>{lang === 'en' ? 'More' : 'மேலும்'}</span>
@@ -267,13 +312,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </div>
 
-              {/* Dynamic Sliding Underline Indicator matching reference */}
-              {activeNavIndex >= 0 && (
+              {/* Dynamic Flowing Underline Indicator: Blue while switching/hovering, Brand Green when clicked/resting */}
+              {displayNavIndex >= 0 && (
                 <span
-                  className="absolute bottom-0 h-0.5 bg-[#00A896] rounded-full transition-all duration-300 ease-out pointer-events-none"
+                  className={`absolute bottom-0 h-0.5 rounded-full transition-all duration-300 ease-out pointer-events-none ${
+                    isHovering
+                      ? 'bg-[#2563EB] shadow-[0_0_8px_rgba(37,99,235,0.45)]'
+                      : 'bg-[#00A896]'
+                  }`}
                   style={{
-                    width: '32px',
-                    left: `calc(${activeNavIndex} * (100% / 6) + ((100% / 6) - 32px) / 2)`,
+                    width: '36px',
+                    left: `calc(${displayNavIndex} * (100% / 6) + ((100% / 6) - 36px) / 2)`,
                   }}
                 />
               )}
@@ -281,7 +330,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Right: Language Pill Dropdown, Notification Bell, User Profile Pill, and SOS Ambulance Button */}
-          <div className="flex items-center gap-2.5 sm:gap-3.5 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 lg:gap-3 flex-shrink-0">
             
             {/* Language Pill Dropdown: [ EN ⌵ ] matching reference */}
             <div className="relative" ref={langDropdownRef}>
@@ -370,7 +419,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     type="button"
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full hover:bg-slate-50 text-slate-800 transition-colors cursor-pointer group"
+                    className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full hover:bg-slate-50 text-slate-800 transition-colors cursor-pointer group flex-shrink-0"
                     title={currentUser.name}
                   >
                     <div className="w-8 h-8 rounded-full bg-[#00897B] text-white flex items-center justify-center font-bold text-sm shadow-2xs overflow-hidden flex-shrink-0">
@@ -380,8 +429,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                         userInitial
                       )}
                     </div>
-                    <span className="text-sm font-semibold text-slate-800 max-w-[120px] truncate hidden sm:inline">
-                      {currentUser.name || 'User'}
+                    <span className="text-sm font-semibold text-slate-800 max-w-[85px] lg:max-w-[110px] truncate hidden sm:inline" title={currentUser.name}>
+                      {userFirstName}
                     </span>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -509,9 +558,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenAmbulance}
-              className="flex items-center gap-2 bg-[#EF4444] hover:bg-[#DC2626] text-white px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer select-none active:scale-95"
+              className="flex items-center gap-1.5 sm:gap-2 bg-[#EF4444] hover:bg-[#DC2626] text-white px-3 sm:px-3.5 lg:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer select-none active:scale-95 flex-shrink-0"
             >
-              <Siren className="w-4 h-4 text-white" />
+              <Siren className="w-4 h-4 text-white flex-shrink-0" />
               <span className="tracking-wide whitespace-nowrap">SOS Ambulance</span>
             </button>
 
