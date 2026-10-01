@@ -12,7 +12,6 @@ import {
   Lock,
   FileText,
   ShieldCheck,
-  Smartphone,
   Download,
   X,
   AlertCircle,
@@ -35,163 +34,275 @@ interface ProfilePageProps {
   onNavigateChat: () => void;
 }
 
+export interface EmergencyContactItem {
+  id: string;
+  name: string;
+  relation: string;
+  phone: string;
+  isActive: boolean;
+  isPrimary?: boolean;
+}
+
+export interface MedicineItem {
+  id: string;
+  name: string;
+  generic?: string;
+  frequency?: string;
+  saving?: string;
+}
+
+export interface VaccinationItem {
+  id: string;
+  name: string;
+  date?: string;
+  dose?: string;
+}
+
+export interface HealthHistoryItem {
+  id: string;
+  date: string;
+  title: string;
+  detail: string;
+  category?: 'consultation' | 'prescription' | 'vaccine' | 'lab' | 'emergency';
+}
+
+export interface UserProfileData {
+  name: string;
+  dob: string;
+  age: string;
+  gender: string;
+  bloodGroup: string;
+  phone: string;
+  email: string;
+  language: string;
+  location: string;
+  healthId: string;
+}
+
 export const ProfilePage: React.FC<ProfilePageProps> = ({
   lang,
   onNavigateHome,
   onNavigateChat,
 }) => {
-  // Demographic state
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [profileData, setProfileData] = useState({
-    name: 'Murugan S.',
-    dob: '14 Aug 1981',
-    age: '45',
-    gender: 'Male',
-    phone: '+91 98401 23456',
-    email: 'murugan.s@gmail.com',
+
+  // Demographic state - initial values are all empty/null, populated ONLY from real user session
+  const [profileData, setProfileData] = useState<UserProfileData>({
+    name: '',
+    dob: '',
+    age: '',
+    gender: '',
+    bloodGroup: '',
+    phone: '',
+    email: '',
     language: 'தமிழ் (Tamil)',
-    location: 'Chennai, Tamil Nadu',
-    healthId: 'HG-782341',
+    location: '',
+    healthId: '',
   });
 
-  // Dynamic Emergency Contact state
-  const [emergencyContacts, setEmergencyContacts] = useState<Array<{
-    id: string;
-    name: string;
-    relation: string;
-    phone: string;
-    isActive: boolean;
-    isPrimary?: boolean;
-  }>>([]);
+  // Dynamic Emergency Contact state - initialized to empty array (no hardcoded contacts)
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContactItem[]>([]);
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
 
-  // Health Information state
-  const [allergies, setAllergies] = useState<string[]>(['Penicillin', 'NSAIDs']);
-  const [conditions, setConditions] = useState<string[]>(['Asthma', 'Hypertension']);
-  const [medicines, setMedicines] = useState([
-    { name: 'Budesonide Inhaler', generic: 'Budesonide 200mcg', frequency: 'Twice daily', saving: '65%' },
-    { name: 'Montelukast', generic: 'Montelukast 10mg', frequency: 'Once daily at night', saving: '74%' },
-  ]);
-  const [vaccinations, setVaccinations] = useState<string[]>(['COVID-19 (2 doses)']);
+  // Health Information state - initialized to empty arrays (no hardcoded data)
+  const [allergies, setAllergies] = useState<string[]>([]);
+  const [conditions, setConditions] = useState<string[]>([]);
+  const [medicines, setMedicines] = useState<MedicineItem[]>([]);
+  const [vaccinations, setVaccinations] = useState<VaccinationItem[]>([]);
+  const [healthHistory, setHealthHistory] = useState<HealthHistoryItem[]>([]);
 
   // AI Assistant permissions state
   const [isAiHealthAccessEnabled, setIsAiHealthAccessEnabled] = useState(true);
 
-  // Individual Dropdown Expansion states
+  // Dropdown / Modal state
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
-  // Form states for individual dropdown editors
-  const [editProfileForm, setEditProfileForm] = useState({ ...profileData });
+  // Form states for individual editors
+  const [editProfileForm, setEditProfileForm] = useState<UserProfileData>({ ...profileData });
   const [editEmergencyForm, setEditEmergencyForm] = useState({ name: '', relation: '', phone: '' });
-  const [newContactForm, setNewContactForm] = useState({ name: '', relation: '', phone: '' });
+  const [newContactForm, setNewContactForm] = useState({ name: '', relation: 'Family', phone: '' });
+  
+  // Quick Input states
   const [newAllergyInput, setNewAllergyInput] = useState('');
   const [newConditionInput, setNewConditionInput] = useState('');
-  const [newMedicineInput, setNewMedicineInput] = useState('');
-  const [newVaccineInput, setNewVaccineInput] = useState('');
+  const [newMedicineForm, setNewMedicineForm] = useState({ name: '', generic: '', frequency: 'Once daily', saving: '' });
+  const [newVaccineForm, setNewVaccineForm] = useState({ name: '', date: '', dose: '1st Dose' });
+  const [newHistoryForm, setNewHistoryForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    title: 'Doctor consultation',
+    detail: '',
+    category: 'consultation' as const,
+  });
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Sync profile data from Supabase live session
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const user = authService.getUser();
-      if (user) {
-        setProfileData((prev) => ({
-          ...prev,
-          name: user.name || prev.name,
-          email: user.email || prev.email,
-          phone: user.phone || prev.phone,
-          healthId: user.healthId || prev.healthId,
-          age: user.age ? String(user.age) : prev.age,
-        }));
-        setEditProfileForm((prev) => ({
-          ...prev,
-          name: user.name || prev.name,
-          email: user.email || prev.email,
-          phone: user.phone || prev.phone,
-          healthId: user.healthId || prev.healthId,
-          age: user.age ? String(user.age) : prev.age,
-        }));
-      }
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
+  const toggleDropdown = (key: string) => {
+    setOpenDropdown(prev => (prev === key ? null : key));
+  };
+
+  // Sync profile and health records from Supabase live session
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUserData = async () => {
       try {
+        setIsLoadingProfile(true);
+
+        // 1. Check local session from authService
+        const authUser = authService.getUser();
+        let initialData: UserProfileData = {
+          name: authUser?.name || '',
+          dob: '',
+          age: authUser?.age ? String(authUser.age) : '',
+          gender: '',
+          bloodGroup: authUser?.bloodGroup || '',
+          phone: authUser?.phone || '',
+          email: authUser?.email || '',
+          language: 'தமிழ் (Tamil)',
+          location: '',
+          healthId: authUser?.healthId || '',
+        };
+
+        // 2. Fetch live session from Supabase
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const { data: patient } = await supabase
+          const userMeta = session.user.user_metadata || {};
+          
+          if (!initialData.name) initialData.name = userMeta.full_name || userMeta.name || session.user.email?.split('@')[0] || '';
+          if (!initialData.email) initialData.email = session.user.email || '';
+          if (!initialData.phone) initialData.phone = userMeta.phone || session.user.phone || '';
+          if (!initialData.healthId) initialData.healthId = 'HG-' + session.user.id.substring(0, 6).toUpperCase();
+
+          // 3. Query PostgreSQL patients table
+          const { data: patient, error: patientErr } = await supabase
             .from('patients')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
-          if (patient) {
-            const updated = {
-              name: patient.full_name || session.user.email?.split('@')[0] || 'User',
-              dob: patient.dob || '14 Aug 1981',
-              age: patient.age ? String(patient.age) : '45',
-              gender: patient.gender || 'Male',
-              phone: patient.phone_number || '',
-              email: patient.email || session.user.email || '',
-              language: patient.preferred_language || 'தமிழ் (Tamil)',
-              location: patient.location || 'Chennai, Tamil Nadu',
-              healthId: patient.health_id || ('HG-' + session.user.id.substring(0, 6).toUpperCase()),
+          if (patient && !patientErr) {
+            initialData = {
+              name: patient.full_name || initialData.name,
+              dob: patient.dob || '',
+              age: patient.age ? String(patient.age) : initialData.age,
+              gender: patient.gender || '',
+              bloodGroup: patient.blood_group || initialData.bloodGroup,
+              phone: patient.phone_number || initialData.phone,
+              email: patient.email || initialData.email,
+              language: patient.preferred_language || initialData.language,
+              location: patient.location || '',
+              healthId: patient.health_id || initialData.healthId,
             };
-            setProfileData(updated);
-            setEditProfileForm(updated);
 
-            if (patient.emergency_contacts && Array.isArray(patient.emergency_contacts) && patient.emergency_contacts.length > 0) {
+            // Emergency contacts
+            if (Array.isArray(patient.emergency_contacts) && patient.emergency_contacts.length > 0) {
               setEmergencyContacts(patient.emergency_contacts);
             } else if (patient.emergency_contact_name) {
-              setEmergencyContacts([
-                {
-                  id: 'primary',
-                  name: patient.emergency_contact_name,
-                  relation: patient.emergency_contact_relation || 'Family',
-                  phone: patient.emergency_contact_phone || '',
-                  isActive: true,
-                  isPrimary: true,
-                }
-              ]);
+              setEmergencyContacts([{
+                id: 'primary-contact',
+                name: patient.emergency_contact_name,
+                relation: patient.emergency_contact_relation || 'Family',
+                phone: patient.emergency_contact_phone || '',
+                isActive: true,
+                isPrimary: true,
+              }]);
+            } else {
+              setEmergencyContacts([]);
             }
 
-            if (patient.known_allergies && Array.isArray(patient.known_allergies) && patient.known_allergies.length > 0) {
-              setAllergies(patient.known_allergies);
+            // Health arrays
+            setAllergies(Array.isArray(patient.known_allergies) ? patient.known_allergies : []);
+            setConditions(Array.isArray(patient.chronic_conditions) ? patient.chronic_conditions : []);
+            
+            // Current medications
+            if (Array.isArray(patient.current_medications)) {
+              setMedicines(patient.current_medications);
+            } else {
+              setMedicines([]);
             }
-            if (patient.chronic_conditions && Array.isArray(patient.chronic_conditions) && patient.chronic_conditions.length > 0) {
-              setConditions(patient.chronic_conditions);
+
+            // Vaccinations
+            if (Array.isArray(patient.vaccinations)) {
+              setVaccinations(patient.vaccinations);
+            } else {
+              setVaccinations([]);
             }
+
+            // Health History
+            if (Array.isArray(patient.health_history)) {
+              setHealthHistory(patient.health_history);
+            } else {
+              setHealthHistory([]);
+            }
+          } else {
+            // New user without patient row yet - initialize all health info to empty
+            setEmergencyContacts([]);
+            setAllergies([]);
+            setConditions([]);
+            setMedicines([]);
+            setVaccinations([]);
+            setHealthHistory([]);
           }
+        } else {
+          // Unauthenticated or guest view - initialize all to empty
+          setEmergencyContacts([]);
+          setAllergies([]);
+          setConditions([]);
+          setMedicines([]);
+          setVaccinations([]);
+          setHealthHistory([]);
+        }
+
+        if (isMounted) {
+          setProfileData(initialData);
+          setEditProfileForm(initialData);
         }
       } catch (err) {
         console.warn('Live profile fetch error:', err);
       } finally {
-        setIsLoadingProfile(false);
+        if (isMounted) {
+          setIsLoadingProfile(false);
+        }
       }
     };
 
     fetchUserData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
+  // Persist patient record to Supabase with upsert
   const persistPatientToSupabase = async (updates: Record<string, any>) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        await supabase
+        const { error } = await supabase
           .from('patients')
-          .update(updates)
-          .eq('id', session.user.id);
+          .upsert({
+            id: session.user.id,
+            email: session.user.email,
+            updated_at: new Date().toISOString(),
+            ...updates,
+          });
+
+        if (error) {
+          console.warn('Supabase upsert warning:', error.message);
+        }
       }
     } catch (err) {
       console.warn('Failed to persist to Supabase:', err);
     }
   };
 
-  const persistEmergencyContacts = async (updated: Array<{
-    id: string;
-    name: string;
-    relation: string;
-    phone: string;
-    isActive: boolean;
-    isPrimary?: boolean;
-  }>) => {
+  // Persist emergency contacts
+  const persistEmergencyContacts = async (updated: EmergencyContactItem[]) => {
     setEmergencyContacts(updated);
     const primary = updated.find(c => c.isPrimary) || updated[0];
     await persistPatientToSupabase({
@@ -202,16 +313,46 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     });
   };
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 2800);
+  // Persist medicines
+  const persistMedicines = async (updated: MedicineItem[]) => {
+    setMedicines(updated);
+    await persistPatientToSupabase({ current_medications: updated });
   };
 
-  const toggleDropdown = (key: string) => {
-    setOpenDropdown(prev => (prev === key ? null : key));
+  // Persist vaccinations
+  const persistVaccinations = async (updated: VaccinationItem[]) => {
+    setVaccinations(updated);
+    await persistPatientToSupabase({ vaccinations: updated });
   };
 
-  // Download My Data
+  // Persist health history
+  const persistHealthHistory = async (updated: HealthHistoryItem[]) => {
+    setHealthHistory(updated);
+    await persistPatientToSupabase({ health_history: updated });
+  };
+
+  // Save full profile demographics
+  const handleSaveProfile = async () => {
+    const updated = { ...profileData, ...editProfileForm };
+    setProfileData(updated);
+    setOpenDropdown(null);
+
+    await persistPatientToSupabase({
+      full_name: updated.name,
+      dob: updated.dob,
+      age: updated.age ? parseInt(updated.age, 10) : null,
+      gender: updated.gender,
+      blood_group: updated.bloodGroup,
+      phone_number: updated.phone,
+      preferred_language: updated.language,
+      location: updated.location,
+      health_id: updated.healthId,
+    });
+
+    showToast(lang === 'en' ? 'Profile details saved successfully!' : 'சுயவிவர தகவல்கள் சேமிக்கப்பட்டன!');
+  };
+
+  // Export User Health Record JSON (NDHM Compliant)
   const handleDownloadData = () => {
     const dataSummary = {
       patient: profileData,
@@ -220,20 +361,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       conditions,
       medicines,
       vaccinations,
-      healthHistory: [
-        { date: '24 Sep 2026', title: 'Doctor consultation', detail: 'Fever & headache' },
-        { date: '12 Aug 2026', title: 'Prescription scanned', detail: 'Budesonide inhaler' },
-        { date: '03 Jun 2026', title: 'Vaccination record', detail: 'Annual Influenza booster' },
-      ],
+      healthHistory,
       exportedAt: new Date().toISOString(),
       standard: 'National Digital Health Mission (NDHM) & ABHA Compliant',
     };
 
+    const patientSlug = (profileData.name || 'Patient').replace(/[^a-zA-Z0-9]/g, '_');
     const blob = new Blob([JSON.stringify(dataSummary, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `HealthGrid_Murugan_S_Medical_Summary.json`;
+    link.download = `HealthGrid_${patientSlug}_Medical_Summary.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -242,8 +380,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     showToast(lang === 'en' ? 'Medical health summary exported successfully!' : 'மருத்துவ ஏடு வெற்றிகரமாக பதிவிறக்கம் செய்யப்பட்டது!');
   };
 
+  const userInitial = profileData.name ? profileData.name.trim().charAt(0).toUpperCase() : 'U';
+
   return (
-    <div className="min-h-screen bg-[#F6F8FA] text-slate-800 font-sans selection:bg-teal-500 selection:text-white">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans selection:bg-teal-500 selection:text-white">
       
       {/* Toast Notification */}
       {toastMessage && (
@@ -253,9 +393,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* TOP GLOBAL NAVBAR WITH ACTIVE PROFILE PILL */}
-      {/* ========================================================= */}
+      {/* Top Header Navbar */}
       <header className="bg-white border-b border-slate-200/90 sticky top-0 z-40 px-4 sm:px-8 py-3 shadow-2xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
@@ -294,12 +432,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           <div className="flex items-center gap-2 sm:gap-3">
             <div
               className="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-teal-50 text-slate-800 border border-teal-300 shadow-2xs text-xs font-semibold cursor-default"
-              title="Current Profile View"
+              title="Current Profile"
             >
               <div className="w-6 h-6 rounded-full bg-[#D0F0EC] text-[#00695C] flex items-center justify-center font-bold text-xs ring-1 ring-teal-500/30">
-                {profileData.name ? profileData.name.charAt(0).toUpperCase() : 'U'}
+                {userInitial}
               </div>
-              <span className="font-bold text-teal-950 truncate max-w-[120px] sm:max-w-none">{profileData.name}</span>
+              <span className="font-bold text-teal-950 truncate max-w-[120px] sm:max-w-none">
+                {profileData.name || (lang === 'en' ? 'Citizen' : 'பயனர்')}
+              </span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
             </div>
 
@@ -320,107 +460,176 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
       </header>
 
-      {/* ========================================================= */}
-      {/* MAIN PROFILE BODY (Matching Profile page ref.png) */}
-      {/* ========================================================= */}
+      {/* Main Profile Body */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         
         {/* Page Title Section */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            {lang === 'en' ? 'My Profile' : 'என் சுயவிவரம்'}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
-            {lang === 'en'
-              ? 'Manage your personal information, health records, and preferences.'
-              : 'உங்கள் தனிப்பட்ட தகவல்கள், மருத்துவ ஏடுகள் மற்றும் விருப்பங்களை நிர்வகிக்கவும்.'}
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              {lang === 'en' ? 'My Health Profile' : 'என் மருத்துவ சுயவிவரம்'}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+              {lang === 'en'
+                ? 'Manage your personal health data, emergency contacts, and active prescriptions.'
+                : 'உங்கள் மருத்துவத் தரவுகள், அவசரத் தொடர்புகள் மற்றும் மருந்துகளை நிர்வகிக்கவும்.'}
+            </p>
+          </div>
+
+          <button
+            onClick={handleDownloadData}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-teal-50 text-teal-800 border border-teal-200 font-bold text-xs shadow-2xs transition-all w-fit"
+          >
+            <Download className="w-3.5 h-3.5 text-teal-600" />
+            <span>{lang === 'en' ? 'Export Health Vault (JSON)' : 'மருத்துவ ஏடு பதிவிறக்கம்'}</span>
+          </button>
         </div>
 
-        {/* ========================================================= */}
-        {/* TOP PROFILE BANNER CARD */}
-        {/* ========================================================= */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs relative">
+        {/* Top Profile Banner Card */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs relative">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
             
             {/* Left: Avatar & Info */}
             <div className="flex items-center gap-4 sm:gap-5">
-              {/* Teal Avatar Circle with Letter M */}
-              <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-[#D0F0EC] text-[#00695C] flex items-center justify-center font-bold text-2xl sm:text-3xl shadow-xs flex-shrink-0">
-                M
+              <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-br from-[#00A896] to-[#00695C] text-white flex items-center justify-center font-bold text-2xl sm:text-3xl shadow-sm flex-shrink-0">
+                {userInitial}
               </div>
 
               <div className="space-y-1">
                 <div className="flex items-center gap-2.5">
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{profileData.name}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+                    {profileData.name || (lang === 'en' ? 'Name Not Set' : 'பெயர் குறிப்பிடப்படவில்லை')}
+                  </h2>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E6F7F2] text-[#00875A] text-xs font-semibold">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#00875A]" />
-                    <span>Verified</span>
+                    <span>{profileData.healthId ? 'Verified' : 'Active'}</span>
                   </span>
                 </div>
 
                 <div className="text-xs text-slate-500 font-medium flex flex-wrap items-center gap-2">
-                  <span>{profileData.age} years</span>
-                  <span>|</span>
-                  <span>{profileData.gender}</span>
-                  <span>|</span>
-                  <span>{profileData.location}</span>
+                  <span>{profileData.age ? `${profileData.age} yrs` : (lang === 'en' ? 'Age: --' : 'வயது: --')}</span>
+                  <span>•</span>
+                  <span>{profileData.gender || (lang === 'en' ? 'Gender: --' : 'பாலினம்: --')}</span>
+                  <span>•</span>
+                  <span>{profileData.bloodGroup ? `Blood: ${profileData.bloodGroup}` : (lang === 'en' ? 'Blood: --' : 'இரத்த வகை: --')}</span>
+                  <span>•</span>
+                  <span>{profileData.location || (lang === 'en' ? 'Location: Not Set' : 'இருப்பிடம் இல்லை')}</span>
                 </div>
 
-                <div className="text-xs text-slate-400 font-medium">
-                  HealthGrid ID: <span className="font-semibold text-slate-600">{profileData.healthId}</span>
+                <div className="text-xs text-slate-400 font-medium flex items-center gap-2">
+                  <span>HealthGrid ID:</span>
+                  <span className="font-mono font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                    {profileData.healthId || 'HG-NEW'}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Right: Edit Profile Button */}
+            {/* Right: Edit Demographics Button */}
             <button
               onClick={() => toggleDropdown('edit-profile')}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-teal-600/40 text-teal-800 hover:bg-teal-50/70 text-xs font-semibold transition-all shadow-2xs"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-all shadow-2xs"
             >
               <Edit2 className="w-3.5 h-3.5 text-teal-700" />
-              <span>{lang === 'en' ? 'Edit Profile' : 'சுயவிவரம் திருத்து'}</span>
+              <span>{lang === 'en' ? 'Edit Demographics' : 'சுயவிவரம் திருத்து'}</span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${openDropdown === 'edit-profile' ? 'rotate-180' : ''}`} />
             </button>
           </div>
 
-          {/* Individual Dropdown: Edit Profile Dropdown */}
+          {/* Edit Demographics Dropdown Drawer */}
           {openDropdown === 'edit-profile' && (
             <div className="mt-5 pt-4 border-t border-slate-100 animate-in fade-in duration-150">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
-                <div className="font-bold text-xs text-slate-900">
-                  {lang === 'en' ? 'Quick Profile Demographics' : 'சுயவிவர திருத்தம்'}
+              <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200/80 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-900 uppercase tracking-wider">
+                    {lang === 'en' ? 'Edit Personal Demographics' : 'சுயவிவர விவரங்கள் திருத்தம்'}
+                  </span>
+                  <button onClick={() => setOpenDropdown(null)} className="text-slate-400 hover:text-slate-600">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Full Name</label>
+                    <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Full Legal Name</label>
                     <input
                       type="text"
+                      placeholder="e.g. Anand Kumar"
                       value={editProfileForm.name}
                       onChange={(e) => setEditProfileForm({ ...editProfileForm, name: e.target.value })}
                       className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-teal-600"
                     />
                   </div>
+
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Age</label>
+                    <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Date of Birth</label>
                     <input
                       type="text"
+                      placeholder="e.g. 14 Aug 1995"
+                      value={editProfileForm.dob}
+                      onChange={(e) => setEditProfileForm({ ...editProfileForm, dob: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-teal-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Age (Years)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 29"
                       value={editProfileForm.age}
                       onChange={(e) => setEditProfileForm({ ...editProfileForm, age: e.target.value })}
                       className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-teal-600"
                     />
                   </div>
+
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Location</label>
+                    <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Gender</label>
+                    <select
+                      value={editProfileForm.gender}
+                      onChange={(e) => setEditProfileForm({ ...editProfileForm, gender: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-teal-600"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Non-Binary">Non-Binary</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Blood Group</label>
+                    <select
+                      value={editProfileForm.bloodGroup}
+                      onChange={(e) => setEditProfileForm({ ...editProfileForm, bloodGroup: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-teal-600"
+                    >
+                      <option value="">Select Blood Group</option>
+                      <option value="A+">A Positive (A+)</option>
+                      <option value="A-">A Negative (A-)</option>
+                      <option value="B+">B Positive (B+)</option>
+                      <option value="B-">B Negative (B-)</option>
+                      <option value="AB+">AB Positive (AB+)</option>
+                      <option value="AB-">AB Negative (AB-)</option>
+                      <option value="O+">O Positive (O+)</option>
+                      <option value="O-">O Negative (O-)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Location / City</label>
                     <input
                       type="text"
+                      placeholder="e.g. Chennai, Tamil Nadu"
                       value={editProfileForm.location}
                       onChange={(e) => setEditProfileForm({ ...editProfileForm, location: e.target.value })}
                       className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-teal-600"
                     />
                   </div>
                 </div>
-                <div className="flex items-center justify-end gap-2 pt-1">
+
+                <div className="flex items-center justify-end gap-2 pt-2">
                   <button
                     onClick={() => setOpenDropdown(null)}
                     className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700 font-semibold"
@@ -428,19 +637,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                     Cancel
                   </button>
                   <button
-                    onClick={() => {
-                      setProfileData({ ...profileData, ...editProfileForm });
-                      persistPatientToSupabase({
-                        full_name: editProfileForm.name,
-                        age: parseInt(editProfileForm.age) || 45,
-                        location: editProfileForm.location,
-                      });
-                      setOpenDropdown(null);
-                      showToast('Profile demographics updated successfully!');
-                    }}
-                    className="px-4 py-1.5 text-xs bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-bold shadow-2xs"
+                    onClick={handleSaveProfile}
+                    className="px-5 py-2 text-xs bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-bold shadow-2xs transition-all"
                   >
-                    Save Changes
+                    {lang === 'en' ? 'Save Demographics' : 'சேமிக்கவும்'}
                   </button>
                 </div>
               </div>
@@ -448,15 +648,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           )}
         </div>
 
-        {/* ========================================================= */}
-        {/* ROW 1: PERSONAL INFORMATION & EMERGENCY CONTACT */}
-        {/* ========================================================= */}
+        {/* Row 1: Personal Information & Emergency Contacts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          {/* Card 1: Personal Information */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+          {/* Card 1: Personal Contact & Language Information */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
             <div>
-              {/* Header */}
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-700">
@@ -480,75 +677,100 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <div className="divide-y divide-slate-100 text-xs mt-2">
                 <div className="py-2.5 flex items-center justify-between">
                   <span className="text-slate-500 font-medium">Full Name</span>
-                  <span className="font-semibold text-slate-900">{profileData.name}</span>
+                  <span className="font-semibold text-slate-900">{profileData.name || '—'}</span>
                 </div>
                 <div className="py-2.5 flex items-center justify-between">
                   <span className="text-slate-500 font-medium">Date of Birth</span>
-                  <span className="font-semibold text-slate-900">{profileData.dob} ({profileData.age} years)</span>
+                  <span className="font-semibold text-slate-900">
+                    {profileData.dob ? `${profileData.dob} ${profileData.age ? `(${profileData.age} yrs)` : ''}` : '—'}
+                  </span>
                 </div>
                 <div className="py-2.5 flex items-center justify-between">
                   <span className="text-slate-500 font-medium">Gender</span>
-                  <span className="font-semibold text-slate-900">{profileData.gender}</span>
+                  <span className="font-semibold text-slate-900">{profileData.gender || '—'}</span>
+                </div>
+                <div className="py-2.5 flex items-center justify-between">
+                  <span className="text-slate-500 font-medium">Blood Group</span>
+                  <span className="font-semibold text-teal-800">{profileData.bloodGroup || '—'}</span>
                 </div>
                 <div className="py-2.5 flex items-center justify-between">
                   <span className="text-slate-500 font-medium">Phone Number</span>
-                  <span className="font-semibold text-slate-900">{profileData.phone}</span>
+                  <span className="font-semibold text-slate-900">{profileData.phone || '—'}</span>
                 </div>
                 <div className="py-2.5 flex items-center justify-between">
-                  <span className="text-slate-500 font-medium">Email</span>
-                  <span className="font-semibold text-slate-900">{profileData.email}</span>
+                  <span className="text-slate-500 font-medium">Email Address</span>
+                  <span className="font-semibold text-slate-900 truncate max-w-[200px]">{profileData.email || '—'}</span>
                 </div>
                 <div className="py-2.5 flex items-center justify-between">
                   <span className="text-slate-500 font-medium">Preferred Language</span>
-                  <span className="font-semibold text-slate-900">{profileData.language}</span>
+                  <span className="font-semibold text-slate-900">{profileData.language || '—'}</span>
                 </div>
                 <div className="py-2.5 flex items-center justify-between">
-                  <span className="text-slate-500 font-medium">Location</span>
-                  <span className="font-semibold text-slate-900">{profileData.location}</span>
+                  <span className="text-slate-500 font-medium">Residential Location</span>
+                  <span className="font-semibold text-slate-900">{profileData.location || '—'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Individual Dropdown Editor for Personal Info */}
+            {/* Edit Drawer for Contact Info */}
             {openDropdown === 'personal-info' && (
               <div className="mt-4 pt-3 border-t border-slate-100 animate-in fade-in duration-150">
-                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5 text-xs">
-                  <div className="font-bold text-slate-900 text-[11px]">Edit Contact Information</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3 text-xs">
+                  <div className="font-bold text-slate-900 text-xs">Edit Contact & Preferences</div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
-                      <label className="text-[10px] text-slate-500 font-semibold">Phone</label>
+                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Phone Number</label>
                       <input
                         type="text"
+                        placeholder="+91..."
                         value={editProfileForm.phone}
                         onChange={(e) => setEditProfileForm({ ...editProfileForm, phone: e.target.value })}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs"
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-500 font-semibold">Email</label>
+                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Email</label>
                       <input
                         type="text"
+                        placeholder="yourname@gmail.com"
                         value={editProfileForm.email}
                         onChange={(e) => setEditProfileForm({ ...editProfileForm, email: e.target.value })}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs"
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Preferred Language</label>
+                      <select
+                        value={editProfileForm.language}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, language: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
+                      >
+                        <option value="தமிழ் (Tamil)">தமிழ் (Tamil)</option>
+                        <option value="English">English</option>
+                        <option value="हिंदी (Hindi)">हिंदी (Hindi)</option>
+                        <option value="తెలుగు (Telugu)">తెలుగు (Telugu)</option>
+                        <option value="മലയാളം (Malayalam)">മലയാളം (Malayalam)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Health ID</label>
+                      <input
+                        type="text"
+                        value={editProfileForm.healthId}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, healthId: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none font-mono"
                       />
                     </div>
                   </div>
+
                   <div className="flex justify-end gap-2 pt-1">
-                    <button onClick={() => setOpenDropdown(null)} className="px-2.5 py-1 text-slate-500 text-xs font-semibold">Cancel</button>
+                    <button onClick={() => setOpenDropdown(null)} className="px-3 py-1.5 text-slate-500 text-xs font-semibold">Cancel</button>
                     <button
-                      onClick={() => {
-                        setProfileData({ ...profileData, ...editProfileForm });
-                        persistPatientToSupabase({
-                          phone_number: editProfileForm.phone,
-                          email: editProfileForm.email,
-                        });
-                        setOpenDropdown(null);
-                        showToast('Personal information updated!');
-                      }}
-                      className="px-3.5 py-1 bg-teal-700 text-white rounded-lg font-bold text-xs shadow-2xs"
+                      onClick={handleSaveProfile}
+                      className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-bold text-xs shadow-2xs"
                     >
-                      Save
+                      Save Changes
                     </button>
                   </div>
                 </div>
@@ -556,13 +778,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             )}
           </div>
 
-          {/* Card 2: Emergency Contact */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+          {/* Card 2: Emergency Contacts */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
             <div className="space-y-4">
-              {/* Header */}
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-700">
+                  <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600">
                     <Phone className="w-4 h-4" />
                   </div>
                   <div>
@@ -570,7 +791,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       {lang === 'en' ? 'Emergency Contacts' : 'அவசர தொடர்புகள்'}
                     </h3>
                     <div className="text-[11px] text-slate-500 font-medium">
-                      {emergencyContacts.filter(c => c.isActive).length} {lang === 'en' ? 'active for 108 SOS' : '108 அவசரத்திற்கு தயார்'}
+                      {emergencyContacts.filter(c => c.isActive).length} {lang === 'en' ? 'ready for 108 SOS dispatch' : '108 அவசரத்திற்கு தயார்'}
                     </div>
                   </div>
                 </div>
@@ -578,10 +799,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <button
                   type="button"
                   onClick={() => toggleDropdown('emergency-add')}
-                  className="flex items-center gap-1 text-teal-700 hover:text-teal-800 text-xs font-semibold px-2 py-1 rounded-lg hover:bg-teal-50 transition-colors"
+                  className="flex items-center gap-1 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold px-3 py-1.5 rounded-xl border border-teal-200 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>{lang === 'en' ? 'Add' : 'சேர்'}</span>
+                  <span>{lang === 'en' ? 'Add Contact' : 'தொடர்பு சேர்'}</span>
                 </button>
               </div>
 
@@ -589,28 +810,27 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               {isLoadingProfile ? (
                 <div className="space-y-3 pt-1">
                   <EmergencyContactSkeleton />
-                  <EmergencyContactSkeleton />
                 </div>
               ) : emergencyContacts.length === 0 ? (
-                <div className="p-4 text-center rounded-2xl bg-slate-50/70 border border-dashed border-slate-200 space-y-2">
-                  <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+                <div className="p-6 text-center rounded-2xl bg-slate-50/70 border border-dashed border-slate-200 space-y-2.5">
+                  <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto">
                     <Phone className="w-4 h-4" />
                   </div>
                   <div className="text-xs font-bold text-slate-800">
-                    {lang === 'en' ? 'No Emergency Contact Added' : 'அவசர தொடர்பு எதுவும் சேர்க்கப்படவில்லை'}
+                    {lang === 'en' ? 'No Emergency Contacts Added' : 'அவசர தொடர்பு எதுவும் சேர்க்கப்படவில்லை'}
                   </div>
                   <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
                     {lang === 'en'
-                      ? 'Add family members or caretakers so they are instantly alerted during a medical emergency.'
+                      ? 'Add family members or caretakers so they receive automated emergency SMS & GPS dispatch during a medical crisis.'
                       : 'அவசர மருத்துவ காலத்தில் தொடர்பு கொள்ள உங்கள் குடும்ப உறுப்பினர்களை சேர்க்கவும்.'}
                   </p>
                   <button
                     type="button"
                     onClick={() => toggleDropdown('emergency-add')}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>{lang === 'en' ? 'Add Primary Contact' : 'முதன்மை தொடர்பு சேர்க்க'}</span>
+                    <span>{lang === 'en' ? 'Add Primary Emergency Contact' : 'முதன்மை தொடர்பு சேர்க்க'}</span>
                   </button>
                 </div>
               ) : (
@@ -621,7 +841,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                     return (
                       <div
                         key={contact.id || index}
-                        className="p-3 rounded-2xl bg-[#FAFBFB] border border-slate-200/80 hover:border-slate-300 transition-all space-y-2.5"
+                        className="p-3.5 rounded-2xl bg-[#FAFBFB] border border-slate-200/80 hover:border-slate-300 transition-all space-y-2.5"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -632,7 +852,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-sm text-slate-900">{contact.name}</span>
                                 {isPrimary && (
-                                  <span className="text-[9px] bg-red-50 text-red-700 px-1.5 py-0.5 rounded-full font-bold border border-red-200">
+                                  <span className="text-[9px] bg-red-50 text-red-700 px-2 py-0.5 rounded-full font-bold border border-red-200">
                                     Primary SOS
                                   </span>
                                 )}
@@ -663,7 +883,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                               onClick={() => {
                                 const updated = emergencyContacts.filter((c) => c.id !== contact.id);
                                 persistEmergencyContacts(updated);
-                                showToast('Emergency contact removed');
+                                showToast(lang === 'en' ? 'Contact removed' : 'தொடர்பு நீக்கப்பட்டது');
                               }}
                               className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                               title="Delete"
@@ -711,56 +931,44 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   })}
                 </div>
               )}
-
-              {/* + Add Another Contact Button */}
-              {emergencyContacts.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => toggleDropdown('emergency-add')}
-                  className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-teal-400 hover:bg-teal-50/50 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs"
-                >
-                  <Plus className="w-4 h-4 text-teal-700" />
-                  <span>{lang === 'en' ? 'Add Another Contact' : 'கூடுதல் தொடர்பு சேர்க்க'}</span>
-                </button>
-              )}
             </div>
 
-            {/* Individual Dropdown: Edit Emergency Contact */}
+            {/* Edit Emergency Contact Modal / Drawer */}
             {openDropdown === 'emergency-edit' && (
               <div className="mt-4 pt-3 border-t border-slate-100 animate-in fade-in duration-150">
-                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
-                  <div className="font-bold text-slate-900 text-[11px]">Edit Emergency Contact</div>
-                  <div className="grid grid-cols-3 gap-2">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3 text-xs">
+                  <div className="font-bold text-slate-900 text-xs">Edit Emergency Contact</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[10px] text-slate-500 font-semibold">Name</label>
+                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Name</label>
                       <input
                         type="text"
                         value={editEmergencyForm.name}
                         onChange={(e) => setEditEmergencyForm({ ...editEmergencyForm, name: e.target.value })}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs"
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-500 font-semibold">Relation</label>
+                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Relation</label>
                       <input
                         type="text"
                         value={editEmergencyForm.relation}
                         onChange={(e) => setEditEmergencyForm({ ...editEmergencyForm, relation: e.target.value })}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs"
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-500 font-semibold">Phone</label>
+                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Phone</label>
                       <input
                         type="text"
                         value={editEmergencyForm.phone}
                         onChange={(e) => setEditEmergencyForm({ ...editEmergencyForm, phone: e.target.value })}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs"
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
                       />
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 pt-1">
-                    <button onClick={() => setOpenDropdown(null)} className="px-2 py-1 text-slate-500 text-xs">Cancel</button>
+                    <button onClick={() => setOpenDropdown(null)} className="px-3 py-1 text-slate-500 text-xs font-semibold">Cancel</button>
                     <button
                       onClick={() => {
                         if (editEmergencyForm.name.trim()) {
@@ -772,49 +980,58 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           showToast('Emergency contact updated!');
                         }
                       }}
-                      className="px-3 py-1 bg-teal-700 text-white rounded-lg font-bold text-xs"
+                      className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-bold text-xs"
                     >
-                      Save
+                      Save Contact
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Individual Dropdown: Add New Emergency Contact */}
+            {/* Add New Emergency Contact Drawer */}
             {openDropdown === 'emergency-add' && (
               <div className="mt-4 pt-3 border-t border-slate-100 animate-in fade-in duration-150">
-                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
-                  <div className="font-bold text-slate-900 text-[11px]">New Emergency Contact</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      placeholder="Name (e.g. Anand S.)"
-                      value={newContactForm.name}
-                      onChange={(e) => setNewContactForm({ ...newContactForm, name: e.target.value })}
-                      className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Relation (e.g. Brother)"
-                      value={newContactForm.relation}
-                      onChange={(e) => setNewContactForm({ ...newContactForm, relation: e.target.value })}
-                      className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Phone (+91...)"
-                      value={newContactForm.phone}
-                      onChange={(e) => setNewContactForm({ ...newContactForm, phone: e.target.value })}
-                      className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs"
-                    />
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3 text-xs">
+                  <div className="font-bold text-slate-900 text-xs">Add New Emergency Contact</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Ramesh K."
+                        value={newContactForm.name}
+                        onChange={(e) => setNewContactForm({ ...newContactForm, name: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Relation</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Brother, Mother"
+                        value={newContactForm.relation}
+                        onChange={(e) => setNewContactForm({ ...newContactForm, relation: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Phone (+91...)</label>
+                      <input
+                        type="text"
+                        placeholder="+91 98400..."
+                        value={newContactForm.phone}
+                        onChange={(e) => setNewContactForm({ ...newContactForm, phone: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
+                      />
+                    </div>
                   </div>
                   <div className="flex justify-end gap-2 pt-1">
-                    <button onClick={() => setOpenDropdown(null)} className="px-2 py-1 text-slate-500 text-xs">Cancel</button>
+                    <button onClick={() => setOpenDropdown(null)} className="px-3 py-1 text-slate-500 text-xs font-semibold">Cancel</button>
                     <button
                       onClick={() => {
                         if (newContactForm.name.trim()) {
-                          const newContact = {
+                          const newContact: EmergencyContactItem = {
                             id: `ec-${Date.now()}`,
                             name: newContactForm.name.trim(),
                             relation: newContactForm.relation.trim() || 'Family',
@@ -824,12 +1041,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           };
                           const updated = [...emergencyContacts, newContact];
                           persistEmergencyContacts(updated);
-                          setNewContactForm({ name: '', relation: '', phone: '' });
+                          setNewContactForm({ name: '', relation: 'Family', phone: '' });
                           setOpenDropdown(null);
-                          showToast(`Contact ${newContact.name} saved successfully!`);
+                          showToast(`Contact ${newContact.name} added!`);
                         }
                       }}
-                      className="px-3 py-1 bg-teal-700 text-white rounded-lg font-bold text-xs"
+                      className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-bold text-xs"
                     >
                       Add Contact
                     </button>
@@ -841,28 +1058,24 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
         </div>
 
-        {/* ========================================================= */}
-        {/* ROW 2: HEALTH INFORMATION CONTAINER (4 TILES) */}
-        {/* ========================================================= */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-4">
-          {/* Header */}
+        {/* Row 2: Health Information Container (4 Tiles - Allergies, Conditions, Medicines, Vaccinations) */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2.5 pb-2">
             <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-700">
               <Heart className="w-4 h-4 fill-teal-700" />
             </div>
             <div>
               <h3 className="font-bold text-base text-slate-900 leading-tight">
-                {lang === 'en' ? 'Health Information' : 'சுகாதார தகவல்'}
+                {lang === 'en' ? 'Health Information & Medical Vault' : 'சுகாதார தகவல் & மருத்துவ பெட்டகம்'}
               </h3>
               <p className="text-xs text-slate-500">
                 {lang === 'en'
-                  ? 'Keep your health information up to date for better and safer guidance.'
+                  ? 'All entries are private, encrypted, and accessible only to you and AI triage during emergencies.'
                   : 'பாதுகாப்பான மற்றும் துல்லியமான ஆலோசனைகளுக்கு உங்கள் விவரங்களை புதுப்பித்து வைக்கவும்.'}
               </p>
             </div>
           </div>
 
-          {/* 4 Interactive Health Information Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
             
             {/* Tile 1: Allergies */}
@@ -874,33 +1087,38 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       <AlertCircle className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="font-bold text-xs text-slate-900">Allergies</div>
+                      <div className="font-bold text-xs text-slate-900">Known Allergies</div>
                       <div className="text-[11px] text-slate-500">{allergies.length} recorded</div>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {allergies.map((allergy, i) => (
-                    <span
-                      key={i}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold bg-[#FEECEC] text-[#D32F2F] px-2.5 py-0.5 rounded-full"
-                    >
-                      <span>{allergy}</span>
-                      <button
-                        onClick={() => {
-                          const updated = allergies.filter((_, idx) => idx !== i);
-                          setAllergies(updated);
-                          persistPatientToSupabase({ known_allergies: updated });
-                        }}
-                        className="hover:text-red-900"
+                {allergies.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic mt-3">
+                    {lang === 'en' ? 'No allergies recorded yet.' : 'ஒவ்வாமை எதுவும் பதிவு செய்யப்படவில்லை.'}
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {allergies.map((allergy, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold bg-[#FEECEC] text-[#D32F2F] px-2.5 py-0.5 rounded-full"
                       >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
+                        <span>{allergy}</span>
+                        <button
+                          onClick={() => {
+                            const updated = allergies.filter((_, idx) => idx !== i);
+                            setAllergies(updated);
+                            persistPatientToSupabase({ known_allergies: updated });
+                          }}
+                          className="hover:text-red-900"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -910,17 +1128,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   className="text-xs text-teal-700 hover:text-teal-800 font-bold flex items-center gap-1 mt-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Allergy</span>
+                  <span>{lang === 'en' ? 'Add Allergy' : 'ஒவ்வாமை சேர்'}</span>
                 </button>
 
                 {openDropdown === 'add-allergy' && (
-                  <div className="mt-2 p-2 bg-white rounded-xl border border-slate-200 space-y-2 text-xs">
+                  <div className="mt-2 p-2.5 bg-white rounded-xl border border-slate-200 space-y-2 text-xs">
                     <input
                       type="text"
-                      placeholder="e.g. Sulfa drugs, Peanuts"
+                      placeholder="e.g. Penicillin, Peanuts, NSAIDs"
                       value={newAllergyInput}
                       onChange={(e) => setNewAllergyInput(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs outline-none"
                     />
                     <div className="flex justify-end gap-1">
                       <button onClick={() => setOpenDropdown(null)} className="px-2 py-0.5 text-slate-500">Cancel</button>
@@ -935,7 +1153,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             showToast('Allergy added to medical vault!');
                           }
                         }}
-                        className="px-2.5 py-0.5 bg-teal-700 text-white rounded font-bold"
+                        className="px-3 py-1 bg-teal-700 text-white rounded-lg font-bold"
                       >
                         Add
                       </button>
@@ -954,33 +1172,38 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       <Activity className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="font-bold text-xs text-slate-900">Health Conditions</div>
+                      <div className="font-bold text-xs text-slate-900">Chronic Conditions</div>
                       <div className="text-[11px] text-slate-500">{conditions.length} recorded</div>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {conditions.map((cond, i) => (
-                    <span
-                      key={i}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold bg-[#EAF2FE] text-[#1976D2] px-2.5 py-0.5 rounded-full"
-                    >
-                      <span>{cond}</span>
-                      <button
-                        onClick={() => {
-                          const updated = conditions.filter((_, idx) => idx !== i);
-                          setConditions(updated);
-                          persistPatientToSupabase({ chronic_conditions: updated });
-                        }}
-                        className="hover:text-blue-900"
+                {conditions.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic mt-3">
+                    {lang === 'en' ? 'No chronic conditions recorded.' : 'நோய்கள் எதுவும் பதிவு செய்யப்படவில்லை.'}
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {conditions.map((cond, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold bg-[#EAF2FE] text-[#1976D2] px-2.5 py-0.5 rounded-full"
                       >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
+                        <span>{cond}</span>
+                        <button
+                          onClick={() => {
+                            const updated = conditions.filter((_, idx) => idx !== i);
+                            setConditions(updated);
+                            persistPatientToSupabase({ chronic_conditions: updated });
+                          }}
+                          className="hover:text-blue-900"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -990,17 +1213,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   className="text-xs text-teal-700 hover:text-teal-800 font-bold flex items-center gap-1 mt-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Condition</span>
+                  <span>{lang === 'en' ? 'Add Condition' : 'நிலை சேர்'}</span>
                 </button>
 
                 {openDropdown === 'add-condition' && (
-                  <div className="mt-2 p-2 bg-white rounded-xl border border-slate-200 space-y-2 text-xs">
+                  <div className="mt-2 p-2.5 bg-white rounded-xl border border-slate-200 space-y-2 text-xs">
                     <input
                       type="text"
-                      placeholder="e.g. Type-2 Diabetes"
+                      placeholder="e.g. Type-2 Diabetes, Asthma"
                       value={newConditionInput}
                       onChange={(e) => setNewConditionInput(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs outline-none"
                     />
                     <div className="flex justify-end gap-1">
                       <button onClick={() => setOpenDropdown(null)} className="px-2 py-0.5 text-slate-500">Cancel</button>
@@ -1015,7 +1238,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             showToast('Condition recorded in profile!');
                           }
                         }}
-                        className="px-2.5 py-0.5 bg-teal-700 text-white rounded font-bold"
+                        className="px-3 py-1 bg-teal-700 text-white rounded-lg font-bold"
                       >
                         Add
                       </button>
@@ -1035,64 +1258,86 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                     </div>
                     <div>
                       <div className="font-bold text-xs text-slate-900">Current Medicines</div>
-                      <div className="text-[11px] text-slate-500">{medicines.length} active medicines</div>
+                      <div className="text-[11px] text-slate-500">{medicines.length} active</div>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
                 </div>
 
-                <div className="space-y-1 mt-3 text-xs text-slate-700 font-medium">
-                  {medicines.map((med, i) => (
-                    <div key={i} className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
-                      <span className="truncate">{med.name}</span>
-                    </div>
-                  ))}
-                </div>
+                {medicines.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic mt-3">
+                    {lang === 'en' ? 'No active medicines recorded.' : 'தற்போது உட்கொள்ளும் மருந்துகள் இல்லை.'}
+                  </p>
+                ) : (
+                  <div className="space-y-1.5 mt-3 text-xs text-slate-700 font-medium max-h-32 overflow-y-auto">
+                    {medicines.map((med) => (
+                      <div key={med.id} className="flex items-center justify-between p-1.5 bg-white rounded-lg border border-slate-100">
+                        <div className="truncate pr-1">
+                          <span className="font-semibold text-slate-900 block truncate">{med.name}</span>
+                          <span className="text-[10px] text-slate-500">{med.frequency || 'Regular'}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const updated = medicines.filter(m => m.id !== med.id);
+                            persistMedicines(updated);
+                          }}
+                          className="text-slate-400 hover:text-rose-600 p-0.5"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
                 <button
                   type="button"
-                  onClick={() => toggleDropdown('medicines-view')}
+                  onClick={() => toggleDropdown('add-medicine')}
                   className="text-xs text-teal-700 hover:text-teal-800 font-bold flex items-center gap-1 mt-1"
                 >
-                  <span>View All</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{lang === 'en' ? 'Add Medicine' : 'மருந்து சேர்'}</span>
                 </button>
 
-                {openDropdown === 'medicines-view' && (
-                  <div className="mt-2 p-2.5 bg-white rounded-xl border border-slate-200 space-y-2 text-[11px]">
-                    <div className="font-bold text-slate-800 text-xs">Jan Aushadhi Prescriptions:</div>
-                    {medicines.map((m, idx) => (
-                      <div key={idx} className="p-1.5 bg-slate-50 rounded-lg">
-                        <div className="font-semibold text-slate-900">{m.name}</div>
-                        <div className="text-slate-500">{m.generic} • {m.frequency}</div>
-                        <div className="text-emerald-700 font-bold">Generic Savings: {m.saving}</div>
-                      </div>
-                    ))}
-                    <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5">
-                      <input
-                        type="text"
-                        placeholder="Add medicine..."
-                        value={newMedicineInput}
-                        onChange={(e) => setNewMedicineInput(e.target.value)}
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none"
-                      />
+                {openDropdown === 'add-medicine' && (
+                  <div className="mt-2 p-3 bg-white rounded-xl border border-slate-200 space-y-2 text-xs">
+                    <input
+                      type="text"
+                      placeholder="Medicine Brand (e.g. Paracetamol 500mg)"
+                      value={newMedicineForm.name}
+                      onChange={(e) => setNewMedicineForm({ ...newMedicineForm, name: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs outline-none"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Frequency (e.g. Twice daily after food)"
+                      value={newMedicineForm.frequency}
+                      onChange={(e) => setNewMedicineForm({ ...newMedicineForm, frequency: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs outline-none"
+                    />
+                    <div className="flex justify-end gap-1 pt-1">
+                      <button onClick={() => setOpenDropdown(null)} className="px-2 py-0.5 text-slate-500">Cancel</button>
                       <button
-                        type="button"
                         onClick={() => {
-                          if (!newMedicineInput.trim()) return;
-                          setMedicines(prev => [
-                            ...prev,
-                            { name: newMedicineInput.trim(), generic: `${newMedicineInput.trim()} Generic`, frequency: 'As advised', saving: '70%' }
-                          ]);
-                          setNewMedicineInput('');
-                          showToast('Medicine added to profile!');
+                          if (newMedicineForm.name.trim()) {
+                            const newMed: MedicineItem = {
+                              id: `med-${Date.now()}`,
+                              name: newMedicineForm.name.trim(),
+                              generic: newMedicineForm.generic || `${newMedicineForm.name.trim()} Generic`,
+                              frequency: newMedicineForm.frequency || 'Once daily',
+                              saving: '60%',
+                            };
+                            const updated = [...medicines, newMed];
+                            persistMedicines(updated);
+                            setNewMedicineForm({ name: '', generic: '', frequency: 'Once daily', saving: '' });
+                            setOpenDropdown(null);
+                            showToast('Medicine added to profile!');
+                          }
                         }}
-                        className="px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold text-xs"
+                        className="px-3 py-1 bg-teal-700 text-white rounded-lg font-bold"
                       >
-                        Add
+                        Save
                       </button>
                     </div>
                   </div>
@@ -1113,19 +1358,33 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       <div className="text-[11px] text-slate-500">{vaccinations.length} recorded</div>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {vaccinations.map((vac, i) => (
-                    <span
-                      key={i}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold bg-[#F3EBFB] text-[#7B1FA2] px-2.5 py-0.5 rounded-full"
-                    >
-                      <span>{vac}</span>
-                    </span>
-                  ))}
-                </div>
+                {vaccinations.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic mt-3">
+                    {lang === 'en' ? 'No vaccinations recorded.' : 'தடுப்பூசிகள் எதுவும் பதிவு செய்யப்படவில்லை.'}
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {vaccinations.map((vac) => (
+                      <span
+                        key={vac.id}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold bg-[#F3EBFB] text-[#7B1FA2] px-2.5 py-0.5 rounded-full"
+                      >
+                        <span>{vac.name} {vac.dose ? `(${vac.dose})` : ''}</span>
+                        <button
+                          onClick={() => {
+                            const updated = vaccinations.filter(v => v.id !== vac.id);
+                            persistVaccinations(updated);
+                          }}
+                          className="hover:text-purple-900"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1135,30 +1394,43 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   className="text-xs text-teal-700 hover:text-teal-800 font-bold flex items-center gap-1 mt-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Vaccination</span>
+                  <span>{lang === 'en' ? 'Add Vaccine' : 'தடுப்பூசி சேர்'}</span>
                 </button>
 
                 {openDropdown === 'add-vaccine' && (
-                  <div className="mt-2 p-2 bg-white rounded-xl border border-slate-200 space-y-2 text-xs">
+                  <div className="mt-2 p-2.5 bg-white rounded-xl border border-slate-200 space-y-2 text-xs">
                     <input
                       type="text"
-                      placeholder="e.g. Hepatitis B, Tetanus"
-                      value={newVaccineInput}
-                      onChange={(e) => setNewVaccineInput(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none"
+                      placeholder="Vaccine Name (e.g. Hepatitis B, Tetanus)"
+                      value={newVaccineForm.name}
+                      onChange={(e) => setNewVaccineForm({ ...newVaccineForm, name: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs outline-none"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Dose (e.g. Booster, 2nd Dose)"
+                      value={newVaccineForm.dose}
+                      onChange={(e) => setNewVaccineForm({ ...newVaccineForm, dose: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs outline-none"
                     />
                     <div className="flex justify-end gap-1">
                       <button onClick={() => setOpenDropdown(null)} className="px-2 py-0.5 text-slate-500">Cancel</button>
                       <button
                         onClick={() => {
-                          if (newVaccineInput.trim()) {
-                            setVaccinations([...vaccinations, newVaccineInput.trim()]);
-                            setNewVaccineInput('');
+                          if (newVaccineForm.name.trim()) {
+                            const newVac: VaccinationItem = {
+                              id: `vac-${Date.now()}`,
+                              name: newVaccineForm.name.trim(),
+                              dose: newVaccineForm.dose.trim(),
+                            };
+                            const updated = [...vaccinations, newVac];
+                            persistVaccinations(updated);
+                            setNewVaccineForm({ name: '', date: '', dose: '1st Dose' });
                             setOpenDropdown(null);
-                            showToast('Vaccination milestone updated!');
+                            showToast('Vaccination recorded!');
                           }
                         }}
-                        className="px-2.5 py-0.5 bg-teal-700 text-white rounded font-bold"
+                        className="px-3 py-1 bg-teal-700 text-white rounded-lg font-bold"
                       >
                         Add
                       </button>
@@ -1171,98 +1443,160 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           </div>
         </div>
 
-        {/* ========================================================= */}
-        {/* ROW 3: THREE COLUMNS (History, AI Assistant, Privacy) */}
-        {/* ========================================================= */}
+        {/* Row 3: Health History, AI Health Assistant & Security */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          {/* Column 1: Health History */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
+          {/* Column 1: Health History (Editable with Add & Delete) */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
             <div>
-              {/* Header */}
-              <div className="flex items-center justify-between pb-2">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-teal-50 flex items-center justify-center text-teal-700">
                     <Clock className="w-4 h-4" />
                   </div>
-                  <h4 className="font-bold text-sm text-slate-900">Health History</h4>
+                  <h4 className="font-bold text-sm text-slate-900">
+                    {lang === 'en' ? 'Health History' : 'மருத்துவ வரலாறு'}
+                  </h4>
                 </div>
                 <button
-                  onClick={() => showToast('Full clinical consultation records loaded.')}
-                  className="text-xs text-teal-700 hover:text-teal-800 font-semibold flex items-center gap-1"
+                  type="button"
+                  onClick={() => toggleDropdown('history-add')}
+                  className="flex items-center gap-1 text-teal-700 hover:text-teal-800 text-xs font-bold"
                 >
-                  <span>View All</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{lang === 'en' ? 'Add' : 'சேர்'}</span>
                 </button>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Your recent consultations, prescriptions and health events.
+
+              <p className="text-[11px] text-slate-400 mt-1">
+                {lang === 'en'
+                  ? 'Your clinical consultations, test reports, and prescription records.'
+                  : 'மருத்துவ ஆலோசனைகள் மற்றும் பரிசோதனை குறிப்புகள்.'}
               </p>
 
-              {/* Timeline List */}
+              {/* Add Health Record Form */}
+              {openDropdown === 'history-add' && (
+                <div className="mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                  <div className="font-bold text-slate-900 text-xs">Log Clinical Event</div>
+                  <input
+                    type="date"
+                    value={newHistoryForm.date}
+                    onChange={(e) => setNewHistoryForm({ ...newHistoryForm, date: e.target.value })}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Event Title (e.g. Doctor consultation, Blood test)"
+                    value={newHistoryForm.title}
+                    onChange={(e) => setNewHistoryForm({ ...newHistoryForm, title: e.target.value })}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
+                  />
+                  <textarea
+                    placeholder="Clinical details (e.g. Fever & headache resolved with paracetamol)"
+                    value={newHistoryForm.detail}
+                    onChange={(e) => setNewHistoryForm({ ...newHistoryForm, detail: e.target.value })}
+                    rows={2}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none resize-none"
+                  />
+                  <div className="flex justify-end gap-1.5 pt-1">
+                    <button onClick={() => setOpenDropdown(null)} className="px-2.5 py-1 text-slate-500 text-xs">Cancel</button>
+                    <button
+                      onClick={() => {
+                        if (newHistoryForm.title.trim()) {
+                          const newRecord: HealthHistoryItem = {
+                            id: `hh-${Date.now()}`,
+                            date: newHistoryForm.date,
+                            title: newHistoryForm.title.trim(),
+                            detail: newHistoryForm.detail.trim() || 'Record logged',
+                          };
+                          const updated = [newRecord, ...healthHistory];
+                          persistHealthHistory(updated);
+                          setNewHistoryForm({
+                            date: new Date().toISOString().split('T')[0],
+                            title: 'Doctor consultation',
+                            detail: '',
+                            category: 'consultation',
+                          });
+                          setOpenDropdown(null);
+                          showToast('Health event recorded successfully!');
+                        }
+                      }}
+                      className="px-3.5 py-1 bg-teal-700 text-white rounded-lg font-bold text-xs"
+                    >
+                      Save Event
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Timeline List or Empty State */}
               {isLoadingProfile ? (
-                <div className="space-y-3 pt-4">
+                <div className="space-y-3 pt-3">
                   <HealthRecordSkeleton />
-                  <HealthRecordSkeleton />
-                  <HealthRecordSkeleton />
+                </div>
+              ) : healthHistory.length === 0 ? (
+                <div className="p-5 text-center rounded-2xl bg-slate-50/70 border border-dashed border-slate-200 mt-3 space-y-2">
+                  <Clock className="w-6 h-6 text-slate-400 mx-auto" />
+                  <div className="text-xs font-bold text-slate-700">
+                    {lang === 'en' ? 'No Clinical History Logged' : 'மருத்துவ வரலாறு எதுவும் இல்லை'}
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    {lang === 'en'
+                      ? 'Consultations with AI Doctor and scanned prescriptions will automatically appear here.'
+                      : 'AI மருத்துவர் ஆலோசனைகள் மற்றும் மருந்துக் குறிப்புகள் இங்கு தோன்றும்.'}
+                  </p>
+                  <button
+                    onClick={() => toggleDropdown('history-add')}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-teal-50 hover:bg-teal-100 text-teal-800 rounded-lg text-xs font-bold border border-teal-200"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>{lang === 'en' ? 'Add Record' : 'பதிவு சேர்'}</span>
+                  </button>
                 </div>
               ) : (
-                <div className="space-y-4 pt-4 text-xs">
-                  {/* Item 1 */}
-                  <div className="flex items-start gap-3 relative">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1 flex-shrink-0 ring-4 ring-emerald-50"></div>
-                  <div>
-                    <div className="text-[11px] text-slate-400">24 Sep 2026</div>
-                    <div className="font-bold text-slate-900">Doctor consultation</div>
-                    <div className="text-slate-500 text-[11px]">Fever &amp; headache</div>
-                  </div>
+                <div className="space-y-3 pt-3 text-xs max-h-80 overflow-y-auto pr-1">
+                  {healthHistory.map((item) => (
+                    <div key={item.id} className="p-3 bg-slate-50 hover:bg-teal-50/40 rounded-2xl border border-slate-200/80 transition-all flex items-start justify-between gap-2">
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] text-slate-400 font-mono">{item.date}</div>
+                        <div className="font-bold text-slate-900 text-xs">{item.title}</div>
+                        <div className="text-slate-500 text-[11px]">{item.detail}</div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const updated = healthHistory.filter(h => h.id !== item.id);
+                          persistHealthHistory(updated);
+                        }}
+                        className="text-slate-400 hover:text-rose-600 p-1"
+                        title="Delete event"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-
-                {/* Item 2 */}
-                <div className="flex items-start gap-3 relative">
-                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500 mt-1 flex-shrink-0 ring-4 ring-blue-50"></div>
-                  <div>
-                    <div className="text-[11px] text-slate-400">12 Aug 2026</div>
-                    <div className="font-bold text-slate-900">Prescription scanned</div>
-                    <div className="text-slate-500 text-[11px]">Budesonide inhaler</div>
-                  </div>
-                </div>
-
-                {/* Item 3 */}
-                <div className="flex items-start gap-3 relative">
-                  <div className="w-2.5 h-2.5 rounded-full bg-purple-500 mt-1 flex-shrink-0 ring-4 ring-purple-50"></div>
-                  <div>
-                    <div className="text-[11px] text-slate-400">03 Jun 2026</div>
-                    <div className="font-bold text-slate-900">Vaccination record</div>
-                    <div className="text-slate-500 text-[11px]">Annual Influenza booster</div>
-                  </div>
-                </div>
-              </div>
               )}
             </div>
           </div>
 
-          {/* Column 2: AI Health Assistant */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
+          {/* Column 2: AI Health Assistant Permissions */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
             <div className="space-y-3">
-              {/* Header with Cute Robot Mascot */}
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-xl bg-teal-50 border border-teal-200/80 p-0.5 flex items-center justify-center flex-shrink-0">
                   <img src="/docbot_mascot.png" alt="AI DocBot" className="w-full h-full object-contain" />
                 </div>
                 <h4 className="font-bold text-sm text-slate-900 flex items-center gap-1">
                   <span>AI Health Assistant</span>
-                  <span className="text-[10px] text-slate-400 cursor-pointer" title="Privacy-first localized health AI">ℹ️</span>
                 </h4>
               </div>
 
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Use your health information to get more personalized and accurate answers.
+                Empower your AI Family Doctor to cross-reference drug allergies, generic medicine costs, and emergency protocols.
               </p>
 
-              {/* Setting Toggle */}
               <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs font-medium">
-                <span className="text-slate-800 pr-2">Health information available to AI</span>
+                <span className="text-slate-800 pr-2">Health Data Access for AI</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -1281,22 +1615,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 </button>
               </div>
 
-              {/* Manage Permissions Button */}
               <button
                 type="button"
                 onClick={() => toggleDropdown('ai-permissions')}
                 className="w-full py-2 px-3 rounded-xl border border-teal-600/40 text-teal-800 hover:bg-teal-50 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
               >
-                <span>Manage what AI can use</span>
+                <span>Manage what AI can access</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
 
-              {/* Individual Dropdown: AI Permissions Checklist */}
               {openDropdown === 'ai-permissions' && (
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] space-y-1.5 animate-in fade-in">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] space-y-2 animate-in fade-in">
                   <div className="flex items-center gap-2">
                     <input type="checkbox" defaultChecked className="accent-teal-600" />
-                    <span>Cross-check drug allergies (Brufen blocker)</span>
+                    <span>Check drug allergy contraindications</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="checkbox" defaultChecked className="accent-teal-600" />
@@ -1312,9 +1644,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           </div>
 
           {/* Column 3: Privacy & Security */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
+          <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
             <div className="space-y-3">
-              {/* Header */}
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-teal-50 flex items-center justify-center text-teal-700">
                   <Shield className="w-4 h-4" />
@@ -1323,68 +1654,54 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               </div>
 
               <p className="text-[11px] text-slate-400">
-                Manage your data, permissions and account security.
+                Patient data privacy, AES-256 encryption, and NDHM compliance.
               </p>
 
-              {/* List Items Matching Reference */}
               <div className="divide-y divide-slate-100 text-xs font-medium">
                 <button
                   type="button"
-                  onClick={() => showToast('Two-factor biometric authentication active.')}
-                  className="w-full py-2 flex items-center justify-between text-slate-700 hover:text-teal-700"
+                  onClick={() => showToast('Biometric security and PostgreSQL Row-Level Security active.')}
+                  className="w-full py-2 flex items-center justify-between text-slate-700 hover:text-teal-700 text-left"
                 >
                   <div className="flex items-center gap-2.5">
                     <Lock className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Account Security</span>
+                    <span>Row-Level Security (RLS)</span>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => showToast('Health data stored with AES-256 military encryption.')}
-                  className="w-full py-2 flex items-center justify-between text-slate-700 hover:text-teal-700"
+                  onClick={() => showToast('Stored with AES-256 encryption on dedicated cloud infrastructure.')}
+                  className="w-full py-2 flex items-center justify-between text-slate-700 hover:text-teal-700 text-left"
                 >
                   <div className="flex items-center gap-2.5">
                     <FileText className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Health Data</span>
+                    <span>Health Data Encryption</span>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => showToast('Zero data selling policy verified under NDHM.')}
-                  className="w-full py-2 flex items-center justify-between text-slate-700 hover:text-teal-700"
+                  onClick={() => showToast('Strict zero data selling and limited use policy.')}
+                  className="w-full py-2 flex items-center justify-between text-slate-700 hover:text-teal-700 text-left"
                 >
                   <div className="flex items-center gap-2.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-                    <span>AI Data Permissions</span>
+                    <span>Zero Data Selling Policy</span>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => showToast('Active session: Chrome on Windows 11 (Chennai, TN).')}
-                  className="w-full py-2 flex items-center justify-between text-slate-700 hover:text-teal-700"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Smartphone className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Login &amp; Devices</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                </button>
-
-                {/* Download My Data (Real Action) */}
                 <button
                   type="button"
                   onClick={handleDownloadData}
-                  className="w-full py-2 flex items-center justify-between text-teal-800 hover:text-teal-900 font-semibold"
+                  className="w-full py-2 flex items-center justify-between text-teal-800 hover:text-teal-900 font-bold text-left"
                 >
                   <div className="flex items-center gap-2.5">
                     <Download className="w-3.5 h-3.5 text-teal-600" />
-                    <span>Download My Data</span>
+                    <span>Download Complete Health Vault</span>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-teal-600" />
                 </button>

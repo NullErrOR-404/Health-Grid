@@ -89,14 +89,14 @@ class AuthService {
       const meta = sbUser.user_metadata || {};
       const user: AuthUser = {
         id: sbUser.id,
-        name: profile?.full_name || meta.full_name || meta.name || sbUser.email?.split('@')[0] || 'Citizen User',
+        name: profile?.full_name || meta.full_name || meta.name || sbUser.email?.split('@')[0] || '',
         email: sbUser.email || meta.email || '',
         phone: profile?.phone_number || meta.phone || sbUser.phone || '',
         role: (meta.role as UserRole) || 'PERSONAL',
         avatarUrl: profile?.avatar_url || meta.avatar_url || undefined,
         healthId: profile?.health_id || ('HG-' + sbUser.id.substring(0, 6).toUpperCase()),
-        age: profile?.age || meta.age || 45,
-        bloodGroup: profile?.blood_group || meta.blood_group || 'B Positive',
+        age: profile?.age ?? meta.age ?? undefined,
+        bloodGroup: profile?.blood_group || meta.blood_group || undefined,
         token: sbUser.id,
       };
 
@@ -106,10 +106,13 @@ class AuthService {
       const meta = sbUser.user_metadata || {};
       const fallbackUser: AuthUser = {
         id: sbUser.id,
-        name: meta.full_name || meta.name || sbUser.email?.split('@')[0] || 'User',
+        name: meta.full_name || meta.name || sbUser.email?.split('@')[0] || '',
         email: sbUser.email || '',
+        phone: meta.phone || sbUser.phone || '',
         role: (meta.role as UserRole) || 'PERSONAL',
         healthId: 'HG-' + sbUser.id.substring(0, 6).toUpperCase(),
+        age: meta.age ?? undefined,
+        bloodGroup: meta.blood_group || undefined,
         token: sbUser.id,
       };
       this.saveToStorage(fallbackUser);
@@ -264,8 +267,8 @@ class AuthService {
       name: data.fullName,
       email,
       role: data.role,
-      age: data.age || 45,
-      bloodGroup: data.bloodGroup || 'B Positive',
+      age: data.age,
+      bloodGroup: data.bloodGroup,
       healthId: 'HG-' + authData.user.id.substring(0, 6).toUpperCase(),
     };
     this.saveToStorage(tempUser);
