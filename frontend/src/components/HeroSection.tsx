@@ -21,6 +21,7 @@ interface HeroSectionProps {
   onOpenPrescription: () => void;
   onOpenDiseaseMap: () => void;
   onOpenBabyShots: () => void;
+  onNavigateMedicines?: () => void;
 }
 
 interface SearchItem {
@@ -41,6 +42,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onOpenPrescription,
   onOpenDiseaseMap,
   onOpenBabyShots,
+  onNavigateMedicines,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -112,7 +114,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       subEn: 'Find 90% cheaper certified generic equivalents nearby',
       subTa: '90% வரை குறைந்த விலையில் மருந்துகள்',
       icon: Pill,
-      action: onOpenPrescription,
+      action: onNavigateMedicines || onOpenPrescription,
     },
     {
       id: 'srv-map',
@@ -143,7 +145,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       subEn: 'Generic: ₹4 per strip (Brand: ₹34) • For fever & pain relief',
       subTa: 'மலிவு விலை: ₹4 மட்டுமே (கடைகளில் ₹34)',
       icon: Pill,
-      action: onOpenPrescription,
+      action: onNavigateMedicines || onOpenPrescription,
     },
     {
       id: 'med-augmentin',
@@ -153,7 +155,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       subEn: 'Generic: ₹22 per strip (Brand: ₹204) • For bacterial infections',
       subTa: 'மலிவு விலை: ₹22 மட்டுமே (கடைகளில் ₹204)',
       icon: Pill,
-      action: onOpenPrescription,
+      action: onNavigateMedicines || onOpenPrescription,
     },
     {
       id: 'med-pantocid',
@@ -163,7 +165,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       subEn: 'Generic: ₹18 (Brand: ₹155) • For stomach acid & reflux',
       subTa: 'மலிவு விலை: ₹18 மட்டுமே (கடைகளில் ₹155)',
       icon: Pill,
-      action: onOpenPrescription,
+      action: onNavigateMedicines || onOpenPrescription,
     },
     {
       id: 'med-metformin',
@@ -173,7 +175,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       subEn: 'Generic: ₹8 per strip (Brand: ₹65) • Blood glucose control',
       subTa: 'மலிவு விலை: ₹8 மட்டுமே (கடைகளில் ₹65)',
       icon: Pill,
-      action: onOpenPrescription,
+      action: onNavigateMedicines || onOpenPrescription,
     },
     // Hospitals
     {

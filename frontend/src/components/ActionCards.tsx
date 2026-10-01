@@ -16,6 +16,7 @@ interface ActionCardsProps {
   onOpenPrescription: () => void;
   onOpenDiseaseMap: () => void;
   onOpenBabyShots: () => void;
+  onNavigateMedicines?: () => void;
 }
 
 export const ActionCards: React.FC<ActionCardsProps> = ({
@@ -25,6 +26,7 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
   onOpenPrescription,
   onOpenDiseaseMap,
   onOpenBabyShots,
+  onNavigateMedicines,
 }) => {
   const services = [
     {
@@ -55,7 +57,7 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
       subEn: 'Genuine & affordable',
       subTa: 'அரசு மக்கள் மருந்தகம்',
       iconBg: 'bg-blue-50 text-blue-600',
-      action: onOpenPrescription,
+      action: onNavigateMedicines || onOpenPrescription,
     },
     {
       id: 'map',

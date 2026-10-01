@@ -31,6 +31,7 @@ interface NotFoundPageProps {
   onOpenBabyShots: () => void;
   onOpenPrivacy: () => void;
   onOpenLogin: () => void;
+  onNavigateMedicines?: () => void;
 }
 
 export const NotFoundPage: React.FC<NotFoundPageProps> = ({
@@ -45,6 +46,7 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
   onOpenBabyShots,
   onOpenPrivacy,
   onOpenLogin,
+  onNavigateMedicines,
 }) => {
   const [attemptedPath, setAttemptedPath] = useState('');
 
@@ -85,6 +87,7 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
           onOpenLogin={onOpenLogin}
           onNavigateProfile={onNavigateProfile}
           onNavigateHome={onNavigateHome}
+          onNavigateMedicines={onNavigateMedicines}
         />
       </header>
 
@@ -320,7 +323,7 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
 
                 {/* 3. Generic Medicines Substitute */}
                 <div 
-                  onClick={onOpenPrescription}
+                  onClick={onNavigateMedicines || onOpenPrescription}
                   className="group bg-slate-50 hover:bg-teal-50/70 p-4 rounded-2xl border border-slate-200/80 hover:border-teal-300 transition-all cursor-pointer flex flex-col justify-between"
                 >
                   <div className="flex items-center justify-between mb-3">

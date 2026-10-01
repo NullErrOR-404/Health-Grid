@@ -22,12 +22,13 @@ import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { NotFoundPage } from './components/NotFoundPage';
 import { ThankYouPage } from './components/ThankYouPage';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
+import { MedicineStorePage } from './components/MedicineStorePage';
 import { Siren, AlertCircle, X, Stethoscope, MapPin } from 'lucide-react';
 import { lenisService } from './services/lenisService';
 import { authService, type AuthUser } from './services/authService';
 import './App.css';
 
-export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found';
+export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines';
 
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -101,6 +102,8 @@ export default function App() {
         setCurrentView('profile');
       } else if (pathname === '/maps' || hash === '#maps' || hash === '#/maps') {
         setCurrentView('maps');
+      } else if (pathname === '/medicines' || hash === '#medicines' || hash === '#/medicines') {
+        setCurrentView('medicines');
       } else if (pathname === '/' || pathname === '/index.html' || pathname === '') {
         // If there is an unknown anchor hash like #unknown
         if (hash && !['', '#', '#/', '#landing', '#home'].includes(hash) && !hash.startsWith('#section-') && !hash.startsWith('#guide-')) {
@@ -152,6 +155,10 @@ export default function App() {
       case 'thank-you':
         title = lang === 'en' ? 'Thank You | HealthGrid - நலம் AI' : 'நன்றி | HealthGrid - நலம் AI';
         desc = lang === 'en' ? 'Thank you for choosing HealthGrid for your healthcare needs.' : 'HealthGrid-ஐ தேர்ந்தெடுத்ததற்கு நன்றி.';
+        break;
+      case 'medicines':
+        title = lang === 'en' ? 'PMBJP Cheap Generic Medicines & Kendra Store | HealthGrid' : 'மலிவு விலை மக்கள் மருந்தகம் & பொது மருந்துகள் | HealthGrid';
+        desc = lang === 'en' ? 'Order authentic Indian Pharmacopoeia PMBJP generic chronic medicines at up to 89% savings with doorstep delivery and Kendra store pickup.' : 'அரசு மக்கள் மருந்தக விலையில் 89% வரை குறைந்த விலையில் அத்தியாவசிய மருந்துகளை வீட்டிலேயே அல்லது அருகிலுள்ள மருந்தகத்தில் பெறலாம்.';
         break;
       case 'not-found':
         title = lang === 'en' ? '404 - Page Not Found | HealthGrid' : '404 - பக்கம் கிடைக்கவில்லை | HealthGrid';
@@ -324,6 +331,7 @@ export default function App() {
             onOpenLogin={() => setIsLoginOpen(true)}
             onNavigateProfile={() => requireAuth(() => navigateToView('profile'), lang === 'en' ? 'Patient Profile' : 'சுயவிவரப் பக்கம்')}
             onNavigateHome={() => navigateToView('landing')}
+            onNavigateMedicines={() => navigateToView('medicines')}
             onNavigateHealthRecords={() => {
               requireAuth(() => {
                 navigateToView('profile');
@@ -359,6 +367,119 @@ export default function App() {
           onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
           onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
           onOpenPrivacy={() => navigateToView('privacy')}
+          onNavigateMedicines={() => navigateToView('medicines')}
+        />
+      </div>
+    );
+  }
+
+  // Render PMBJP Jan Aushadhi Medicine Store Page (/medicines)
+  if (currentView === 'medicines') {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500 selection:text-white">
+        {/* Sticky Coordinated Header */}
+        <header className="sticky top-0 z-40 w-full">
+          <GovAlertMarquee
+            lang={lang}
+            onOpenMaps={() => navigateToView('maps')}
+            onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+          />
+          <Navbar
+            lang={lang}
+            setLang={setLang}
+            activeView="medicines"
+            onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+            onOpenVoiceChat={() => navigateToView('chat')}
+            onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+            onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+            onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
+            onOpenLogin={() => setIsLoginOpen(true)}
+            onNavigateProfile={() => requireAuth(() => navigateToView('profile'), lang === 'en' ? 'Patient Profile' : 'சுயவிவரப் பக்கம்')}
+            onNavigateHome={() => navigateToView('landing')}
+            onNavigateMedicines={() => navigateToView('medicines')}
+            onNavigateHealthRecords={() => {
+              requireAuth(() => {
+                navigateToView('profile');
+                setTimeout(() => {
+                  const el = document.getElementById('health-information');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }, 250);
+              }, lang === 'en' ? 'Health Records' : 'மருத்துவ ஏடுகள்');
+            }}
+            onNavigateSettings={() => {
+              requireAuth(() => {
+                navigateToView('profile');
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent('open-profile-edit'));
+                }, 250);
+              }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
+            }}
+          />
+        </header>
+
+        {/* Medicine Store Content */}
+        <main className="flex-1 w-full">
+          <MedicineStorePage
+            lang={lang}
+            onNavigateHome={() => navigateToView('landing')}
+            onOpenLogin={() => setIsLoginOpen(true)}
+            onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+            onOpenDiseaseMap={() => navigateToView('maps')}
+          />
+        </main>
+
+        {/* Global Footer */}
+        <Footer
+          lang={lang}
+          setLang={setLang}
+          onOpenVoiceChat={() => navigateToView('chat')}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+          onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+          onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+          onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
+          onOpenPrivacy={() => navigateToView('privacy')}
+          onOpenTerms={() => navigateToView('terms')}
+          onNavigateMedicines={() => navigateToView('medicines')}
+        />
+
+        {/* Global Modals Accessible within Medicine Store */}
+        <AmbulanceModal
+          isOpen={isAmbulanceOpen}
+          onClose={() => setIsAmbulanceOpen(false)}
+          lang={lang}
+          onOpenHandover={() => setIsHandoverOpen(true)}
+        />
+        <PrescriptionModal
+          isOpen={isPrescriptionOpen}
+          onClose={() => setIsPrescriptionOpen(false)}
+          lang={lang}
+          onOpenDiseaseMap={() => navigateToView('maps')}
+        />
+        <DiseaseMapModal
+          isOpen={isDiseaseMapOpen}
+          onClose={() => setIsDiseaseMapOpen(false)}
+          lang={lang}
+        />
+        <BabyShotsModal
+          isOpen={isBabyShotsOpen}
+          onClose={() => setIsBabyShotsOpen(false)}
+          lang={lang}
+        />
+        <DoctorHandoverModal
+          isOpen={isHandoverOpen}
+          onClose={() => setIsHandoverOpen(false)}
+          lang={lang}
+        />
+        <LoginModal
+          isOpen={isLoginOpen}
+          onClose={() => {
+            setIsLoginOpen(false);
+            setLoginNotice(null);
+            pendingAuthActionRef.current = null;
+          }}
+          lang={lang}
+          contextNotice={loginNotice}
+          onSuccess={handleGlobalLoginSuccess}
         />
       </div>
     );
@@ -404,6 +525,7 @@ export default function App() {
           onOpenBabyShots={() => setIsBabyShotsOpen(true)}
           onOpenPrivacy={() => navigateToView('privacy')}
           onOpenLogin={() => setIsLoginOpen(true)}
+          onNavigateMedicines={() => navigateToView('medicines')}
         />
 
         {/* Global Modals Accessible within 404 Page */}
@@ -466,6 +588,7 @@ export default function App() {
           onOpenLogin={() => setIsLoginOpen(true)}
           onNavigateProfile={() => requireAuth(() => navigateToView('profile'), lang === 'en' ? 'Patient Profile' : 'சுயவிவரப் பக்கம்')}
           onNavigateHome={() => navigateToView('landing')}
+          onNavigateMedicines={() => navigateToView('medicines')}
           onNavigateHealthRecords={() => {
             requireAuth(() => {
               navigateToView('profile');
@@ -495,6 +618,7 @@ export default function App() {
           onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
           onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
           onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
+          onNavigateMedicines={() => navigateToView('medicines')}
         />
 
         {/* Elevated 6-Service Shelf Matching Landing page new.png */}
@@ -505,6 +629,7 @@ export default function App() {
           onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
           onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
           onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
+          onNavigateMedicines={() => navigateToView('medicines')}
         />
 
         {/* Community Health Heatmap & Quick Health Insights Section */}
@@ -526,6 +651,7 @@ export default function App() {
         onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
         onOpenPrivacy={() => navigateToView('privacy')}
         onOpenTerms={() => navigateToView('terms')}
+        onNavigateMedicines={() => navigateToView('medicines')}
       />
 
       {/* Roaming AI Mascot Companion (DocBot) */}

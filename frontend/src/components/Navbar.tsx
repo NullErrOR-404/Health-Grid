@@ -24,7 +24,7 @@ import { authService, type AuthUser } from '../services/authService';
 export interface NavbarProps {
   lang: Language;
   setLang: (lang: Language) => void;
-  activeView?: 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'not-found';
+  activeView?: 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'not-found' | 'medicines';
   onOpenAmbulance: () => void;
   onOpenVoiceChat: (sampleQuery?: string) => void;
   onOpenPrescription: () => void;
@@ -33,6 +33,7 @@ export interface NavbarProps {
   onOpenLogin: () => void;
   onNavigateProfile?: () => void;
   onNavigateHome?: () => void;
+  onNavigateMedicines?: () => void;
   onNavigateHealthRecords?: () => void;
   onNavigateSettings?: () => void;
 }
@@ -49,6 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenLogin,
   onNavigateProfile,
   onNavigateHome,
+  onNavigateMedicines,
   onNavigateHealthRecords,
   onNavigateSettings,
 }) => {
@@ -109,6 +111,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const getActiveNavIndex = (): number => {
     if (activeView === 'landing') return 0;
     if (activeView === 'chat') return 1;
+    if (activeView === 'medicines') return 2;
     if (activeView === 'maps') return 3;
     return -1;
   };
@@ -198,7 +201,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onMouseEnter={() => setHoveredNavIndex(2)}
                   onClick={() => {
                     setHoveredNavIndex(null);
-                    onOpenPrescription();
+                    if (onNavigateMedicines) {
+                      onNavigateMedicines();
+                    } else {
+                      onOpenPrescription();
+                    }
                   }} 
                   className={`py-2 text-center transition-colors cursor-pointer w-full truncate ${
                     hoveredNavIndex === 2 
@@ -672,7 +679,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
 
                 <button
-                  onClick={() => { onOpenPrescription(); setMobileMenuOpen(false); }}
+                  onClick={() => { 
+                    if (onNavigateMedicines) {
+                      onNavigateMedicines();
+                    } else {
+                      onOpenPrescription();
+                    }
+                    setMobileMenuOpen(false); 
+                  }}
                   className="flex flex-col items-center justify-center p-3 bg-yellow-50/80 hover:bg-yellow-100/80 text-yellow-800 rounded-xl border border-yellow-200/80 transition-colors"
                 >
                   <Pill className="w-5 h-5 text-yellow-600 mb-1" />

@@ -17,6 +17,7 @@ interface FooterProps {
   onOpenBabyShots?: () => void;
   onOpenPrivacy?: () => void;
   onOpenTerms?: () => void;
+  onNavigateMedicines?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ 
@@ -29,6 +30,7 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenBabyShots,
   onOpenPrivacy,
   onOpenTerms,
+  onNavigateMedicines,
 }) => {
   return (
     <footer className="relative bg-white pt-14 pb-10 border-t border-slate-200/80 overflow-hidden">
@@ -123,7 +125,7 @@ export const Footer: React.FC<FooterProps> = ({
               <li onClick={onOpenAmbulance} className="hover:text-teal-700 transition-colors cursor-pointer">
                 {lang === 'en' ? 'Call Ambulance' : 'ஆம்புலன்ஸ்'}
               </li>
-              <li onClick={onOpenPrescription} className="hover:text-teal-700 transition-colors cursor-pointer">
+              <li onClick={onNavigateMedicines || onOpenPrescription} className="hover:text-teal-700 transition-colors cursor-pointer">
                 {lang === 'en' ? 'Buy Medicines' : 'மலிவு மருந்துகள்'}
               </li>
               <li onClick={onOpenDiseaseMap} className="hover:text-teal-700 transition-colors cursor-pointer">
