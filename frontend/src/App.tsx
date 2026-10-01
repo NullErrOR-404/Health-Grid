@@ -263,6 +263,7 @@ export default function App() {
           onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
           onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
           onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
+          onNavigateMedicines={() => navigateToView('medicines')}
         />
 
         {/* Global Modals Accessible within Chat */}

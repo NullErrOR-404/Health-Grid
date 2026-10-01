@@ -425,7 +425,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onOpenPrescription();
+                  if (onNavigateMedicines) {
+                    onNavigateMedicines();
+                  } else {
+                    onOpenPrescription();
+                  }
                 }}
                 className="absolute top-[7%] right-[42%] w-[18%] h-[18%] rounded-2xl cursor-pointer hover:ring-2 hover:ring-blue-400/50 bg-transparent"
                 title="View Medicines"

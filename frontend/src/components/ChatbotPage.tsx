@@ -102,6 +102,7 @@ interface ChatbotPageProps {
   onOpenPrescription?: () => void;
   onOpenDiseaseMap?: () => void;
   onOpenBabyShots?: () => void;
+  onNavigateMedicines?: () => void;
   initialQuery?: string;
 }
 
@@ -121,6 +122,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   onOpenPrescription,
   onOpenDiseaseMap,
   onOpenBabyShots,
+  onNavigateMedicines,
   initialQuery,
 }) => {
   // Zero-Disk Pure Cloud Storage: Sessions live strictly in memory and Supabase PostgreSQL RLS tables.
@@ -1143,10 +1145,15 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
             </button>
           )}
 
-          {onOpenPrescription && (
+          {(onNavigateMedicines || onOpenPrescription) && (
             <button
               onClick={() => {
-                ensureAuth(onOpenPrescription, lang === 'en' ? 'Sign in to access prescription & generic medicines' : 'மருந்து சேவைகளுக்கு உள்நுழையவும்');
+                if (onNavigateMedicines) {
+                  onNavigateMedicines();
+                } else {
+                  window.history.pushState({}, '', '/medicines');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }
               }}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
             >

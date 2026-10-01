@@ -204,7 +204,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     if (onNavigateMedicines) {
                       onNavigateMedicines();
                     } else {
-                      onOpenPrescription();
+                      window.history.pushState({}, '', '/medicines');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
                     }
                   }} 
                   className={`py-2 text-center transition-colors cursor-pointer w-full truncate ${
@@ -683,7 +684,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     if (onNavigateMedicines) {
                       onNavigateMedicines();
                     } else {
-                      onOpenPrescription();
+                      window.history.pushState({}, '', '/medicines');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
                     }
                     setMobileMenuOpen(false); 
                   }}
