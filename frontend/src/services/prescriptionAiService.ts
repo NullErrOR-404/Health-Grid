@@ -553,6 +553,77 @@ doctorName, clinicOrHospital, date, diagnosisNotes, medications, dosageSchedule,
       return { success: false, error: err.message || 'Failed to securely store prescription.' };
     }
   }
+
+  /**
+   * Fetch recent prescription scans for the authenticated patient
+   */
+  public async fetchRecentPrescriptions(): Promise<Array<{
+    id: string;
+    date: string;
+    medicineCount: number;
+    doctorName?: string;
+    result: PrescriptionAnalysisResult;
+  }>> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) return [];
+
+      // 1. Try Supabase prescriptions table first
+      try {
+        const { data, error } = await supabase
+          .from('prescriptions')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (!error && data && data.length > 0) {
+          return data.map((row: any) => ({
+            id: row.id,
+            date: row.prescription_date || (row.created_at ? new Date(row.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent'),
+            medicineCount: Array.isArray(row.medications) ? row.medications.length : 0,
+            doctorName: row.doctor_name,
+            result: {
+              doctorName: row.doctor_name || 'Dr. Consultant Physician',
+              clinicOrHospital: row.clinic_hospital || 'HealthGrid Care Network',
+              date: row.prescription_date || 'Recent',
+              diagnosisNotes: row.diagnosis || 'Prescribed medications',
+              medications: row.medications || [],
+              medicines: row.medications || [],
+              dosageSchedule: row.dosage_schedule || { morning: [], afternoon: [], night: [] },
+              safetyRadar: row.safety_radar || { foodInteractions: [], missedDoseGuidanceEn: '', missedDoseGuidanceTa: '' },
+              refillCountdown: row.refill_countdown || { courseDurationDays: 5, dailyPillsCount: 2, refillDateText: '5 days' },
+              humanDoctorExplanationEn: row.audio_explanation_en || 'Take your medicines as prescribed.',
+              humanDoctorExplanationTa: row.audio_explanation_ta || 'மருந்துகளை சரியாக உட்கொள்ளவும்.',
+              allergyWarnings: [],
+              totalBrandCost: row.total_brand_cost || 0,
+              totalGenericCost: row.total_generic_cost || 0,
+              totalSavings: row.total_savings || 0,
+              savingsPercentage: row.total_brand_cost ? Math.round((row.total_savings / row.total_brand_cost) * 100) : 0,
+              pagesCount: row.pages_count || 1,
+            },
+          }));
+        }
+      } catch (err) {
+        // Fallback to local storage cache
+      }
+
+      // 2. Fallback to user-scoped local storage cache
+      const cacheKey = `healthgrid_prescriptions_${userId}`;
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+      return cached.map((c: any) => ({
+        id: c.id,
+        date: c.result?.date || (c.savedAt ? new Date(c.savedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent'),
+        medicineCount: Array.isArray(c.result?.medicines) ? c.result.medicines.length : (Array.isArray(c.result?.medications) ? c.result.medications.length : 0),
+        doctorName: c.result?.doctorName,
+        result: c.result,
+      }));
+    } catch (err) {
+      console.error('Error fetching recent prescriptions:', err);
+      return [];
+    }
+  }
 }
 
 export const prescriptionAiService = new PrescriptionAiService();
