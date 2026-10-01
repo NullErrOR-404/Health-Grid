@@ -46,7 +46,7 @@ import {
   CalendarCheck
 } from 'lucide-react';
 import type { Language } from '../types';
-import { speechEngine } from '../services/speechService';
+import { speechEngine, type DoctorPersona } from '../services/speechService';
 import {
   agiService,
   AVAILABLE_MODELS,
@@ -130,6 +130,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [inputText, setInputText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
+  const [voicePersona, setVoicePersona] = useState<DoctorPersona>(() => speechEngine.getVoiceSettings().persona || 'meera');
   const [isRecording, setIsRecording] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -140,6 +141,14 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [activeCareLoops, setActiveCareLoops] = useState<CareLoopFollowUp[]>([]);
   const pendingActionRef = useRef<(() => void) | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
+  const isSendingRef = useRef(false);
+
+  // Keep voice persona synchronized with global speech settings
+  useEffect(() => {
+    return speechEngine.subscribeSettings((settings) => {
+      setVoicePersona(settings.persona);
+    });
+  }, []);
 
   // Subscribe to proactive Care-Loop recovery tasks
   useEffect(() => {
@@ -187,12 +196,9 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
 
-  const ensureAuth = (action?: () => void, customNotice?: string): boolean => {
+  const checkAuth = (customNotice?: string): boolean => {
     const user = authService.getCurrentUser();
-    if (user) {
-      if (action) action();
-      return true;
-    }
+    if (user) return true;
     const notice =
       customNotice ||
       (lang === 'en'
@@ -201,10 +207,23 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     setLoginNotice(notice);
     setToastMessage(notice);
     setIsLoginOpen(true);
-    if (action) {
+    return false;
+  };
+
+  const withAuth = (action: () => void, customNotice?: string): void => {
+    if (checkAuth(customNotice)) {
+      action();
+    } else {
       pendingActionRef.current = action;
     }
-    return false;
+  };
+
+  const ensureAuth = (action?: () => void, customNotice?: string): boolean => {
+    if (action) {
+      withAuth(action, customNotice);
+      return Boolean(authService.getCurrentUser());
+    }
+    return checkAuth(customNotice);
   };
 
   const handleLoginSuccess = (user: AuthUser) => {
@@ -367,7 +386,8 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   // Voice input handling with speechEngine and pulse animation
   const handleToggleVoiceInput = () => {
-    if (!ensureAuth(() => handleToggleVoiceInput(), lang === 'en' ? 'Sign in to use voice consultation' : 'குரல் வழிக் கேள்வி கேட்க உள்நுழையவும்')) {
+    if (!checkAuth(lang === 'en' ? 'Sign in to use voice consultation' : 'குரல் வழிக் கேள்வி கேட்க உள்நுழையவும்')) {
+      pendingActionRef.current = handleToggleVoiceInput;
       return;
     }
 
@@ -445,8 +465,14 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       setIsRecording(false);
     }
 
+    if (isSendingRef.current || isThinking) return;
+
     const query = (textToSend || inputText).trim();
-    if (!query || isThinking) return;
+    if (!query) return;
+
+    isSendingRef.current = true;
+    setInputText('');
+    setIsThinking(true);
 
     const userMessage: ChatMessage = {
       id: `u-${Date.now()}`,
@@ -597,6 +623,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       }
     } finally {
       setIsThinking(false);
+      isSendingRef.current = false;
     }
   };
 
@@ -605,7 +632,8 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!ensureAuth(() => fileInputRef.current?.click(), lang === 'en' ? 'Sign in to analyze prescriptions' : 'மருந்து சீட்டுகளைப் பகுப்பாய்வு செய்ய உள்நுழையவும்')) {
+    if (!checkAuth(lang === 'en' ? 'Sign in to analyze prescriptions' : 'மருந்து சீட்டுகளைப் பகுப்பாய்வு செய்ய உள்நுழையவும்')) {
+      pendingActionRef.current = () => fileInputRef.current?.click();
       e.target.value = '';
       return;
     }
@@ -1344,6 +1372,32 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               </span>
             </button>
 
+            {/* Doctor Voice Persona Switcher */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  const nextPersona: DoctorPersona = voicePersona === 'meera' ? 'arvind' : 'meera';
+                  setVoicePersona(nextPersona);
+                  speechEngine.updateVoiceSettings({ persona: nextPersona });
+                  const toast = nextPersona === 'meera'
+                    ? (lang === 'en' ? 'Voice set to Dr. Meera (Warm Female Bedside)' : 'குரல்: டாக்டர் மீரா (அன்பான மருத்துவர்)')
+                    : (lang === 'en' ? 'Voice set to Dr. Arvind (Calm Male Bedside)' : 'குரல்: டாக்டர் அரவிந்த் (அமைதியான மருத்துவர்)');
+                  setToastMessage(toast);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-2xs cursor-pointer group"
+                title={lang === 'en' ? 'Toggle AI Doctor Voice Persona (Dr. Meera / Dr. Arvind)' : 'மருத்துவர் குரலை மாற்றவும்'}
+              >
+                <Volume2 className="w-3.5 h-3.5 text-teal-600 group-hover:scale-110 transition-transform" />
+                <span className="font-bold text-slate-800">
+                  {voicePersona === 'meera' ? 'Dr. Meera' : 'Dr. Arvind'}
+                </span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-700 font-bold border border-teal-100 hidden sm:inline">
+                  {voicePersona === 'meera' ? (lang === 'en' ? 'Female' : 'பெண்') : (lang === 'en' ? 'Male' : 'ஆண்')}
+                </span>
+              </button>
+            </div>
+
             {/* Language Dropdown */}
             <div className="relative">
               <button
@@ -1835,7 +1889,11 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!ensureAuth(() => handleSendMessage())) return;
+                if (isThinking || isSendingRef.current) return;
+                if (!checkAuth(lang === 'en' ? 'Sign in to start your consultation' : 'உரையாட உள்நுழையவும்')) {
+                  pendingActionRef.current = () => handleSendMessage();
+                  return;
+                }
                 handleSendMessage();
               }}
               className="rounded-full border flex items-center gap-2 p-1.5 sm:p-2 shadow-xs transition-all bg-white border-slate-300 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100"
@@ -1844,7 +1902,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  ensureAuth(
+                  withAuth(
                     () => fileInputRef.current?.click(),
                     lang === 'en' ? 'Sign in to attach medical records or prescriptions' : 'மருத்துவ ஆவணங்களைப் பதிவேற்ற உள்நுழையவும்'
                   );
@@ -1862,7 +1920,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 value={inputText}
                 onChange={(e) => {
                   if (!authService.getCurrentUser()) {
-                    ensureAuth();
+                    checkAuth();
                     return;
                   }
                   setInputText(e.target.value);
@@ -1870,13 +1928,13 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 onFocus={(e) => {
                   if (!authService.getCurrentUser()) {
                     e.target.blur();
-                    ensureAuth(() => chatInputRef.current?.focus());
+                    withAuth(() => chatInputRef.current?.focus());
                   }
                 }}
                 onClick={(e) => {
                   if (!authService.getCurrentUser()) {
                     e.currentTarget.blur();
-                    ensureAuth(() => chatInputRef.current?.focus());
+                    withAuth(() => chatInputRef.current?.focus());
                   }
                 }}
                 placeholder={

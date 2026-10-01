@@ -433,6 +433,8 @@ export class SpeechEngine {
     });
   }
 
+  private audioCache = new Map<string, Blob>();
+
   private async fetchGeminiAudio(
     text: string,
     lang: 'ta' | 'en',
@@ -444,65 +446,99 @@ export class SpeechEngine {
       throw new Error('Gemini API key is not configured');
     }
 
-    // Voice mapping: Aoede for warm female doctor, Charon for calm male physician
-    const voiceName = persona === 'meera' ? 'Aoede' : 'Charon';
-    const prompt =
-      lang === 'ta'
-        ? `தயவுசெய்து ஒரு அன்பான, அக்கறையான குடும்ப மருத்துவர் குரலில் பின்வரும் செய்தியை நேரடியாக வாசிக்கவும். எந்த கூடுதல் முன்னுரையும் சேர்க்க வேண்டாம்: "${text}"`
-        : `Please read the following text aloud in a warm, empathetic, caring family doctor bedside manner. Do not add any preamble, only speak the text: "${text}"`;
+    const cleanSpeechText = text.replace(/^[•*\-\d.]+\s+/gm, '').replace(/https?:\/\/\S+/g, '').trim();
+    if (!cleanSpeechText) {
+      throw new Error('No readable speech text');
+    }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal,
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }]
-            }
-          ],
-          generationConfig: {
-            responseModalities: ['AUDIO'],
-            speechConfig: {
-              voiceConfig: {
-                prebuiltVoiceConfig: {
-                  voiceName
+    // Check memory cache to prevent redundant synthesis
+    const cacheKey = `${persona}:${lang}:${cleanSpeechText}`;
+    if (this.audioCache.has(cacheKey)) {
+      return this.audioCache.get(cacheKey)!;
+    }
+
+    // Voice mapping: Aoede for warm female physician (Dr. Meera), Charon for calm male physician (Dr. Arvind)
+    const voiceName = persona === 'meera' ? 'Aoede' : 'Charon';
+
+    const ttsCandidateModels = [
+      'gemini-3.8-flash-tts',
+      'gemini-3.8-flash-lite-tts',
+      'gemini-3.1-flash-tts-preview',
+      'gemini-2.5-flash-preview-tts',
+    ];
+
+    let lastError: Error | null = null;
+
+    for (const modelName of ttsCandidateModels) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal,
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: cleanSpeechText }]
+                }
+              ],
+              generationConfig: {
+                responseModalities: ['AUDIO'],
+                speechConfig: {
+                  voiceConfig: {
+                    prebuiltVoiceConfig: {
+                      voiceName
+                    }
+                  }
                 }
               }
-            }
+            })
           }
-        })
+        );
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Gemini Audio API error ${response.status} on ${modelName}: ${errText}`);
+        }
+
+        const data = await response.json();
+        const candidate = data.candidates?.[0];
+        const part = candidate?.content?.parts?.[0];
+        const inlineData = part?.inlineData;
+
+        if (!inlineData || !inlineData.data) {
+          throw new Error(`No audio data received in Gemini ${modelName} response`);
+        }
+
+        const pcmOrWavBytes = base64ToUint8Array(inlineData.data);
+        const mime = (inlineData.mimeType || '').toLowerCase();
+
+        // If MIME is PCM, wrap in standard 24kHz WAV header
+        let wavBuffer: ArrayBuffer;
+        if (mime.includes('pcm') || !mime.includes('wav')) {
+          wavBuffer = pcmToWav(pcmOrWavBytes, 24000, 1);
+        } else {
+          wavBuffer = pcmOrWavBytes.buffer as ArrayBuffer;
+        }
+
+        const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+        // Cache up to 100 recent spoken phrases
+        if (this.audioCache.size > 100) {
+          const firstKey = this.audioCache.keys().next().value;
+          if (firstKey) this.audioCache.delete(firstKey);
+        }
+        this.audioCache.set(cacheKey, blob);
+        return blob;
+      } catch (err: any) {
+        if (err.name === 'AbortError') throw err;
+        lastError = err;
+        console.warn(`[SpeechEngine] ${modelName} synthesis failed, trying next candidate:`, err.message);
       }
-    );
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Gemini Audio API error ${response.status}: ${errText}`);
     }
 
-    const data = await response.json();
-    const part = data.candidates?.[0]?.content?.parts?.[0];
-    const inlineData = part?.inlineData;
-
-    if (!inlineData || !inlineData.data) {
-      throw new Error('No audio data received in Gemini response');
-    }
-
-    const pcmOrWavBytes = base64ToUint8Array(inlineData.data);
-    const mime = (inlineData.mimeType || '').toLowerCase();
-
-    // If MIME is PCM, wrap in standard 24kHz WAV header
-    let wavBuffer: ArrayBuffer;
-    if (mime.includes('pcm') || !mime.includes('wav')) {
-      wavBuffer = pcmToWav(pcmOrWavBytes, 24000, 1);
-    } else {
-      wavBuffer = pcmOrWavBytes.buffer as ArrayBuffer;
-    }
-
-    return new Blob([wavBuffer], { type: 'audio/wav' });
+    throw lastError || new Error('All Gemini TTS models exhausted');
   }
 
   private async fetchSarvamAudio(
