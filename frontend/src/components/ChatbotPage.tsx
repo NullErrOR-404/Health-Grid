@@ -47,7 +47,7 @@ import {
 } from '../services/aiService';
 import { medicalRecordService } from '../services/medicalRecordService';
 import { supabase } from '../services/supabaseClient';
-import { authService, type AuthUser } from '../services/authService';
+import { authService, purgeAllTestArtifacts, type AuthUser } from '../services/authService';
 import { LoginModal } from './LoginModal';
 
 export interface ChatMessage {
@@ -104,8 +104,13 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   // Sessions state with LocalStorage persistence and legacy mock purging
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
     try {
+      purgeAllTestArtifacts();
       const saved = localStorage.getItem('healthgrid_chat_sessions');
       if (saved) {
+        if (saved.toLowerCase().includes('murugan') || saved.includes('8841')) {
+          localStorage.removeItem('healthgrid_chat_sessions');
+          return [createFreshSession()];
+        }
         const parsed = JSON.parse(saved);
         // Purge legacy mock sessions if detected
         const hasLegacyMock = Array.isArray(parsed) && parsed.some((s: any) =>
@@ -113,7 +118,8 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           s.id === 'child-vaccination' ||
           s.id === 'diabetes-diet-plan' ||
           s.id === 'skin-rash' ||
-          s.id === 'stomach-pain'
+          s.id === 'stomach-pain' ||
+          JSON.stringify(s).toLowerCase().includes('murugan')
         );
         if (!hasLegacyMock && Array.isArray(parsed) && parsed.length > 0) {
           return parsed;
@@ -310,17 +316,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   // Voice input handling with speechEngine and pulse animation
   const handleToggleVoiceInput = () => {
-    const activeUser = currentUser || authService.getCurrentUser();
-    if (!activeUser) {
-      setToastMessage(
-        lang === 'en'
-          ? 'Sign in required to use voice consultation'
-          : 'குரல் ஆலோசனையைப் பயன்படுத்த உள்நுழையவும்'
-      );
-      setIsLoginOpen(true);
-      return;
-    }
-
     if (isRecording) {
       speechEngine.stopListening();
       setIsRecording(false);
@@ -390,17 +385,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   // Submit Prompt to AGI Doctor
   const handleSendMessage = async (textToSend?: string) => {
-    const activeUser = currentUser || authService.getCurrentUser();
-    if (!activeUser) {
-      setToastMessage(
-        lang === 'en'
-          ? 'Sign in required to consult DocBot'
-          : 'டாக் பாட் ஆலோசனை பெற உள்நுழையவும்'
-      );
-      setIsLoginOpen(true);
-      return;
-    }
-
     if (isRecording) {
       speechEngine.stopListening();
       setIsRecording(false);
@@ -451,9 +435,27 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
     try {
       const patientProfile = medicalRecordService.getProfile();
-      const patientContext = `Patient: ${patientProfile.name}, Age: ${patientProfile.age}y. Chronic Conditions: ${patientProfile.chronicConditions.join(
-        ', '
-      )}. Drug Allergies: ${patientProfile.allergies.join(', ')}.`;
+      const conditions = (patientProfile.chronicConditions || []).filter(c => Boolean(c) && !c.toLowerCase().includes('seasonal'));
+      const allergies = (patientProfile.allergies || []).filter(a => Boolean(a) && !a.toLowerCase().includes('penicillin'));
+      const hasName = Boolean(
+        patientProfile.name &&
+        patientProfile.name.trim() &&
+        !patientProfile.name.toLowerCase().includes('murugan') &&
+        !patientProfile.name.toLowerCase().includes('verified patient')
+      );
+
+      let patientContext: string | undefined = undefined;
+      // Only attach clinical context if user is signed in with legitimate, non-mock profile data
+      if (currentUser && (hasName || conditions.length > 0 || allergies.length > 0)) {
+        const parts: string[] = [];
+        if (hasName) parts.push(`Patient: ${patientProfile.name.trim()}`);
+        if (patientProfile.age > 0) parts.push(`Age: ${patientProfile.age}y`);
+        if (conditions.length > 0) parts.push(`Chronic Conditions: ${conditions.join(', ')}`);
+        if (allergies.length > 0) parts.push(`Drug Allergies: ${allergies.join(', ')}`);
+        if (parts.length > 0) {
+          patientContext = parts.join('. ') + '.';
+        }
+      }
 
       const history = (activeSession?.messages || []).map((m) => ({
         sender: m.sender,

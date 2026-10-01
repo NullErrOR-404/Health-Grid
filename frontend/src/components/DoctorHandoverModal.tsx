@@ -31,7 +31,7 @@ export const DoctorHandoverModal: React.FC<DoctorHandoverModalProps> = ({
   onClose,
   lang,
   patientData = {
-    name: 'K. Subramanian',
+    name: 'Emergency Patient Handover',
     age: 58,
     gender: 'Male',
     bloodGroup: 'B Positive (B+)',

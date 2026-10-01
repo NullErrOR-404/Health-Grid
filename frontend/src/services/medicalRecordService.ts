@@ -58,15 +58,15 @@ export interface PatientProfile {
   records: MedicalRecord[];
 }
 
-// Dynamic initial baseline patient profile
+// Dynamic baseline patient profile - strictly empty until user enters real data
 export const initialPatientProfile: PatientProfile = {
-  id: 'HG-HEALTH-VAULT',
-  name: 'Verified Patient',
-  age: 32,
-  gender: 'Other',
-  bloodGroup: 'B Positive',
-  chronicConditions: ['Seasonal Allergies'],
-  allergies: ['Penicillin'],
+  id: '',
+  name: '',
+  age: 0,
+  gender: '',
+  bloodGroup: '',
+  chronicConditions: [],
+  allergies: [],
   records: [],
 };
 
@@ -76,10 +76,13 @@ class MedicalRecordService {
   getProfile(): PatientProfile {
     const authUser = authService.getCurrentUser();
     if (authUser) {
+      const cleanName = (authUser.name && !authUser.name.toLowerCase().includes('murugan') && !authUser.name.toLowerCase().includes('verified patient'))
+        ? authUser.name.trim()
+        : '';
       return {
         ...this.profile,
         id: authUser.healthId || this.profile.id,
-        name: authUser.name || this.profile.name,
+        name: cleanName,
         age: authUser.age || this.profile.age,
         bloodGroup: authUser.bloodGroup || this.profile.bloodGroup,
       };

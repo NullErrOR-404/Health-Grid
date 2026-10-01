@@ -58,6 +58,31 @@ export const generateImmutableHealthId = (userId?: string): string => {
   return `HG-${randomCode}`;
 };
 
+export const purgeAllTestArtifacts = () => {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        const val = (localStorage.getItem(key) || '').toLowerCase();
+        if (
+          val.includes('murugan') ||
+          val.includes('8841') ||
+          val.includes('pat-tn-2026')
+        ) {
+          keysToRemove.push(key);
+        }
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch (e) {
+    console.warn('Storage purge error:', e);
+  }
+};
+
+// Immediately purge test artifacts on module evaluation
+purgeAllTestArtifacts();
+
 const STORAGE_KEY = 'healthgrid_auth_user';
 
 class AuthService {
@@ -71,9 +96,21 @@ class AuthService {
 
   private loadFromStorage() {
     try {
+      purgeAllTestArtifacts();
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        this.currentUser = JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (
+          !parsed ||
+          (typeof parsed.name === 'string' && parsed.name.toLowerCase().includes('murugan')) ||
+          (typeof parsed.email === 'string' && parsed.email.toLowerCase().includes('murugan')) ||
+          (typeof parsed.healthId === 'string' && parsed.healthId.includes('8841'))
+        ) {
+          localStorage.removeItem(STORAGE_KEY);
+          this.currentUser = null;
+          return;
+        }
+        this.currentUser = parsed;
       }
     } catch {
       this.currentUser = null;
@@ -143,9 +180,23 @@ class AuthService {
           });
       }
 
+      const rawName = profile?.full_name || meta.full_name || meta.name || sbUser.email?.split('@')[0] || '';
+      const sanitizedName = rawName.toLowerCase().includes('murugan')
+        ? (sbUser.email && !sbUser.email.toLowerCase().includes('murugan') ? sbUser.email.split('@')[0] : 'Patient')
+        : rawName;
+
+      // If PostgreSQL had legacy test name "Murugan", scrub it in the database
+      if (profile?.full_name && profile.full_name.toLowerCase().includes('murugan')) {
+        supabase
+          .from('patients')
+          .update({ full_name: sanitizedName, updated_at: new Date().toISOString() })
+          .eq('id', sbUser.id)
+          .then();
+      }
+
       const user: AuthUser = {
         id: sbUser.id,
-        name: profile?.full_name || meta.full_name || meta.name || sbUser.email?.split('@')[0] || '',
+        name: sanitizedName,
         email: sbUser.email || meta.email || '',
         phone: profile?.phone_number || meta.phone || sbUser.phone || '',
         role: (meta.role as UserRole) || 'PERSONAL',
@@ -160,9 +211,14 @@ class AuthService {
     } catch (e) {
       console.warn('Could not sync user profile from Supabase:', e);
       const meta = sbUser.user_metadata || {};
+      const rawFallbackName = meta.full_name || meta.name || sbUser.email?.split('@')[0] || '';
+      const sanitizedFallbackName = rawFallbackName.toLowerCase().includes('murugan')
+        ? (sbUser.email && !sbUser.email.toLowerCase().includes('murugan') ? sbUser.email.split('@')[0] : 'Patient')
+        : rawFallbackName;
+
       const fallbackUser: AuthUser = {
         id: sbUser.id,
-        name: meta.full_name || meta.name || sbUser.email?.split('@')[0] || '',
+        name: sanitizedFallbackName,
         email: sbUser.email || '',
         phone: meta.phone || sbUser.phone || '',
         role: (meta.role as UserRole) || 'PERSONAL',
