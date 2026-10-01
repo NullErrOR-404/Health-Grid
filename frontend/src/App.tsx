@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Language } from './types';
 import { Navbar } from './components/Navbar';
 import { GovAlertMarquee } from './components/GovAlertMarquee';
@@ -22,7 +22,7 @@ import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { NotFoundPage } from './components/NotFoundPage';
 import { Siren, Mic, AlertCircle, X } from 'lucide-react';
 import { lenisService } from './services/lenisService';
-import { authService } from './services/authService';
+import { authService, type AuthUser } from './services/authService';
 import './App.css';
 
 export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'not-found';
@@ -42,6 +42,9 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [selectedGuide, setSelectedGuide] = useState<GuideArticle | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [loginNotice, setLoginNotice] = useState<string | null>(null);
+  const [chatInitialQuery, setChatInitialQuery] = useState<string | undefined>(undefined);
+  const pendingAuthActionRef = useRef<(() => void) | null>(null);
 
   const isAnyModalOpen = Boolean(
     isAmbulanceOpen ||
@@ -148,12 +151,24 @@ export default function App() {
     if (user) {
       action();
     } else {
-      setToastMessage(
+      const notice =
         lang === 'en'
-          ? `Sign in required to access ${featureName || 'this service'}`
-          : `${featureName || 'இந்த சேவையைப்'} பயன்படுத்த உள்நுழையவும்`
-      );
+          ? `Sign in or create an account to access ${featureName || 'this service'}`
+          : `${featureName || 'இந்த சேவையைப்'} பயன்படுத்த உள்நுழையவும் அல்லது புதிய கணக்கு தொடங்கவும்`;
+      setToastMessage(notice);
+      setLoginNotice(notice);
+      pendingAuthActionRef.current = action;
       setIsLoginOpen(true);
+    }
+  };
+
+  const handleGlobalLoginSuccess = (_user: AuthUser) => {
+    setIsLoginOpen(false);
+    setLoginNotice(null);
+    if (pendingAuthActionRef.current) {
+      const act = pendingAuthActionRef.current;
+      pendingAuthActionRef.current = null;
+      setTimeout(() => act(), 100);
     }
   };
 
@@ -166,13 +181,16 @@ export default function App() {
   };
 
   const handleOpenVoiceChat = (sampleQuery?: string) => {
-    if (sampleQuery) {
-      setVoiceChatQuery(sampleQuery);
-      setIsVoiceChatOpen(true);
-    } else {
-      // Direct full-screen Chatbot experience matching Chatbot UI.png
-      navigateToView('chat');
+    if (sampleQuery && sampleQuery.trim()) {
+      setChatInitialQuery(sampleQuery.trim());
+      requireAuth(() => {
+        setChatInitialQuery(sampleQuery.trim());
+        navigateToView('chat');
+      }, lang === 'en' ? 'AI Consultation' : 'மருத்துவ ஆலோசனை');
+      return;
     }
+    // Direct click to chat: allow interactive preview
+    navigateToView('chat');
   };
 
   // Render Full-Screen Chatbot Page matching Chatbot UI.png
@@ -182,12 +200,13 @@ export default function App() {
         <ChatbotPage
           lang={lang}
           setLang={setLang}
+          initialQuery={chatInitialQuery}
           onNavigateHome={() => navigateToView('landing')}
           onNavigateProfile={() => navigateToView('profile')}
-          onOpenAmbulance={() => setIsAmbulanceOpen(true)}
-          onOpenPrescription={() => setIsPrescriptionOpen(true)}
-          onOpenDiseaseMap={() => setIsDiseaseMapOpen(true)}
-          onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+          onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+          onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+          onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
         />
 
         {/* Global Modals Accessible within Chat */}
@@ -349,8 +368,14 @@ export default function App() {
         />
         <LoginModal
           isOpen={isLoginOpen}
-          onClose={() => setIsLoginOpen(false)}
+          onClose={() => {
+            setIsLoginOpen(false);
+            setLoginNotice(null);
+            pendingAuthActionRef.current = null;
+          }}
           lang={lang}
+          contextNotice={loginNotice}
+          onSuccess={handleGlobalLoginSuccess}
         />
       </>
     );
@@ -511,8 +536,14 @@ export default function App() {
 
       <LoginModal
         isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
+        onClose={() => {
+          setIsLoginOpen(false);
+          setLoginNotice(null);
+          pendingAuthActionRef.current = null;
+        }}
         lang={lang}
+        contextNotice={loginNotice}
+        onSuccess={handleGlobalLoginSuccess}
       />
 
       <HealthGuideModal

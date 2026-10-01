@@ -80,6 +80,7 @@ interface ChatbotPageProps {
   onOpenPrescription?: () => void;
   onOpenDiseaseMap?: () => void;
   onOpenBabyShots?: () => void;
+  initialQuery?: string;
 }
 
 const createFreshSession = (title = 'New Consultation'): ChatSession => ({
@@ -98,6 +99,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   onOpenPrescription,
   onOpenDiseaseMap,
   onOpenBabyShots,
+  initialQuery,
 }) => {
   // Sessions state with LocalStorage persistence and legacy mock purging
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
@@ -152,7 +154,10 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [loginNotice, setLoginNotice] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const pendingActionRef = useRef<(() => void) | null>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
 
   // Proactively sweep and eliminate any legacy mock chat history on mount
   useEffect(() => {
@@ -209,7 +214,50 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     }
   }, [sessions]);
 
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
+
+  const ensureAuth = (action?: () => void, customNotice?: string): boolean => {
+    const user = authService.getCurrentUser();
+    if (user) {
+      if (action) action();
+      return true;
+    }
+    const notice =
+      customNotice ||
+      (lang === 'en'
+        ? 'Sign in or create an account to start your consultation'
+        : 'மருத்துவ ஆலோசனையைத் தொடங்க உள்நுழையவும் அல்லது புதிய கணக்கு தொடங்கவும்');
+    setLoginNotice(notice);
+    setToastMessage(notice);
+    setIsLoginOpen(true);
+    if (action) {
+      pendingActionRef.current = action;
+    }
+    return false;
+  };
+
+  const handleLoginSuccess = (user: AuthUser) => {
+    setCurrentUser(user);
+    setIsLoginOpen(false);
+    setLoginNotice(null);
+    if (pendingActionRef.current) {
+      const act = pendingActionRef.current;
+      pendingActionRef.current = null;
+      setTimeout(() => act(), 100);
+    } else {
+      setTimeout(() => chatInputRef.current?.focus(), 150);
+    }
+  };
+
+  // Sync initial search query if transferred from landing hero
+  useEffect(() => {
+    if (initialQuery && initialQuery.trim()) {
+      setInputText(initialQuery.trim());
+      if (authService.getCurrentUser()) {
+        handleSendMessage(initialQuery.trim());
+      }
+    }
+  }, [initialQuery]);
 
   // Subscribe to auth changes and load isolated user chat sessions from Supabase
   useEffect(() => {
@@ -348,6 +396,10 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   // Voice input handling with speechEngine and pulse animation
   const handleToggleVoiceInput = () => {
+    if (!ensureAuth(() => handleToggleVoiceInput(), lang === 'en' ? 'Sign in to use voice consultation' : 'குரல் வழிக் கேள்வி கேட்க உள்நுழையவும்')) {
+      return;
+    }
+
     if (isRecording) {
       speechEngine.stopListening();
       setIsRecording(false);
@@ -769,7 +821,9 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         {/* + New Chat Pill Button */}
         <div className="px-4 pb-2">
           <button
-            onClick={handleNewChat}
+            onClick={() => {
+              ensureAuth(handleNewChat, lang === 'en' ? 'Sign in to start a new chat' : 'புதிய உரையாடலைத் தொடங்க உள்நுழையவும்');
+            }}
             className="w-full flex items-center gap-2 py-2.5 px-4 rounded-xl bg-[#E8F7F2] hover:bg-[#DDF2EB] text-[#0A604D] font-bold text-xs transition-colors border border-[#C6ECE0] shadow-2xs"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -796,7 +850,10 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
           <button
             onClick={() => {
-              handleSendMessage(lang === 'en' ? 'Connect me with doctor telemedicine tele-triage.' : 'மருத்துவரை தொலைபேசியில் அழைக்கவும்.');
+              ensureAuth(
+                () => handleSendMessage(lang === 'en' ? 'Connect me with doctor telemedicine tele-triage.' : 'மருத்துவரை தொலைபேசியில் அழைக்கவும்.'),
+                lang === 'en' ? 'Sign in to request doctor tele-triage' : 'மருத்துவரை அழைக்க உள்நுழையவும்'
+              );
             }}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
           >
@@ -806,7 +863,9 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
           {onOpenAmbulance && (
             <button
-              onClick={onOpenAmbulance}
+              onClick={() => {
+                ensureAuth(onOpenAmbulance, lang === 'en' ? 'Sign in to dispatch ambulance' : 'ஆம்புலன்ஸ் அழைக்க உள்நுழையவும்');
+              }}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
             >
               <Siren className="w-4 h-4 text-rose-500" />
@@ -816,7 +875,9 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
           {onOpenPrescription && (
             <button
-              onClick={onOpenPrescription}
+              onClick={() => {
+                ensureAuth(onOpenPrescription, lang === 'en' ? 'Sign in to access prescription & generic medicines' : 'மருந்து சேவைகளுக்கு உள்நுழையவும்');
+              }}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
             >
               <Pill className="w-4 h-4 text-slate-500" />
@@ -826,7 +887,9 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
           {onOpenDiseaseMap && (
             <button
-              onClick={onOpenDiseaseMap}
+              onClick={() => {
+                ensureAuth(onOpenDiseaseMap, lang === 'en' ? 'Sign in to access disease outbreak map' : 'நோய் வரைபடத்திற்கு உள்நுழையவும்');
+              }}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
             >
               <Shield className="w-4 h-4 text-slate-500" />
@@ -836,7 +899,9 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
           {onOpenBabyShots && (
             <button
-              onClick={onOpenBabyShots}
+              onClick={() => {
+                ensureAuth(onOpenBabyShots, lang === 'en' ? 'Sign in to access vaccination records' : 'தடுப்பூசி அட்டவணைக்கு உள்நுழையவும்');
+              }}
               className="w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
             >
               <div className="flex items-center gap-3">
@@ -894,9 +959,19 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                       <div
                         role="button"
                         tabIndex={0}
-                        onClick={() => setActiveSessionId(session.id)}
+                        onClick={() => {
+                          if (!authService.getCurrentUser()) {
+                            ensureAuth();
+                            return;
+                          }
+                          setActiveSessionId(session.id);
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
+                            if (!authService.getCurrentUser()) {
+                              ensureAuth();
+                              return;
+                            }
                             setActiveSessionId(session.id);
                           }
                         }}
@@ -1063,7 +1138,12 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 {suggestionCards.map((card, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleSendMessage(card.query)}
+                    onClick={() => {
+                      ensureAuth(
+                        () => handleSendMessage(card.query),
+                        lang === 'en' ? 'Sign in or create an account to consult DocBot' : 'ஆலோசனையைத் தொடங்க உள்நுழையவும்'
+                      );
+                    }}
                     className="p-4 rounded-2xl bg-white border border-slate-200/90 hover:border-teal-400 hover:shadow-xs transition-all flex items-center gap-3.5 group text-left"
                   >
                     <div className={`w-10 h-10 rounded-2xl ${card.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
@@ -1212,7 +1292,12 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setShowModelDropdown(!showModelDropdown)}
+                  onClick={() => {
+                    ensureAuth(
+                      () => setShowModelDropdown(!showModelDropdown),
+                      lang === 'en' ? 'Sign in to switch clinical AI models' : 'மாதிரியை மாற்ற உள்நுழையவும்'
+                    );
+                  }}
                   className="flex items-center gap-1.5 px-3 py-1 rounded-xl border text-[11px] font-semibold transition-all bg-slate-50 border-slate-200/90 text-slate-700 hover:bg-slate-100 shadow-2xs"
                   title="Switch AGI Model"
                 >
@@ -1335,6 +1420,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                if (!ensureAuth(() => handleSendMessage())) return;
                 handleSendMessage();
               }}
               className="rounded-full border flex items-center gap-2 p-1.5 sm:p-2 shadow-xs transition-all bg-white border-slate-300 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100"
@@ -1342,7 +1428,12 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               {/* Paperclip Attachment Button */}
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  ensureAuth(
+                    () => fileInputRef.current?.click(),
+                    lang === 'en' ? 'Sign in to attach medical records or prescriptions' : 'மருத்துவ ஆவணங்களைப் பதிவேற்ற உள்நுழையவும்'
+                  );
+                }}
                 className="p-2.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                 title="Attach Prescription or Lab Slip"
               >
@@ -1351,13 +1442,32 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
               {/* Text Input Field */}
               <input
+                ref={chatInputRef}
                 type="text"
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
+                onChange={(e) => {
+                  if (!authService.getCurrentUser()) {
+                    ensureAuth();
+                    return;
+                  }
+                  setInputText(e.target.value);
+                }}
+                onFocus={(e) => {
+                  if (!authService.getCurrentUser()) {
+                    e.target.blur();
+                    ensureAuth(() => chatInputRef.current?.focus());
+                  }
+                }}
+                onClick={(e) => {
+                  if (!authService.getCurrentUser()) {
+                    e.currentTarget.blur();
+                    ensureAuth(() => chatInputRef.current?.focus());
+                  }
+                }}
                 placeholder={
                   lang === 'en'
-                    ? 'Ask a health question in English or Tamil...'
-                    : 'தமிழில் அல்லது English-ல் மருத்துவக் கேள்வி கேட்கவும்...'
+                    ? (currentUser ? 'Ask a health question in English or Tamil...' : 'Sign in or create an account to chat...')
+                    : (currentUser ? 'தமிழில் அல்லது English-ல் மருத்துவக் கேள்வி கேட்கவும்...' : 'உரையாட உள்நுழையவும் அல்லது கணக்கு தொடங்கவும்...')
                 }
                 className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-800 placeholder-slate-400 px-1"
               />
@@ -1379,7 +1489,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               {/* Circular Send Button (Matching Chatbot UI.png) */}
               <button
                 type="submit"
-                disabled={!inputText.trim() || isThinking}
+                disabled={isThinking}
                 className="p-2.5 rounded-full bg-[#057A55] hover:bg-[#046A4A] disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-xs transition-transform active:scale-95"
                 title="Send Message"
               >
@@ -1460,8 +1570,14 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       {/* Login Modal mounted inside ChatbotPage */}
       <LoginModal
         isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
+        onClose={() => {
+          setIsLoginOpen(false);
+          setLoginNotice(null);
+          pendingActionRef.current = null;
+        }}
         lang={lang}
+        contextNotice={loginNotice}
+        onSuccess={handleLoginSuccess}
       />
 
     </div>

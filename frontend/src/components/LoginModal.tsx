@@ -35,6 +35,8 @@ interface LoginModalProps {
   onClose: () => void;
   lang: Language;
   onOpenDoctorHandover?: () => void;
+  contextNotice?: string | null;
+  onSuccess?: (user: AuthUser) => void;
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({
@@ -42,6 +44,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onClose,
   lang,
   onOpenDoctorHandover,
+  contextNotice,
+  onSuccess,
 }) => {
   const [role, setRole] = useState<UserRole>('PERSONAL');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -88,11 +92,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
       setTimeout(() => {
         setIsLoading(false);
+        if (onSuccess) {
+          onSuccess(user);
+        }
         onClose();
         if (role === 'HEALTHCARE_PROFESSIONAL' && onOpenDoctorHandover) {
           onOpenDoctorHandover();
         }
-      }, 900);
+      }, 700);
     } catch (err: any) {
       setIsLoading(false);
       setErrorMessage(err.message || 'Authentication error occurred. Please check your credentials.');
@@ -302,6 +309,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             {/* Form Container */}
             <div className="my-auto py-2">
               
+              {/* Context Notice Banner (when prompted by chat or scanner action) */}
+              {contextNotice && (
+                <div className="mb-4 p-3 sm:p-3.5 rounded-2xl bg-teal-50 border border-teal-200/90 text-[#00695C] text-xs font-semibold flex items-center gap-2.5 shadow-2xs animate-in fade-in slide-in-from-top-2">
+                  <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                    ✓
+                  </div>
+                  <span className="leading-snug">{contextNotice}</span>
+                </div>
+              )}
+
               {/* Form Title & Subtitle */}
               <div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
