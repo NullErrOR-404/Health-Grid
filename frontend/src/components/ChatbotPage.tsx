@@ -43,7 +43,8 @@ import {
   FileUp,
   Video,
   Clock,
-  CalendarCheck
+  CalendarCheck,
+  Square
 } from 'lucide-react';
 import type { Language } from '../types';
 import { speechEngine, type DoctorPersona } from '../services/speechService';
@@ -385,15 +386,11 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   }, []);
 
   // Voice input handling with speechEngine and pulse animation
-  const handleToggleVoiceInput = () => {
-    if (!checkAuth(lang === 'en' ? 'Sign in to use voice consultation' : 'குரல் வழிக் கேள்வி கேட்க உள்நுழையவும்')) {
-      pendingActionRef.current = handleToggleVoiceInput;
-      return;
-    }
-
+  const handleToggleVoiceInput = async () => {
     if (isRecording) {
-      speechEngine.stopListening();
       setIsRecording(false);
+      setToastMessage(lang === 'en' ? 'Processing speech...' : 'குரல் பதிவு செயலாக்கப்படுகிறது...');
+      await speechEngine.stopListening();
       return;
     }
 
@@ -403,21 +400,38 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     }
 
     setIsRecording(true);
-    speechEngine.startListening(lang, {
+    setToastMessage(
+      lang === 'en'
+        ? 'Listening... Speak symptoms in English or Tamil (Tap mic or "Done" to finish)'
+        : 'கேட்கிறது... தமிழில் அல்லது English-ல் பேசவும் (முடிக்க மைக் தட்டவும்)'
+    );
+
+    await speechEngine.startListening(lang, {
       onTranscript: (transcript, isFinal) => {
-        setInputText(transcript);
+        if (transcript && transcript.trim()) {
+          setInputText(transcript);
+        }
         if (isFinal) {
-          setIsRecording(false);
+          setToastMessage(
+            lang === 'en'
+              ? `Heard: "${transcript.slice(0, 32)}${transcript.length > 32 ? '...' : ''}"`
+              : `பதிவு: "${transcript.slice(0, 32)}${transcript.length > 32 ? '...' : ''}"`
+          );
         }
       },
       onStateChange: (state) => {
-        if (state === 'idle' || state === 'error') {
+        if (state === 'idle') {
+          setIsRecording(false);
+        } else if (state === 'processing') {
+          setToastMessage(lang === 'en' ? 'Transcribing with Whisper AI...' : 'குரல் உரை மாற்றப்படுகிறது...');
+        } else if (state === 'error') {
           setIsRecording(false);
         }
       },
       onError: (err) => {
         console.warn('Voice input error:', err);
         setIsRecording(false);
+        setToastMessage(err);
       },
     });
   };
@@ -1372,29 +1386,43 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               </span>
             </button>
 
-            {/* Doctor Voice Persona Switcher */}
-            <div className="relative">
+            {/* Doctor Voice Persona Switcher in Header */}
+            <div className="flex items-center p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/90 shadow-2xs">
               <button
                 type="button"
                 onClick={() => {
-                  const nextPersona: DoctorPersona = voicePersona === 'meera' ? 'arvind' : 'meera';
-                  setVoicePersona(nextPersona);
-                  speechEngine.updateVoiceSettings({ persona: nextPersona });
-                  const toast = nextPersona === 'meera'
-                    ? (lang === 'en' ? 'Voice set to Dr. Meera (Warm Female Bedside)' : 'குரல்: டாக்டர் மீரா (அன்பான மருத்துவர்)')
-                    : (lang === 'en' ? 'Voice set to Dr. Arvind (Calm Male Bedside)' : 'குரல்: டாக்டர் அரவிந்த் (அமைதியான மருத்துவர்)');
-                  setToastMessage(toast);
+                  setVoicePersona('meera');
+                  speechEngine.updateVoiceSettings({ persona: 'meera' });
+                  setToastMessage(lang === 'en' ? 'Doctor Voice: Dr. Meera (Warm Female Bedside)' : 'குரல்: டாக்டர் மீரா (பெண் மருத்துவர்)');
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-2xs cursor-pointer group"
-                title={lang === 'en' ? 'Toggle AI Doctor Voice Persona (Dr. Meera / Dr. Arvind)' : 'மருத்துவர் குரலை மாற்றவும்'}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  voicePersona === 'meera'
+                    ? 'bg-white text-emerald-800 shadow-xs border border-emerald-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title={lang === 'en' ? 'Dr. Meera (Warm Female Bedside)' : 'டாக்டர் மீரா (பெண் மருத்துவர்)'}
               >
-                <Volume2 className="w-3.5 h-3.5 text-teal-600 group-hover:scale-110 transition-transform" />
-                <span className="font-bold text-slate-800">
-                  {voicePersona === 'meera' ? 'Dr. Meera' : 'Dr. Arvind'}
-                </span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-700 font-bold border border-teal-100 hidden sm:inline">
-                  {voicePersona === 'meera' ? (lang === 'en' ? 'Female' : 'பெண்') : (lang === 'en' ? 'Male' : 'ஆண்')}
-                </span>
+                <Volume2 className="w-3 h-3 text-emerald-600" />
+                <span>Dr. Meera</span>
+                <span className="text-[9px] text-emerald-700 font-bold hidden md:inline">(F)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setVoicePersona('arvind');
+                  speechEngine.updateVoiceSettings({ persona: 'arvind' });
+                  setToastMessage(lang === 'en' ? 'Doctor Voice: Dr. Arvind (Calm Male Bedside)' : 'குரல்: டாக்டர் அரவிந்த் (ஆண் மருத்துவர்)');
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  voicePersona === 'arvind'
+                    ? 'bg-white text-teal-800 shadow-xs border border-teal-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title={lang === 'en' ? 'Dr. Arvind (Calm Male Bedside)' : 'டாக்டர் அரவிந்த் (ஆண் மருத்துவர்)'}
+              >
+                <Volume2 className="w-3 h-3 text-teal-700" />
+                <span>Dr. Arvind</span>
+                <span className="text-[9px] text-teal-700 font-bold hidden md:inline">(M)</span>
               </button>
             </div>
 
@@ -1494,18 +1522,76 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 </p>
               </div>
 
+              {/* Doctor Voice Persona Selector in Welcome Screen */}
+              <div className="max-w-md mx-auto p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs text-left">
+                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                  <span>{lang === 'en' ? 'AI Doctor Voice Persona' : 'மருத்துவர் குரல் தெரிவு'}</span>
+                  <span className="text-[10px] text-teal-700 font-mono font-semibold">Gemini Live Audio</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVoicePersona('meera');
+                      speechEngine.updateVoiceSettings({ persona: 'meera' });
+                      setToastMessage(lang === 'en' ? 'Voice set to Dr. Meera (Warm Female Bedside)' : 'குரல்: டாக்டர் மீரா (பெண் மருத்துவர்)');
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      voicePersona === 'meera'
+                        ? 'bg-emerald-50/90 border-emerald-400 text-emerald-950 ring-2 ring-emerald-200 shadow-xs'
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <Volume2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Dr. Meera</span>
+                      </div>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-200/80 font-extrabold text-emerald-900">
+                        {lang === 'en' ? 'Female' : 'பெண்'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-1 leading-tight">
+                      {lang === 'en' ? 'Warm, empathetic bedside' : 'அன்பான பெண் மருத்துவர்'}
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVoicePersona('arvind');
+                      speechEngine.updateVoiceSettings({ persona: 'arvind' });
+                      setToastMessage(lang === 'en' ? 'Voice set to Dr. Arvind (Calm Male Bedside)' : 'குரல்: டாக்டர் அரவிந்த் (ஆண் மருத்துவர்)');
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      voicePersona === 'arvind'
+                        ? 'bg-teal-50/90 border-teal-500 text-teal-950 ring-2 ring-teal-200 shadow-xs'
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <Volume2 className="w-3.5 h-3.5 text-teal-700" />
+                        <span>Dr. Arvind</span>
+                      </div>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-teal-200/80 font-extrabold text-teal-900">
+                        {lang === 'en' ? 'Male' : 'ஆண்'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-1 leading-tight">
+                      {lang === 'en' ? 'Calm, clinical bedside' : 'அமைதியான ஆண் மருத்துவர்'}
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               {/* 4 Action Suggestion Cards (Matching Chatbot UI.png) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left pt-2">
                 {suggestionCards.map((card, idx) => (
                   <button
                     key={idx}
-                    onClick={() => {
-                      ensureAuth(
-                        () => handleSendMessage(card.query),
-                        lang === 'en' ? 'Sign in or create an account to consult DocBot' : 'ஆலோசனையைத் தொடங்க உள்நுழையவும்'
-                      );
-                    }}
-                    className="p-4 rounded-2xl bg-white border border-slate-200/90 hover:border-teal-400 hover:shadow-xs transition-all flex items-center gap-3.5 group text-left"
+                    onClick={() => handleSendMessage(card.query)}
+                    className="p-4 rounded-2xl bg-white border border-slate-200/90 hover:border-teal-400 hover:shadow-xs transition-all flex items-center gap-3.5 group text-left cursor-pointer"
                   >
                     <div className={`w-10 h-10 rounded-2xl ${card.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
                       {card.icon}
@@ -1709,9 +1795,27 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                             <ThumbsDown className="w-3.5 h-3.5" />
                           </button>
                           <button
+                            type="button"
+                            onClick={() => {
+                              const next = voicePersona === 'meera' ? 'arvind' : 'meera';
+                              setVoicePersona(next);
+                              speechEngine.updateVoiceSettings({ persona: next });
+                              setToastMessage(
+                                next === 'meera'
+                                  ? (lang === 'en' ? 'Voice: Dr. Meera (Warm Female Bedside)' : 'குரல்: டாக்டர் மீரா (பெண்)')
+                                  : (lang === 'en' ? 'Voice: Dr. Arvind (Calm Male Bedside)' : 'குரல்: டாக்டர் அரவிந்த் (ஆண்)')
+                              );
+                            }}
+                            className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 transition-colors flex items-center gap-1 font-semibold cursor-pointer"
+                            title={lang === 'en' ? 'Click to switch Doctor Voice persona' : 'மருத்துவர் குரல் மாற்ற கிளிக்'}
+                          >
+                            <Volume2 className="w-2.5 h-2.5 text-emerald-600" />
+                            <span>{voicePersona === 'meera' ? 'Dr. Meera (F)' : 'Dr. Arvind (M)'}</span>
+                          </button>
+                          <button
                             onClick={() => handleSpeakMessage(msg.text)}
-                            className="p-1 hover:text-teal-700 rounded transition-colors"
-                            title="Read Aloud"
+                            className="p-1 hover:text-teal-700 rounded transition-colors cursor-pointer"
+                            title={isVoiceSpeaking ? (lang === 'en' ? 'Stop Speaking' : 'நிறுத்து') : (lang === 'en' ? 'Read Aloud with Doctor Voice' : 'படிக்கவும்')}
                           >
                             {isVoiceSpeaking ? (
                               <VolumeX className="w-3.5 h-3.5 text-rose-500" />
@@ -1754,91 +1858,139 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         <div className="p-4 sm:p-5 border-t z-10 bg-white border-slate-200/90">
           <div className="max-w-3xl mx-auto space-y-2.5">
             
-            {/* Docked Model Selector & Realtime Quota Bar (Per Grill-me User Selection) */}
+            {/* Docked Model Selector, Doctor Voice Persona Switcher & Realtime Quota Bar */}
             <div className="flex flex-wrap items-center justify-between gap-2 px-1">
               
-              {/* Model Dropdown Pill (Claude/ChatGPT styled) */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    ensureAuth(
-                      () => setShowModelDropdown(!showModelDropdown),
-                      lang === 'en' ? 'Sign in to switch clinical AI models' : 'மாதிரியை மாற்ற உள்நுழையவும்'
-                    );
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-xl border text-[11px] font-semibold transition-all bg-slate-50 border-slate-200/90 text-slate-700 hover:bg-slate-100 shadow-2xs"
-                  title="Switch AGI Model"
-                >
-                  {currentModel.provider === 'google' ? (
-                    <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
-                  ) : currentModel.isReasoning ? (
-                    <Brain className="w-3.5 h-3.5 text-emerald-600" />
-                  ) : (
-                    <Zap className="w-3.5 h-3.5 text-amber-500" />
-                  )}
-                  <span className="font-bold">{currentModel.name}</span>
-                  <span className="text-[9px] uppercase font-mono px-1 py-0.2 rounded bg-slate-200/70 text-slate-600">
-                    {currentModel.provider === 'groq' ? 'Groq' : 'Gemini'}
-                  </span>
-                  <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
-                </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Model Dropdown Pill (Claude/ChatGPT styled) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowModelDropdown(!showModelDropdown)}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-xl border text-[11px] font-semibold transition-all bg-slate-50 border-slate-200/90 text-slate-700 hover:bg-slate-100 shadow-2xs cursor-pointer"
+                    title="Switch AGI Model"
+                  >
+                    {currentModel.provider === 'google' ? (
+                      <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
+                    ) : currentModel.isReasoning ? (
+                      <Brain className="w-3.5 h-3.5 text-emerald-600" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5 text-amber-500" />
+                    )}
+                    <span className="font-bold">{currentModel.name}</span>
+                    <span className="text-[9px] uppercase font-mono px-1 py-0.2 rounded bg-slate-200/70 text-slate-600">
+                      {currentModel.provider === 'groq' ? 'Groq' : 'Gemini'}
+                    </span>
+                    <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
+                  </button>
 
-                {/* Model Popover Dropdown */}
-                {showModelDropdown && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowModelDropdown(false)} />
-                    <div className="absolute bottom-full mb-2 left-0 w-80 sm:w-96 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl shadow-slate-950/50 z-50 p-2.5 text-slate-200 animate-dropdown-flow-up">
-                      <div className="px-3 py-2 border-b border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
-                        <span>Select AGI Model</span>
-                        <span className="text-teal-400 lowercase font-mono text-[10px]">Active Keys Verified</span>
-                      </div>
-                      <div className="space-y-1 mt-2">
-                        {AVAILABLE_MODELS.map((model) => {
-                          const isSelected = model.id === currentModel.id;
-                          return (
-                            <button
-                              key={model.id}
-                              type="button"
-                              onClick={() => {
-                                agiService.setModel(model.id);
-                                setCurrentModel(model);
-                                setShowModelDropdown(false);
-                              }}
-                              className={`w-full text-left p-2.5 rounded-xl transition-all flex items-start gap-2.5 ${
-                                isSelected
-                                  ? 'bg-teal-950 border border-teal-500/50 text-white'
-                                  : 'hover:bg-slate-800 text-slate-300 border border-transparent'
-                              }`}
-                            >
-                              <div className="p-2 rounded-xl mt-0.5 bg-slate-800">
-                                {model.provider === 'google' ? (
-                                  <Sparkles className="w-4 h-4 text-cyan-400" />
-                                ) : model.isReasoning ? (
-                                  <Brain className="w-4 h-4 text-emerald-400" />
-                                ) : (
-                                  <Zap className="w-4 h-4 text-amber-400" />
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-bold text-xs text-white truncate">{model.name}</span>
-                                  <span className="text-[10px] font-mono text-teal-400 bg-teal-950 px-1.5 py-0.5 rounded border border-teal-800/50">
-                                    {model.speed}
-                                  </span>
+                  {/* Model Popover Dropdown */}
+                  {showModelDropdown && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setShowModelDropdown(false)} />
+                      <div className="absolute bottom-full mb-2 left-0 w-80 sm:w-96 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl shadow-slate-950/50 z-50 p-2.5 text-slate-200 animate-dropdown-flow-up">
+                        <div className="px-3 py-2 border-b border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
+                          <span>Select AGI Model</span>
+                          <span className="text-teal-400 lowercase font-mono text-[10px]">Active Keys Verified</span>
+                        </div>
+                        <div className="space-y-1 mt-2">
+                          {AVAILABLE_MODELS.map((model) => {
+                            const isSelected = model.id === currentModel.id;
+                            return (
+                              <button
+                                key={model.id}
+                                type="button"
+                                onClick={() => {
+                                  agiService.setModel(model.id);
+                                  setCurrentModel(model);
+                                  setShowModelDropdown(false);
+                                }}
+                                className={`w-full text-left p-2.5 rounded-xl transition-all flex items-start gap-2.5 ${
+                                  isSelected
+                                    ? 'bg-teal-950 border border-teal-500/50 text-white'
+                                    : 'hover:bg-slate-800 text-slate-300 border border-transparent'
+                                }`}
+                              >
+                                <div className="p-2 rounded-xl mt-0.5 bg-slate-800">
+                                  {model.provider === 'google' ? (
+                                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                                  ) : model.isReasoning ? (
+                                    <Brain className="w-4 h-4 text-emerald-400" />
+                                  ) : (
+                                    <Zap className="w-4 h-4 text-amber-400" />
+                                  )}
                                 </div>
-                                <div className="text-[11px] text-slate-400 leading-tight mt-0.5 line-clamp-2">
-                                  {model.description}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-bold text-xs text-white truncate">{model.name}</span>
+                                    <span className="text-[10px] font-mono text-teal-400 bg-teal-950 px-1.5 py-0.5 rounded border border-teal-800/50">
+                                      {model.speed}
+                                    </span>
+                                  </div>
+                                  <div className="text-[11px] text-slate-400 leading-tight mt-0.5 line-clamp-2">
+                                    {model.description}
+                                  </div>
                                 </div>
-                              </div>
-                              {isSelected && <Check className="w-4 h-4 text-teal-400 flex-shrink-0 mt-1" />}
-                            </button>
-                          );
-                        })}
+                                {isSelected && <Check className="w-4 h-4 text-teal-400 flex-shrink-0 mt-1" />}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
+                </div>
+
+                {/* Doctor Voice Persona Dual Switcher Segment */}
+                <div className="flex items-center p-0.5 bg-slate-100 rounded-xl border border-slate-200/90 shadow-2xs">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-2 pr-1 hidden sm:inline">
+                    {lang === 'en' ? 'Voice:' : 'குரல்:'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVoicePersona('meera');
+                      speechEngine.updateVoiceSettings({ persona: 'meera' });
+                      setToastMessage(lang === 'en' ? 'Doctor Voice: Dr. Meera (Warm Female Bedside)' : 'குரல்: டாக்டர் மீரா (பெண் மருத்துவர்)');
+                    }}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      voicePersona === 'meera'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                    title={lang === 'en' ? 'Switch to Dr. Meera (Warm Female Bedside)' : 'டாக்டர் மீரா (பெண் மருத்துவர்)'}
+                  >
+                    <Volume2 className="w-3 h-3" />
+                    <span>Dr. Meera</span>
+                    <span className={`text-[9px] px-1 py-0.2 rounded font-semibold ${
+                      voicePersona === 'meera' ? 'bg-emerald-700 text-emerald-100' : 'bg-slate-200 text-slate-500'
+                    }`}>
+                      {lang === 'en' ? 'F' : 'பெண்'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVoicePersona('arvind');
+                      speechEngine.updateVoiceSettings({ persona: 'arvind' });
+                      setToastMessage(lang === 'en' ? 'Doctor Voice: Dr. Arvind (Calm Male Bedside)' : 'குரல்: டாக்டர் அரவிந்த் (ஆண் மருத்துவர்)');
+                    }}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      voicePersona === 'arvind'
+                        ? 'bg-teal-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                    title={lang === 'en' ? 'Switch to Dr. Arvind (Calm Male Bedside)' : 'டாக்டர் அரவிந்த் (ஆண் மருத்துவர்)'}
+                  >
+                    <Volume2 className="w-3 h-3" />
+                    <span>Dr. Arvind</span>
+                    <span className={`text-[9px] px-1 py-0.2 rounded font-semibold ${
+                      voicePersona === 'arvind' ? 'bg-teal-800 text-teal-100' : 'bg-slate-200 text-slate-500'
+                    }`}>
+                      {lang === 'en' ? 'M' : 'ஆண்'}
+                    </span>
+                  </button>
+                </div>
               </div>
 
               {/* Dynamic Color-Changing Realtime Quota Bar */}
@@ -1885,15 +2037,36 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               })()}
             </div>
 
+            {/* Live Voice Recording Status Banner */}
+            {isRecording && (
+              <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-rose-50 border border-rose-200/90 text-rose-900 shadow-xs animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="flex items-center gap-2.5 text-xs font-semibold">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-600"></span>
+                  </span>
+                  <span>
+                    {lang === 'en'
+                      ? 'Listening to symptoms... Speak in English or Tamil'
+                      : 'கேட்கிறது... அறிகுறிகளைத் தமிழில் அல்லது ஆங்கிலத்தில் பேசவும்'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleVoiceInput}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-2xs transition-all active:scale-95 cursor-pointer"
+                >
+                  <Square className="w-3 h-3 fill-white" />
+                  <span>{lang === 'en' ? 'Done Speaking' : 'முடிந்தது'}</span>
+                </button>
+              </div>
+            )}
+
             {/* Input Capsule (Matching Chatbot UI.png) */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 if (isThinking || isSendingRef.current) return;
-                if (!checkAuth(lang === 'en' ? 'Sign in to start your consultation' : 'உரையாட உள்நுழையவும்')) {
-                  pendingActionRef.current = () => handleSendMessage();
-                  return;
-                }
                 handleSendMessage();
               }}
               className="rounded-full border flex items-center gap-2 p-1.5 sm:p-2 shadow-xs transition-all bg-white border-slate-300 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100"
@@ -1902,12 +2075,9 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  withAuth(
-                    () => fileInputRef.current?.click(),
-                    lang === 'en' ? 'Sign in to attach medical records or prescriptions' : 'மருத்துவ ஆவணங்களைப் பதிவேற்ற உள்நுழையவும்'
-                  );
+                  fileInputRef.current?.click();
                 }}
-                className="p-2.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                className="p-2.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Attach Prescription or Lab Slip"
               >
                 <Paperclip className="w-4 h-4 rotate-45" />
@@ -1918,29 +2088,11 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 ref={chatInputRef}
                 type="text"
                 value={inputText}
-                onChange={(e) => {
-                  if (!authService.getCurrentUser()) {
-                    checkAuth();
-                    return;
-                  }
-                  setInputText(e.target.value);
-                }}
-                onFocus={(e) => {
-                  if (!authService.getCurrentUser()) {
-                    e.target.blur();
-                    withAuth(() => chatInputRef.current?.focus());
-                  }
-                }}
-                onClick={(e) => {
-                  if (!authService.getCurrentUser()) {
-                    e.currentTarget.blur();
-                    withAuth(() => chatInputRef.current?.focus());
-                  }
-                }}
+                onChange={(e) => setInputText(e.target.value)}
                 placeholder={
-                  lang === 'en'
-                    ? (currentUser ? 'Ask a health question in English or Tamil...' : 'Sign in or create an account to chat...')
-                    : (currentUser ? 'தமிழில் அல்லது English-ல் மருத்துவக் கேள்வி கேட்கவும்...' : 'உரையாட உள்நுழையவும் அல்லது கணக்கு தொடங்கவும்...')
+                  isRecording
+                    ? (lang === 'en' ? 'Listening... speak symptoms now...' : 'கேட்கிறது... இப்போது பேசவும்...')
+                    : (lang === 'en' ? 'Ask a health question in English or Tamil (or tap mic to speak)...' : 'தமிழில் அல்லது English-ல் மருத்துவக் கேள்வி கேட்கவும்...')
                 }
                 className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-800 placeholder-slate-400 px-1"
               />
@@ -1949,21 +2101,21 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               <button
                 type="button"
                 onClick={handleToggleVoiceInput}
-                className={`p-2.5 rounded-full transition-all ${
+                className={`p-2.5 rounded-full transition-all cursor-pointer ${
                   isRecording
                     ? 'bg-rose-500 text-white animate-pulse shadow-lg ring-4 ring-rose-200'
                     : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
                 }`}
-                title={isRecording ? (lang === 'en' ? 'Stop listening' : 'நிறுத்து') : (lang === 'en' ? 'Voice Input' : 'குரல் உள்ளீடு')}
+                title={isRecording ? (lang === 'en' ? 'Stop listening' : 'நிறுத்து') : (lang === 'en' ? 'Voice Input (Click to Speak)' : 'குரல் உள்ளீடு')}
               >
-                <Mic className={`w-4 h-4 ${isRecording ? 'animate-bounce' : ''}`} />
+                <Mic className={`w-4 h-4 ${isRecording ? 'animate-bounce text-white' : ''}`} />
               </button>
 
               {/* Circular Send Button (Matching Chatbot UI.png) */}
               <button
                 type="submit"
                 disabled={isThinking}
-                className="p-2.5 rounded-full bg-[#057A55] hover:bg-[#046A4A] disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-xs transition-transform active:scale-95"
+                className="p-2.5 rounded-full bg-[#057A55] hover:bg-[#046A4A] disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-xs transition-transform active:scale-95 cursor-pointer"
                 title="Send Message"
               >
                 <Send className="w-4 h-4" />

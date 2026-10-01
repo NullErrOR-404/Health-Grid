@@ -177,6 +177,12 @@ export function splitIntoSentences(text: string): string[] {
 export class SpeechEngine {
   private recognition: any = null;
   private isListening = false;
+  private mediaStream: MediaStream | null = null;
+  private mediaRecorder: MediaRecorder | null = null;
+  private audioChunks: Blob[] = [];
+  private activeCallbacks: SpeechCallbacks | null = null;
+  private hasReceivedFinalTranscript: boolean = false;
+  private currentListeningLang: 'ta' | 'en' = 'ta';
   private voiceSettings: VoiceSettings = DEFAULT_VOICE_SETTINGS;
   private settingsListeners: Array<(s: VoiceSettings) => void> = [];
 
@@ -193,15 +199,6 @@ export class SpeechEngine {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        this.recognition = new SpeechRecognition();
-        this.recognition.continuous = false;
-        this.recognition.interimResults = true;
-        this.recognition.maxAlternatives = 1;
-      }
-
       // Load persisted settings
       try {
         const saved = localStorage.getItem('healthgrid_voice_settings');
@@ -236,76 +233,256 @@ export class SpeechEngine {
   }
 
   public isSpeechRecognitionSupported(): boolean {
-    return this.recognition !== null;
+    if (typeof window === 'undefined') return false;
+    return !!(
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition ||
+      navigator.mediaDevices?.getUserMedia
+    );
   }
 
-  public startListening(lang: 'ta' | 'en', callbacks: SpeechCallbacks): void {
-    // If AI is currently speaking, barge-in stops the AI immediately
-    this.stopSpeaking();
+  /**
+   * Transcribe captured microphone audio via Groq Whisper AI (sub-400ms SOTA model)
+   */
+  public async transcribeAudioWithGroqWhisper(audioBlob: Blob, lang: 'ta' | 'en'): Promise<string> {
+    const groqKey = (import.meta as any).env.VITE_GROQ_API_KEY || '';
+    if (!groqKey) {
+      throw new Error('Groq API key not configured');
+    }
 
-    if (!this.recognition) {
-      callbacks.onStateChange?.('listening');
-      setTimeout(() => {
-        const fallbackText =
-          lang === 'ta'
-            ? 'எனக்கு 2 நாளா அதிக காய்ச்சலும் உடல் வலியும் இருக்கு'
-            : 'I have severe fever and body pain since 2 days';
-        callbacks.onTranscript?.(fallbackText, true);
-        callbacks.onStateChange?.('idle');
-      }, 2500);
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'speech_input.webm');
+    formData.append('model', 'whisper-large-v3-turbo');
+    formData.append('language', lang === 'ta' ? 'ta' : 'en');
+    formData.append('prompt', 'Clinical medical health consultation symptoms in Tamil or Indian English');
+
+    const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${groqKey}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Groq Whisper error ${res.status}: ${errText}`);
+    }
+
+    const data = await res.json();
+    return (data.text || '').trim();
+  }
+
+  private latestTranscript: string = '';
+
+  /**
+   * Resilient Dual-Mode Speech Recognition:
+   * 1. Safely requests microphone access and spins up MediaRecorder for Groq Whisper AI.
+   * 2. Runs native Web Speech API in parallel for instantaneous real-time transcription.
+   * 3. If Web Speech API is absent, blocked, or silent, Groq Whisper transcribes the recording automatically.
+   */
+  public async startListening(lang: 'ta' | 'en', callbacks: SpeechCallbacks): Promise<void> {
+    this.stopSpeaking();
+    
+    // Stop any existing session without invoking old callbacks
+    this.isListening = false;
+    if (this.recognition) {
+      try {
+        this.recognition.onend = null;
+        this.recognition.onerror = null;
+        this.recognition.stop();
+      } catch (e) {
+        // Ignored
+      }
+      this.recognition = null;
+    }
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      try {
+        this.mediaRecorder.stop();
+      } catch (e) {
+        // Ignored
+      }
+      this.mediaRecorder = null;
+    }
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach((track) => track.stop());
+      this.mediaStream = null;
+    }
+
+    this.currentListeningLang = lang;
+    this.activeCallbacks = callbacks;
+    this.hasReceivedFinalTranscript = false;
+    this.latestTranscript = '';
+    this.audioChunks = [];
+
+    let mediaAcquired = false;
+
+    // 1. Attempt getUserMedia for hardware mic access & Groq Whisper buffer
+    try {
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+        this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaAcquired = true;
+
+        if (typeof MediaRecorder !== 'undefined') {
+          try {
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+              ? 'audio/webm;codecs=opus'
+              : MediaRecorder.isTypeSupported('audio/webm')
+              ? 'audio/webm'
+              : 'audio/mp4';
+            const mr = new MediaRecorder(this.mediaStream, { mimeType });
+            mr.ondataavailable = (e) => {
+              if (e.data && e.data.size > 0) {
+                this.audioChunks.push(e.data);
+              }
+            };
+            mr.start(250);
+            this.mediaRecorder = mr;
+          } catch (mrErr) {
+            console.warn('MediaRecorder buffer setup skipped:', mrErr);
+          }
+        }
+      }
+    } catch (permErr: any) {
+      console.warn('Microphone getUserMedia warning:', permErr);
+    }
+
+    // 2. Setup Web Speech Recognition
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!mediaAcquired && !SpeechRecognition) {
+      callbacks.onError?.(
+        lang === 'en'
+          ? 'Microphone access is not supported or was blocked. Please check browser permissions.'
+          : 'மைக்ரோஃபோன் அணுகல் ஆதரிக்கப்படவில்லை அல்லது தடுக்கப்பட்டது.'
+      );
+      callbacks.onStateChange?.('error');
       return;
     }
 
-    try {
-      this.recognition.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
-      callbacks.onStateChange?.('listening');
-      this.isListening = true;
+    this.isListening = true;
+    callbacks.onStateChange?.('listening');
 
-      this.recognition.onresult = (event: any) => {
-        let interim = '';
-        let final = '';
+    if (SpeechRecognition) {
+      try {
+        const rec = new SpeechRecognition();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
+        rec.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
 
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            final += transcript;
-          } else {
-            interim += transcript;
+        rec.onresult = (event: any) => {
+          let interim = '';
+          let final = '';
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              final += transcript;
+            } else {
+              interim += transcript;
+            }
           }
-        }
 
-        const text = final || interim;
-        callbacks.onTranscript?.(text, !!final);
-      };
+          const text = (final || interim).trim();
+          if (text) {
+            this.latestTranscript = text;
+            if (final) this.hasReceivedFinalTranscript = true;
+            callbacks.onTranscript?.(text, !!final);
+          }
+        };
 
-      this.recognition.onerror = (event: any) => {
-        this.isListening = false;
-        callbacks.onStateChange?.('error');
-        callbacks.onError?.(event.error || 'Speech recognition failed');
-      };
+        rec.onerror = (event: any) => {
+          console.warn('Web Speech recognition status:', event.error);
+          if (event.error === 'not-allowed') {
+            callbacks.onError?.(
+              lang === 'en'
+                ? 'Microphone permission denied. Please allow microphone access in your browser.'
+                : 'மைக்ரோஃபோன் அனுமதி மறுக்கப்பட்டது. உலாவியில் அனுமதிக்கவும்.'
+            );
+          }
+        };
 
-      this.recognition.onend = () => {
-        this.isListening = false;
-        callbacks.onStateChange?.('idle');
-      };
+        rec.onend = () => {
+          // Keep listening continuously while isListening is active
+          if (this.isListening && this.recognition) {
+            try {
+              this.recognition.start();
+            } catch (err) {
+              // Recognition already active or stopped
+            }
+          }
+        };
 
-      this.recognition.start();
-    } catch (e: any) {
-      this.isListening = false;
-      callbacks.onStateChange?.('error');
-      callbacks.onError?.(e.message);
+        this.recognition = rec;
+        rec.start();
+      } catch (recErr: any) {
+        console.warn('Web Speech start warning, continuing with Groq Whisper buffer:', recErr);
+      }
     }
   }
 
-  public stopListening(): void {
-    if (this.recognition && this.isListening) {
+  public async stopListening(): Promise<void> {
+    if (!this.isListening && !this.mediaRecorder) return;
+    this.isListening = false;
+
+    // Terminate Web Speech recognition safely
+    if (this.recognition) {
       try {
+        this.recognition.onend = null;
         this.recognition.stop();
+        this.recognition = null;
       } catch (err) {
         // Ignored
       }
-      this.isListening = false;
     }
+
+    // Stop MediaRecorder and grab buffered audio
+    let recordedBlob: Blob | null = null;
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      try {
+        await new Promise<void>((resolve) => {
+          if (!this.mediaRecorder) return resolve();
+          this.mediaRecorder.onstop = () => resolve();
+          this.mediaRecorder.stop();
+        });
+        if (this.audioChunks.length > 0) {
+          recordedBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+        }
+      } catch (e) {
+        console.warn('Error stopping mediaRecorder:', e);
+      }
+      this.mediaRecorder = null;
+    }
+
+    // Release microphone tracks immediately
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach((track) => track.stop());
+      this.mediaStream = null;
+    }
+
+    const callbacks = this.activeCallbacks;
+    const lang = this.currentListeningLang;
+    const hadWebSpeechResult = this.hasReceivedFinalTranscript || Boolean(this.latestTranscript.trim());
+    this.activeCallbacks = null;
+
+    // If Web Speech did not yield final text, transcribe with Groq Whisper AI
+    if (!hadWebSpeechResult && recordedBlob && recordedBlob.size > 300) {
+      try {
+        callbacks?.onStateChange?.('processing');
+        const whisperText = await this.transcribeAudioWithGroqWhisper(recordedBlob, lang);
+        if (whisperText) {
+          callbacks?.onTranscript?.(whisperText, true);
+        }
+      } catch (wErr: any) {
+        console.warn('Groq Whisper fallback transcription notice:', wErr);
+      }
+    } else if (this.latestTranscript) {
+      callbacks?.onTranscript?.(this.latestTranscript, true);
+    }
+
+    callbacks?.onStateChange?.('idle');
   }
 
   /**
