@@ -101,20 +101,14 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     }
   }, [isOpen]);
 
-  // Manage camera lifecycle
-  useEffect(() => {
-    if (isOpen && activeTab === 'camera' && !analysisResult && !isAnalyzing) {
-      startCamera(cameraFacingMode);
-    } else {
-      stopCamera();
+  // Stop device camera
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     }
-    return () => {
-      stopCamera();
-      speechEngine.stopSpeaking();
-    };
-  }, [isOpen, activeTab, cameraFacingMode, analysisResult, isAnalyzing]);
-
-  if (!isOpen) return null;
+    setIsCameraActive(false);
+  };
 
   // Start device camera
   const startCamera = async (facingMode: 'environment' | 'user' = 'environment') => {
@@ -156,14 +150,18 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     }
   };
 
-  // Stop device camera
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
+  // Manage camera lifecycle
+  useEffect(() => {
+    if (isOpen && activeTab === 'camera' && !analysisResult && !isAnalyzing) {
+      startCamera(cameraFacingMode);
+    } else {
+      stopCamera();
     }
-    setIsCameraActive(false);
-  };
+    return () => {
+      stopCamera();
+      speechEngine.stopSpeaking();
+    };
+  }, [isOpen, activeTab, cameraFacingMode, analysisResult, isAnalyzing]);
 
   // Toggle front/rear camera
   const handleSwitchCamera = () => {
@@ -365,6 +363,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&recur=RRULE:FREQ=DAILY;COUNT=${analysisResult.refillCountdown.courseDurationDays || 5}`;
     window.open(url, '_blank');
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
