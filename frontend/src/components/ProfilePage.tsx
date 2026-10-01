@@ -28,6 +28,7 @@ import { supabase } from '../services/supabaseClient';
 import { authService, generateImmutableHealthId } from '../services/authService';
 import { EmergencyContactSkeleton, HealthRecordSkeleton } from './SkeletonLoader';
 import { CustomSelect } from './CustomSelect';
+import { CustomDatePicker, calculateAgeFromDob } from './CustomDatePicker';
 
 const GENDER_OPTIONS = [
   { value: 'Male', label: 'Male' },
@@ -233,18 +234,19 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             .eq('id', session.user.id)
             .maybeSingle();
 
-          // Determine immutable account UUID HealthGrid ID
+          // Determine immutable account 7-8 char HealthGrid ID
           const existingHealthId = patient?.health_id;
-          const immutableHealthId = (existingHealthId && existingHealthId.length > 12)
-            ? existingHealthId
-            : (authUser?.healthId && authUser.healthId.length > 12)
-            ? authUser.healthId
+          const is7to8 = (id?: string) => !!(id && /^HG-[A-Z0-9]{7,8}$/i.test(id));
+          const immutableHealthId = is7to8(existingHealthId)
+            ? existingHealthId!.toUpperCase()
+            : is7to8(authUser?.healthId)
+            ? authUser!.healthId!.toUpperCase()
             : generateImmutableHealthId(session.user.id);
 
           initialData.healthId = immutableHealthId;
 
-          // If patient record is missing health_id or using old truncated prefix, persist full UUID ID
-          if (session.user.id && (!patient?.health_id || patient.health_id.length <= 12)) {
+          // If patient record is missing health_id or using old format, persist 7-8 char ID
+          if (session.user.id && !is7to8(patient?.health_id)) {
             supabase
               .from('patients')
               .upsert({
@@ -270,7 +272,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               email: patient.email || initialData.email,
               language: patient.preferred_language || initialData.language,
               location: patient.location || '',
-              healthId: (patient.health_id && patient.health_id.length > 12) ? patient.health_id : immutableHealthId,
+              healthId: is7to8(patient.health_id) ? patient.health_id.toUpperCase() : immutableHealthId,
             };
 
             // Emergency contacts
@@ -643,24 +645,34 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
                   <div>
                     <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Date of Birth</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 14 Aug 1995"
+                    <CustomDatePicker
                       value={editProfileForm.dob}
-                      onChange={(e) => setEditProfileForm({ ...editProfileForm, dob: e.target.value })}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-teal-600"
+                      onChange={(newDob) => {
+                        const calculatedAge = calculateAgeFromDob(newDob);
+                        setEditProfileForm({
+                          ...editProfileForm,
+                          dob: newDob,
+                          age: calculatedAge !== null ? String(calculatedAge) : '',
+                        });
+                      }}
+                      placeholder="Select Date of Birth"
+                      size="sm"
+                      rounded="xl"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Age (Years)</label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 29"
-                      value={editProfileForm.age}
-                      onChange={(e) => setEditProfileForm({ ...editProfileForm, age: e.target.value })}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-teal-600"
-                    />
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-semibold text-slate-600 block">Age (Years)</label>
+                      <span className="text-[9px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.2 rounded border border-teal-200 inline-flex items-center gap-1">
+                        <Lock className="w-2.5 h-2.5 text-teal-600" />
+                        <span>Auto-Calculated</span>
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 cursor-not-allowed select-none flex items-center justify-between shadow-inner">
+                      <span>{editProfileForm.age ? `${editProfileForm.age} years old` : 'Select DOB above'}</span>
+                      <span className="text-[10px] text-slate-400 font-normal">Non-editable</span>
+                    </div>
                   </div>
 
                   <div>

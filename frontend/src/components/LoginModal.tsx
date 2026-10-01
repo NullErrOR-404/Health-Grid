@@ -17,6 +17,7 @@ import {
 import type { Language } from '../types';
 import { authService, type UserRole, type AuthUser } from '../services/authService';
 import { CustomSelect } from './CustomSelect';
+import { CustomDatePicker, calculateAgeFromDob } from './CustomDatePicker';
 
 const BLOOD_GROUP_OPTIONS = [
   { value: 'B Positive', label: 'B Positive (B+)', badge: 'B+' },
@@ -48,7 +49,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [age, setAge] = useState(45);
+  const [dob, setDob] = useState('');
+  const [age, setAge] = useState<number>(0);
   const [bloodGroup, setBloodGroup] = useState('B Positive');
   const [isLoading, setIsLoading] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
@@ -70,7 +72,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           identifier,
           password,
           role,
-          age,
+          dob: dob || undefined,
+          age: age || undefined,
           bloodGroup,
         });
       } else {
@@ -439,18 +442,40 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   </div>
                 </div>
 
-                {/* Age & Blood Group if Registering */}
+                {/* DOB, Auto-Calculated Age, and Blood Group if Registering */}
                 {isRegisterMode && (
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Age</label>
-                      <input
-                        type="number"
-                        value={age}
-                        onChange={(e) => setAge(Number(e.target.value))}
-                        className="w-full px-3 py-2.5 rounded-2xl border border-slate-200 text-xs text-slate-900"
-                      />
+                  <div className="space-y-3 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Date of Birth</label>
+                        <CustomDatePicker
+                          value={dob}
+                          onChange={(newDob) => {
+                            setDob(newDob);
+                            const calculated = calculateAgeFromDob(newDob);
+                            setAge(calculated !== null ? calculated : 0);
+                          }}
+                          placeholder="Select Birth Date"
+                          size="sm"
+                          rounded="2xl"
+                          triggerClassName="!py-2.5 !rounded-2xl"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-bold text-slate-700">Age (Years)</label>
+                          <span className="text-[9px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.2 rounded border border-teal-200 inline-flex items-center gap-1">
+                            <Lock className="w-2.5 h-2.5 text-teal-600" />
+                            <span>Auto-Calculated</span>
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 border border-slate-200 rounded-2xl px-3 py-2.5 text-xs font-semibold text-slate-600 cursor-not-allowed select-none flex items-center justify-between shadow-inner">
+                          <span>{age > 0 ? `${age} years old` : 'Select DOB'}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">Locked</span>
+                        </div>
+                      </div>
                     </div>
+
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Blood Group</label>
                       <CustomSelect

@@ -19,23 +19,43 @@ export interface AuthUser {
   licenseNumber?: string;
   hospitalName?: string;
   token?: string;
+  dob?: string;
   age?: number;
   bloodGroup?: string;
   healthId?: string;
 }
 
 export const generateImmutableHealthId = (userId?: string): string => {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // 32 uppercase alphanumeric chars
   if (userId && userId.trim()) {
-    return `HG-${userId.trim().toUpperCase()}`;
+    const clean = userId.replace(/[^a-zA-Z0-9]/g, '');
+    let h1 = 0x811c9dc5;
+    let h2 = 5381;
+    for (let i = 0; i < clean.length; i++) {
+      const code = clean.charCodeAt(i);
+      h1 = Math.imul(h1 ^ code, 0x01000193);
+      h2 = ((h2 << 5) + h2) ^ code;
+      h2 |= 0;
+    }
+    let n1 = Math.abs(h1);
+    let n2 = Math.abs(h2);
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+      result += chars[n1 % chars.length];
+      n1 = Math.floor(n1 / chars.length);
+    }
+    for (let i = 0; i < 3; i++) {
+      result += chars[n2 % chars.length];
+      n2 = Math.floor(n2 / chars.length);
+    }
+    return `HG-${result}`;
   }
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return `HG-${crypto.randomUUID().toUpperCase()}`;
+
+  let randomCode = '';
+  for (let i = 0; i < 7; i++) {
+    randomCode += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return 'HG-' + 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16).toUpperCase();
-  });
+  return `HG-${randomCode}`;
 };
 
 const STORAGE_KEY = 'healthgrid_auth_user';
@@ -102,12 +122,13 @@ class AuthService {
 
       const meta = sbUser.user_metadata || {};
       const existingHealthId = profile?.health_id;
-      const healthId = (existingHealthId && existingHealthId.length > 12)
-        ? existingHealthId
+      const isValid7to8 = (id?: string) => !!(id && /^HG-[A-Z0-9]{7,8}$/i.test(id));
+      const healthId = isValid7to8(existingHealthId)
+        ? existingHealthId!.toUpperCase()
         : generateImmutableHealthId(sbUser.id);
 
-      // Persist immutable UUID HealthGrid ID if missing or outdated in PostgreSQL
-      if (!profile?.health_id || profile.health_id.length <= 12) {
+      // Persist immutable 7-8 char HealthGrid ID if missing or outdated in PostgreSQL
+      if (!isValid7to8(profile?.health_id)) {
         supabase
           .from('patients')
           .upsert({
@@ -261,6 +282,7 @@ class AuthService {
     identifier: string;
     password: string;
     role: UserRole;
+    dob?: string;
     age?: number;
     bloodGroup?: string;
   }): Promise<AuthUser> {
@@ -275,6 +297,7 @@ class AuthService {
         data: {
           full_name: data.fullName,
           role: data.role,
+          dob: data.dob,
           age: data.age,
           blood_group: data.bloodGroup,
           phone: !data.identifier.includes('@') ? data.identifier : undefined,
@@ -302,6 +325,7 @@ class AuthService {
       name: data.fullName,
       email,
       role: data.role,
+      dob: data.dob,
       age: data.age,
       bloodGroup: data.bloodGroup,
       healthId: generateImmutableHealthId(authData.user.id),
