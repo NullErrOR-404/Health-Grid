@@ -16,12 +16,14 @@ import {
   Minus,
   Sparkles,
   Siren,
-  CheckCircle2
+  CheckCircle2,
+  ArrowUpDown
 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Language } from '../types';
 import { FacilityListSkeleton } from './SkeletonLoader';
+import { CustomSelect } from './CustomSelect';
 
 export type FacilityType = 'all' | 'hospital' | 'pharmacy' | 'clinic';
 
@@ -704,16 +706,26 @@ export const FindCareNearYou: React.FC<FindCareNearYouProps> = ({
             <span className="font-bold text-[#0B132B]">
               {filteredPlaces.length} {lang === 'en' ? 'places nearby' : 'இடங்கள் உள்ளன'}
             </span>
-            <div className="flex items-center gap-1 text-slate-600 font-medium">
-              <span>{lang === 'en' ? 'Sort:' : 'வரிசை:'}</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-transparent font-semibold text-slate-800 border-none focus:outline-none cursor-pointer"
-              >
-                <option value="nearest">{lang === 'en' ? 'Nearest' : 'அருகிலுள்ளவை'}</option>
-                <option value="name">{lang === 'en' ? 'Name' : 'பெயர்'}</option>
-              </select>
+            <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+              <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap">
+                {lang === 'en' ? 'Sort:' : 'வரிசை:'}
+              </span>
+              <div className="w-36">
+                <CustomSelect
+                  value={sortBy}
+                  onChange={(val) => setSortBy(val as any)}
+                  options={[
+                    { value: 'nearest', label: lang === 'en' ? 'Nearest' : 'அருகிலுள்ளவை' },
+                    { value: 'name', label: lang === 'en' ? 'Name (A-Z)' : 'பெயர்' },
+                  ]}
+                  placeholder={lang === 'en' ? 'Sort' : 'வரிசை'}
+                  size="xs"
+                  rounded="xl"
+                  align="right"
+                  icon={<ArrowUpDown className="w-3 h-3 text-slate-400" />}
+                  triggerClassName="!py-1 !px-2.5 !bg-white !text-xs !font-semibold !border-slate-200"
+                />
+              </div>
             </div>
           </div>
 

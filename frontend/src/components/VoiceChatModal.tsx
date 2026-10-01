@@ -426,7 +426,7 @@ Active Prescriptions: ${patientProfile.records
                     className="fixed inset-0 z-40"
                     onClick={() => setShowModelDropdown(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl z-50 p-2.5 text-slate-200 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl shadow-slate-950/50 z-50 p-2.5 text-slate-200 animate-dropdown-flow">
                     <div className="px-3 py-2 border-b border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
                       <span>Select AGI Model</span>
                       <span className="text-teal-400 lowercase font-mono text-[10px]">Active Keys Verified</span>

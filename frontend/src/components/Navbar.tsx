@@ -273,7 +273,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 {/* More dropdown popover */}
                 {moreDropdownOpen && (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 animate-in fade-in zoom-in-95 duration-150 text-left">
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/90 p-2 z-50 animate-dropdown-flow text-left">
                     <button 
                       type="button"
                       onClick={() => { onOpenBabyShots(); setMoreDropdownOpen(false); }} 
@@ -345,7 +345,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {langDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-36 bg-white rounded-xl shadow-xl border border-slate-100 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/90 p-1.5 z-50 animate-dropdown-flow">
                   <button
                     type="button"
                     onClick={() => { setLang('en'); setLangDropdownOpen(false); }}
@@ -388,7 +388,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Notification Popover */}
               {notificationsOpen && (
-                <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/90 p-3 z-50 animate-dropdown-flow">
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
                     <span className="font-bold text-xs text-slate-900">
                       {lang === 'en' ? 'Public Health Alerts' : 'சுகாதார எச்சரிக்கைகள்'}
@@ -437,7 +437,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                   {/* Dropdown Card matching reference screenshot exactly */}
                   {userDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-3.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/90 p-3.5 z-50 animate-dropdown-flow">
                       {/* Top User Info Card */}
                       <div className="flex items-center gap-3 pb-3 mb-2 border-b border-slate-100">
                         <div className="w-10 h-10 rounded-full bg-[#00897B] text-white flex items-center justify-center font-bold text-base flex-shrink-0 overflow-hidden">

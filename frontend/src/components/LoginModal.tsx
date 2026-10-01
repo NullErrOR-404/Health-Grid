@@ -16,6 +16,18 @@ import {
 } from 'lucide-react';
 import type { Language } from '../types';
 import { authService, type UserRole, type AuthUser } from '../services/authService';
+import { CustomSelect } from './CustomSelect';
+
+const BLOOD_GROUP_OPTIONS = [
+  { value: 'B Positive', label: 'B Positive (B+)', badge: 'B+' },
+  { value: 'O Positive', label: 'O Positive (O+)', badge: 'O+' },
+  { value: 'A Positive', label: 'A Positive (A+)', badge: 'A+' },
+  { value: 'AB Positive', label: 'AB Positive (AB+)', badge: 'AB+' },
+  { value: 'O Negative', label: 'O Negative (O-)', badge: 'O-' },
+  { value: 'A Negative', label: 'A Negative (A-)', badge: 'A-' },
+  { value: 'B Negative', label: 'B Negative (B-)', badge: 'B-' },
+  { value: 'AB Negative', label: 'AB Negative (AB-)', badge: 'AB-' },
+];
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -441,17 +453,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Blood Group</label>
-                      <select
+                      <CustomSelect
                         value={bloodGroup}
-                        onChange={(e) => setBloodGroup(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-2xl border border-slate-200 text-xs text-slate-900 bg-white"
-                      >
-                        <option>B Positive</option>
-                        <option>O Positive</option>
-                        <option>A Positive</option>
-                        <option>AB Positive</option>
-                        <option>O Negative</option>
-                      </select>
+                        onChange={(val) => setBloodGroup(val)}
+                        options={BLOOD_GROUP_OPTIONS}
+                        placeholder="Select Blood Group"
+                        size="xs"
+                        rounded="2xl"
+                        triggerClassName="!py-2.5 !rounded-2xl"
+                      />
                     </div>
                   </div>
                 )}

@@ -27,6 +27,33 @@ import type { Language } from '../types';
 import { supabase } from '../services/supabaseClient';
 import { authService, generateImmutableHealthId } from '../services/authService';
 import { EmergencyContactSkeleton, HealthRecordSkeleton } from './SkeletonLoader';
+import { CustomSelect } from './CustomSelect';
+
+const GENDER_OPTIONS = [
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+  { value: 'Non-Binary', label: 'Non-Binary' },
+  { value: 'Prefer not to say', label: 'Prefer not to say' },
+];
+
+const BLOOD_GROUP_OPTIONS = [
+  { value: 'A+', label: 'A Positive (A+)', badge: 'A+' },
+  { value: 'A-', label: 'A Negative (A-)', badge: 'A-' },
+  { value: 'B+', label: 'B Positive (B+)', badge: 'B+' },
+  { value: 'B-', label: 'B Negative (B-)', badge: 'B-' },
+  { value: 'AB+', label: 'AB Positive (AB+)', badge: 'AB+' },
+  { value: 'AB-', label: 'AB Negative (AB-)', badge: 'AB-' },
+  { value: 'O+', label: 'O Positive (O+)', badge: 'O+' },
+  { value: 'O-', label: 'O Negative (O-)', badge: 'O-' },
+];
+
+const PREFERRED_LANGUAGE_OPTIONS = [
+  { value: 'தமிழ் (Tamil)', label: 'தமிழ் (Tamil)', badge: 'TA' },
+  { value: 'English', label: 'English', badge: 'EN' },
+  { value: 'हिंदी (Hindi)', label: 'हिंदी (Hindi)', badge: 'HI' },
+  { value: 'తెలుగు (Telugu)', label: 'తెలుగు (Telugu)', badge: 'TE' },
+  { value: 'മലയാളം (Malayalam)', label: 'മലയാളം (Malayalam)', badge: 'ML' },
+];
 
 interface ProfilePageProps {
   lang: Language;
@@ -638,36 +665,28 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
                   <div>
                     <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Gender</label>
-                    <select
+                    <CustomSelect
                       value={editProfileForm.gender}
-                      onChange={(e) => setEditProfileForm({ ...editProfileForm, gender: e.target.value })}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-teal-600"
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Non-Binary">Non-Binary</option>
-                      <option value="Prefer not to say">Prefer not to say</option>
-                    </select>
+                      onChange={(val) => setEditProfileForm({ ...editProfileForm, gender: val })}
+                      options={GENDER_OPTIONS}
+                      placeholder="Select Gender"
+                      size="sm"
+                      rounded="xl"
+                    />
                   </div>
 
                   <div>
                     <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Blood Group</label>
-                    <select
+                    <CustomSelect
                       value={editProfileForm.bloodGroup}
-                      onChange={(e) => setEditProfileForm({ ...editProfileForm, bloodGroup: e.target.value })}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-teal-600"
-                    >
-                      <option value="">Select Blood Group</option>
-                      <option value="A+">A Positive (A+)</option>
-                      <option value="A-">A Negative (A-)</option>
-                      <option value="B+">B Positive (B+)</option>
-                      <option value="B-">B Negative (B-)</option>
-                      <option value="AB+">AB Positive (AB+)</option>
-                      <option value="AB-">AB Negative (AB-)</option>
-                      <option value="O+">O Positive (O+)</option>
-                      <option value="O-">O Negative (O-)</option>
-                    </select>
+                      onChange={(val) => setEditProfileForm({ ...editProfileForm, bloodGroup: val })}
+                      options={BLOOD_GROUP_OPTIONS}
+                      placeholder="Select Blood Group"
+                      size="sm"
+                      rounded="xl"
+                      searchable={true}
+                      searchPlaceholder="Search blood type..."
+                    />
                   </div>
 
                   <div>
@@ -794,17 +813,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                     </div>
                     <div>
                       <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Preferred Language</label>
-                      <select
+                      <CustomSelect
                         value={editProfileForm.language}
-                        onChange={(e) => setEditProfileForm({ ...editProfileForm, language: e.target.value })}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none"
-                      >
-                        <option value="தமிழ் (Tamil)">தமிழ் (Tamil)</option>
-                        <option value="English">English</option>
-                        <option value="हिंदी (Hindi)">हिंदी (Hindi)</option>
-                        <option value="తెలుగు (Telugu)">తెలుగు (Telugu)</option>
-                        <option value="മലയാളം (Malayalam)">മലയാളം (Malayalam)</option>
-                      </select>
+                        onChange={(val) => setEditProfileForm({ ...editProfileForm, language: val })}
+                        options={PREFERRED_LANGUAGE_OPTIONS}
+                        placeholder="Select Language"
+                        size="xs"
+                        rounded="lg"
+                      />
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1">

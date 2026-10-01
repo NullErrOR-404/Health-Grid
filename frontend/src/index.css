@@ -101,3 +101,54 @@ html.lenis, html.lenis body {
   animation: shimmer-sweep 2s ease-in-out infinite;
 }
 
+/* Premium Flowing Dropdown Animation System */
+@keyframes dropdown-flow-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dropdown-flow-up {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown-flow {
+  animation: dropdown-flow-down 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top center;
+  will-change: transform, opacity;
+}
+
+.animate-dropdown-flow-up {
+  animation: dropdown-flow-up 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: bottom center;
+  will-change: transform, opacity;
+}
+
+/* Polyfill for animate-in used across dropdown menus */
+.animate-in {
+  animation-duration: 180ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+}
+
+.fade-in {
+  animation-name: dropdown-flow-down;
+}
+
+.zoom-in-95 {
+  transform-origin: top right;
+}
+
