@@ -6,6 +6,9 @@ Allow: /#emergency
 Allow: /maps
 Allow: /chat
 Allow: /bulletins
+Allow: /privacy
+Allow: /terms
+Allow: /thank-you
 
 # Disallow private patient vaults and auth endpoints from public crawling
 Disallow: /profile
@@ -13,4 +16,4 @@ Disallow: /auth/
 Disallow: /api/
 
 # Canonical Sitemap Declaration
-Sitemap: https://healthgrid.app/sitemap.xml
+Sitemap: https://healthgrid-app.vercel.app/sitemap.xml

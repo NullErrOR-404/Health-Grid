@@ -16,6 +16,7 @@ interface FooterProps {
   onOpenDiseaseMap?: () => void;
   onOpenBabyShots?: () => void;
   onOpenPrivacy?: () => void;
+  onOpenTerms?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ 
@@ -27,6 +28,7 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenDiseaseMap,
   onOpenBabyShots,
   onOpenPrivacy,
+  onOpenTerms,
 }) => {
   return (
     <footer className="relative bg-white pt-14 pb-10 border-t border-slate-200/80 overflow-hidden">
@@ -315,7 +317,7 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs text-slate-600">
-            <button onClick={onOpenPrivacy} className="hover:text-teal-700 transition-colors cursor-pointer">Terms of Service</button>
+            <button onClick={onOpenTerms || onOpenPrivacy} className="hover:text-teal-700 transition-colors cursor-pointer">Terms of Service</button>
             <span className="text-slate-300">|</span>
             <button onClick={onOpenPrivacy} className="hover:text-teal-700 font-semibold text-slate-800 transition-colors cursor-pointer">Privacy Policy</button>
             <span className="text-slate-300">|</span>
@@ -323,7 +325,7 @@ export const Footer: React.FC<FooterProps> = ({
             <span className="text-slate-300">|</span>
             <span className="hover:text-slate-900 transition-colors cursor-pointer">Accessibility</span>
             <span className="text-slate-300">|</span>
-            <span className="hover:text-slate-900 transition-colors cursor-pointer">Sitemap</span>
+            <a href="/sitemap.xml" target="_blank" rel="noopener noreferrer" className="hover:text-teal-700 transition-colors">Sitemap</a>
           </div>
 
           {/* Language Switcher with Globe Icon */}
