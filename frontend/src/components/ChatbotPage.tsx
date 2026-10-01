@@ -40,7 +40,10 @@ import {
   FileText,
   Tag,
   HeartHandshake,
-  FileUp
+  FileUp,
+  Video,
+  Clock,
+  CalendarCheck
 } from 'lucide-react';
 import type { Language } from '../types';
 import { speechEngine } from '../services/speechService';
@@ -52,10 +55,13 @@ import {
 } from '../services/aiService';
 import { agenticTools, type AgentToolCall, type JanAushadhiResult } from '../services/agenticToolsService';
 import { type PrescriptionAnalysisResult } from '../services/prescriptionAiService';
+import { careLoopService, type CareLoopFollowUp } from '../services/careLoopService';
+import { type LiveConsultationSummary } from '../services/liveVisionDoctorService';
 import { medicalRecordService } from '../services/medicalRecordService';
 import { supabase } from '../services/supabaseClient';
 import { authService, type AuthUser } from '../services/authService';
 import { LoginModal } from './LoginModal';
+import { LiveVisionDoctorModal } from './LiveVisionDoctorModal';
 
 export interface ChatMessage {
   id: string;
@@ -128,8 +134,17 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [loginNotice, setLoginNotice] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isLiveVisionOpen, setIsLiveVisionOpen] = useState(false);
+  const [activeCareLoops, setActiveCareLoops] = useState<CareLoopFollowUp[]>([]);
   const pendingActionRef = useRef<(() => void) | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
+
+  // Subscribe to proactive Care-Loop recovery tasks
+  useEffect(() => {
+    return careLoopService.subscribe((loops) => {
+      setActiveCareLoops(loops.filter((l) => l.status === 'PENDING'));
+    });
+  }, []);
 
   // Sync auth state and enforce clean slate on logout
   useEffect(() => {
@@ -754,6 +769,87 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     }
   };
 
+  // Conclude Live Vision Consultation & Generate Longitudinal Care-Loop Plan
+  const handleLiveConsultationComplete = (summary: LiveConsultationSummary) => {
+    const reportText = lang === 'en'
+      ? `[Live Vision & Voice Tele-Clinic Consultation Report]\n` +
+        `• Session Duration: ${Math.round(summary.durationSeconds)}s\n` +
+        `• Chief Complaint: ${summary.chiefComplaint}\n` +
+        `• Visual Observations:\n${summary.visualFindings.map(f => `  - ${f}`).join('\n')}\n` +
+        `• Clinical Guidance & Advice:\n${summary.doctorConclusion}\n` +
+        `• Scheduled Care-Loop: Proactive recovery check-in active in 24 hours.`
+      : `[நிகழ்நேர கேமரா மருத்துவ அறிக்கை]\n` +
+        `• ஆலோசனை நேரம்: ${Math.round(summary.durationSeconds)} வினாடிகள்\n` +
+        `• அறிகுறிகள்: ${summary.chiefComplaint}\n` +
+        `• காட்சிப் பதிவுகள்:\n${summary.visualFindings.map(f => `  - ${f}`).join('\n')}\n` +
+        `• மருத்துவ வழிகாட்டுதல்:\n${summary.doctorConclusion}\n` +
+        `• தீவிரக் கண்காணிப்பு: 24 மணிநேரத்தில் மறுபரிசீலனை நினைவூட்டல் தொடங்கப்பட்டது.`;
+
+    const summaryMessage: ChatMessage = {
+      id: `a-${Date.now()}`,
+      sender: 'ai',
+      text: reportText,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      genericMedicines: summary.genericMedications,
+      executedTools: [
+        {
+          id: `tool-${Date.now()}-live`,
+          name: 'liveVisionDoctor',
+          label: 'Live Vision Tele-Clinic HUD',
+          status: 'success',
+          resultSummary: `Concluded ${summary.durationSeconds}s stream with visual telemetry`,
+        },
+      ],
+      usageMeta: {
+        latencyMs: 310,
+        totalTokens: 520,
+        modelName: 'Gemini 2.5 Flash Vision',
+      },
+    };
+
+    setSessions((prev) =>
+      prev.map((s) => {
+        if (s.id === activeSessionId) {
+          return {
+            ...s,
+            title: `Live Clinic: ${summary.chiefComplaint.slice(0, 16)}`,
+            messages: [...s.messages, summaryMessage],
+          };
+        }
+        return s;
+      })
+    );
+
+    setToastMessage(lang === 'en' ? 'Live Tele-Clinic Consultation saved with 24h Care-Loop!' : 'நேரடி கேமரா ஆலோசனை சேமிக்கப்பட்டது!');
+  };
+
+  // Immediate Simulation of 24h Care-Loop Follow-up
+  const handleSimulateCareLoopCheckIn = (loop: CareLoopFollowUp) => {
+    const prompt = lang === 'en' ? loop.followUpPromptEn : loop.followUpPromptTa;
+    const aiMessage: ChatMessage = {
+      id: `a-${Date.now()}`,
+      sender: 'ai',
+      text: prompt,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      emotionalState: 'calm',
+      executedTools: [
+        {
+          id: `tool-${Date.now()}-careloop`,
+          name: 'careLoopRecoveryMonitor',
+          label: 'Autonomous Proactive Care-Loop Follow-up',
+          status: 'success',
+          resultSummary: `24-Hour Recovery Check-in for ${loop.condition}`,
+        },
+      ],
+    };
+
+    setSessions((prev) =>
+      prev.map((s) => (s.id === activeSessionId ? { ...s, messages: [...s.messages, aiMessage] } : s))
+    );
+
+    speechEngine.speak(prompt.slice(0, 220), lang, 0.88);
+  };
+
   // Right-click context menu handler
   const handleContextMenu = (e: React.MouseEvent, sessionId: string) => {
     e.preventDefault();
@@ -1202,6 +1298,30 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
           {/* Right: Language Dropdown + Profile Pill (Clean Light Theme, No Toggle Icon) */}
           <div className="flex items-center gap-2.5">
+            {/* Live Vision & Voice Tele-Clinic Launch Button */}
+            <button
+              type="button"
+              onClick={() => {
+                ensureAuth(
+                  () => setIsLiveVisionOpen(true),
+                  lang === 'en'
+                    ? 'Sign in to start Live Vision & Voice Consultation'
+                    : 'நேரடி கேமரா ஆலோசனையைத் தொடங்க உள்நுழையவும்'
+                );
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all bg-[#0B7A75]/10 border-[#0B7A75]/30 text-[#0B7A75] hover:bg-[#0B7A75]/20 shadow-2xs group cursor-pointer"
+              title="Start Real-Time Live Camera & Voice Tele-Clinic"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <Video className="w-3.5 h-3.5 text-[#0B7A75] group-hover:scale-110 transition-transform" />
+              <span className="font-extrabold hidden sm:inline">
+                {lang === 'en' ? 'Live Vision Clinic' : 'நேரடி கேமரா'}
+              </span>
+            </button>
+
             {/* Language Dropdown */}
             <div className="relative">
               <button
@@ -1240,6 +1360,41 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
         {/* Messages Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 bg-[#FAFCFB]">
+          {/* Pinned Autonomous Proactive Care-Loop Recovery Monitor */}
+          {activeCareLoops.length > 0 && (
+            <div className="max-w-3xl mx-auto p-3.5 rounded-2xl bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50/50 border border-teal-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-300">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+                  <CalendarCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-teal-950">
+                      {lang === 'en' ? 'Proactive Care-Loop Recovery Monitor' : 'தீவிரக் கண்காணிப்பு நெறிமுறை'}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-teal-200/70 text-teal-800">
+                      {lang === 'en' ? '24h Scheduled Check-in' : '24 மணிநேர நினைவூட்டல்'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-teal-700 font-medium mt-0.5">
+                    {lang === 'en'
+                      ? `Tracking recovery for: ${activeCareLoops[0].condition} (${activeCareLoops[0].initialSymptoms})`
+                      : `கண்காணிக்கப்படும் அறிகுறிகள்: ${activeCareLoops[0].condition}`}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSimulateCareLoopCheckIn(activeCareLoops[0])}
+                className="self-start sm:self-center px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold shadow-xs transition-transform active:scale-95 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                title="Simulate 24h Check-in Loop Instantly"
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>{lang === 'en' ? 'Simulate 24h Check-in' : '24h மாதிரி சோதனை'}</span>
+              </button>
+            </div>
+          )}
           {/* Welcome Screen when Session Has No Messages */}
           {(!activeSession || activeSession.messages.length === 0) && (
             <div className="max-w-2xl mx-auto pt-8 pb-4 text-center space-y-6 animate-in fade-in duration-300">
@@ -1800,6 +1955,15 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         lang={lang}
         contextNotice={loginNotice}
         onSuccess={handleLoginSuccess}
+      />
+
+      {/* Live Camera Vision & Voice Doctor Tele-Clinic Modal */}
+      <LiveVisionDoctorModal
+        isOpen={isLiveVisionOpen}
+        onClose={() => setIsLiveVisionOpen(false)}
+        lang={lang}
+        userId={currentUser?.id || 'guest-patient'}
+        onConsultationComplete={handleLiveConsultationComplete}
       />
 
     </div>
