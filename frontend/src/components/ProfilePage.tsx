@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import type { Language } from '../types';
 import { supabase } from '../services/supabaseClient';
-import { authService } from '../services/authService';
+import { authService, generateImmutableHealthId } from '../services/authService';
 import { EmergencyContactSkeleton, HealthRecordSkeleton } from './SkeletonLoader';
 
 interface ProfilePageProps {
@@ -198,7 +198,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           if (!initialData.name) initialData.name = userMeta.full_name || userMeta.name || session.user.email?.split('@')[0] || '';
           if (!initialData.email) initialData.email = session.user.email || '';
           if (!initialData.phone) initialData.phone = userMeta.phone || session.user.phone || '';
-          if (!initialData.healthId) initialData.healthId = 'HG-' + session.user.id.substring(0, 6).toUpperCase();
 
           // 3. Query PostgreSQL patients table
           const { data: patient, error: patientErr } = await supabase
@@ -206,6 +205,32 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             .select('*')
             .eq('id', session.user.id)
             .maybeSingle();
+
+          // Determine immutable account UUID HealthGrid ID
+          const existingHealthId = patient?.health_id;
+          const immutableHealthId = (existingHealthId && existingHealthId.length > 12)
+            ? existingHealthId
+            : (authUser?.healthId && authUser.healthId.length > 12)
+            ? authUser.healthId
+            : generateImmutableHealthId(session.user.id);
+
+          initialData.healthId = immutableHealthId;
+
+          // If patient record is missing health_id or using old truncated prefix, persist full UUID ID
+          if (session.user.id && (!patient?.health_id || patient.health_id.length <= 12)) {
+            supabase
+              .from('patients')
+              .upsert({
+                id: session.user.id,
+                health_id: immutableHealthId,
+                full_name: initialData.name,
+                email: initialData.email,
+                updated_at: new Date().toISOString()
+              })
+              .then(({ error }) => {
+                if (error) console.warn('Could not persist immutable health_id:', error);
+              });
+          }
 
           if (patient && !patientErr) {
             initialData = {
@@ -218,7 +243,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               email: patient.email || initialData.email,
               language: patient.preferred_language || initialData.language,
               location: patient.location || '',
-              healthId: patient.health_id || initialData.healthId,
+              healthId: (patient.health_id && patient.health_id.length > 12) ? patient.health_id : immutableHealthId,
             };
 
             // Emergency contacts
@@ -355,7 +380,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
   // Save full profile demographics
   const handleSaveProfile = async () => {
-    const updated = { ...profileData, ...editProfileForm };
+    // HealthGrid ID is strictly immutable and cannot be modified by edits
+    const updated = { ...profileData, ...editProfileForm, healthId: profileData.healthId };
     setProfileData(updated);
     setOpenDropdown(null);
 
@@ -368,7 +394,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       phone_number: updated.phone,
       preferred_language: updated.language,
       location: updated.location,
-      health_id: updated.healthId,
+      health_id: profileData.healthId, // Strictly immutable!
     });
 
     showToast(lang === 'en' ? 'Profile details saved successfully!' : 'சுயவிவர தகவல்கள் சேமிக்கப்பட்டன!');
@@ -538,10 +564,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   <span>{profileData.location || (lang === 'en' ? 'Location: Not Set' : 'இருப்பிடம் இல்லை')}</span>
                 </div>
 
-                <div className="text-xs text-slate-400 font-medium flex items-center gap-2">
-                  <span>HealthGrid ID:</span>
-                  <span className="font-mono font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
-                    {profileData.healthId || 'HG-NEW'}
+                <div className="text-xs text-slate-500 font-medium flex items-center gap-2 flex-wrap pt-0.5">
+                  <span className="font-semibold text-slate-600">HealthGrid ID:</span>
+                  <span className="font-mono font-bold text-teal-800 bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-200/90 text-xs sm:text-sm tracking-wide flex items-center gap-1.5 shadow-2xs select-all">
+                    <ShieldCheck className="w-3.5 h-3.5 text-teal-600 flex-shrink-0" />
+                    <span>{profileData.healthId || 'HG-GENERATING...'}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 inline-flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5 text-slate-400" />
+                    <span>{lang === 'en' ? 'Immutable UUID' : 'மாற்றமுடியாதது'}</span>
                   </span>
                 </div>
               </div>
@@ -776,13 +807,19 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-500 font-semibold mb-1 block">Health ID</label>
-                      <input
-                        type="text"
-                        value={editProfileForm.healthId}
-                        onChange={(e) => setEditProfileForm({ ...editProfileForm, healthId: e.target.value })}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none font-mono"
-                      />
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[10px] text-slate-500 font-semibold block">HealthGrid ID</label>
+                        <span className="text-[9px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 inline-flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5 text-teal-600" />
+                          <span>Non-Editable (Immutable UUID)</span>
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-mono font-semibold text-slate-600 cursor-not-allowed select-all flex items-center justify-between shadow-inner">
+                        <span className="truncate">{profileData.healthId}</span>
+                        <span className="text-[10px] text-slate-400 font-sans font-normal ml-2 flex-shrink-0">
+                          Permanent
+                        </span>
+                      </div>
                     </div>
                   </div>
 

@@ -24,6 +24,20 @@ export interface AuthUser {
   healthId?: string;
 }
 
+export const generateImmutableHealthId = (userId?: string): string => {
+  if (userId && userId.trim()) {
+    return `HG-${userId.trim().toUpperCase()}`;
+  }
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return `HG-${crypto.randomUUID().toUpperCase()}`;
+  }
+  return 'HG-' + 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16).toUpperCase();
+  });
+};
+
 const STORAGE_KEY = 'healthgrid_auth_user';
 
 class AuthService {
@@ -87,6 +101,27 @@ class AuthService {
         .single();
 
       const meta = sbUser.user_metadata || {};
+      const existingHealthId = profile?.health_id;
+      const healthId = (existingHealthId && existingHealthId.length > 12)
+        ? existingHealthId
+        : generateImmutableHealthId(sbUser.id);
+
+      // Persist immutable UUID HealthGrid ID if missing or outdated in PostgreSQL
+      if (!profile?.health_id || profile.health_id.length <= 12) {
+        supabase
+          .from('patients')
+          .upsert({
+            id: sbUser.id,
+            health_id: healthId,
+            full_name: profile?.full_name || meta.full_name || meta.name || '',
+            email: sbUser.email || meta.email || '',
+            updated_at: new Date().toISOString()
+          })
+          .then(({ error }) => {
+            if (error) console.warn('Could not persist immutable health_id to PostgreSQL:', error);
+          });
+      }
+
       const user: AuthUser = {
         id: sbUser.id,
         name: profile?.full_name || meta.full_name || meta.name || sbUser.email?.split('@')[0] || '',
@@ -94,7 +129,7 @@ class AuthService {
         phone: profile?.phone_number || meta.phone || sbUser.phone || '',
         role: (meta.role as UserRole) || 'PERSONAL',
         avatarUrl: profile?.avatar_url || meta.avatar_url || undefined,
-        healthId: profile?.health_id || ('HG-' + sbUser.id.substring(0, 6).toUpperCase()),
+        healthId,
         age: profile?.age ?? meta.age ?? undefined,
         bloodGroup: profile?.blood_group || meta.blood_group || undefined,
         token: sbUser.id,
@@ -110,7 +145,7 @@ class AuthService {
         email: sbUser.email || '',
         phone: meta.phone || sbUser.phone || '',
         role: (meta.role as UserRole) || 'PERSONAL',
-        healthId: 'HG-' + sbUser.id.substring(0, 6).toUpperCase(),
+        healthId: generateImmutableHealthId(sbUser.id),
         age: meta.age ?? undefined,
         bloodGroup: meta.blood_group || undefined,
         token: sbUser.id,
@@ -269,7 +304,7 @@ class AuthService {
       role: data.role,
       age: data.age,
       bloodGroup: data.bloodGroup,
-      healthId: 'HG-' + authData.user.id.substring(0, 6).toUpperCase(),
+      healthId: generateImmutableHealthId(authData.user.id),
     };
     this.saveToStorage(tempUser);
     return tempUser;
