@@ -20,8 +20,9 @@ import { ProfilePage } from './components/ProfilePage';
 import { FindCareNearYou } from './components/FindCareNearYou';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { NotFoundPage } from './components/NotFoundPage';
-import { Siren, Mic } from 'lucide-react';
+import { Siren, Mic, AlertCircle, X } from 'lucide-react';
 import { lenisService } from './services/lenisService';
+import { authService } from './services/authService';
 import './App.css';
 
 export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'not-found';
@@ -40,6 +41,7 @@ export default function App() {
   const [isHandoverOpen, setIsHandoverOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [selectedGuide, setSelectedGuide] = useState<GuideArticle | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const isAnyModalOpen = Boolean(
     isAmbulanceOpen ||
@@ -111,6 +113,49 @@ export default function App() {
       window.removeEventListener('hashchange', syncRoute);
     };
   }, []);
+
+  // Listen for global auth triggers and toast notifications
+  useEffect(() => {
+    const handleRequireLogin = (e: any) => {
+      if (e.detail?.message) {
+        setToastMessage(e.detail.message);
+      }
+      setIsLoginOpen(true);
+    };
+    const handleShowToast = (e: any) => {
+      if (e.detail?.message) {
+        setToastMessage(e.detail.message);
+      }
+    };
+    window.addEventListener('healthgrid:require-login', handleRequireLogin);
+    window.addEventListener('healthgrid:toast', handleShowToast);
+    return () => {
+      window.removeEventListener('healthgrid:require-login', handleRequireLogin);
+      window.removeEventListener('healthgrid:toast', handleShowToast);
+    };
+  }, []);
+
+  // Auto-dismiss toast notification after 4s
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const requireAuth = (action: () => void, featureName?: string) => {
+    const user = authService.getCurrentUser();
+    if (user) {
+      action();
+    } else {
+      setToastMessage(
+        lang === 'en'
+          ? `Sign in required to access ${featureName || 'this service'}`
+          : `${featureName || 'இந்த சேவையைப்'} பயன்படுத்த உள்நுழையவும்`
+      );
+      setIsLoginOpen(true);
+    }
+  };
 
   const navigateToView = (view: AppView) => {
     setCurrentView(view);
@@ -197,32 +242,36 @@ export default function App() {
           <GovAlertMarquee
             lang={lang}
             onOpenMaps={() => navigateToView('maps')}
-            onOpenAmbulance={() => setIsAmbulanceOpen(true)}
+            onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
           />
           <Navbar
             lang={lang}
             setLang={setLang}
             activeView="maps"
-            onOpenAmbulance={() => setIsAmbulanceOpen(true)}
+            onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
             onOpenVoiceChat={() => navigateToView('chat')}
-            onOpenPrescription={() => setIsPrescriptionOpen(true)}
-            onOpenDiseaseMap={() => navigateToView('maps')}
-            onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+            onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+            onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+            onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
             onOpenLogin={() => setIsLoginOpen(true)}
-            onNavigateProfile={() => navigateToView('profile')}
+            onNavigateProfile={() => requireAuth(() => navigateToView('profile'), lang === 'en' ? 'Patient Profile' : 'சுயவிவரப் பக்கம்')}
             onNavigateHome={() => navigateToView('landing')}
             onNavigateHealthRecords={() => {
-              navigateToView('profile');
-              setTimeout(() => {
-                const el = document.getElementById('health-information');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }, 250);
+              requireAuth(() => {
+                navigateToView('profile');
+                setTimeout(() => {
+                  const el = document.getElementById('health-information');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }, 250);
+              }, lang === 'en' ? 'Health Records' : 'மருத்துவ ஏடுகள்');
             }}
             onNavigateSettings={() => {
-              navigateToView('profile');
-              setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('open-profile-edit'));
-              }, 250);
+              requireAuth(() => {
+                navigateToView('profile');
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent('open-profile-edit'));
+                }, 250);
+              }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
             }}
           />
         </header>
@@ -237,10 +286,10 @@ export default function App() {
           lang={lang}
           setLang={setLang}
           onOpenVoiceChat={() => navigateToView('chat')}
-          onOpenAmbulance={() => setIsAmbulanceOpen(true)}
-          onOpenPrescription={() => setIsPrescriptionOpen(true)}
-          onOpenDiseaseMap={() => navigateToView('maps')}
-          onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+          onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+          onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+          onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
           onOpenPrivacy={() => navigateToView('privacy')}
         />
       </div>
@@ -315,32 +364,36 @@ export default function App() {
         <GovAlertMarquee
           lang={lang}
           onOpenMaps={() => navigateToView('maps')}
-          onOpenAmbulance={() => setIsAmbulanceOpen(true)}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
         />
         <Navbar
           lang={lang}
           setLang={setLang}
           activeView="landing"
-          onOpenAmbulance={() => setIsAmbulanceOpen(true)}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
           onOpenVoiceChat={() => navigateToView('chat')}
-          onOpenPrescription={() => setIsPrescriptionOpen(true)}
-          onOpenDiseaseMap={() => navigateToView('maps')}
-          onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+          onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+          onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+          onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
           onOpenLogin={() => setIsLoginOpen(true)}
-          onNavigateProfile={() => navigateToView('profile')}
+          onNavigateProfile={() => requireAuth(() => navigateToView('profile'), lang === 'en' ? 'Patient Profile' : 'சுயவிவரப் பக்கம்')}
           onNavigateHome={() => navigateToView('landing')}
           onNavigateHealthRecords={() => {
-            navigateToView('profile');
-            setTimeout(() => {
-              const el = document.getElementById('health-information');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }, 250);
+            requireAuth(() => {
+              navigateToView('profile');
+              setTimeout(() => {
+                const el = document.getElementById('health-information');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }, 250);
+            }, lang === 'en' ? 'Health Records' : 'மருத்துவ ஏடுகள்');
           }}
           onNavigateSettings={() => {
-            navigateToView('profile');
-            setTimeout(() => {
-              window.dispatchEvent(new CustomEvent('open-profile-edit'));
-            }, 250);
+            requireAuth(() => {
+              navigateToView('profile');
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('open-profile-edit'));
+              }, 250);
+            }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
           }}
         />
       </header>
@@ -350,26 +403,26 @@ export default function App() {
         <HeroSection
           lang={lang}
           onOpenVoiceChat={() => navigateToView('chat')}
-          onOpenAmbulance={() => setIsAmbulanceOpen(true)}
-          onOpenPrescription={() => setIsPrescriptionOpen(true)}
-          onOpenDiseaseMap={() => setIsDiseaseMapOpen(true)}
-          onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+          onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+          onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+          onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
         />
 
         {/* Elevated 6-Service Shelf Matching Landing page new.png */}
         <ActionCards
           lang={lang}
           onOpenVoiceChat={() => navigateToView('chat')}
-          onOpenAmbulance={() => setIsAmbulanceOpen(true)}
-          onOpenPrescription={() => setIsPrescriptionOpen(true)}
-          onOpenDiseaseMap={() => setIsDiseaseMapOpen(true)}
-          onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+          onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+          onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+          onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
         />
 
         {/* Community Health Heatmap & Quick Health Insights Section */}
         <CommunityHealthSection
           lang={lang}
-          onOpenDiseaseMap={() => setIsDiseaseMapOpen(true)}
+          onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
           onSelectGuide={(guide) => setSelectedGuide(guide)}
         />
       </main>
@@ -379,17 +432,17 @@ export default function App() {
         lang={lang}
         setLang={setLang}
         onOpenVoiceChat={() => navigateToView('chat')}
-        onOpenAmbulance={() => setIsAmbulanceOpen(true)}
-        onOpenPrescription={() => setIsPrescriptionOpen(true)}
-        onOpenDiseaseMap={() => setIsDiseaseMapOpen(true)}
-        onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+        onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+        onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+        onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+        onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
         onOpenPrivacy={() => navigateToView('privacy')}
       />
 
       {/* Mobile Floating Sticky Action Bar */}
       <div className="md:hidden fixed bottom-4 left-4 right-4 z-40 flex items-center gap-3">
         <button
-          onClick={() => setIsAmbulanceOpen(true)}
+          onClick={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
           className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 px-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 border border-red-500 active:scale-95 transition-all text-xs"
         >
           <Siren className="w-4 h-4 animate-spin" />
@@ -470,6 +523,17 @@ export default function App() {
         onOpenDiseaseMap={() => setIsDiseaseMapOpen(true)}
         onOpenBabyShots={() => setIsBabyShotsOpen(true)}
       />
+
+      {/* Floating Global Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-semibold border border-slate-700 animate-in fade-in slide-in-from-top-3 duration-200">
+          <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <span>{toastMessage}</span>
+          <button onClick={() => setToastMessage(null)} className="ml-2 text-slate-400 hover:text-white transition-colors">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

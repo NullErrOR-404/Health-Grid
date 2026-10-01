@@ -33,7 +33,9 @@ import {
   RotateCcw,
   Sparkles,
   Brain,
-  Zap
+  Zap,
+  AlertCircle,
+  X
 } from 'lucide-react';
 import type { Language } from '../types';
 import { speechEngine } from '../services/speechService';
@@ -46,6 +48,7 @@ import {
 import { medicalRecordService } from '../services/medicalRecordService';
 import { supabase } from '../services/supabaseClient';
 import { authService, type AuthUser } from '../services/authService';
+import { LoginModal } from './LoginModal';
 
 export interface ChatMessage {
   id: string;
@@ -81,93 +84,12 @@ interface ChatbotPageProps {
   onOpenBabyShots?: () => void;
 }
 
-const INITIAL_SESSIONS: ChatSession[] = [
-  {
-    id: 'fever-headache',
-    title: 'Fever and headache',
-    dateGroup: 'Today',
-    messages: [
-      {
-        id: 'u1',
-        sender: 'user',
-        text: 'I have a mild fever and headache since yesterday. What should I do?',
-        time: '10:24 AM'
-      },
-      {
-        id: 'a1',
-        sender: 'ai',
-        text: `A mild fever (usually ≤ 38°C / 100.4°F) with headache is often due to a viral infection and usually gets better with rest and home care.
-
-Here's what you can do:
-1. Rest and stay hydrated (water, soup, tender coconut water, ORS).
-2. You may take paracetamol (acetaminophen) 500 mg every 6–8 hours if needed (for adults), unless advised otherwise by your doctor. Under Jan Aushadhi, generic paracetamol is available for ₹0.40/tablet.
-3. Keep track of your temperature.
-4. If symptoms persist beyond 3 days or worsen, consult a doctor.
-
-Please seek medical attention earlier if you experience:
-• Fever above 38.5°C (101.3°F)
-• Severe headache, vomiting, or neck stiffness
-• Breathing difficulty, chest pain, or rash`,
-        time: '10:24 AM',
-        usageMeta: {
-          latencyMs: 380,
-          totalTokens: 142,
-          modelName: 'GPT-OSS 120B AGI'
-        }
-      }
-    ]
-  },
-  {
-    id: 'child-vaccination',
-    title: 'Child vaccination',
-    dateGroup: 'Today',
-    messages: [
-      {
-        id: 'u2',
-        sender: 'user',
-        text: 'When is the 6-week pentavalent vaccine due for my infant?',
-        time: '9:15 AM'
-      },
-      {
-        id: 'a2',
-        sender: 'ai',
-        text: `Under the Tamil Nadu Universal Immunization Programme (UIP), the Pentavalent-1 vaccine is scheduled at 6 weeks of age, along with OPV-1 and Rotavirus-1.\n\nYou can receive this free of cost at any nearby Urban Primary Health Centre (UPHC) or Government Hospital.`,
-        time: '9:16 AM'
-      }
-    ]
-  },
-  {
-    id: 'diabetes-diet-plan',
-    title: 'Diabetes diet plan',
-    dateGroup: 'Today',
-    messages: [
-      {
-        id: 'u3',
-        sender: 'user',
-        text: 'Can I eat brown rice and ragi kali daily for Type-2 diabetes?',
-        time: 'Yesterday'
-      },
-      {
-        id: 'a3',
-        sender: 'ai',
-        text: `Yes! Finger millet (Ragi) and unpolished brown rice have a significantly lower glycemic index compared to polished white ponni rice, which helps prevent post-prandial blood sugar spikes.\n\nCombine it with fiber-rich greens (keerai) and protein (sundal/dal) for optimal glycemic control.`,
-        time: 'Yesterday'
-      }
-    ]
-  },
-  {
-    id: 'skin-rash',
-    title: 'Skin rash',
-    dateGroup: 'Today',
-    messages: []
-  },
-  {
-    id: 'stomach-pain',
-    title: 'Stomach pain',
-    dateGroup: 'Today',
-    messages: []
-  }
-];
+const createFreshSession = (title = 'New Consultation'): ChatSession => ({
+  id: `chat-${Date.now()}`,
+  title,
+  dateGroup: 'Today',
+  messages: [],
+});
 
 export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   lang,
@@ -179,22 +101,41 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   onOpenDiseaseMap,
   onOpenBabyShots,
 }) => {
-  // Sessions state with LocalStorage persistence
+  // Sessions state with LocalStorage persistence and legacy mock purging
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
     try {
       const saved = localStorage.getItem('healthgrid_chat_sessions');
-      return saved ? JSON.parse(saved) : INITIAL_SESSIONS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Purge legacy mock sessions if detected
+        const hasLegacyMock = Array.isArray(parsed) && parsed.some((s: any) =>
+          s.id === 'fever-headache' ||
+          s.id === 'child-vaccination' ||
+          s.id === 'diabetes-diet-plan' ||
+          s.id === 'skin-rash' ||
+          s.id === 'stomach-pain'
+        );
+        if (!hasLegacyMock && Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        } else {
+          localStorage.removeItem('healthgrid_chat_sessions');
+        }
+      }
     } catch {
-      return INITIAL_SESSIONS;
+      // fallback
     }
+    return [createFreshSession()];
   });
 
-  const [activeSessionId, setActiveSessionId] = useState<string>('fever-headache');
+  const [activeSessionId, setActiveSessionId] = useState<string>(() => sessions[0]?.id || `chat-${Date.now()}`);
   const [inputText, setInputText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Model & Realtime Usage State
   const [currentModel, setCurrentModel] = useState<ModelOption>(agiService.getCurrentModel());
@@ -351,6 +292,66 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     return () => window.removeEventListener('click', handleGlobalClick);
   }, [contextMenu.visible]);
 
+  // Auto-dismiss toast alert after 4 seconds
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  // Clean up speech engine on unmount
+  useEffect(() => {
+    return () => {
+      speechEngine.stopListening();
+      speechEngine.stopSpeaking();
+    };
+  }, []);
+
+  // Voice input handling with speechEngine and pulse animation
+  const handleToggleVoiceInput = () => {
+    const activeUser = currentUser || authService.getCurrentUser();
+    if (!activeUser) {
+      setToastMessage(
+        lang === 'en'
+          ? 'Sign in required to use voice consultation'
+          : 'குரல் ஆலோசனையைப் பயன்படுத்த உள்நுழையவும்'
+      );
+      setIsLoginOpen(true);
+      return;
+    }
+
+    if (isRecording) {
+      speechEngine.stopListening();
+      setIsRecording(false);
+      return;
+    }
+
+    if (isVoiceSpeaking) {
+      speechEngine.stopSpeaking();
+      setIsVoiceSpeaking(false);
+    }
+
+    setIsRecording(true);
+    speechEngine.startListening(lang, {
+      onTranscript: (transcript, isFinal) => {
+        setInputText(transcript);
+        if (isFinal) {
+          setIsRecording(false);
+        }
+      },
+      onStateChange: (state) => {
+        if (state === 'idle' || state === 'error') {
+          setIsRecording(false);
+        }
+      },
+      onError: (err) => {
+        console.warn('Voice input error:', err);
+        setIsRecording(false);
+      },
+    });
+  };
+
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0];
 
   // Create New Chat
@@ -389,6 +390,22 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   // Submit Prompt to AGI Doctor
   const handleSendMessage = async (textToSend?: string) => {
+    const activeUser = currentUser || authService.getCurrentUser();
+    if (!activeUser) {
+      setToastMessage(
+        lang === 'en'
+          ? 'Sign in required to consult DocBot'
+          : 'டாக் பாட் ஆலோசனை பெற உள்நுழையவும்'
+      );
+      setIsLoginOpen(true);
+      return;
+    }
+
+    if (isRecording) {
+      speechEngine.stopListening();
+      setIsRecording(false);
+    }
+
     const query = (textToSend || inputText).trim();
     if (!query || isThinking) return;
 
@@ -901,26 +918,32 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         {/* Bottom Profile Footer (leads to /profile) */}
         <div className={`p-3 border-t ${isDarkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-[#FAFCFB]'}`}>
           <button
-            onClick={onNavigateProfile}
+            onClick={() => {
+              if (currentUser) {
+                onNavigateProfile();
+              } else {
+                setIsLoginOpen(true);
+              }
+            }}
             className={`w-full p-2.5 rounded-2xl flex items-center justify-between text-xs transition-colors group cursor-pointer ${
               isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
             }`}
-            title="Open Profile Page"
+            title={currentUser ? (lang === 'en' ? 'Open Profile Page' : 'சுயவிவரப் பக்கம்') : (lang === 'en' ? 'Click to Sign In' : 'உள்நுழைய கிளிக்')}
           >
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-full bg-[#D0F0EC] text-[#00695C] flex items-center justify-center font-bold text-xs ring-1 ring-teal-500/20 group-hover:scale-105 transition-transform overflow-hidden">
                 {currentUser?.avatarUrl ? (
                   <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                 ) : (
-                  (currentUser?.name || 'M').charAt(0).toUpperCase()
+                  currentUser ? currentUser.name.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5" />
                 )}
               </div>
               <div className="text-left">
                 <div className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate max-w-[130px]">
-                  {currentUser ? currentUser.name : 'Murugan S.'}
+                  {currentUser ? currentUser.name : (lang === 'en' ? 'Guest Patient' : 'விருந்தினர்')}
                 </div>
                 <div className="text-[10px] text-teal-600 dark:text-teal-400 font-medium">
-                  {lang === 'en' ? 'My Health Profile' : 'என் சுயவிவரம்'}
+                  {currentUser ? (lang === 'en' ? 'My Health Profile' : 'என் சுயவிவரம்') : (lang === 'en' ? 'Click to Sign In' : 'உள்நுழைய கிளிக்')}
                 </div>
               </div>
             </div>
@@ -990,19 +1013,27 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
             {/* Top Right Profile Round Pill */}
             <button
-              onClick={onNavigateProfile}
+              onClick={() => {
+                if (currentUser) {
+                  onNavigateProfile();
+                } else {
+                  setIsLoginOpen(true);
+                }
+              }}
               className={`flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full border transition-all text-xs font-semibold cursor-pointer group ${
                 isDarkMode
                   ? 'bg-slate-800 border-slate-700 text-slate-200 hover:border-teal-400'
                   : 'bg-white border-slate-200 text-slate-800 hover:border-teal-400 shadow-2xs'
               }`}
-              title={lang === 'en' ? 'My Health Profile (Murugan S.)' : 'என் சுயவிவரம்'}
+              title={currentUser ? (lang === 'en' ? `My Health Profile (${currentUser.name})` : 'என் சுயவிவரம்') : (lang === 'en' ? 'Sign In / Profile' : 'உள்நுழை / சுயவிவரம்')}
             >
               <div className="w-5 h-5 rounded-full bg-[#D0F0EC] text-[#00695C] flex items-center justify-center font-bold text-[10px] group-hover:scale-105 transition-transform">
-                M
+                {currentUser ? currentUser.name.charAt(0).toUpperCase() : <User className="w-3 h-3" />}
               </div>
-              <span className="truncate max-w-[80px] font-semibold">Murugan S.</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span className="truncate max-w-[80px] font-semibold">
+                {currentUser ? currentUser.name : (lang === 'en' ? 'Sign In' : 'உள்நுழை')}
+              </span>
+              {currentUser && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>}
             </button>
           </div>
         </header>
@@ -1350,16 +1381,18 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-800 placeholder-slate-400 px-1"
               />
 
-              {/* Microphone Button */}
+              {/* Microphone Button with Active Pulsing Ring Animation */}
               <button
                 type="button"
-                onClick={() => {
-                  handleSendMessage('Vanakkam DocBot! Please tell me about preventive monsoon health tips.');
-                }}
-                className="p-2.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                title="Voice Input"
+                onClick={handleToggleVoiceInput}
+                className={`p-2.5 rounded-full transition-all ${
+                  isRecording
+                    ? 'bg-rose-500 text-white animate-pulse shadow-lg ring-4 ring-rose-200'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                }`}
+                title={isRecording ? (lang === 'en' ? 'Stop listening' : 'நிறுத்து') : (lang === 'en' ? 'Voice Input' : 'குரல் உள்ளீடு')}
               >
-                <Mic className="w-4 h-4" />
+                <Mic className={`w-4 h-4 ${isRecording ? 'animate-bounce' : ''}`} />
               </button>
 
               {/* Circular Send Button (Matching Chatbot UI.png) */}
@@ -1431,6 +1464,24 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           </button>
         </div>
       )}
+
+      {/* Floating Toast Notification Alert */}
+      {toastMessage && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-semibold border border-slate-700 animate-in fade-in slide-in-from-top-3 duration-200">
+          <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <span>{toastMessage}</span>
+          <button onClick={() => setToastMessage(null)} className="ml-2 text-slate-400 hover:text-white transition-colors">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Login Modal mounted inside ChatbotPage */}
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        lang={lang}
+      />
 
     </div>
   );

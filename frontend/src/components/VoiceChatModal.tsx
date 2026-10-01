@@ -48,6 +48,7 @@ import {
   type UsageStats,
 } from '../services/aiService';
 import { PrescriptionScanSkeleton } from './SkeletonLoader';
+import { authService } from '../services/authService';
 
 interface Message {
   id: string;
@@ -91,20 +92,7 @@ export const VoiceChatModal: React.FC<VoiceChatModalProps> = ({
   onOpenAmbulance,
   onOpenHandover,
 }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      sender: 'ai',
-      textEn:
-        "Vanakkam! I am DocBot, your 24/7 AI family doctor. I have access to your verified medical records and Tamil Nadu clinical guidelines. How are you feeling right now? You can speak or type in Tamil, English, or Tanglish, or tap the camera icon to scan a prescription slip.",
-      textTa:
-        "வணக்கம்! நான் உங்கள் டாக் பாட் (DocBot) AI குடும்ப மருத்துவர். உங்கள் பழைய மருத்துவ ஏடுகள் மற்றும் தமிழ்நாடு மருத்துவ வழிகாட்டுதல்கள் என்னிடம் உள்ளன. உங்களுக்கு இப்போது என்ன உடம்பு செய்கிறது? தமிழில் தயங்காமல் பேசலாம் அல்லது மருந்து சீட்டை கேமரா மூலம் ஸ்கேன் செய்யலாம்.",
-      time: 'Just now',
-      triageLevel: 'GREEN',
-      protocolCitation: 'Indian Pharmacopoeia (IP) & ICMR Clinical Triage Standard',
-      retrievedRecordCitation: 'Patient Health Vault #PAT-TN-2026-8841 (Murugan S., 45y)',
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
@@ -173,6 +161,20 @@ export const VoiceChatModal: React.FC<VoiceChatModalProps> = ({
   };
 
   const handleStartVoice = () => {
+    if (!authService.getCurrentUser()) {
+      window.dispatchEvent(
+        new CustomEvent('healthgrid:require-login', {
+          detail: {
+            message:
+              lang === 'en'
+                ? 'Sign in required to use voice consultation'
+                : 'குரல் ஆலோசனையைப் பயன்படுத்த உள்நுழையவும்',
+          },
+        })
+      );
+      return;
+    }
+
     if (isRecording) {
       speechEngine.stopListening();
       setIsRecording(false);
@@ -205,6 +207,20 @@ export const VoiceChatModal: React.FC<VoiceChatModalProps> = ({
   };
 
   const handleDocScan = async (sampleType: 'prescription' | 'lab') => {
+    if (!authService.getCurrentUser()) {
+      window.dispatchEvent(
+        new CustomEvent('healthgrid:require-login', {
+          detail: {
+            message:
+              lang === 'en'
+                ? 'Sign in required to scan medical records'
+                : 'மருத்துவ சீட்டுகளை ஸ்கேன் செய்ய உள்நுழையவும்',
+          },
+        })
+      );
+      return;
+    }
+
     setShowUploadPicker(false);
     setIsScanningDoc(true);
 
@@ -243,6 +259,20 @@ export const VoiceChatModal: React.FC<VoiceChatModalProps> = ({
   const patientProfile = medicalRecordService.getProfile();
 
   const handleUserSubmit = async (queryText: string) => {
+    if (!authService.getCurrentUser()) {
+      window.dispatchEvent(
+        new CustomEvent('healthgrid:require-login', {
+          detail: {
+            message:
+              lang === 'en'
+                ? 'Sign in required to consult DocBot'
+                : 'டாக் பாட் ஆலோசனை பெற உள்நுழையவும்',
+          },
+        })
+      );
+      return;
+    }
+
     const text = queryText.trim();
     if (!text || isThinking) return;
 
@@ -294,7 +324,7 @@ Active Prescriptions: ${patientProfile.records
         protocolCitation: agiResult.protocolCitation,
         retrievedRecordCitation: crossCheck.hasContraindication
           ? `${crossCheck.retrievedRecordTitle} • ${crossCheck.retrievedCondition}`
-          : `Longitudinal Patient Vault (#PAT-TN-2026-8841)`,
+          : `Longitudinal Patient Vault (${patientProfile.id || 'ABHA-VAULT'})`,
         contraindicationWarning: crossCheck.hasContraindication
           ? { en: crossCheck.warningAlertEn || '', ta: crossCheck.warningAlertTa || '' }
           : undefined,
@@ -355,7 +385,7 @@ Active Prescriptions: ${patientProfile.records
           time: 'Now',
           triageLevel: 'GREEN',
           protocolCitation: 'ICMR Primary Care Guidelines',
-          retrievedRecordCitation: crossCheck.retrievedRecordTitle || 'Patient Health Vault #PAT-TN-2026-8841',
+          retrievedRecordCitation: crossCheck.retrievedRecordTitle || 'Patient Health Vault (Verified Record)',
         };
       }
       setMessages((prev) => [...prev, fallbackMsg]);
@@ -732,6 +762,24 @@ Active Prescriptions: ${patientProfile.records
 
         {/* Messages Body */}
         <div data-lenis-prevent className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-slate-50/60">
+          {messages.length === 0 && (
+            <div className="h-full min-h-[260px] flex flex-col items-center justify-center text-center p-8 space-y-4 animate-in fade-in duration-200">
+              <div className="w-16 h-16 rounded-full bg-teal-50 border border-teal-200/80 p-2 flex items-center justify-center shadow-xs">
+                <img src="/docbot_mascot.png" alt="DocBot" className="w-10 h-10 object-contain" />
+              </div>
+              <div className="max-w-sm">
+                <h3 className="font-bold text-slate-800 text-base">
+                  {lang === 'en' ? 'DocBot Voice Consultation' : 'டாக் பாட் குரல் ஆலோசனை'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  {lang === 'en'
+                    ? 'Tap the microphone to speak your symptoms, or type below in Tamil or English.'
+                    : 'உங்கள் அறிகுறிகளைக் குரலில் பேச மைக் பொத்தானைத் தட்டவும், அல்லது கீழே தட்டச்சு செய்யவும்.'}
+                </p>
+              </div>
+            </div>
+          )}
+
           {messages.map((msg) => {
             const isUser = msg.sender === 'user';
             return (

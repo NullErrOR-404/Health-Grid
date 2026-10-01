@@ -8,6 +8,8 @@
  * - Drug interaction and contraindication safety checks
  */
 
+import { authService } from './authService';
+
 export interface MedicalRecord {
   id: string;
   documentType: 'PRESCRIPTION' | 'LAB_REPORT' | 'DISCHARGE_SUMMARY';
@@ -56,72 +58,32 @@ export interface PatientProfile {
   records: MedicalRecord[];
 }
 
-// Initial baseline patient record (Murugan S., 45y, resident of Royapuram, Chennai)
+// Dynamic initial baseline patient profile
 export const initialPatientProfile: PatientProfile = {
-  id: 'PAT-TN-2026-8841',
-  name: 'Murugan S.',
-  age: 45,
-  gender: 'Male',
+  id: 'HG-HEALTH-VAULT',
+  name: 'Verified Patient',
+  age: 32,
+  gender: 'Other',
   bloodGroup: 'B Positive',
-  chronicConditions: ['Mild Bronchial Asthma (Intermittent)', 'Pre-Hypertension (Borderline 134/86 mmHg)'],
-  allergies: ['Penicillin (Moderate skin hives)', 'NSAIDs (Induces wheezing/bronchospasm)'],
-  records: [
-    {
-      id: 'REC-2026-08-ASTHMA',
-      documentType: 'DISCHARGE_SUMMARY',
-      title: 'Pulmonology Outpatient Evaluation',
-      doctorName: 'Dr. R. Meenakshi, MD (Pulmonology)',
-      hospitalName: 'Government Stanley Medical College Hospital, Chennai',
-      date: '14 Aug 2026',
-      diagnoses: ['Mild Bronchial Asthma', 'Seasonal Dust Allergy'],
-      activeMedications: [
-        {
-          name: 'Budecort Inhaler 200mcg',
-          genericEquivalent: 'Budesonide 200mcg Inhaler',
-          dosage: '200 mcg',
-          frequency: '1 puff as needed (SOS)',
-          purpose: 'Asthma reliever',
-          brandPrice: 380,
-          genericPrice: 65,
-        },
-        {
-          name: 'Montair-LC',
-          genericEquivalent: 'Montelukast 10mg + Levocetirizine 5mg',
-          dosage: '10mg / 5mg',
-          frequency: '1 tablet at bedtime for 10 days',
-          purpose: 'Allergic rhinitis & wheezing prevention',
-          brandPrice: 195,
-          genericPrice: 28,
-        },
-      ],
-      knownAllergies: ['NSAIDs / Aspirin (Contraindicated - induces bronchospasm)', 'Penicillin'],
-      verifiedProtocolSource: 'ICMR National Guidelines for Respiratory Care & Asthma Management',
-    },
-    {
-      id: 'REC-2026-09-LAB',
-      documentType: 'LAB_REPORT',
-      title: 'Annual Health Routine Hemogram & Biochemistry',
-      doctorName: 'Dr. V. Sundaram, MD (Pathology)',
-      hospitalName: 'Urban Primary Health Centre (UPHC), Royapuram',
-      date: '22 Sep 2026',
-      diagnoses: ['Normal Hb & Platelets', 'Mild Borderline Fasting Sugar (108 mg/dL)'],
-      activeMedications: [],
-      knownAllergies: [],
-      labFindings: [
-        { testName: 'Hemoglobin (Hb)', value: '14.2 g/dL', normalRange: '13.0 - 17.0 g/dL', status: 'NORMAL' },
-        { testName: 'Platelet Count', value: '2.4 Lakhs/mcL', normalRange: '1.5 - 4.5 Lakhs/mcL', status: 'NORMAL' },
-        { testName: 'Fasting Blood Glucose', value: '108 mg/dL', normalRange: '70 - 100 mg/dL', status: 'ELEVATED' },
-        { testName: 'Serum Creatinine', value: '0.9 mg/dL', normalRange: '0.7 - 1.3 mg/dL', status: 'NORMAL' },
-      ],
-      verifiedProtocolSource: 'WHO & National NCD Screening Guidelines',
-    },
-  ],
+  chronicConditions: ['Seasonal Allergies'],
+  allergies: ['Penicillin'],
+  records: [],
 };
 
 class MedicalRecordService {
   private profile: PatientProfile = { ...initialPatientProfile };
 
   getProfile(): PatientProfile {
+    const authUser = authService.getCurrentUser();
+    if (authUser) {
+      return {
+        ...this.profile,
+        id: authUser.healthId || this.profile.id,
+        name: authUser.name || this.profile.name,
+        age: authUser.age || this.profile.age,
+        bloodGroup: authUser.bloodGroup || this.profile.bloodGroup,
+      };
+    }
     return this.profile;
   }
 
@@ -227,7 +189,7 @@ class MedicalRecordService {
     // Default safe clinical grounding
     return {
       hasContraindication: false,
-      retrievedRecordTitle: 'Patient Health Record #PAT-TN-2026-8841',
+      retrievedRecordTitle: 'Verified Longitudinal Health Record',
       retrievedCondition: 'No adverse interactions detected',
       protocolCitation: 'Indian Pharmacopoeia (IP) & National Formulary of India (NFI) Standards',
       safeAlternatives: [],

@@ -191,6 +191,10 @@ class AuthService {
     return this.currentUser;
   }
 
+  getCurrentUser(): AuthUser | null {
+    return this.currentUser;
+  }
+
   isAuthenticated(): boolean {
     return this.currentUser !== null;
   }
