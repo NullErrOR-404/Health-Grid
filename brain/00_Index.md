@@ -50,6 +50,7 @@ graph TD
     DEC --> ADR5[[ADR-005-Mobile-First-Responsive-Architecture]]
     DEC --> ADR6[[ADR-006-Decommission-Legacy-HIS-Doctor-Portal]]
     DEC --> ADR7[[ADR-007-Decommission-Roaming-Mascot]]
+    DEC --> ADR8[[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]
 
     CTX --> ACT[[Active_Context]]
     CTX --> CRED[[Key_Credentials_and_Environments]]
@@ -97,6 +98,7 @@ graph TD
 - [[ADR-005-Mobile-First-Responsive-Architecture]]: Mobile-first responsive overhaul, unmounting roaming mascot, and fullscreen mobile modal sheets.
 - [[ADR-006-Decommission-Legacy-HIS-Doctor-Portal]]: Decommissioning legacy HIS and consolidating on the multi-tenant Hospital ERP.
 - [[ADR-007-Decommission-Roaming-Mascot]]: Decommissioning autonomous roaming mascot and scrolling thought bubbles.
+- [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]: Mobile Navbar zero-overflow layout, compact top bar, and high-priority drawer emergency card.
 
 ---
 

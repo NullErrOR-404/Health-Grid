@@ -39,9 +39,11 @@ Back to [[00_Index]]
 - [x] Initialized and linked project-specific **Obsidian Second Brain** in `brain/` with interactive graph coloring and Map of Content (MOC).
 - [x] Decommissioned legacy vibecoded `HospitalInformationSystem.tsx` (1,279 lines) and stripped all Doctor Portal / Hospital HIS CTAs; consolidated hospital management on [[Hospital_ERP_Dashboard]] (see [[ADR-006-Decommission-Legacy-HIS-Doctor-Portal]]). Preserved citizen OPD screening intake modal as `frontend/src/components/PatientIntakeModal.tsx`.
 - [x] Decommissioned autonomous floating mascot (`RoamingDocBot.tsx`) and scroll-tracking thought bubbles completely from runtime and codebase (see [[ADR-007-Decommission-Roaming-Mascot]]).
+- [x] Implemented Mobile Navbar Zero-Overflow Architecture (`h-16 sm:h-20`, compact logo, hidden top SOS/bell on mobile, high-contrast 108 Emergency Banner in mobile drawer) (see [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]).
 
 ## In-Flight / Next Focus
-- [ ] Deploy mobile-first release & cleanup to Vercel and verify on all 4 live production aliases.
+- [ ] Push changes to GitHub `origin/main` to trigger automated Vercel production deployment.
+- [ ] Verify zero overflow on all 4 live production aliases (`healthgrid-app.vercel.app`, etc.).
 - [ ] Submit Google Cloud Console OAuth consent screen for production branding verification.
 - [ ] Monitor Google Search Console indexing and crawler telemetry.
 - [ ] Real-time updates to this Second Brain whenever new clinical features or architectural modifications ship.
@@ -51,5 +53,6 @@ Back to [[00_Index]]
 - [[Hospital_ERP_Dashboard]]
 - [[ADR-006-Decommission-Legacy-HIS-Doctor-Portal]]
 - [[ADR-007-Decommission-Roaming-Mascot]]
+- [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]
 - [[Key_Credentials_and_Environments]]
 - [[Deployment_and_Domains]]

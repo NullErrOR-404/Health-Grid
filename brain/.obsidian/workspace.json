@@ -184,6 +184,7 @@
   },
   "active": "287d32495fe46cef",
   "lastOpenFiles": [
+    "decisions/ADR-008-Mobile-Navbar-Zero-Overflow-Architecture.md",
     "decisions/ADR-007-Decommission-Roaming-Mascot.md",
     "decisions/ADR-006-Decommission-Legacy-HIS-Doctor-Portal.md",
     "ui/Page_By_Page_Audit_Catalog.md",

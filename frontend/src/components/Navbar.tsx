@@ -133,17 +133,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       <header className="relative w-full bg-white border-b border-slate-200/90 shadow-2xs transition-all z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
           
           {/* Left: Brand Logo matching Header reference.png */}
           <div 
-            className="flex items-center gap-3 cursor-pointer select-none flex-shrink-0" 
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none flex-shrink-0" 
             onClick={handleHomeClick}
           >
             <img 
               src="/Logo.png" 
               alt="HealthGrid - நலம் AI" 
-              className="h-10 sm:h-11 w-auto object-contain hover:opacity-95 transition-opacity" 
+              className="h-8 sm:h-11 w-auto max-w-[130px] sm:max-w-none object-contain hover:opacity-95 transition-opacity" 
             />
           </div>
 
@@ -330,18 +330,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Right: Language Pill Dropdown, Notification Bell, User Profile Pill, and SOS Ambulance Button */}
-          <div className="flex items-center gap-2 sm:gap-2.5 lg:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3 flex-shrink-0">
             
             {/* Language Pill Dropdown: [ EN ⌵ ] matching reference */}
             <div className="relative" ref={langDropdownRef}>
               <button
                 type="button"
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-2xs hover:border-slate-300 transition-all cursor-pointer select-none"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-2xs hover:border-slate-300 transition-all cursor-pointer select-none"
                 aria-label="Select Language"
               >
                 <span>{lang === 'en' ? 'EN' : 'தமிழ்'}</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${langDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${langDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {langDropdownOpen && (
@@ -373,8 +373,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Subtle vertical separator matching reference */}
             <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
-            {/* Notification Bell with Red Badge Dot matching reference */}
-            <div className="relative" ref={notificationRef}>
+            {/* Notification Bell with Red Badge Dot matching reference (Hidden on mobile <sm, accessible in drawer) */}
+            <div className="relative hidden sm:block" ref={notificationRef}>
               <button
                 type="button"
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
@@ -412,14 +412,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* User Profile Pill & Dropdown - Responsive compact avatar on mobile, 140px pill on desktop */}
-            <div className="relative w-9 sm:w-[140px] flex-shrink-0" ref={userDropdownRef}>
+            {/* User Profile Pill & Dropdown - Responsive compact 32px avatar on mobile, 140px pill on desktop */}
+            <div className="relative w-8 h-8 sm:w-[140px] sm:h-10 flex-shrink-0" ref={userDropdownRef}>
               {currentUser ? (
                 <>
                   <button
                     type="button"
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="w-9 h-9 sm:w-[140px] sm:h-10 flex items-center justify-center sm:justify-between p-0 sm:pl-1 sm:pr-2 rounded-full hover:bg-slate-50 text-slate-800 transition-colors cursor-pointer group border border-slate-200/60 hover:border-slate-300 flex-shrink-0"
+                    className="w-8 h-8 sm:w-[140px] sm:h-10 flex items-center justify-center sm:justify-between p-0 sm:pl-1 sm:pr-2 rounded-full hover:bg-slate-50 text-slate-800 transition-colors cursor-pointer group border border-slate-200/60 hover:border-slate-300 flex-shrink-0"
                     title={currentUser.name}
                   >
                     <div className="flex items-center gap-2 min-w-0 sm:flex-1">
@@ -548,7 +548,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={onOpenLogin}
-                  className="w-9 h-9 sm:w-[140px] sm:h-10 flex items-center justify-center gap-1.5 p-0 sm:px-3 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-all shadow-2xs cursor-pointer flex-shrink-0"
+                  className="w-8 h-8 sm:w-[140px] sm:h-10 flex items-center justify-center gap-1.5 p-0 sm:px-3 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-all shadow-2xs cursor-pointer flex-shrink-0"
                   title={lang === 'en' ? 'Sign In' : 'உள்நுழைக'}
                 >
                   <User className="w-4 h-4 text-teal-700 flex-shrink-0" />
@@ -557,11 +557,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* SOS Ambulance Button - Desktop/Tablet (Hidden on mobile <sm, as mobile uses persistent bottom dock) */}
+            {/* SOS Ambulance Button - Desktop/Tablet Only (Hidden on mobile <md, as mobile uses persistent bottom dock & top drawer banner) */}
             <button
               type="button"
               onClick={onOpenAmbulance}
-              className="hidden sm:flex items-center gap-1.5 sm:gap-2 bg-[#EF4444] hover:bg-[#DC2626] text-white px-3 sm:px-3.5 lg:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer select-none active:scale-95 flex-shrink-0 ml-1 sm:ml-2"
+              className="hidden md:flex items-center gap-1.5 sm:gap-2 bg-[#EF4444] hover:bg-[#DC2626] text-white px-3 sm:px-3.5 lg:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer select-none active:scale-95 flex-shrink-0 ml-1 sm:ml-2"
             >
               <Siren className="w-4 h-4 text-white flex-shrink-0" />
               <span className="tracking-wide whitespace-nowrap">SOS Ambulance</span>
@@ -571,19 +571,80 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-slate-700 hover:text-slate-900 rounded-xl hover:bg-slate-100 focus:outline-none cursor-pointer"
+              className="md:hidden w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center p-1 sm:p-2 text-slate-700 hover:text-slate-900 rounded-xl hover:bg-slate-100 focus:outline-none cursor-pointer flex-shrink-0"
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
             </button>
           </div>
         </div>
 
         {/* Mobile Slide-Out Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 top-20 bg-slate-900/40 backdrop-blur-sm z-50">
-            <div className="bg-white border-b border-slate-200 p-6 space-y-4 shadow-2xl animate-in slide-in-from-top duration-200 max-h-[calc(100vh-5rem)] overflow-y-auto">
+          <div className="md:hidden fixed inset-0 top-16 sm:top-20 bg-slate-900/40 backdrop-blur-sm z-50">
+            <div className="bg-white border-b border-slate-200 p-4 sm:p-6 space-y-4 shadow-2xl animate-in slide-in-from-top duration-200 max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-5rem)] overflow-y-auto">
               
+              {/* High-Contrast Top Emergency Card */}
+              <div className="bg-gradient-to-r from-rose-500 to-red-600 rounded-2xl p-4 text-white shadow-lg space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <Siren className="w-5 h-5 text-white animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="font-black text-sm tracking-wide leading-tight">
+                      {lang === 'en' ? '24/7 Emergency Support' : '24/7 அவசர உதவி'}
+                    </div>
+                    <div className="text-[11px] text-rose-100 leading-tight">
+                      {lang === 'en' ? 'Instant 108 ambulance dispatch & helpline' : 'உடனடி 108 ஆம்புலன்ஸ் & மருத்துவ உதவி'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenAmbulance();
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white text-rose-600 font-bold text-xs shadow-sm hover:bg-rose-50 transition-colors cursor-pointer"
+                  >
+                    <Siren className="w-4 h-4 text-rose-600" />
+                    <span>{lang === 'en' ? 'Dispatch 108' : '108 அனுப்பு'}</span>
+                  </button>
+
+                  <a
+                    href="tel:104"
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-rose-700/60 hover:bg-rose-700 text-white font-bold text-xs border border-white/20 transition-colors text-center"
+                  >
+                    <PhoneCall className="w-3.5 h-3.5" />
+                    <span>{lang === 'en' ? 'Call 104' : '104 அழை'}</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Public Health Alerts Banner */}
+              <div 
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenDiseaseMap();
+                }}
+                className="p-3 rounded-2xl bg-amber-50 border border-amber-200/90 text-amber-900 cursor-pointer hover:bg-amber-100/70 transition-colors flex items-center justify-between gap-3 text-xs"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping flex-shrink-0" />
+                  <div className="truncate">
+                    <div className="font-bold text-xs">
+                      {lang === 'en' ? 'Public Health Alert' : 'சுகாதார எச்சரிக்கை'}
+                    </div>
+                    <div className="text-[11px] text-amber-700 truncate">
+                      {lang === 'en' ? 'Dengue Outbreak in Chennai • View radar map' : 'சென்னையில் டெங்கு பரவல் • வரைபடம் காண்க'}
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              </div>
+
               {/* Mobile Profile / Login Card */}
               <div className="pb-3 border-b border-slate-100">
                 {currentUser ? (
@@ -595,7 +656,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-50 hover:bg-teal-100/80 border border-teal-200 transition-all text-left"
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-[#00897B] text-white font-bold flex items-center justify-center text-xs overflow-hidden">
+                      <div className="w-8 h-8 rounded-full bg-[#00897B] text-white font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0">
                         {currentUser.avatarUrl ? (
                           <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                         ) : (
@@ -658,7 +719,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center justify-between pb-1 border-b border-slate-100">
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   {lang === 'en' ? 'Quick Access Services' : 'அதிவேக சேவைகள்'}
                 </span>
@@ -667,7 +728,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <button
                   onClick={() => { onOpenVoiceChat(); setMobileMenuOpen(false); }}
                   className="flex flex-col items-center justify-center p-3 bg-teal-50/80 hover:bg-teal-100/80 text-teal-800 rounded-xl border border-teal-200/80 transition-colors"
@@ -725,23 +786,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
 
-              {/* Emergency Hotline Buttons */}
-              <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
-                <a 
-                  href="tel:108" 
-                  className="flex-1 flex items-center justify-center gap-2 bg-red-600 text-white py-2.5 rounded-xl font-bold text-xs"
-                >
-                  <PhoneCall className="w-3.5 h-3.5" />
-                  <span>108 Ambulance</span>
-                </a>
-                <a 
-                  href="tel:104" 
-                  className="flex-1 flex items-center justify-center gap-2 bg-teal-600 text-white py-2.5 rounded-xl font-bold text-xs"
-                >
-                  <PhoneCall className="w-3.5 h-3.5" />
-                  <span>104 Health Help</span>
-                </a>
-              </div>
+              {currentUser && (
+                <div className="pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setMobileMenuOpen(false);
+                      await authService.logout();
+                      if (onNavigateHome) onNavigateHome();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold transition-colors"
+                  >
+                    <LogOut className="w-4 h-4 text-rose-600" />
+                    <span>{lang === 'en' ? 'Logout' : 'வெளியேறு'}</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
