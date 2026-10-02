@@ -17,6 +17,7 @@ interface ActionCardsProps {
   onOpenDiseaseMap: () => void;
   onOpenBabyShots: () => void;
   onNavigateMedicines?: () => void;
+  onOpenPatientIntake?: () => void;
 }
 
 export const ActionCards: React.FC<ActionCardsProps> = ({
@@ -27,6 +28,7 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
   onOpenDiseaseMap,
   onOpenBabyShots,
   onNavigateMedicines,
+  onOpenPatientIntake,
 }) => {
   const services = [
     {
@@ -37,7 +39,7 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
       subEn: '24/7 consultation',
       subTa: '24/7 உடனடி சேவை',
       iconBg: 'bg-teal-50 text-teal-600',
-      action: onOpenVoiceChat,
+      action: onOpenPatientIntake || onOpenVoiceChat,
     },
     {
       id: 'ambulance',

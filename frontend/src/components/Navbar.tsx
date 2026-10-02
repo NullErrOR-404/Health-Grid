@@ -16,7 +16,8 @@ import {
   ChevronRight,
   Check,
   Settings,
-  Home
+  Home,
+  Building2
 } from 'lucide-react';
 import type { Language } from '../types';
 import { authService, type AuthUser } from '../services/authService';
@@ -24,7 +25,7 @@ import { authService, type AuthUser } from '../services/authService';
 export interface NavbarProps {
   lang: Language;
   setLang: (lang: Language) => void;
-  activeView?: 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'not-found' | 'medicines';
+  activeView?: 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'not-found' | 'medicines' | 'his';
   onOpenAmbulance: () => void;
   onOpenVoiceChat: (sampleQuery?: string) => void;
   onOpenPrescription: () => void;
@@ -36,6 +37,8 @@ export interface NavbarProps {
   onNavigateMedicines?: () => void;
   onNavigateHealthRecords?: () => void;
   onNavigateSettings?: () => void;
+  onNavigateHis?: () => void;
+  onOpenPatientIntake?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -53,6 +56,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigateMedicines,
   onNavigateHealthRecords,
   onNavigateSettings,
+  onNavigateHis,
+  onOpenPatientIntake,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
@@ -278,6 +283,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <FileText className="w-4 h-4 text-blue-600" />
                       <span>{lang === 'en' ? 'Scan Prescription' : 'சீட்டு ஸ்கேன்'}</span>
                     </button>
+                    {onOpenPatientIntake && (
+                      <button 
+                        type="button"
+                        onClick={() => { onOpenPatientIntake(); setMoreDropdownOpen(false); }} 
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded-xl transition-colors cursor-pointer"
+                      >
+                        <Stethoscope className="w-4 h-4 text-teal-600" />
+                        <span>{lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை (டோக்கன்)'}</span>
+                      </button>
+                    )}
+                    {onNavigateHis && (
+                      <button 
+                        type="button"
+                        onClick={() => { onNavigateHis(); setMoreDropdownOpen(false); }} 
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded-xl transition-colors cursor-pointer"
+                      >
+                        <Building2 className="w-4 h-4 text-emerald-600" />
+                        <span>{lang === 'en' ? 'Doctor Portal / Hospital HIS' : 'மருத்துவர் தளம் / மருத்துவமனை HIS'}</span>
+                      </button>
+                    )}
                     <div className="border-t border-slate-100 my-1"></div>
                     <div className="px-3 py-1 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
                       {lang === 'en' ? 'Emergency 24x7' : 'அவசர உதவி'}
@@ -513,6 +538,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                           <span>{lang === 'en' ? 'Settings' : 'அமைப்புகள்'}</span>
                         </button>
 
+                        {onNavigateHis && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              onNavigateHis();
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-teal-800 bg-teal-50/70 hover:bg-teal-100/70 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left"
+                          >
+                            <Building2 className="w-4 h-4 text-teal-600" />
+                            <span>{lang === 'en' ? 'Doctor Portal / Hospital HIS' : 'மருத்துவர் தளம் / மருத்துவமனை HIS'}</span>
+                          </button>
+                        )}
+
                         <div className="border-t border-slate-100 my-1"></div>
 
                         {/* Logout */}
@@ -710,6 +749,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <Baby className="w-5 h-5 text-green-600 mb-1" />
                   <span className="text-xs font-semibold text-center">{lang === 'en' ? 'Baby Shots' : 'தடுப்பூசி'}</span>
                 </button>
+
+                {onNavigateHis && (
+                  <button
+                    onClick={() => { onNavigateHis(); setMobileMenuOpen(false); }}
+                    className="col-span-2 flex items-center justify-center gap-2 p-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl border border-emerald-200 transition-colors font-bold text-xs"
+                  >
+                    <Building2 className="w-4 h-4 text-emerald-600" />
+                    <span>{lang === 'en' ? 'Doctor Portal / Hospital HIS' : 'மருத்துவர் தளம் / மருத்துவமனை HIS'}</span>
+                  </button>
+                )}
               </div>
 
               {/* Emergency Hotline Buttons */}

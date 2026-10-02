@@ -23,13 +23,15 @@ import { NotFoundPage } from './components/NotFoundPage';
 import { ThankYouPage } from './components/ThankYouPage';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { MedicineStorePage } from './components/MedicineStorePage';
+import { HospitalInformationSystem } from './components/his/HospitalInformationSystem';
+import { PatientIntakeModal } from './components/his/PatientIntakeModal';
 import { Siren, AlertCircle, X, Stethoscope, MapPin } from 'lucide-react';
 import { lenisService } from './services/lenisService';
 import { authService, type AuthUser } from './services/authService';
 import { useScrollReveal } from './hooks/useScrollReveal';
 import './App.css';
 
-export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines';
+export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'his';
 
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -44,6 +46,7 @@ export default function App() {
   const [isBabyShotsOpen, setIsBabyShotsOpen] = useState(false);
   const [isHandoverOpen, setIsHandoverOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isPatientIntakeOpen, setIsPatientIntakeOpen] = useState(false);
   const [selectedGuide, setSelectedGuide] = useState<GuideArticle | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [loginNotice, setLoginNotice] = useState<string | null>(null);
@@ -58,6 +61,7 @@ export default function App() {
     isBabyShotsOpen ||
     isHandoverOpen ||
     isLoginOpen ||
+    isPatientIntakeOpen ||
     selectedGuide
   );
 
@@ -108,6 +112,8 @@ export default function App() {
         setCurrentView('maps');
       } else if (pathname === '/medicines' || hash === '#medicines' || hash === '#/medicines') {
         setCurrentView('medicines');
+      } else if (pathname === '/his' || pathname === '/doctor-portal' || hash === '#his' || hash === '#/his' || hash === '#doctor-portal') {
+        setCurrentView('his');
       } else if (pathname === '/' || pathname === '/index.html' || pathname === '') {
         // If there is an unknown anchor hash like #unknown
         if (hash && !['', '#', '#/', '#landing', '#home'].includes(hash) && !hash.startsWith('#section-') && !hash.startsWith('#guide-')) {
@@ -163,6 +169,10 @@ export default function App() {
       case 'medicines':
         title = lang === 'en' ? 'PMBJP Cheap Generic Medicines & Kendra Store | HealthGrid' : 'மலிவு விலை மக்கள் மருந்தகம் & பொது மருந்துகள் | HealthGrid';
         desc = lang === 'en' ? 'Order authentic Indian Pharmacopoeia PMBJP generic chronic medicines at up to 89% savings with doorstep delivery and Kendra store pickup.' : 'அரசு மக்கள் மருந்தக விலையில் 89% வரை குறைந்த விலையில் அத்தியாவசிய மருந்துகளை வீட்டிலேயே அல்லது அருகிலுள்ள மருந்தகத்தில் பெறலாம்.';
+        break;
+      case 'his':
+        title = lang === 'en' ? 'Hospital Information System (HIS / EHR) & Doctor Portal | HealthGrid' : 'மருத்துவமனை தகவல் அமைப்பு (HIS / EHR) & மருத்துவர் தளம் | HealthGrid';
+        desc = lang === 'en' ? 'Clinical Hospital Information System: OPD Token Queue, Live Tele-Consult Chamber with SOAP notes and generic e-prescribing, Inpatient Bed Census, and Diagnostic Lab Hub.' : 'மருத்துவர் தளம் மற்றும் மருத்துவமனை மேலாண்மை அமைப்பு: நோயாளிகள் டோக்கன் வரிசை, நேரடி ஆலோசனை, படுக்கைகள் நிலவரம்.';
         break;
       case 'not-found':
         title = lang === 'en' ? '404 - Page Not Found | HealthGrid' : '404 - பக்கம் கிடைக்கவில்லை | HealthGrid';
@@ -357,6 +367,8 @@ export default function App() {
                 }, 250);
               }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
             }}
+            onNavigateHis={() => navigateToView('his')}
+            onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
           />
         </header>
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -424,6 +436,8 @@ export default function App() {
                 }, 250);
               }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
             }}
+            onNavigateHis={() => navigateToView('his')}
+            onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
           />
         </header>
 
@@ -481,6 +495,16 @@ export default function App() {
           onClose={() => setIsHandoverOpen(false)}
           lang={lang}
         />
+        <PatientIntakeModal
+          isOpen={isPatientIntakeOpen}
+          onClose={() => setIsPatientIntakeOpen(false)}
+          lang={lang}
+          onOpenAmbulance={() => setIsAmbulanceOpen(true)}
+          onJoinConsultation={() => {
+            setIsPatientIntakeOpen(false);
+            navigateToView('his');
+          }}
+        />
         <LoginModal
           isOpen={isLoginOpen}
           onClose={() => {
@@ -491,8 +515,19 @@ export default function App() {
           lang={lang}
           contextNotice={loginNotice}
           onSuccess={handleGlobalLoginSuccess}
+          onNavigateHis={() => navigateToView('his')}
         />
       </div>
+    );
+  }
+
+  // Render Dedicated Hospital Information System (HIS / EHR) Workspace
+  if (currentView === 'his') {
+    return (
+      <HospitalInformationSystem
+        lang={lang}
+        onExitToCitizenView={() => navigateToView('landing')}
+      />
     );
   }
 
@@ -573,6 +608,7 @@ export default function App() {
           lang={lang}
           contextNotice={loginNotice}
           onSuccess={handleGlobalLoginSuccess}
+          onNavigateHis={() => navigateToView('his')}
         />
       </>
     );
@@ -620,6 +656,8 @@ export default function App() {
               }, 250);
             }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
           }}
+          onNavigateHis={() => navigateToView('his')}
+          onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
         />
       </header>
 
@@ -644,6 +682,7 @@ export default function App() {
           onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
           onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
           onNavigateMedicines={() => navigateToView('medicines')}
+          onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
         />
 
         {/* Community Health Heatmap & Quick Health Insights Section */}
@@ -720,6 +759,17 @@ export default function App() {
         lang={lang}
       />
 
+      <PatientIntakeModal
+        isOpen={isPatientIntakeOpen}
+        onClose={() => setIsPatientIntakeOpen(false)}
+        lang={lang}
+        onOpenAmbulance={() => setIsAmbulanceOpen(true)}
+        onJoinConsultation={() => {
+          setIsPatientIntakeOpen(false);
+          navigateToView('his');
+        }}
+      />
+
       <LoginModal
         isOpen={isLoginOpen}
         onClose={() => {
@@ -730,6 +780,7 @@ export default function App() {
         lang={lang}
         contextNotice={loginNotice}
         onSuccess={handleGlobalLoginSuccess}
+        onNavigateHis={() => navigateToView('his')}
       />
 
       <HealthGuideModal

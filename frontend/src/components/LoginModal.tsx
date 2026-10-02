@@ -35,6 +35,7 @@ interface LoginModalProps {
   onClose: () => void;
   lang: Language;
   onOpenDoctorHandover?: () => void;
+  onNavigateHis?: () => void;
   contextNotice?: string | null;
   onSuccess?: (user: AuthUser) => void;
 }
@@ -44,6 +45,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onClose,
   lang,
   onOpenDoctorHandover,
+  onNavigateHis,
   contextNotice,
   onSuccess,
 }) => {
@@ -96,8 +98,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           onSuccess(user);
         }
         onClose();
-        if (role === 'HEALTHCARE_PROFESSIONAL' && onOpenDoctorHandover) {
-          onOpenDoctorHandover();
+        if (role === 'HEALTHCARE_PROFESSIONAL') {
+          if (onNavigateHis) {
+            onNavigateHis();
+          } else if (onOpenDoctorHandover) {
+            onOpenDoctorHandover();
+          }
         }
       }, 700);
     } catch (err: any) {
