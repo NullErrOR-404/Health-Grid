@@ -40,6 +40,7 @@ Back to [[00_Index]]
 - [x] Decommissioned legacy vibecoded `HospitalInformationSystem.tsx` (1,279 lines) and stripped all Doctor Portal / Hospital HIS CTAs; consolidated hospital management on [[Hospital_ERP_Dashboard]] (see [[ADR-006-Decommission-Legacy-HIS-Doctor-Portal]]). Preserved citizen OPD screening intake modal as `frontend/src/components/PatientIntakeModal.tsx`.
 - [x] Decommissioned autonomous floating mascot (`RoamingDocBot.tsx`) and scroll-tracking thought bubbles completely from runtime and codebase (see [[ADR-007-Decommission-Roaming-Mascot]]).
 - [x] Implemented Mobile Navbar Zero-Overflow Architecture (`h-16 sm:h-20`, compact logo, hidden top SOS/bell on mobile, high-contrast 108 Emergency Banner in mobile drawer) (see [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]).
+- [x] Fixed Mobile Login Modal Scroll Trapping by hiding desktop marketing banners on mobile (`hidden lg:flex`), removing fixed minimum heights, and enabling smooth touch scrolling; overhauled ChatbotPage top header into ultra-minimal single-line pills (`[ 📹 Live ]`, `[ 🩺 Records ]`, `[ 🌐 EN ]`, `[ 👤 Sign In ]`) with zero text wrapping, and transformed in-chat suggestions, voice selectors, and docked controls into concise rounded-full pills (see [[ADR-009-Mobile-Login-Scroll-and-ChatUI-Minimal-Pills]]).
 
 ## In-Flight / Next Focus
 - [ ] Push changes to GitHub `origin/main` to trigger automated Vercel production deployment.
@@ -54,5 +55,6 @@ Back to [[00_Index]]
 - [[ADR-006-Decommission-Legacy-HIS-Doctor-Portal]]
 - [[ADR-007-Decommission-Roaming-Mascot]]
 - [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]
+- [[ADR-009-Mobile-Login-Scroll-and-ChatUI-Minimal-Pills]]
 - [[Key_Credentials_and_Environments]]
 - [[Deployment_and_Domains]]

@@ -265,7 +265,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-5 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex sm:items-center justify-center p-0 sm:p-5 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto overscroll-contain">
       {/* Toast Notifications */}
       {successToast && (
         <div className="fixed top-5 z-[110] bg-emerald-600 text-white font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-4 text-sm">
@@ -282,7 +282,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       )}
 
       {/* Main Container Card */}
-      <div className="bg-white rounded-none sm:rounded-[32px] shadow-2xl border-none sm:border border-slate-100/90 w-full h-full sm:h-auto sm:max-h-[95vh] max-w-[1020px] overflow-y-auto relative my-0 sm:my-auto">
+      <div className="bg-white rounded-none sm:rounded-[32px] shadow-2xl border-none sm:border border-slate-100/90 w-full min-h-[100dvh] sm:min-h-0 sm:h-auto sm:max-h-[92vh] max-w-[1020px] overflow-y-auto overscroll-contain relative my-0 sm:my-auto flex flex-col pb-8 sm:pb-0 safe-area-pb">
         
         {/* Floating Close Button */}
         <button
@@ -297,10 +297,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* VIEW 1: PERSONA SELECTOR UI (Matching Login Persona selector UI.png)     */}
         {/* ========================================================================= */}
         {viewMode === 'PERSONA_SELECT' && (
-          <div className="flex flex-col lg:flex-row min-h-[660px]">
-            {/* Left Column: Hospital Atrium with DocBot & Value Pillars */}
+          <div className="flex flex-col lg:flex-row min-h-0 lg:min-h-[660px] flex-1">
+            {/* Left Column: Hospital Atrium with DocBot & Value Pillars (Hidden on mobile for instant account access) */}
             <div
-              className="w-full lg:w-[49%] relative p-8 lg:p-10 flex flex-col justify-between overflow-hidden bg-no-repeat"
+              className="hidden lg:flex lg:w-[49%] relative p-8 lg:p-10 flex-col justify-between overflow-hidden bg-no-repeat"
               style={{
                 backgroundImage: "url('/login-persona-bg.png')",
                 backgroundPosition: "left bottom",
@@ -401,7 +401,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </div>
 
             {/* Right Column: Persona Account Type Selection */}
-            <div className="w-full lg:w-[51%] p-8 lg:p-12 flex flex-col justify-center bg-white">
+            <div className="w-full lg:w-[51%] p-6 sm:p-8 lg:p-12 flex flex-col justify-center bg-white flex-1">
               <div className="text-center mb-8">
                 <h2 className="text-2xl lg:text-[28px] font-extrabold text-slate-900 tracking-tight">
                   Welcome to HealthGrid
@@ -523,10 +523,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* VIEW 2A: HEALTHCARE PROFESSIONAL LOGIN (Matching Healthcare professional UI.png) */}
         {/* ========================================================================= */}
         {viewMode === 'LOGIN_FORM' && activePersona === 'HEALTHCARE_PROFESSIONAL' && (
-          <div className="flex flex-col lg:flex-row min-h-[660px]">
-            {/* Left Column: Doctor at laptop with DocBot Hero Cover */}
+          <div className="flex flex-col lg:flex-row min-h-0 lg:min-h-[660px] flex-1">
+            {/* Left Column: Doctor at laptop with DocBot Hero Cover (Hidden on mobile) */}
             <div
-              className="w-full lg:w-[49%] relative p-8 lg:p-10 flex flex-col justify-between overflow-hidden bg-no-repeat"
+              className="hidden lg:flex lg:w-[49%] relative p-8 lg:p-10 flex-col justify-between overflow-hidden bg-no-repeat"
               style={{
                 backgroundImage: "url('/healthcare-hero-cover.png')",
                 backgroundPosition: "center bottom",
@@ -569,7 +569,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </div>
 
             {/* Right Column: Healthcare Professional Login Form */}
-            <div className="w-full lg:w-[51%] p-8 lg:p-12 flex flex-col justify-center bg-white relative">
+            <div className="w-full lg:w-[51%] p-6 sm:p-8 lg:p-12 flex flex-col justify-center bg-white relative flex-1">
               {/* Back to Personas Bar */}
               <div className="flex items-center justify-between mb-4">
                 <button
@@ -780,10 +780,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
             ) : (
               /* SPLIT LAYOUT MATCHING Hospital Portal login UI.png 1:1 */
-              <div className="flex flex-col lg:flex-row min-h-[660px]">
-                {/* Left Column: 3D Robot doctor with laptop, floating cards & speech bubble */}
+              <div className="flex flex-col lg:flex-row min-h-0 lg:min-h-[660px] flex-1">
+                {/* Left Column: 3D Robot doctor with laptop, floating cards & speech bubble (Hidden on mobile) */}
                 <div
-                  className="w-full lg:w-[49%] relative p-8 lg:p-10 flex flex-col justify-between overflow-hidden bg-no-repeat"
+                  className="hidden lg:flex lg:w-[49%] relative p-8 lg:p-10 flex-col justify-between overflow-hidden bg-no-repeat"
                   style={{
                     backgroundImage: "url('/hospital-portal-login-bg.png')",
                     backgroundPosition: "left bottom",
@@ -827,7 +827,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </div>
 
                 {/* Right Column: Hospital Portal Login Form */}
-                <div className="w-full lg:w-[51%] p-8 lg:p-12 flex flex-col justify-center bg-white relative">
+                <div className="w-full lg:w-[51%] p-6 sm:p-8 lg:p-12 flex flex-col justify-center bg-white relative flex-1">
                   {/* Back to Personas Bar */}
                   <div className="flex items-center justify-between mb-4">
                     <button
@@ -1021,10 +1021,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* VIEW 2B: ACTIVE PERSONAL LOGIN / REGISTRATION FORM (Matching Personal ref) */}
         {/* ========================================================================= */}
         {viewMode === 'LOGIN_FORM' && activePersona === 'PERSONAL' && (
-          <div className="flex flex-col lg:flex-row min-h-[660px]">
-            {/* Left Column: Personal Background with Woman, Mascot & Feature Badges */}
+          <div className="flex flex-col lg:flex-row min-h-0 lg:min-h-[660px] flex-1">
+            {/* Left Column: Personal Background with Woman, Mascot & Feature Badges (Hidden on mobile) */}
             <div
-              className="w-full lg:w-[49%] relative p-8 lg:p-10 flex flex-col justify-between overflow-hidden bg-no-repeat"
+              className="hidden lg:flex lg:w-[49%] relative p-8 lg:p-10 flex-col justify-between overflow-hidden bg-no-repeat"
               style={{
                 backgroundImage: "url('/personal-login-bg.png')",
                 backgroundPosition: "82% center",
@@ -1138,7 +1138,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </div>
 
             {/* Right Column: Credentials Input Form */}
-            <div className="w-full lg:w-[51%] p-8 lg:p-12 flex flex-col justify-center bg-white relative">
+            <div className="w-full lg:w-[51%] p-6 sm:p-8 lg:p-12 flex flex-col justify-center bg-white relative flex-1">
               {/* Back to Personas & Need Help Bar */}
               <div className="flex items-center justify-between mb-5">
                 <button
