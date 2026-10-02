@@ -16,8 +16,8 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `c179711` (`feat(ui): concise transparency panel docked on left, fully exposing 3D DocBot mascot and shield on right`)
-- **Vercel Production Deployment**: `dpl_6xLxGp8qM6CbdC6E6Lok8YdNXxCc`
+- **Latest Commit**: `ea22570` (`fix(navbar): zero-overflow mobile header layout, compact brand logo, and high-priority drawer emergency banner`)
+- **Vercel Production Deployment**: `dpl_D7abFuV8bp9fgL9UzuNMg8HM7ayW`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
