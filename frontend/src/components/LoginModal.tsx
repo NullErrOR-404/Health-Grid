@@ -29,7 +29,7 @@ import type { Language } from '../types';
 import { authService, type UserRole, type AuthUser } from '../services/authService';
 import { CustomSelect } from './CustomSelect';
 import { CustomDatePicker, calculateAgeFromDob } from './CustomDatePicker';
-import { type HospitalEntity, getHospitalsList } from '../data/hospitalsList';
+import { type HospitalEntity, getHospitalsList, validateHospitalCredentials } from '../data/hospitalsList';
 import { RegisterHospitalModal } from './RegisterHospitalModal';
 
 const BLOOD_GROUP_OPTIONS = [
@@ -148,11 +148,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
     setTimeout(() => {
       setIsLoading(false);
+      const validation = validateHospitalCredentials(selectedHospital.code, identifier, password);
+      if (!validation.valid) {
+        setErrorMessage(
+          validation.message ||
+            (lang === 'en'
+              ? 'Invalid administrator credentials for this hospital.'
+              : 'தவறான நிர்வாகி அங்கீகாரச் சான்றுகள்.')
+        );
+        return;
+      }
+
       const generatedToken = `HG-ERP-SEC-${Math.random().toString(36).substring(2, 9).toUpperCase()}-2026`;
-      const adminDisplayName = identifier.includes('@') ? identifier.split('@')[0] : identifier;
+      const adminDisplayName =
+        validation.hospital?.adminName ||
+        (identifier.includes('@') ? identifier.split('@')[0] : identifier);
 
       setHospitalAuthSession({
-        hospital: selectedHospital,
+        hospital: validation.hospital || selectedHospital,
         token: generatedToken,
         adminName: adminDisplayName,
       });

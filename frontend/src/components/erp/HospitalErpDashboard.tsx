@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   HeartPulse,
   Search,
@@ -39,6 +39,13 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { type HospitalEntity, getHospitalsList } from '../../data/hospitalsList';
+import {
+  getHospitalUserspace,
+  registerPatientInUserspace,
+  bookAppointmentInUserspace,
+  admitPatientInUserspace,
+  type HospitalUserspaceData,
+} from '../../services/hospitalUserspaceService';
 
 interface HospitalErpDashboardProps {
   initialHospital?: HospitalEntity;
@@ -67,9 +74,34 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
     }
   );
 
+  const [userspace, setUserspace] = useState<HospitalUserspaceData>(() =>
+    getHospitalUserspace(
+      currentHospital.code,
+      currentHospital.name,
+      currentHospital.totalBeds,
+      currentHospital.availableBeds
+    )
+  );
+
+  useEffect(() => {
+    setUserspace(
+      getHospitalUserspace(
+        currentHospital.code,
+        currentHospital.name,
+        currentHospital.totalBeds,
+        currentHospital.availableBeds
+      )
+    );
+  }, [currentHospital.code, currentHospital.name, currentHospital.totalBeds, currentHospital.availableBeds]);
+
   const [activeMenu, setActiveMenu] = useState('Dashboard');
   const [isHospitalSwitcherOpen, setIsHospitalSwitcherOpen] = useState(false);
   const [quickActionModal, setQuickActionModal] = useState<string | null>(null);
+  const [qaPatientName, setQaPatientName] = useState('');
+  const [qaPatientPhone, setQaPatientPhone] = useState('');
+  const [qaPatientDept, setQaPatientDept] = useState('');
+  const [qaPatientDoctor, setQaPatientDoctor] = useState('');
+  const [qaPatientAge, setQaPatientAge] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -379,7 +411,7 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                   <Users className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-slate-900">148</div>
+              <div className="text-2xl font-black text-slate-900">{userspace.metrics.todayOpd}</div>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-0.5">
                   ↑ 12% <span className="text-slate-400 font-normal">vs yesterday</span>
@@ -398,7 +430,7 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                   <Bed className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-slate-900">86</div>
+              <div className="text-2xl font-black text-slate-900">{userspace.metrics.ipdPatients}</div>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-0.5">
                   ↑ 5% <span className="text-slate-400 font-normal">vs yesterday</span>
@@ -418,14 +450,14 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                 </div>
               </div>
               <div className="text-2xl font-black text-slate-900">
-                24 <span className="text-xs font-medium text-slate-400">/ 120</span>
+                {userspace.metrics.availableBeds} <span className="text-xs font-medium text-slate-400">/ {userspace.metrics.totalBeds}</span>
               </div>
               <div className="mt-2 pt-2 border-t border-slate-100">
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex">
-                  <div className="bg-teal-600 h-full rounded-full" style={{ width: '80%' }}></div>
+                  <div className="bg-teal-600 h-full rounded-full" style={{ width: `${userspace.metrics.occupancyPercentage}%` }}></div>
                 </div>
                 <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium mt-1">
-                  <span>80% Occupancy</span>
+                  <span>{userspace.metrics.occupancyPercentage}% Occupancy</span>
                 </div>
               </div>
             </div>
@@ -438,10 +470,10 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                   <FlaskConical className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-slate-900">32</div>
+              <div className="text-2xl font-black text-slate-900">{userspace.metrics.labOrdersTotal}</div>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500">
                 <span>
-                  <strong className="text-slate-800">12</strong> pending • <strong className="text-emerald-600">18</strong> done
+                  <strong className="text-slate-800">{userspace.metrics.labOrdersPending}</strong> pending • <strong className="text-emerald-600">{userspace.metrics.labOrdersCompleted}</strong> done
                 </span>
                 <div className="flex items-end gap-1 h-3">
                   <div className="w-1 bg-purple-300 h-1.5 rounded-t"></div>
@@ -459,7 +491,7 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                   <Pill className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-slate-900">5</div>
+              <div className="text-2xl font-black text-slate-900">{userspace.metrics.pharmacyAlerts}</div>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-[11px] font-semibold text-amber-600">
                 <span>Low stock items</span>
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
@@ -474,10 +506,10 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                   <IndianRupee className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-slate-900">₹ 2,48,320</div>
+              <div className="text-2xl font-black text-slate-900">{userspace.metrics.todayRevenue}</div>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <span className="text-[11px] font-semibold text-emerald-600">
-                  ↑ 8% <span className="text-slate-400 font-normal">vs yesterday</span>
+                  {userspace.metrics.revenueVsYesterday}
                 </span>
                 <div className="flex items-end gap-1 h-3">
                   <div className="w-1 bg-emerald-300 h-2 rounded-t"></div>
@@ -503,50 +535,9 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
               </div>
 
               <div className="space-y-3">
-                {[
-                  {
-                    time: '09:00 AM',
-                    name: 'Priya Sharma',
-                    dept: 'OPD - General Medicine',
-                    doctor: 'Dr. Arjun Mehta',
-                    status: 'Checked In',
-                    statusColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                  },
-                  {
-                    time: '09:30 AM',
-                    name: 'Karthik R',
-                    dept: 'OPD - Cardiology',
-                    doctor: 'Dr. Sneha Iyer',
-                    status: 'Waiting',
-                    statusColor: 'bg-amber-50 text-amber-700 border-amber-200',
-                  },
-                  {
-                    time: '10:00 AM',
-                    name: 'Meena Devi',
-                    dept: 'OPD - Endocrinology',
-                    doctor: 'Dr. Vikram Nair',
-                    status: 'Waiting',
-                    statusColor: 'bg-amber-50 text-amber-700 border-amber-200',
-                  },
-                  {
-                    time: '10:30 AM',
-                    name: 'Rajesh Kumar',
-                    dept: 'OPD - Orthopedics',
-                    doctor: 'Dr. Priya Menon',
-                    status: 'Scheduled',
-                    statusColor: 'bg-blue-50 text-blue-700 border-blue-200',
-                  },
-                  {
-                    time: '11:00 AM',
-                    name: 'Lakshmi S',
-                    dept: 'OPD - Dermatology',
-                    doctor: 'Dr. Amit Desai',
-                    status: 'Scheduled',
-                    statusColor: 'bg-blue-50 text-blue-700 border-blue-200',
-                  },
-                ].map((appt, idx) => (
+                {userspace.appointments.map((appt) => (
                   <div
-                    key={idx}
+                    key={appt.id}
                     className="p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50/70 transition-colors flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
@@ -578,7 +569,7 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-sm font-bold text-slate-900">Bed Occupancy</h2>
                 <button
-                  onClick={() => triggerToast('Ward bed map: ICU (18/20), General (60/70), Emergency (18/30)')}
+                  onClick={() => triggerToast(`Ward bed map: ${userspace.metrics.availableBeds} available of ${userspace.metrics.totalBeds} total beds`)}
                   className="text-xs font-semibold text-teal-600 hover:text-teal-700"
                 >
                   View Details →
@@ -590,7 +581,7 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                 <svg className="w-36 h-36 -rotate-90" viewBox="0 0 100 100">
                   {/* Background Circle */}
                   <circle cx="50" cy="50" r="38" stroke="#f1f5f9" strokeWidth="10" fill="none" />
-                  {/* Occupied Slice (Coral / Red) 80% */}
+                  {/* Occupied Slice (Coral / Red) */}
                   <circle
                     cx="50"
                     cy="50"
@@ -598,11 +589,11 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                     stroke="#f87171"
                     strokeWidth="10"
                     strokeDasharray="238.7"
-                    strokeDashoffset="47.7"
+                    strokeDashoffset={238.7 * (1 - userspace.metrics.occupancyPercentage / 100)}
                     fill="none"
                     strokeLinecap="round"
                   />
-                  {/* Available Slice (Teal) 15% */}
+                  {/* Available Slice (Teal) */}
                   <circle
                     cx="50"
                     cy="50"
@@ -610,13 +601,13 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                     stroke="#2dd4bf"
                     strokeWidth="10"
                     strokeDasharray="238.7"
-                    strokeDashoffset="202.9"
+                    strokeDashoffset={238.7 * (userspace.metrics.occupancyPercentage / 100)}
                     fill="none"
                   />
                 </svg>
 
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-black text-slate-900">80%</span>
+                  <span className="text-2xl font-black text-slate-900">{userspace.metrics.occupancyPercentage}%</span>
                   <span className="text-[10px] font-semibold text-slate-400">Occupied</span>
                 </div>
               </div>
@@ -627,23 +618,17 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                   <span className="flex items-center gap-1.5 text-slate-600 text-[11px]">
                     <span className="w-2.5 h-2.5 rounded-full bg-rose-400"></span> Occupied
                   </span>
-                  <strong className="text-slate-900 text-xs">96</strong>
+                  <strong className="text-slate-900 text-xs">{userspace.metrics.totalBeds - userspace.metrics.availableBeds}</strong>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5 text-slate-600 text-[11px]">
                     <span className="w-2.5 h-2.5 rounded-full bg-teal-400"></span> Available
                   </span>
-                  <strong className="text-slate-900 text-xs">24</strong>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-slate-600 text-[11px]">
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Maintenance
-                  </span>
-                  <strong className="text-slate-900 text-xs">8</strong>
+                  <strong className="text-slate-900 text-xs">{userspace.metrics.availableBeds}</strong>
                 </div>
                 <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-700">
-                  <span>Total Beds</span>
-                  <span>120</span>
+                  <span>Total Facility Beds</span>
+                  <span>{userspace.metrics.totalBeds}</span>
                 </div>
               </div>
             </div>
@@ -758,16 +743,10 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                 </span>
               </div>
 
-              <div className="text-2xl font-black text-slate-900 mb-3">₹ 2,48,320</div>
+              <div className="text-2xl font-black text-slate-900 mb-3">{userspace.metrics.todayRevenue}</div>
 
               <div className="space-y-2 text-xs">
-                {[
-                  { label: 'OPD Consultations', amount: '₹ 1,12,480', dot: 'bg-blue-600' },
-                  { label: 'IPD Admissions & Wards', amount: '₹ 86,200', dot: 'bg-teal-500' },
-                  { label: 'Pharmacy Dispensary', amount: '₹ 32,400', dot: 'bg-amber-500' },
-                  { label: 'Laboratory Diagnostics', amount: '₹ 12,600', dot: 'bg-purple-500' },
-                  { label: 'Radiology & Imaging', amount: '₹ 44,640', dot: 'bg-indigo-500' },
-                ].map((item, idx) => (
+                {userspace.metrics.revenueBreakdown.map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between text-slate-600">
                     <span className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${item.dot}`}></span>
@@ -788,11 +767,11 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-slate-900">Pending Tasks</h2>
                   <span className="w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
-                    12
+                    {userspace.tasks.length}
                   </span>
                 </div>
                 <button
-                  onClick={() => triggerToast('Viewing all 12 operational work orders')}
+                  onClick={() => triggerToast(`Viewing all ${userspace.tasks.length} operational work orders`)}
                   className="text-xs font-semibold text-teal-600 hover:text-teal-700"
                 >
                   View All →
@@ -800,34 +779,9 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
               </div>
 
               <div className="space-y-2.5">
-                {[
-                  {
-                    title: 'Lab reports awaiting verification',
-                    dept: 'Laboratory',
-                    priority: 'High',
-                    color: 'text-rose-600 bg-rose-50 border-rose-200',
-                  },
-                  {
-                    title: 'Discharge summaries pending',
-                    dept: 'Inpatient',
-                    priority: 'Medium',
-                    color: 'text-amber-600 bg-amber-50 border-amber-200',
-                  },
-                  {
-                    title: 'Medicine requisitions pending approval',
-                    dept: 'Pharmacy',
-                    priority: 'Medium',
-                    color: 'text-amber-600 bg-amber-50 border-amber-200',
-                  },
-                  {
-                    title: 'Insurance claims to review',
-                    dept: 'Finance',
-                    priority: 'Low',
-                    color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
-                  },
-                ].map((task, idx) => (
+                {userspace.tasks.map((task) => (
                   <div
-                    key={idx}
+                    key={task.id}
                     className="p-2.5 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
                   >
                     <div>
@@ -849,7 +803,7 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-bold text-slate-900">Recent Admissions</h2>
                 <button
-                  onClick={() => triggerToast('Inpatient bed roster updated')}
+                  onClick={() => triggerToast(`Inpatient roster: ${userspace.admissions.length} active bed admissions`)}
                   className="text-xs font-semibold text-teal-600 hover:text-teal-700"
                 >
                   View All →
@@ -868,14 +822,8 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {[
-                      { name: 'Suresh Rajan', age: '45 / M', dept: 'General Medicine', time: '10:20 AM', status: 'Admitted' },
-                      { name: 'Anita Sharma', age: '32 / F', dept: 'Gynecology', time: '09:15 AM', status: 'Admitted' },
-                      { name: 'Rahul Verma', age: '28 / M', dept: 'Orthopedics', time: '08:40 AM', status: 'In OT' },
-                      { name: 'Meena Devi', age: '56 / F', dept: 'Cardiology', time: '07:50 AM', status: 'Admitted' },
-                      { name: 'Karthik S', age: '12 / M', dept: 'Pediatrics', time: '07:30 AM', status: 'Admitted' },
-                    ].map((row, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/50">
+                    {userspace.admissions.map((row) => (
+                      <tr key={row.id} className="hover:bg-slate-50/50">
                         <td className="py-2.5 font-bold text-slate-900">{row.name}</td>
                         <td className="py-2.5 text-slate-500 font-mono text-[11px]">{row.age}</td>
                         <td className="py-2.5 text-slate-600">{row.dept}</td>
@@ -904,7 +852,7 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-slate-900">Critical Alerts</h2>
                   <span className="w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
-                    5
+                    {userspace.alerts.length}
                   </span>
                 </div>
                 <button
@@ -916,36 +864,23 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
               </div>
 
               <div className="space-y-3">
-                {[
-                  {
-                    title: '2 patients in Emergency waiting',
-                    sub: 'Emergency • 5 min ago',
-                    icon: AlertTriangle,
-                    color: 'text-rose-600 bg-rose-50',
-                  },
-                  {
-                    title: 'Ventilator V-03 requires maintenance',
-                    sub: 'Biomedical • 18 min ago',
-                    icon: Wrench,
-                    color: 'text-amber-600 bg-amber-50',
-                  },
-                  {
-                    title: 'Paracetamol 500mg out of stock',
-                    sub: 'Pharmacy • 25 min ago',
-                    icon: Pill,
-                    color: 'text-rose-600 bg-rose-50',
-                  },
-                  {
-                    title: 'Lab Analyzer L-02 offline',
-                    sub: 'Laboratory • 42 min ago',
-                    icon: Microscope,
-                    color: 'text-amber-600 bg-amber-50',
-                  },
-                ].map((alert, idx) => {
-                  const AlertIcon = alert.icon;
+                {userspace.alerts.map((alert) => {
+                  let AlertIcon = AlertTriangle;
+                  let colorClass = 'text-rose-600 bg-rose-50';
+                  if (alert.type === 'biomedical') {
+                    AlertIcon = Wrench;
+                    colorClass = 'text-amber-600 bg-amber-50';
+                  } else if (alert.type === 'pharmacy') {
+                    AlertIcon = Pill;
+                    colorClass = 'text-rose-600 bg-rose-50';
+                  } else if (alert.type === 'lab') {
+                    AlertIcon = Microscope;
+                    colorClass = 'text-amber-600 bg-amber-50';
+                  }
+
                   return (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs">
-                      <div className={`p-1.5 rounded-lg ${alert.color} flex-shrink-0 mt-0.5`}>
+                    <div key={alert.id} className="flex items-start gap-2.5 text-xs">
+                      <div className={`p-1.5 rounded-lg ${colorClass} flex-shrink-0 mt-0.5`}>
                         <AlertIcon className="w-3.5 h-3.5" />
                       </div>
                       <div>
@@ -972,7 +907,11 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                 {quickActionModal === 'admit' && 'Admit Inpatient to Ward'}
               </h3>
               <button
-                onClick={() => setQuickActionModal(null)}
+                onClick={() => {
+                  setQuickActionModal(null);
+                  setQaPatientName('');
+                  setQaPatientPhone('');
+                }}
                 className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800"
               >
                 <X className="w-4 h-4" />
@@ -982,28 +921,118 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
               Operating in facility context: <strong className="text-slate-900">{currentHospital.name}</strong> ({currentHospital.code}).
             </p>
             <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Patient Full Name"
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl"
-              />
-              <input
-                type="tel"
-                placeholder="Contact Phone / HealthGrid ID"
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl"
-              />
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Patient Full Name</label>
+                <input
+                  type="text"
+                  value={qaPatientName}
+                  onChange={(e) => setQaPatientName(e.target.value)}
+                  placeholder="e.g. Anandha Kumar"
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                />
+              </div>
+
+              {quickActionModal === 'register' && (
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Contact Phone / HealthGrid ID</label>
+                  <input
+                    type="tel"
+                    value={qaPatientPhone}
+                    onChange={(e) => setQaPatientPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  />
+                </div>
+              )}
+
+              {quickActionModal === 'appointment' && (
+                <>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Specialty Department</label>
+                    <input
+                      type="text"
+                      value={qaPatientDept}
+                      onChange={(e) => setQaPatientDept(e.target.value)}
+                      placeholder="e.g. OPD - Cardiology"
+                      className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Assigned Doctor</label>
+                    <input
+                      type="text"
+                      value={qaPatientDoctor}
+                      onChange={(e) => setQaPatientDoctor(e.target.value)}
+                      placeholder={currentHospital.code === 'HG-H002' ? 'Dr. K. Srinivasan' : 'Dr. Arjun Mehta'}
+                      className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    />
+                  </div>
+                </>
+              )}
+
+              {quickActionModal === 'admit' && (
+                <>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Age & Gender</label>
+                    <input
+                      type="text"
+                      value={qaPatientAge}
+                      onChange={(e) => setQaPatientAge(e.target.value)}
+                      placeholder="e.g. 48 / M"
+                      className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Admitting Ward / Department</label>
+                    <input
+                      type="text"
+                      value={qaPatientDept}
+                      onChange={(e) => setQaPatientDept(e.target.value)}
+                      placeholder="e.g. General Medicine Ward"
+                      className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    />
+                  </div>
+                </>
+              )}
             </div>
+
             <div className="flex justify-end gap-2 mt-5">
               <button
-                onClick={() => setQuickActionModal(null)}
+                onClick={() => {
+                  setQuickActionModal(null);
+                  setQaPatientName('');
+                  setQaPatientPhone('');
+                }}
                 className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg"
               >
                 Cancel
               </button>
               <button
                 onClick={() => {
+                  const targetName = qaPatientName.trim() || 'New Patient';
+                  if (quickActionModal === 'register') {
+                    const updated = registerPatientInUserspace(currentHospital.code, targetName);
+                    setUserspace(updated);
+                    triggerToast(`Patient "${targetName}" registered in ${currentHospital.name} registry.`);
+                  } else if (quickActionModal === 'appointment') {
+                    const dept = qaPatientDept.trim() || 'OPD - General Medicine';
+                    const doc = qaPatientDoctor.trim() || (currentHospital.code === 'HG-H002' ? 'Dr. K. Srinivasan' : 'Dr. Arjun Mehta');
+                    const updated = bookAppointmentInUserspace(currentHospital.code, targetName, dept, doc);
+                    setUserspace(updated);
+                    triggerToast(`Appointment booked for "${targetName}" with ${doc}.`);
+                  } else if (quickActionModal === 'admit') {
+                    const age = qaPatientAge.trim() || '45 / M';
+                    const dept = qaPatientDept.trim() || 'Inpatient General Ward';
+                    const updated = admitPatientInUserspace(currentHospital.code, targetName, age, dept);
+                    setUserspace(updated);
+                    triggerToast(`Patient "${targetName}" admitted to ${dept}. Bed allocated.`);
+                  }
                   setQuickActionModal(null);
-                  triggerToast('Operation processed and recorded to Hospital Registry.');
+                  setQaPatientName('');
+                  setQaPatientPhone('');
+                  setQaPatientDept('');
+                  setQaPatientDoctor('');
+                  setQaPatientAge('');
                 }}
                 className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl"
               >

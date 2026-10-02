@@ -51,6 +51,8 @@ export const RegisterHospitalModal: React.FC<RegisterHospitalModalProps> = ({
       const formattedNum = nextNum < 10 ? `00${nextNum}` : nextNum < 100 ? `0${nextNum}` : `${nextNum}`;
       const code = `HG-H${formattedNum}`;
       const id = `hosp-${Date.now()}`;
+      const emailPrefix = adminEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const allocatedUsername = `${emailPrefix}_admin`;
 
       const newHospital: HospitalEntity = {
         id,
@@ -63,6 +65,8 @@ export const RegisterHospitalModal: React.FC<RegisterHospitalModalProps> = ({
         availableBeds: 25,
         adminName: adminEmail.split('@')[0].replace('.', ' ').toUpperCase(),
         adminEmail: adminEmail.trim(),
+        username: allocatedUsername,
+        password: password.trim(),
       };
 
       saveHospital(newHospital);
@@ -72,7 +76,7 @@ export const RegisterHospitalModal: React.FC<RegisterHospitalModalProps> = ({
       setTimeout(() => {
         onSuccess(newHospital);
         onClose();
-      }, 1200);
+      }, 1800);
     }, 600);
   };
 
@@ -109,6 +113,17 @@ export const RegisterHospitalModal: React.FC<RegisterHospitalModalProps> = ({
               <span className="font-semibold text-slate-900">{registeredHospital.name}</span> has been issued Hospital Code{' '}
               <span className="font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{registeredHospital.code}</span>.
             </p>
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 text-left max-w-sm mx-auto">
+              <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Allocated Administrator Userspace:</div>
+              <div className="flex items-center justify-between text-xs py-1 border-b border-slate-200/60">
+                <span className="text-slate-600">Assigned Username:</span>
+                <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">{registeredHospital.username}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs py-1">
+                <span className="text-slate-600">Admin Email:</span>
+                <span className="font-medium text-slate-800">{registeredHospital.adminEmail}</span>
+              </div>
+            </div>
             <p className="text-xs text-slate-500">Redirecting to Hospital Portal with your new facility selected...</p>
           </div>
         ) : (
