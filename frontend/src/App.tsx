@@ -13,6 +13,7 @@ import { lenisService } from './services/lenisService';
 import { authService, type AuthUser } from './services/authService';
 import { useScrollReveal } from './hooks/useScrollReveal';
 import type { GuideArticle } from './components/HealthGuideModal';
+import type { HospitalEntity } from './data/hospitalsList';
 import './App.css';
 
 // Lazy-loaded Views (Code-splitting secondary routes)
@@ -24,6 +25,7 @@ const NotFoundPage = lazy(() => import('./components/NotFoundPage').then(m => ({
 const ThankYouPage = lazy(() => import('./components/ThankYouPage').then(m => ({ default: m.ThankYouPage })));
 const MedicineStorePage = lazy(() => import('./components/MedicineStorePage').then(m => ({ default: m.MedicineStorePage })));
 const HospitalInformationSystem = lazy(() => import('./components/his/HospitalInformationSystem').then(m => ({ default: m.HospitalInformationSystem })));
+const HospitalErpDashboard = lazy(() => import('./components/erp/HospitalErpDashboard').then(m => ({ default: m.HospitalErpDashboard })));
 
 // Lazy-loaded On-Demand Modals
 const AmbulanceModal = lazy(() => import('./components/AmbulanceModal').then(m => ({ default: m.AmbulanceModal })));
@@ -43,11 +45,13 @@ const ViewLoadingFallback = () => (
   </div>
 );
 
-export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'his';
+export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'his' | 'hospital-erp';
 
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
   const [currentView, setCurrentView] = useState<AppView>('landing');
+  const [activeErpHospital, setActiveErpHospital] = useState<HospitalEntity | undefined>(undefined);
+  const [activeErpAdmin, setActiveErpAdmin] = useState<string>('Admin Ravi');
 
   // Modals state
   const [isAmbulanceOpen, setIsAmbulanceOpen] = useState(false);
@@ -126,6 +130,8 @@ export default function App() {
         setCurrentView('medicines');
       } else if (pathname === '/his' || pathname === '/doctor-portal' || hash === '#his' || hash === '#/his' || hash === '#doctor-portal') {
         setCurrentView('his');
+      } else if (pathname === '/hospital-erp' || pathname === '/hospital-portal' || hash === '#hospital-erp' || hash === '#hospital-portal' || hash === '#/hospital-erp') {
+        setCurrentView('hospital-erp');
       } else if (pathname === '/' || pathname === '/index.html' || pathname === '') {
         // If there is an unknown anchor hash like #unknown
         if (hash && !['', '#', '#/', '#landing', '#home'].includes(hash) && !hash.startsWith('#section-') && !hash.startsWith('#guide-')) {
@@ -185,6 +191,10 @@ export default function App() {
       case 'his':
         title = lang === 'en' ? 'Hospital Information System (HIS / EHR) & Doctor Portal | HealthGrid' : 'மருத்துவமனை தகவல் அமைப்பு (HIS / EHR) & மருத்துவர் தளம் | HealthGrid';
         desc = lang === 'en' ? 'Clinical Hospital Information System: OPD Token Queue, Live Tele-Consult Chamber with SOAP notes and generic e-prescribing, Inpatient Bed Census, and Diagnostic Lab Hub.' : 'மருத்துவர் தளம் மற்றும் மருத்துவமனை மேலாண்மை அமைப்பு: நோயாளிகள் டோக்கன் வரிசை, நேரடி ஆலோசனை, படுக்கைகள் நிலவரம்.';
+        break;
+      case 'hospital-erp':
+        title = 'HealthGrid Hospital ERP | Autonomous Multi-Tenant Healthcare Operations';
+        desc = 'Unified hospital ERP management: OPD and IPD censuses, real-time bed occupancy, department activity, revenue flow, and clinical alerts.';
         break;
       case 'not-found':
         title = lang === 'en' ? '404 - Page Not Found | HealthGrid' : '404 - பக்கம் கிடைக்கவில்லை | HealthGrid';
@@ -580,6 +590,11 @@ export default function App() {
               contextNotice={loginNotice}
               onSuccess={handleGlobalLoginSuccess}
               onNavigateHis={() => navigateToView('his')}
+              onNavigateHospitalErp={(hospital, adminName) => {
+                setActiveErpHospital(hospital);
+                setActiveErpAdmin(adminName);
+                navigateToView('hospital-erp');
+              }}
             />
           </Suspense>
         )}
@@ -594,6 +609,19 @@ export default function App() {
         <HospitalInformationSystem
           lang={lang}
           onExitToCitizenView={() => navigateToView('landing')}
+        />
+      </Suspense>
+    );
+  }
+
+  // Render Dedicated Hospital ERP Operations Workspace (Matching ERP Overview.png)
+  if (currentView === 'hospital-erp') {
+    return (
+      <Suspense fallback={<ViewLoadingFallback />}>
+        <HospitalErpDashboard
+          initialHospital={activeErpHospital}
+          adminName={activeErpAdmin}
+          onExit={() => navigateToView('landing')}
         />
       </Suspense>
     );
@@ -699,6 +727,11 @@ export default function App() {
               contextNotice={loginNotice}
               onSuccess={handleGlobalLoginSuccess}
               onNavigateHis={() => navigateToView('his')}
+              onNavigateHospitalErp={(hospital, adminName) => {
+                setActiveErpHospital(hospital);
+                setActiveErpAdmin(adminName);
+                navigateToView('hospital-erp');
+              }}
             />
           </Suspense>
         )}
@@ -903,6 +936,11 @@ export default function App() {
             contextNotice={loginNotice}
             onSuccess={handleGlobalLoginSuccess}
             onNavigateHis={() => navigateToView('his')}
+            onNavigateHospitalErp={(hospital, adminName) => {
+              setActiveErpHospital(hospital);
+              setActiveErpAdmin(adminName);
+              navigateToView('hospital-erp');
+            }}
           />
         </Suspense>
       )}

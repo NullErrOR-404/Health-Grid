@@ -1,0 +1,1018 @@
+import React, { useState } from 'react';
+import {
+  HeartPulse,
+  Search,
+  Bell,
+  HelpCircle,
+  Building2,
+  ChevronDown,
+  CalendarDays,
+  Plus,
+  Users,
+  Bed,
+  FlaskConical,
+  Pill,
+  IndianRupee,
+  LayoutDashboard,
+  UserCheck,
+  Stethoscope,
+  AlertTriangle,
+  Activity,
+  Syringe,
+  Microscope,
+  Radiation,
+  Scissors,
+  Droplets,
+  CreditCard,
+  Shield,
+  ShoppingCart,
+  Boxes,
+  Wrench,
+  UserCog,
+  BarChart3,
+  Settings,
+  ShieldAlert,
+  ArrowUpRight,
+  LogOut,
+  X,
+  CheckCircle2,
+  Sparkles,
+} from 'lucide-react';
+import { type HospitalEntity, getHospitalsList } from '../../data/hospitalsList';
+
+interface HospitalErpDashboardProps {
+  initialHospital?: HospitalEntity;
+  adminName?: string;
+  onExit: () => void;
+}
+
+export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
+  initialHospital,
+  adminName = 'Admin Ravi',
+  onExit,
+}) => {
+  const hospitals = getHospitalsList();
+  const [currentHospital, setCurrentHospital] = useState<HospitalEntity>(
+    initialHospital || hospitals[0] || {
+      id: 'hosp-1',
+      code: 'HG-H001',
+      name: 'City Care Hospital',
+      city: 'Chennai',
+      state: 'Tamil Nadu',
+      type: 'Multi-Specialty Tertiary Hospital',
+      totalBeds: 120,
+      availableBeds: 24,
+      adminName: 'Admin Ravi',
+      adminEmail: 'ravi.admin@citycare.in',
+    }
+  );
+
+  const [activeMenu, setActiveMenu] = useState('Dashboard');
+  const [isHospitalSwitcherOpen, setIsHospitalSwitcherOpen] = useState(false);
+  const [quickActionModal, setQuickActionModal] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const triggerToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const navSections = [
+    {
+      category: 'MAIN',
+      items: [{ id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard }],
+    },
+    {
+      category: 'PATIENT CARE',
+      items: [
+        { id: 'Patient Management', label: 'Patient Management', icon: Users },
+        { id: 'OPD Management', label: 'OPD Management', icon: UserCheck },
+        { id: 'IPD & Bed Management', label: 'IPD & Bed Management', icon: Bed },
+        { id: 'Appointments', label: 'Appointments', icon: CalendarDays },
+        { id: 'Emergency', label: 'Emergency', icon: AlertTriangle },
+      ],
+    },
+    {
+      category: 'CLINICAL',
+      items: [
+        { id: 'Doctors & OPD', label: 'Doctors & OPD', icon: Stethoscope },
+        { id: 'Nursing', label: 'Nursing', icon: Syringe },
+        { id: 'Laboratory (LIS)', label: 'Laboratory (LIS)', icon: Microscope },
+        { id: 'Radiology (RIS)', label: 'Radiology (RIS)', icon: Radiation },
+        { id: 'Pharmacy', label: 'Pharmacy', icon: Pill },
+        { id: 'Operation Theatre', label: 'Operation Theatre', icon: Scissors },
+        { id: 'Blood Bank', label: 'Blood Bank', icon: Droplets },
+      ],
+    },
+    {
+      category: 'FINANCE & OPERATIONS',
+      items: [
+        { id: 'Billing & Payments', label: 'Billing & Payments', icon: CreditCard },
+        { id: 'Insurance & TPA', label: 'Insurance & TPA', icon: Shield },
+        { id: 'Procurement', label: 'Procurement', icon: ShoppingCart },
+        { id: 'Inventory & Stores', label: 'Inventory & Stores', icon: Boxes },
+        { id: 'Assets & Maintenance', label: 'Assets & Maintenance', icon: Wrench },
+        { id: 'HR & Staff Management', label: 'HR & Staff Management', icon: UserCog },
+        { id: 'Reports & Analytics', label: 'Reports & Analytics', icon: BarChart3 },
+      ],
+    },
+    {
+      category: 'ADMINISTRATION',
+      items: [
+        { id: 'Hospital Settings', label: 'Hospital Settings', icon: Settings },
+        { id: 'Audit Logs', label: 'Audit Logs', icon: ShieldAlert },
+      ],
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col font-sans select-none antialiased">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-4 right-4 z-[200] bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-top-3">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* TOP APP BAR */}
+      <header className="h-16 bg-white border-b border-slate-200/80 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-40 shadow-xs">
+        {/* Logo & Brand */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-sm shadow-teal-600/30">
+              <HeartPulse className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-lg font-black tracking-tight text-slate-900 leading-none block">
+                HealthGrid
+              </span>
+              <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase leading-none block mt-0.5">
+                Hospital Management
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Global Search Bar */}
+        <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
+          <div className="relative w-full">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search patients, staff, appointments, or menu..."
+              className="w-full pl-10 pr-12 py-2 rounded-xl border border-slate-200 bg-slate-50/70 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 focus:bg-white transition-all"
+            />
+            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 bg-slate-200/60 px-1.5 py-0.5 rounded border border-slate-300/60">
+              Ctrl K
+            </kbd>
+          </div>
+        </div>
+
+        {/* Right Action Icons & Profiles */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => triggerToast('5 new hospital operational notifications.')}
+            className="relative w-9 h-9 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors"
+            title="Notifications"
+          >
+            <Bell className="w-4 h-4" />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
+              5
+            </span>
+          </button>
+
+          <button
+            onClick={() => triggerToast('HealthGrid Hospital ERP v2.4 • Documentation & Help')}
+            className="w-9 h-9 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors"
+            title="Help"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+
+          {/* Hospital Switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setIsHospitalSwitcherOpen(!isHospitalSwitcherOpen)}
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white text-left transition-all"
+            >
+              <div className="w-7 h-7 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
+                <Building2 className="w-3.5 h-3.5" />
+              </div>
+              <div className="hidden sm:block">
+                <div className="text-xs font-bold text-slate-900 leading-tight">
+                  {currentHospital.name}
+                </div>
+                <div className="text-[10px] font-mono font-medium text-slate-400 leading-none">
+                  {currentHospital.code}
+                </div>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+
+            {isHospitalSwitcherOpen && (
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-3 py-1.5 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Partner Facilities
+                </div>
+                <div className="max-h-60 overflow-y-auto py-1">
+                  {hospitals.map((hosp) => (
+                    <button
+                      key={hosp.id}
+                      onClick={() => {
+                        setCurrentHospital(hosp);
+                        setIsHospitalSwitcherOpen(false);
+                        triggerToast(`Switched active view to ${hosp.name}`);
+                      }}
+                      className={`w-full px-3 py-2 flex items-center justify-between text-left hover:bg-slate-50 transition-colors ${
+                        hosp.id === currentHospital.id ? 'bg-teal-50/70' : ''
+                      }`}
+                    >
+                      <div>
+                        <div className="text-xs font-semibold text-slate-900">{hosp.name}</div>
+                        <div className="text-[10px] text-slate-400">{hosp.city}</div>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-teal-700 bg-teal-100/60 px-1.5 py-0.5 rounded">
+                        {hosp.code}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Admin Avatar & Dropdown */}
+          <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+            <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+              AR
+            </div>
+            <div className="hidden lg:block text-left">
+              <div className="text-xs font-bold text-slate-900 leading-tight">{adminName}</div>
+              <div className="text-[10px] text-slate-400 leading-none">Hospital Administrator</div>
+            </div>
+            <button
+              onClick={onExit}
+              className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors ml-1"
+              title="Exit to Citizen Portal"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* MAIN LAYOUT: SIDEBAR + DASHBOARD CONTENT */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* LEFT SIDEBAR NAVIGATION */}
+        <aside className="w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between hidden md:flex overflow-y-auto">
+          <div className="p-3 space-y-6">
+            {navSections.map((sec, secIdx) => (
+              <div key={secIdx}>
+                {sec.category !== 'MAIN' && (
+                  <div className="px-3 mb-1.5 text-[10px] font-extrabold text-slate-400 tracking-wider">
+                    {sec.category}
+                  </div>
+                )}
+                <div className="space-y-0.5">
+                  {sec.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeMenu === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveMenu(item.id);
+                          if (item.id !== 'Dashboard') {
+                            triggerToast(`Switched workspace tab to: ${item.label}`);
+                          }
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                          isActive
+                            ? 'bg-teal-50 text-teal-700 shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Sidebar Footer */}
+          <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+            <button
+              onClick={onExit}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <LogOut className="w-4 h-4 text-slate-400" />
+                Return to HealthGrid Home
+              </span>
+              <ArrowUpRight className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+          </div>
+        </aside>
+
+        {/* DASHBOARD BODY */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-7 space-y-6">
+          {/* Header Row: Greeting & Action Buttons */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-[28px] font-black text-slate-900 tracking-tight">
+                Good Morning, {adminName.split(' ')[1] || adminName}
+              </h1>
+              <p className="text-xs lg:text-sm text-slate-500 mt-1">
+                Here&apos;s what&apos;s happening at <span className="font-semibold text-slate-700">{currentHospital.name}</span> today.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Date Pill */}
+              <div className="flex items-center gap-2 bg-white border border-slate-200 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 shadow-xs">
+                <CalendarDays className="w-4 h-4 text-teal-600" />
+                <span>Mon, 02 Oct 2026</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+
+              {/* Action Buttons */}
+              <button
+                onClick={() => setQuickActionModal('register')}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-teal-600/20 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Register Patient</span>
+              </button>
+
+              <button
+                onClick={() => setQuickActionModal('appointment')}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-xs font-bold shadow-sm shadow-sky-600/20 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Book Appointment</span>
+              </button>
+
+              <button
+                onClick={() => setQuickActionModal('admit')}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-xl text-xs font-bold shadow-sm shadow-blue-600/20 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Admit Patient</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 6 TOP KPI CARDS */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            {/* Card 1: OPD Visits */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-500">OPD Visits</span>
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Users className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900">148</div>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-0.5">
+                  ↑ 12% <span className="text-slate-400 font-normal">vs yesterday</span>
+                </span>
+                <svg className="w-12 h-4 text-sky-500" viewBox="0 0 50 16" fill="none">
+                  <path d="M1 12 C10 15, 20 2, 35 8 C42 12, 47 4, 49 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Card 2: IPD Patients */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-500">IPD Patients</span>
+                <div className="w-8 h-8 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center">
+                  <Bed className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900">86</div>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-0.5">
+                  ↑ 5% <span className="text-slate-400 font-normal">vs yesterday</span>
+                </span>
+                <svg className="w-12 h-4 text-rose-400" viewBox="0 0 50 16" fill="none">
+                  <path d="M1 14 C12 6, 25 15, 38 7 C44 3, 47 6, 49 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Card 3: Available Beds */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-500">Available Beds</span>
+                <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                  <Bed className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900">
+                24 <span className="text-xs font-medium text-slate-400">/ 120</span>
+              </div>
+              <div className="mt-2 pt-2 border-t border-slate-100">
+                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex">
+                  <div className="bg-teal-600 h-full rounded-full" style={{ width: '80%' }}></div>
+                </div>
+                <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium mt-1">
+                  <span>80% Occupancy</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Lab Orders */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-500">Lab Orders</span>
+                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                  <FlaskConical className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900">32</div>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500">
+                <span>
+                  <strong className="text-slate-800">12</strong> pending • <strong className="text-emerald-600">18</strong> done
+                </span>
+                <div className="flex items-end gap-1 h-3">
+                  <div className="w-1 bg-purple-300 h-1.5 rounded-t"></div>
+                  <div className="w-1 bg-purple-400 h-2.5 rounded-t"></div>
+                  <div className="w-1 bg-purple-600 h-3 rounded-t"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5: Pharmacy Stock Alerts */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-500">Pharmacy Alerts</span>
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <Pill className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900">5</div>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-[11px] font-semibold text-amber-600">
+                <span>Low stock items</span>
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+              </div>
+            </div>
+
+            {/* Card 6: Today's Revenue */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-500">Today&apos;s Revenue</span>
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <IndianRupee className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900">₹ 2,48,320</div>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                <span className="text-[11px] font-semibold text-emerald-600">
+                  ↑ 8% <span className="text-slate-400 font-normal">vs yesterday</span>
+                </span>
+                <div className="flex items-end gap-1 h-3">
+                  <div className="w-1 bg-emerald-300 h-2 rounded-t"></div>
+                  <div className="w-1 bg-emerald-400 h-2.5 rounded-t"></div>
+                  <div className="w-1 bg-emerald-600 h-3 rounded-t"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* MIDDLE 3-PANEL GRID: Appointments, Bed Occupancy, Department Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* PANEL 1: Today's Appointments (5 cols) */}
+            <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-bold text-slate-900">Today&apos;s Appointments</h2>
+                <button
+                  onClick={() => triggerToast('Viewing all 42 registered appointments')}
+                  className="text-xs font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1"
+                >
+                  View All →
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {[
+                  {
+                    time: '09:00 AM',
+                    name: 'Priya Sharma',
+                    dept: 'OPD - General Medicine',
+                    doctor: 'Dr. Arjun Mehta',
+                    status: 'Checked In',
+                    statusColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                  },
+                  {
+                    time: '09:30 AM',
+                    name: 'Karthik R',
+                    dept: 'OPD - Cardiology',
+                    doctor: 'Dr. Sneha Iyer',
+                    status: 'Waiting',
+                    statusColor: 'bg-amber-50 text-amber-700 border-amber-200',
+                  },
+                  {
+                    time: '10:00 AM',
+                    name: 'Meena Devi',
+                    dept: 'OPD - Endocrinology',
+                    doctor: 'Dr. Vikram Nair',
+                    status: 'Waiting',
+                    statusColor: 'bg-amber-50 text-amber-700 border-amber-200',
+                  },
+                  {
+                    time: '10:30 AM',
+                    name: 'Rajesh Kumar',
+                    dept: 'OPD - Orthopedics',
+                    doctor: 'Dr. Priya Menon',
+                    status: 'Scheduled',
+                    statusColor: 'bg-blue-50 text-blue-700 border-blue-200',
+                  },
+                  {
+                    time: '11:00 AM',
+                    name: 'Lakshmi S',
+                    dept: 'OPD - Dermatology',
+                    doctor: 'Dr. Amit Desai',
+                    status: 'Scheduled',
+                    statusColor: 'bg-blue-50 text-blue-700 border-blue-200',
+                  },
+                ].map((appt, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50/70 transition-colors flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-[11px] font-mono font-medium text-slate-400 w-16">
+                        {appt.time}
+                      </span>
+                      <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center">
+                        {appt.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900">{appt.name}</div>
+                        <div className="text-[10px] text-slate-500">
+                          {appt.dept} • <span className="font-medium text-slate-700">{appt.doctor}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${appt.statusColor}`}
+                    >
+                      {appt.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* PANEL 2: Bed Occupancy Donut (3 cols) */}
+            <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-bold text-slate-900">Bed Occupancy</h2>
+                <button
+                  onClick={() => triggerToast('Ward bed map: ICU (18/20), General (60/70), Emergency (18/30)')}
+                  className="text-xs font-semibold text-teal-600 hover:text-teal-700"
+                >
+                  View Details →
+                </button>
+              </div>
+
+              {/* Donut Chart Simulation */}
+              <div className="my-auto py-2 flex flex-col items-center justify-center relative">
+                <svg className="w-36 h-36 -rotate-90" viewBox="0 0 100 100">
+                  {/* Background Circle */}
+                  <circle cx="50" cy="50" r="38" stroke="#f1f5f9" strokeWidth="10" fill="none" />
+                  {/* Occupied Slice (Coral / Red) 80% */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    stroke="#f87171"
+                    strokeWidth="10"
+                    strokeDasharray="238.7"
+                    strokeDashoffset="47.7"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                  {/* Available Slice (Teal) 15% */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    stroke="#2dd4bf"
+                    strokeWidth="10"
+                    strokeDasharray="238.7"
+                    strokeDashoffset="202.9"
+                    fill="none"
+                  />
+                </svg>
+
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-2xl font-black text-slate-900">80%</span>
+                  <span className="text-[10px] font-semibold text-slate-400">Occupied</span>
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="space-y-1.5 pt-2 border-t border-slate-100 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-slate-600 text-[11px]">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-400"></span> Occupied
+                  </span>
+                  <strong className="text-slate-900 text-xs">96</strong>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-slate-600 text-[11px]">
+                    <span className="w-2.5 h-2.5 rounded-full bg-teal-400"></span> Available
+                  </span>
+                  <strong className="text-slate-900 text-xs">24</strong>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-slate-600 text-[11px]">
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Maintenance
+                  </span>
+                  <strong className="text-slate-900 text-xs">8</strong>
+                </div>
+                <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-700">
+                  <span>Total Beds</span>
+                  <span>120</span>
+                </div>
+              </div>
+            </div>
+
+            {/* PANEL 3: Department Activity (4 cols) */}
+            <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-bold text-slate-900">Department Activity</h2>
+                <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                  <span>Today</span>
+                  <ChevronDown className="w-3 h-3" />
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                {[
+                  { name: 'General Medicine', count: 42, pct: 85, icon: Stethoscope },
+                  { name: 'Pediatrics', count: 28, pct: 60, icon: Users },
+                  { name: 'Orthopedics', count: 18, pct: 40, icon: Activity },
+                  { name: 'Gynecology & Obs', count: 25, pct: 55, icon: HeartPulse },
+                  { name: 'Cardiology', count: 20, pct: 45, icon: HeartPulse },
+                  { name: 'Dermatology', count: 15, pct: 35, icon: Sparkles },
+                  { name: 'ENT', count: 12, pct: 28, icon: Activity },
+                  { name: 'Others', count: 28, pct: 60, icon: Users },
+                ].map((dept, idx) => {
+                  const DeptIcon = dept.icon;
+                  return (
+                    <div key={idx} className="flex items-center gap-2 text-xs">
+                      <DeptIcon className="w-3.5 h-3.5 text-teal-600 flex-shrink-0" />
+                      <span className="w-36 text-slate-700 font-medium truncate">{dept.name}</span>
+                      <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div
+                          className="bg-teal-500 h-full rounded-full"
+                          style={{ width: `${dept.pct}%` }}
+                        ></div>
+                      </div>
+                      <span className="w-6 text-right font-bold text-slate-800 text-[11px]">
+                        {dept.count}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* LOWER SECTION: Patient Flow Chart & Revenue Overview */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Patient Flow Curve (7 cols) */}
+            <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-sm font-bold text-slate-900">Patient Flow</h2>
+                  <div className="flex items-center gap-3 text-[11px] font-semibold">
+                    <span className="flex items-center gap-1.5 text-blue-600">
+                      <span className="w-2 h-2 rounded-full bg-blue-600"></span> OPD
+                    </span>
+                    <span className="flex items-center gap-1.5 text-teal-600">
+                      <span className="w-2 h-2 rounded-full bg-teal-500"></span> IPD
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                  <span>Today</span>
+                  <ChevronDown className="w-3 h-3" />
+                </div>
+              </div>
+
+              {/* Patient Flow SVG Line Chart */}
+              <div className="h-44 w-full relative">
+                <svg className="w-full h-full" viewBox="0 0 500 120" preserveAspectRatio="none">
+                  <line x1="0" y1="20" x2="500" y2="20" stroke="#f1f5f9" strokeWidth="1" />
+                  <line x1="0" y1="50" x2="500" y2="50" stroke="#f1f5f9" strokeWidth="1" />
+                  <line x1="0" y1="80" x2="500" y2="80" stroke="#f1f5f9" strokeWidth="1" />
+                  <line x1="0" y1="110" x2="500" y2="110" stroke="#f1f5f9" strokeWidth="1" />
+
+                  {/* OPD Line (Blue) */}
+                  <path
+                    d="M 10 90 Q 60 70 120 40 T 220 30 T 320 60 T 400 35 T 480 80"
+                    fill="none"
+                    stroke="#2563eb"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+                  {/* IPD Line (Teal) */}
+                  <path
+                    d="M 10 100 Q 60 90 120 75 T 220 70 T 320 85 T 400 70 T 480 95"
+                    fill="none"
+                    stroke="#0d9488"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="flex justify-between text-[10px] font-mono text-slate-400 mt-2">
+                  <span>8 AM</span>
+                  <span>10 AM</span>
+                  <span>12 PM</span>
+                  <span>2 PM</span>
+                  <span>4 PM</span>
+                  <span>6 PM</span>
+                  <span>8 PM</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Revenue Overview (5 cols) */}
+            <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-bold text-slate-900">Revenue Overview</h2>
+                <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  ↑ 8% vs yesterday
+                </span>
+              </div>
+
+              <div className="text-2xl font-black text-slate-900 mb-3">₹ 2,48,320</div>
+
+              <div className="space-y-2 text-xs">
+                {[
+                  { label: 'OPD Consultations', amount: '₹ 1,12,480', dot: 'bg-blue-600' },
+                  { label: 'IPD Admissions & Wards', amount: '₹ 86,200', dot: 'bg-teal-500' },
+                  { label: 'Pharmacy Dispensary', amount: '₹ 32,400', dot: 'bg-amber-500' },
+                  { label: 'Laboratory Diagnostics', amount: '₹ 12,600', dot: 'bg-purple-500' },
+                  { label: 'Radiology & Imaging', amount: '₹ 44,640', dot: 'bg-indigo-500' },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-slate-600">
+                    <span className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${item.dot}`}></span>
+                      {item.label}
+                    </span>
+                    <strong className="text-slate-900 font-mono">{item.amount}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* BOTTOM 3-PANEL GRID: Pending Tasks, Recent Admissions, Critical Alerts */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Pending Tasks (4 cols) */}
+            <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-slate-900">Pending Tasks</h2>
+                  <span className="w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+                    12
+                  </span>
+                </div>
+                <button
+                  onClick={() => triggerToast('Viewing all 12 operational work orders')}
+                  className="text-xs font-semibold text-teal-600 hover:text-teal-700"
+                >
+                  View All →
+                </button>
+              </div>
+
+              <div className="space-y-2.5">
+                {[
+                  {
+                    title: 'Lab reports awaiting verification',
+                    dept: 'Laboratory',
+                    priority: 'High',
+                    color: 'text-rose-600 bg-rose-50 border-rose-200',
+                  },
+                  {
+                    title: 'Discharge summaries pending',
+                    dept: 'Inpatient',
+                    priority: 'Medium',
+                    color: 'text-amber-600 bg-amber-50 border-amber-200',
+                  },
+                  {
+                    title: 'Medicine requisitions pending approval',
+                    dept: 'Pharmacy',
+                    priority: 'Medium',
+                    color: 'text-amber-600 bg-amber-50 border-amber-200',
+                  },
+                  {
+                    title: 'Insurance claims to review',
+                    dept: 'Finance',
+                    priority: 'Low',
+                    color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+                  },
+                ].map((task, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2.5 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <div className="font-semibold text-slate-900">{task.title}</div>
+                      <div className="text-[10px] text-slate-400">{task.dept}</div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${task.color}`}
+                    >
+                      {task.priority}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Admissions (5 cols) */}
+            <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-bold text-slate-900">Recent Admissions</h2>
+                <button
+                  onClick={() => triggerToast('Inpatient bed roster updated')}
+                  className="text-xs font-semibold text-teal-600 hover:text-teal-700"
+                >
+                  View All →
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-slate-400 text-[10px] font-bold uppercase">
+                      <th className="pb-2">Patient</th>
+                      <th className="pb-2">Age/Gen</th>
+                      <th className="pb-2">Department</th>
+                      <th className="pb-2">Time</th>
+                      <th className="pb-2 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {[
+                      { name: 'Suresh Rajan', age: '45 / M', dept: 'General Medicine', time: '10:20 AM', status: 'Admitted' },
+                      { name: 'Anita Sharma', age: '32 / F', dept: 'Gynecology', time: '09:15 AM', status: 'Admitted' },
+                      { name: 'Rahul Verma', age: '28 / M', dept: 'Orthopedics', time: '08:40 AM', status: 'In OT' },
+                      { name: 'Meena Devi', age: '56 / F', dept: 'Cardiology', time: '07:50 AM', status: 'Admitted' },
+                      { name: 'Karthik S', age: '12 / M', dept: 'Pediatrics', time: '07:30 AM', status: 'Admitted' },
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50">
+                        <td className="py-2.5 font-bold text-slate-900">{row.name}</td>
+                        <td className="py-2.5 text-slate-500 font-mono text-[11px]">{row.age}</td>
+                        <td className="py-2.5 text-slate-600">{row.dept}</td>
+                        <td className="py-2.5 text-slate-400 font-mono text-[11px]">{row.time}</td>
+                        <td className="py-2.5 text-right">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              row.status === 'In OT'
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-emerald-100 text-emerald-700'
+                            }`}
+                          >
+                            {row.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Critical Alerts (3 cols) */}
+            <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-slate-900">Critical Alerts</h2>
+                  <span className="w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+                    5
+                  </span>
+                </div>
+                <button
+                  onClick={() => triggerToast('Emergency incident response active')}
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                >
+                  View All →
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {[
+                  {
+                    title: '2 patients in Emergency waiting',
+                    sub: 'Emergency • 5 min ago',
+                    icon: AlertTriangle,
+                    color: 'text-rose-600 bg-rose-50',
+                  },
+                  {
+                    title: 'Ventilator V-03 requires maintenance',
+                    sub: 'Biomedical • 18 min ago',
+                    icon: Wrench,
+                    color: 'text-amber-600 bg-amber-50',
+                  },
+                  {
+                    title: 'Paracetamol 500mg out of stock',
+                    sub: 'Pharmacy • 25 min ago',
+                    icon: Pill,
+                    color: 'text-rose-600 bg-rose-50',
+                  },
+                  {
+                    title: 'Lab Analyzer L-02 offline',
+                    sub: 'Laboratory • 42 min ago',
+                    icon: Microscope,
+                    color: 'text-amber-600 bg-amber-50',
+                  },
+                ].map((alert, idx) => {
+                  const AlertIcon = alert.icon;
+                  return (
+                    <div key={idx} className="flex items-start gap-2.5 text-xs">
+                      <div className={`p-1.5 rounded-lg ${alert.color} flex-shrink-0 mt-0.5`}>
+                        <AlertIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-900 leading-snug">{alert.title}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{alert.sub}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* QUICK ACTION MODAL SIMULATOR */}
+      {quickActionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 animate-in zoom-in-95">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-slate-900 capitalize">
+                {quickActionModal === 'register' && 'Register New Patient'}
+                {quickActionModal === 'appointment' && 'Book OPD Appointment'}
+                {quickActionModal === 'admit' && 'Admit Inpatient to Ward'}
+              </h3>
+              <button
+                onClick={() => setQuickActionModal(null)}
+                className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-600 mb-4">
+              Operating in facility context: <strong className="text-slate-900">{currentHospital.name}</strong> ({currentHospital.code}).
+            </p>
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="Patient Full Name"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl"
+              />
+              <input
+                type="tel"
+                placeholder="Contact Phone / HealthGrid ID"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl"
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                onClick={() => setQuickActionModal(null)}
+                className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setQuickActionModal(null);
+                  triggerToast('Operation processed and recorded to Hospital Registry.');
+                }}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl"
+              >
+                Confirm &amp; Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

@@ -21,11 +21,16 @@ import {
   HelpCircle,
   Mail,
   Landmark,
+  Search,
+  Plus,
+  ChevronDown,
 } from 'lucide-react';
 import type { Language } from '../types';
 import { authService, type UserRole, type AuthUser } from '../services/authService';
 import { CustomSelect } from './CustomSelect';
 import { CustomDatePicker, calculateAgeFromDob } from './CustomDatePicker';
+import { type HospitalEntity, getHospitalsList } from '../data/hospitalsList';
+import { RegisterHospitalModal } from './RegisterHospitalModal';
 
 const BLOOD_GROUP_OPTIONS = [
   { value: 'B Positive', label: 'B Positive (B+)', badge: 'B+' },
@@ -46,6 +51,7 @@ interface LoginModalProps {
   lang: Language;
   onOpenDoctorHandover?: () => void;
   onNavigateHis?: () => void;
+  onNavigateHospitalErp?: (hospital: HospitalEntity, adminName: string) => void;
   contextNotice?: string | null;
   onSuccess?: (user: AuthUser) => void;
 }
@@ -56,10 +62,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   lang,
   onOpenDoctorHandover,
   onNavigateHis,
+  onNavigateHospitalErp,
   contextNotice,
   onSuccess,
 }) => {
   const [viewMode, setViewMode] = useState<ModalViewMode>('PERSONA_SELECT');
+  const [activePersona, setActivePersona] = useState<UserRole | 'HOSPITAL'>('PERSONAL');
   const [role, setRole] = useState<UserRole>('PERSONAL');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -75,6 +83,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [infoToast, setInfoToast] = useState<string | null>(null);
 
+  // Hospital Portal State
+  const [hospitals, setHospitals] = useState<HospitalEntity[]>(() => getHospitalsList());
+  const [selectedHospital, setSelectedHospital] = useState<HospitalEntity | null>(() => getHospitalsList()[0] || null);
+  const [isHospitalDropdownOpen, setIsHospitalDropdownOpen] = useState(false);
+  const [hospitalSearchQuery, setHospitalSearchQuery] = useState('');
+  const [isRegisterHospitalModalOpen, setIsRegisterHospitalModalOpen] = useState(false);
+  const [hospitalAuthSession, setHospitalAuthSession] = useState<{
+    hospital: HospitalEntity;
+    token: string;
+    adminName: string;
+  } | null>(null);
+
   if (!isOpen) return null;
 
   const showNotification = (msg: string) => {
@@ -83,7 +103,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   const handleSelectPersona = (selectedRole: UserRole | 'HOSPITAL') => {
-    if (selectedRole === 'HEALTHCARE_PROFESSIONAL' || selectedRole === 'HOSPITAL') {
+    setActivePersona(selectedRole);
+    if (selectedRole === 'HOSPITAL') {
+      setViewMode('LOGIN_FORM');
+      setIsRegisterMode(false);
+      setErrorMessage(null);
+      setHospitalAuthSession(null);
+      return;
+    }
+    if (selectedRole === 'HEALTHCARE_PROFESSIONAL') {
       setRole('HEALTHCARE_PROFESSIONAL');
       setViewMode('LOGIN_FORM');
       setIsRegisterMode(false);
@@ -95,6 +123,48 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setIsRegisterMode(false);
     setErrorMessage(null);
   };
+
+  const handleHospitalLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedHospital) {
+      setErrorMessage(
+        lang === 'en'
+          ? 'Please choose your hospital from the list.'
+          : 'பட்டியலிலிருந்து உங்கள் மருத்துவமனையைத் தேர்ந்தெடுக்கவும்.'
+      );
+      return;
+    }
+    if (!identifier.trim() || !password) {
+      setErrorMessage(
+        lang === 'en'
+          ? 'Please enter your username and password.'
+          : 'பயனர்பெயர் மற்றும் கடவுச்சொல்லை உள்ளிடவும்.'
+      );
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    setTimeout(() => {
+      setIsLoading(false);
+      const generatedToken = `HG-ERP-SEC-${Math.random().toString(36).substring(2, 9).toUpperCase()}-2026`;
+      const adminDisplayName = identifier.includes('@') ? identifier.split('@')[0] : identifier;
+
+      setHospitalAuthSession({
+        hospital: selectedHospital,
+        token: generatedToken,
+        adminName: adminDisplayName,
+      });
+    }, 600);
+  };
+
+  const filteredHospitals = hospitals.filter(
+    (h) =>
+      h.name.toLowerCase().includes(hospitalSearchQuery.toLowerCase()) ||
+      h.city.toLowerCase().includes(hospitalSearchQuery.toLowerCase()) ||
+      h.code.toLowerCase().includes(hospitalSearchQuery.toLowerCase())
+  );
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -450,7 +520,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* ========================================================================= */}
         {/* VIEW 2A: HEALTHCARE PROFESSIONAL LOGIN (Matching Healthcare professional UI.png) */}
         {/* ========================================================================= */}
-        {viewMode === 'LOGIN_FORM' && role === 'HEALTHCARE_PROFESSIONAL' && (
+        {viewMode === 'LOGIN_FORM' && activePersona === 'HEALTHCARE_PROFESSIONAL' && (
           <div className="flex flex-col lg:flex-row min-h-[660px]">
             {/* Left Column: Doctor at laptop with DocBot Hero Cover */}
             <div
@@ -653,9 +723,302 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         )}
 
         {/* ========================================================================= */}
+        {/* VIEW 2C: HOSPITAL PORTAL LOGIN UI (Matching Hospital Portal login UI.png) */}
+        {/* ========================================================================= */}
+        {viewMode === 'LOGIN_FORM' && activePersona === 'HOSPITAL' && (
+          <div>
+            {hospitalAuthSession ? (
+              /* CONFIRMATION SCREEN (Requested: Show successful authentication confirmation screen with session token and hospital ID, then route to ERP) */
+              <div className="p-8 lg:p-14 text-center max-w-xl mx-auto animate-in zoom-in-95 duration-200">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md shadow-emerald-500/20">
+                  <CheckCircle2 className="w-9 h-9" />
+                </div>
+                <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-bold px-3.5 py-1 rounded-full mb-3 shadow-2xs">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Hospital Enterprise Authentication Verified</span>
+                </div>
+                <h2 className="text-2xl lg:text-3xl font-black text-slate-900 mb-1">
+                  {hospitalAuthSession.hospital.name}
+                </h2>
+                <p className="text-xs text-slate-500 mb-6 font-medium">
+                  Facility Code: <span className="font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{hospitalAuthSession.hospital.code}</span> • {hospitalAuthSession.hospital.city}, {hospitalAuthSession.hospital.state}
+                </p>
+
+                {/* Session Security Details Card */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 text-left space-y-2.5 mb-6 text-xs shadow-2xs">
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                    <span className="text-slate-500 font-medium">Administrator Session:</span>
+                    <span className="font-bold text-slate-900">{hospitalAuthSession.adminName}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                    <span className="text-slate-500 font-medium">Hospital Security Token:</span>
+                    <span className="font-mono font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200/60">
+                      {hospitalAuthSession.token}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500 font-medium">Operational Clearance:</span>
+                    <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Full Hospital Management &amp; ERP Access</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onNavigateHospitalErp) {
+                      onNavigateHospitalErp(hospitalAuthSession.hospital, hospitalAuthSession.adminName);
+                    }
+                    onClose();
+                  }}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-[#0066FF] hover:bg-[#0052cc] active:scale-[0.99] text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all"
+                >
+                  <span>Enter Hospital ERP Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              /* SPLIT LAYOUT MATCHING Hospital Portal login UI.png 1:1 */
+              <div className="flex flex-col lg:flex-row min-h-[660px]">
+                {/* Left Column: 3D Robot doctor with laptop, floating cards & speech bubble */}
+                <div
+                  className="w-full lg:w-[49%] relative p-8 lg:p-10 flex flex-col justify-between overflow-hidden bg-no-repeat"
+                  style={{
+                    backgroundImage: "url('/hospital-portal-login-bg.png')",
+                    backgroundPosition: "left bottom",
+                    backgroundSize: "cover",
+                    backgroundColor: '#e0f2fe',
+                  }}
+                >
+                  {/* Soft readability gradient mask */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/45 to-transparent pointer-events-none"></div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-transparent to-transparent pointer-events-none"></div>
+
+                  {/* Main Headline & Subtitle matching reference 1:1 */}
+                  <div className="relative z-10 pt-4 pb-2">
+                    <h1 className="text-3xl lg:text-[44px] font-black text-[#0f172a] leading-[1.12] tracking-tight">
+                      Empowering<br />
+                      Hospitals for<br />
+                      <span className="text-[#0066FF]">Greater Care</span>
+                    </h1>
+                    <p className="text-xs lg:text-sm text-slate-600 leading-relaxed mt-3.5 max-w-sm font-normal">
+                      A secure and unified ERP platform to manage operations, staff, patients, and more — all in one place.
+                    </p>
+                  </div>
+
+                  {/* DocBot Speech Bubble with Left Tail pointing to robot */}
+                  <div className="relative z-10 mt-auto mb-20 self-start max-w-[215px] ml-4 lg:ml-8">
+                    <div className="relative bg-white/95 backdrop-blur-md rounded-2xl p-3 px-3.5 shadow-md border border-slate-100 text-slate-800 text-xs font-bold leading-snug">
+                      <p>Access your hospital&apos;s system securely!</p>
+                      {/* Tail pointing down toward DocBot */}
+                      <div className="absolute -bottom-2 left-6 w-0 h-0 border-l-[6px] border-l-transparent border-t-[8px] border-t-white border-r-[6px] border-r-transparent drop-shadow-xs"></div>
+                    </div>
+                  </div>
+
+                  {/* Subtle bottom note */}
+                  <div className="relative z-10 pt-4 border-t border-slate-200/50 flex items-center gap-2 text-[11px] font-medium text-slate-500">
+                    <span>Hospital ERP</span>
+                    <span className="text-slate-300">|</span>
+                    <span>Unified Operations</span>
+                    <span className="text-slate-300">|</span>
+                    <span>NABH &amp; HIPAA Ready</span>
+                  </div>
+                </div>
+
+                {/* Right Column: Hospital Portal Login Form */}
+                <div className="w-full lg:w-[51%] p-8 lg:p-12 flex flex-col justify-center bg-white relative">
+                  {/* Back to Personas Bar */}
+                  <div className="flex items-center justify-between mb-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewMode('PERSONA_SELECT');
+                        setErrorMessage(null);
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Change account type</span>
+                    </button>
+                  </div>
+
+                  {/* Hospital Information System Brand Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-2xl bg-[#009688] flex items-center justify-center text-white shadow-md shadow-teal-500/20">
+                      <HeartPulse className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-xl font-black text-slate-900 tracking-tight leading-none">HealthGrid</div>
+                      <div className="text-[10px] text-slate-500 font-bold tracking-[0.18em] uppercase mt-1">
+                        HOSPITAL INFORMATION SYSTEM
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Heading */}
+                  <div className="mb-6">
+                    <h2 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
+                      Hospital Portal
+                    </h2>
+                    <p className="text-xs lg:text-sm text-slate-500 mt-1">
+                      Select your hospital and sign in to access your ERP system.
+                    </p>
+                  </div>
+
+                  {/* Error Banner */}
+                  {errorMessage && (
+                    <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+
+                  {/* Credentials Form */}
+                  <form onSubmit={handleHospitalLoginSubmit} className="space-y-4">
+                    {/* Select Hospital Custom Dropdown */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Select Hospital
+                      </label>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setIsHospitalDropdownOpen(!isHospitalDropdownOpen)}
+                          className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-white text-left text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 focus:border-[#0066FF] transition-all flex items-center justify-between"
+                        >
+                          <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <span className={selectedHospital ? 'font-medium text-slate-900 truncate' : 'text-slate-400'}>
+                            {selectedHospital ? `${selectedHospital.name} (${selectedHospital.code})` : 'Choose your hospital'}
+                          </span>
+                          <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        </button>
+
+                        {isHospitalDropdownOpen && (
+                          <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                            {/* Search filter input */}
+                            <div className="relative mb-2">
+                              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                              <input
+                                type="text"
+                                value={hospitalSearchQuery}
+                                onChange={(e) => setHospitalSearchQuery(e.target.value)}
+                                placeholder="Search hospital name, city or code..."
+                                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+
+                            {/* Hospitals list */}
+                            <div className="max-h-48 overflow-y-auto space-y-1">
+                              {filteredHospitals.map((hosp) => (
+                                <button
+                                  key={hosp.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedHospital(hosp);
+                                    setIsHospitalDropdownOpen(false);
+                                  }}
+                                  className={`w-full px-3 py-2 text-left rounded-lg text-xs flex items-center justify-between hover:bg-slate-50 transition-colors ${
+                                    selectedHospital?.id === hosp.id ? 'bg-blue-50/80 font-bold text-blue-700' : 'text-slate-700'
+                                  }`}
+                                >
+                                  <div>
+                                    <div className="font-semibold">{hosp.name}</div>
+                                    <div className="text-[10px] text-slate-400">{hosp.city}</div>
+                                  </div>
+                                  <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                    {hosp.code}
+                                  </span>
+                                </button>
+                              ))}
+                              {filteredHospitals.length === 0 && (
+                                <div className="p-3 text-center text-xs text-slate-400">
+                                  No matching hospitals found.
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Action at the bottom: Register New Hospital */}
+                            <div className="pt-2 mt-1 border-t border-slate-100">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsHospitalDropdownOpen(false);
+                                  setIsRegisterHospitalModalOpen(true);
+                                }}
+                                className="w-full py-2 px-3 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>+ Register New Hospital</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Username Field */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Username
+                      </label>
+                      <div className="relative">
+                        <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={identifier}
+                          onChange={(e) => setIdentifier(e.target.value)}
+                          placeholder="Enter your username"
+                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 focus:border-[#0066FF] transition-all"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Password Field */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Enter your password"
+                          className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 focus:border-[#0066FF] transition-all"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sign In Button */}
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full mt-2 py-3.5 px-6 rounded-xl bg-[#0066FF] hover:bg-[#0052cc] active:scale-[0.99] text-white font-bold text-sm shadow-md hover:shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <span>{isLoading ? 'Verifying Hospital Credentials...' : 'Sign In'}</span>
+                      {!isLoading && <ArrowRight className="w-4 h-4" />}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================================= */}
         {/* VIEW 2B: ACTIVE PERSONAL LOGIN / REGISTRATION FORM (Matching Personal ref) */}
         {/* ========================================================================= */}
-        {viewMode === 'LOGIN_FORM' && role === 'PERSONAL' && (
+        {viewMode === 'LOGIN_FORM' && activePersona === 'PERSONAL' && (
           <div className="flex flex-col lg:flex-row min-h-[660px]">
             {/* Left Column: Personal Background with Woman, Mascot & Feature Badges */}
             <div
@@ -1057,6 +1420,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </div>
           </div>
         )}
+
+        {/* Hospital Registration Modal Triggered from Hospital Selection Dropdown */}
+        <RegisterHospitalModal
+          isOpen={isRegisterHospitalModalOpen}
+          onClose={() => setIsRegisterHospitalModalOpen(false)}
+          onSuccess={(newHosp) => {
+            const updated = getHospitalsList();
+            setHospitals(updated);
+            setSelectedHospital(newHosp);
+            showNotification(`Facility ${newHosp.name} (${newHosp.code}) registered and selected.`);
+          }}
+        />
       </div>
     </div>
   );
