@@ -239,8 +239,34 @@ Official HealthGrid Portal: https://healthgrid-app.vercel.app
                 <li onClick={onOpenDiseaseMap} className="hover:text-teal-700 transition-colors cursor-pointer">
                   {lang === 'en' ? 'Public Health Alerts' : 'சுகாதார எச்சரிக்கைகள்'}
                 </li>
-                <li onClick={onOpenTerms || onOpenPrivacy} className="hover:text-teal-700 transition-colors cursor-pointer">
-                  {lang === 'en' ? 'Guidelines & Policies' : 'வழிகாட்டுதல்கள்'}
+                <li>
+                  <a 
+                    href="/privacy"
+                    onClick={(e) => {
+                      if (onOpenPrivacy) {
+                        e.preventDefault();
+                        onOpenPrivacy();
+                      }
+                    }} 
+                    className="hover:text-teal-700 transition-colors block py-0.5"
+                  >
+                    {lang === 'en' ? 'Privacy Policy & Data Sovereignty' : 'தனியுரிமைக் கொள்கை'}
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="/terms"
+                    onClick={(e) => {
+                      const handler = onOpenTerms || onOpenPrivacy;
+                      if (handler) {
+                        e.preventDefault();
+                        handler();
+                      }
+                    }} 
+                    className="hover:text-teal-700 transition-colors block py-0.5"
+                  >
+                    {lang === 'en' ? 'Terms & Conditions of Service' : 'விதிமுறைகள் & நிபந்தனைகள்'}
+                  </a>
                 </li>
                 <li onClick={handleDownloadResources} className="hover:text-teal-700 transition-colors cursor-pointer flex items-center gap-1.5">
                   <span>{lang === 'en' ? 'Downloadable Resources' : 'பதிவிறக்கங்கள்'}</span>
@@ -422,21 +448,32 @@ Official HealthGrid Portal: https://healthgrid-app.vercel.app
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs text-slate-600">
-              <button 
-                type="button"
-                onClick={onOpenTerms || onOpenPrivacy} 
+              <a 
+                href="/terms" 
+                onClick={(e) => {
+                  const handler = onOpenTerms || onOpenPrivacy;
+                  if (handler) {
+                    e.preventDefault();
+                    handler();
+                  }
+                }} 
                 className="hover:text-teal-700 transition-colors cursor-pointer"
               >
                 Terms of Service
-              </button>
+              </a>
               <span className="text-slate-300">|</span>
-              <button 
-                type="button"
-                onClick={onOpenPrivacy} 
+              <a 
+                href="/privacy" 
+                onClick={(e) => {
+                  if (onOpenPrivacy) {
+                    e.preventDefault();
+                    onOpenPrivacy();
+                  }
+                }} 
                 className="hover:text-teal-700 font-semibold text-slate-800 transition-colors cursor-pointer"
               >
                 Privacy Policy
-              </button>
+              </a>
               <span className="text-slate-300">|</span>
               <button
                 type="button"

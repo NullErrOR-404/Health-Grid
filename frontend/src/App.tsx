@@ -5,6 +5,7 @@ import { GovAlertMarquee } from './components/GovAlertMarquee';
 import { HeroSection } from './components/HeroSection';
 import { ActionCards } from './components/ActionCards';
 import { CommunityHealthSection } from './components/CommunityHealthSection';
+import { OAuthTransparencySection } from './components/OAuthTransparencySection';
 import { Footer } from './components/Footer';
 import { RoamingDocBot } from './components/RoamingDocBot';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
@@ -815,6 +816,13 @@ export default function App() {
           lang={lang}
           onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
           onSelectGuide={(guide) => setSelectedGuide(guide)}
+        />
+
+        {/* Google OAuth & User Data Transparency Compliance Section */}
+        <OAuthTransparencySection
+          lang={lang}
+          onOpenPrivacy={() => navigateToView('privacy')}
+          onOpenTerms={() => navigateToView('terms')}
         />
       </main>
 
