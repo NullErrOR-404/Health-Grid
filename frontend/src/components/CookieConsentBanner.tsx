@@ -82,7 +82,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
     <div
       role="region"
       aria-label={lang === 'en' ? 'Privacy & Cookie Consent' : 'தனியுரிமை ஒப்புதல்'}
-      className="fixed bottom-6 right-6 z-50 max-w-[460px] w-[calc(100%-2rem)] sm:w-full bg-white rounded-3xl p-6 sm:p-7 shadow-[0_20px_50px_rgba(15,23,42,0.18)] border border-slate-100 animate-in fade-in slide-in-from-bottom-5 duration-300"
+      className="fixed bottom-6 right-6 z-40 max-w-[460px] w-[calc(100%-2rem)] sm:w-full bg-white rounded-3xl p-6 sm:p-7 shadow-[0_20px_50px_rgba(15,23,42,0.18)] border border-slate-100 animate-in fade-in slide-in-from-bottom-5 duration-300"
     >
       {!showChoices ? (
         // Standard View matching Reference Screenshot 1:1
