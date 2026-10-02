@@ -294,12 +294,22 @@ export const FindCareNearYou: React.FC<FindCareNearYouProps> = ({
   });
   const [isLocating, setIsLocating] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<PlaceItem | null>(PLACES_DATA[0]);
+  const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list');
 
   // Leaflet map refs
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const radiusCircleRef = useRef<L.Circle | null>(null);
+
+  // Invalidate map size when switching to map tab on mobile
+  useEffect(() => {
+    if (mobileTab === 'map' && mapInstanceRef.current) {
+      setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 150);
+    }
+  }, [mobileTab]);
 
   // Haversine formula to compute distance from center
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -533,6 +543,7 @@ export const FindCareNearYou: React.FC<FindCareNearYouProps> = ({
   // Center on selected place
   const handleSelectPlace = (place: PlaceItem) => {
     setSelectedPlace(place);
+    setMobileTab('map');
     if (mapInstanceRef.current) {
       mapInstanceRef.current.flyTo([place.lat, place.lng], 15, { duration: 0.8 });
     }
@@ -541,38 +552,66 @@ export const FindCareNearYou: React.FC<FindCareNearYouProps> = ({
   return (
     <div
       data-lenis-prevent={isModal ? true : undefined}
-      className={`bg-white text-slate-900 w-full flex flex-col font-sans ${isModal ? 'max-w-7xl h-[92vh] rounded-3xl overflow-hidden shadow-2xl border border-slate-200' : 'min-h-[calc(100vh-120px)]'}`}
+      className={`bg-white text-slate-900 w-full flex flex-col font-sans ${isModal ? 'max-w-7xl h-full sm:h-[92vh] rounded-none sm:rounded-3xl overflow-hidden shadow-2xl border-none sm:border border-slate-200' : 'min-h-[calc(100vh-120px)]'}`}
     >
       {/* Top Header / Page Title Row */}
-      <div className="px-4 sm:px-8 pt-5 pb-4 border-b border-slate-100 flex items-center justify-between bg-white">
+      <div className="px-4 sm:px-8 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-slate-100 flex items-center justify-between bg-white gap-3 shrink-0">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B132B] tracking-tight">
+          <h1 className="text-xl sm:text-3xl font-extrabold text-[#0B132B] tracking-tight">
             {lang === 'en' ? 'Find Care Near You' : 'உங்கள் அருகிலுள்ள மருத்துவ மையங்கள்'}
           </h1>
-          <p className="text-sm text-slate-500 font-normal mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5">
             {lang === 'en'
               ? 'Hospitals, pharmacies and clinics based on your location'
               : 'உங்கள் இருப்பிடத்தை அடிப்படையாகக் கொண்ட மருத்துவமனைகள், மருந்தகங்கள் மற்றும் கிளினிக்குகள்'}
           </p>
         </div>
 
-        {isModal && onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Mobile Segmented View Switcher: List vs Map (lg:hidden) */}
+          <div className="lg:hidden flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setMobileTab('list')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                mobileTab === 'list'
+                  ? 'bg-white text-teal-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {lang === 'en' ? 'List' : 'பட்டியல்'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab('map')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                mobileTab === 'map'
+                  ? 'bg-white text-teal-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {lang === 'en' ? 'Map' : 'வரைபடம்'}
+            </button>
+          </div>
+
+          {isModal && onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors min-w-[36px] min-h-[36px] cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Two-Column Layout matching Maps ref.png */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         
         {/* LEFT COLUMN: Directory & Filters Sidebar (400px - 440px) */}
-        <div className="w-full lg:w-[440px] xl:w-[460px] border-r border-slate-100 bg-white flex flex-col h-full z-10 flex-shrink-0">
+        <div className={`w-full lg:w-[440px] xl:w-[460px] border-r border-slate-100 bg-white flex flex-col h-full z-10 flex-shrink-0 ${mobileTab === 'list' ? 'flex' : 'hidden lg:flex'}`}>
           
           {/* Top Controls in Sidebar */}
           <div className="p-4 sm:p-5 border-b border-slate-100 space-y-4">
@@ -811,7 +850,7 @@ export const FindCareNearYou: React.FC<FindCareNearYouProps> = ({
         </div>
 
         {/* RIGHT COLUMN: Leaflet Interactive Map */}
-        <div className="flex-1 relative h-[500px] lg:h-auto overflow-hidden bg-slate-100">
+        <div className={`flex-1 relative h-full min-h-[420px] lg:h-auto overflow-hidden bg-slate-100 ${mobileTab === 'map' ? 'flex' : 'hidden lg:flex'}`}>
           
           {/* Map Container */}
           <div data-lenis-prevent ref={mapContainerRef} className="w-full h-full" style={{ zIndex: 1 }} />

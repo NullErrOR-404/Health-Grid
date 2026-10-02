@@ -44,7 +44,8 @@ import {
   Video,
   Clock,
   CalendarCheck,
-  Square
+  Square,
+  Menu
 } from 'lucide-react';
 import type { Language } from '../types';
 import { speechEngine, type DoctorPersona } from '../services/speechService';
@@ -130,6 +131,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [sessions, setSessions] = useState<ChatSession[]>([createFreshSession()]);
 
   const [activeSessionId, setActiveSessionId] = useState<string>(() => `chat-${Date.now()}`);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
@@ -1061,8 +1063,16 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   ];
 
   return (
-    <div className="flex h-screen w-full overflow-hidden font-sans bg-white text-slate-800">
+    <div className="flex h-[100dvh] w-full overflow-hidden font-sans bg-white text-slate-800">
       
+      {/* Mobile Drawer Backdrop Overlay */}
+      {isMobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 md:hidden animate-in fade-in duration-200"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* Hidden File Input for Paperclip */}
       <input
         type="file"
@@ -1077,7 +1087,12 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       {/* ========================================================= */}
       {/* 1. LEFT SIDEBAR (Matching Chatbot UI.png) */}
       {/* ========================================================= */}
-      <aside className="w-64 sm:w-72 flex-shrink-0 flex flex-col border-r bg-[#FAFCFB] border-slate-200/90">
+      <aside className={`
+        fixed md:relative inset-y-0 left-0 z-50 md:z-0
+        w-72 sm:w-80 md:w-64 lg:w-72 flex-shrink-0 flex flex-col border-r bg-[#FAFCFB] border-slate-200/90
+        transform transition-transform duration-200 ease-in-out
+        ${isMobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}
+      `}>
         
         {/* Brand Logo Header */}
         <div className="p-4 sm:p-5 flex items-center justify-between">
@@ -1088,6 +1103,14 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               className="h-9 sm:h-10 w-auto object-contain hover:opacity-95 transition-opacity" 
             />
           </div>
+          <button
+            type="button"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="md:hidden p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+            aria-label="Close sidebar"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* + New Chat Pill Button */}
@@ -1328,27 +1351,35 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         
         {/* Top Header Bar (Matching Chatbot UI.png) */}
-        <header className="px-6 py-3.5 border-b flex items-center justify-between flex-shrink-0 z-20 bg-white border-slate-200/90">
-          {/* Left: DocBot AI + Verified Badge */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-teal-50 border border-teal-200/60 p-1 flex items-center justify-center shadow-2xs">
+        <header className="px-3 sm:px-6 py-2.5 sm:py-3.5 border-b flex items-center justify-between flex-shrink-0 z-20 bg-white border-slate-200/90 gap-2">
+          {/* Left: Mobile Drawer Trigger + DocBot AI + Verified Badge */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="md:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center shrink-0 cursor-pointer"
+              aria-label="Open navigation sidebar"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-teal-50 border border-teal-200/60 p-1 flex items-center justify-center shadow-2xs shrink-0">
               <img
                 src="/docbot_mascot.png"
                 alt="DocBot AI"
                 className="w-full h-full object-contain filter drop-shadow"
               />
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 leading-tight">DocBot AI</h2>
-              <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-700">
-                <span>{lang === 'en' ? 'Verified Medical Assistant' : 'சரிபார்க்கப்பட்ட மருத்துவ உதவியாளர்'}</span>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100" />
+            <div className="min-w-0">
+              <h2 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">DocBot AI</h2>
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium text-emerald-700">
+                <span className="truncate max-w-[110px] sm:max-w-none">{lang === 'en' ? 'Verified Assistant' : 'சரிபார்க்கப்பட்டவர்'}</span>
+                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 fill-emerald-100 shrink-0" />
               </div>
             </div>
           </div>
 
           {/* Right: Language Dropdown + Profile Pill (Clean Light Theme, No Toggle Icon) */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Live Vision & Voice Tele-Clinic Launch Button */}
             <button
               type="button"
@@ -1862,7 +1893,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         {/* ========================================================= */}
         {/* 3. INPUT BAR & DOCKED CONTROLS */}
         {/* ========================================================= */}
-        <div className="p-4 sm:p-5 border-t z-10 bg-white border-slate-200/90">
+        <div className="p-3 sm:p-5 pb-5 sm:pb-5 safe-area-pb border-t z-10 bg-white border-slate-200/90">
           <div className="max-w-3xl mx-auto space-y-2.5">
             
             {/* Docked Model Selector, Doctor Voice Persona Switcher & Realtime Quota Bar */}
@@ -1895,7 +1926,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                   {showModelDropdown && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setShowModelDropdown(false)} />
-                      <div className="absolute bottom-full mb-2 left-0 w-80 sm:w-96 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl shadow-slate-950/50 z-50 p-2.5 text-slate-200 animate-dropdown-flow-up">
+                      <div className="absolute bottom-full mb-2 left-0 w-[calc(100vw-2.5rem)] sm:w-96 max-w-sm bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl shadow-slate-950/50 z-50 p-2.5 text-slate-200 animate-dropdown-flow-up">
                         <div className="px-3 py-2 border-b border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
                           <span>Select AGI Model</span>
                           <span className="text-teal-400 lowercase font-mono text-[10px]">Active Keys Verified</span>

@@ -246,8 +246,91 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     { en: 'Nearby Hospitals', ta: 'அருகிலுள்ள மருத்துவமனை' },
   ];
 
+  // Reusable Hero Mascot Graphic with Interactive Hotspots
+  const renderMascotGraphic = (isMobile = false) => (
+    <div
+      className={`relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white group cursor-pointer ${
+        isMobile ? 'w-full max-w-md mx-auto aspect-[16/11]' : 'w-full aspect-[4/3] sm:aspect-auto'
+      }`}
+      onClick={() => onOpenVoiceChat()}
+      title={lang === 'en' ? 'Click DocBot to start consultation' : 'DocBot-உடன் பேச தொடங்கு'}
+    >
+      <img
+        ref={isMobile ? undefined : heroImageRef}
+        src="/desk_robot_hero.png"
+        alt="HealthGrid AI Doctor Mascot"
+        className="w-full h-full object-cover transform group-hover:scale-[1.02] transition-transform duration-500"
+      />
+
+      {/* Interactive Floating Hotspots */}
+      {/* Hotspot 1: Speech Bubble triggers Voice Chat */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenVoiceChat();
+        }}
+        className="absolute top-[28%] left-[2%] w-[38%] h-[26%] rounded-2xl cursor-pointer transition-all hover:ring-2 hover:ring-teal-400/50 bg-transparent"
+        title="Tap speech bubble to speak"
+        aria-label="Tap to speak with DocBot"
+      />
+
+      {/* Hotspot 2: Top-right Pill capsule icon triggers Prescriptions */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onNavigateMedicines) {
+            onNavigateMedicines();
+          } else {
+            onOpenPrescription();
+          }
+        }}
+        className="absolute top-[7%] right-[42%] w-[18%] h-[18%] rounded-2xl cursor-pointer hover:ring-2 hover:ring-blue-400/50 bg-transparent"
+        title="View Medicines"
+        aria-label="View Medicines"
+      />
+
+      {/* Hotspot 3: Hospital icon triggers clinic locator */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenDiseaseMap();
+        }}
+        className="absolute top-[22%] right-[11%] w-[16%] h-[18%] rounded-2xl cursor-pointer hover:ring-2 hover:ring-cyan-400/50 bg-transparent"
+        title="Find Hospitals & Clinics"
+        aria-label="Find Hospitals & Clinics"
+      />
+
+      {/* Hotspot 4: Location pin icon triggers Outbreak map */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenDiseaseMap();
+        }}
+        className="absolute bottom-[28%] right-[8%] w-[16%] h-[18%] rounded-2xl cursor-pointer hover:ring-2 hover:ring-rose-400/50 bg-transparent"
+        title="Outbreak Radar"
+        aria-label="Outbreak Radar"
+      />
+
+      {/* Hotspot 5: Green cross shield triggers Doctor consultation */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenVoiceChat();
+        }}
+        className="absolute top-[10%] left-[20%] w-[16%] h-[18%] rounded-2xl cursor-pointer hover:ring-2 hover:ring-emerald-400/50 bg-transparent"
+        title="Doctor Verified Advice"
+        aria-label="Doctor Verified Advice"
+      />
+    </div>
+  );
+
   return (
-    <section id="hero-section" className="relative pt-6 sm:pt-10 pb-10 sm:pb-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="hero-section" className="relative pt-6 sm:pt-10 pb-10 sm:pb-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
         
         {/* Left Column: Headlines, Intelligent Search & Popular Queries */}
@@ -259,7 +342,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {/* Main Title Matching Reference */}
-          <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-black text-slate-900 tracking-tight leading-[1.12]">
+          <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black text-slate-900 tracking-tight leading-[1.14]">
             {lang === 'en' ? (
               <>
                 Your Health<br />Our Priority
@@ -270,6 +353,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </>
             )}
           </h1>
+
+          {/* Mobile Hero Visual Anchor (Standard Ergonomic Stacking: Headline -> Visual Anchor -> Description & Search) */}
+          <div className="lg:hidden my-3">
+            {renderMascotGraphic(true)}
+          </div>
 
           {/* Subtext Matching Reference */}
           <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-lg">
@@ -392,87 +480,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
         </div>
 
-        {/* Right Column: Doctor Robot at Desk Matching Landing page new.png */}
-        <div className="lg:col-span-6 relative flex items-center justify-center reveal-scale-init reveal-delay-2">
+        {/* Right Column: Doctor Robot at Desk (Desktop/Tablet) */}
+        <div className="hidden lg:flex lg:col-span-6 relative items-center justify-center reveal-scale-init reveal-delay-2">
           <div className="relative w-full max-w-lg lg:max-w-none">
-            
-            {/* The Authentic 3D Doctor Robot Sitting at Desk */}
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white group cursor-pointer"
-                 onClick={() => onOpenVoiceChat()}
-                 title={lang === 'en' ? 'Click DocBot to start consultation' : 'DocBot-உடன் பேச தொடங்கு'}>
-              <img
-                ref={heroImageRef}
-                src="/desk_robot_hero.png"
-                alt="HealthGrid AI Doctor Mascot"
-                className="w-full h-auto object-cover transform group-hover:scale-[1.02] transition-transform duration-500"
-              />
-
-              {/* Interactive Floating Hotspots */}
-              {/* Hotspot 1: Speech Bubble triggers Voice Chat */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenVoiceChat();
-                }}
-                className="absolute top-[28%] left-[2%] w-[38%] h-[26%] rounded-2xl cursor-pointer transition-all hover:ring-2 hover:ring-teal-400/50 bg-transparent"
-                title="Tap speech bubble to speak"
-                aria-label="Tap to speak with DocBot"
-              />
-
-              {/* Hotspot 2: Top-right Pill capsule icon triggers Prescriptions */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onNavigateMedicines) {
-                    onNavigateMedicines();
-                  } else {
-                    onOpenPrescription();
-                  }
-                }}
-                className="absolute top-[7%] right-[42%] w-[18%] h-[18%] rounded-2xl cursor-pointer hover:ring-2 hover:ring-blue-400/50 bg-transparent"
-                title="View Medicines"
-                aria-label="View Medicines"
-              />
-
-              {/* Hotspot 3: Hospital icon triggers clinic locator */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenDiseaseMap();
-                }}
-                className="absolute top-[22%] right-[11%] w-[16%] h-[18%] rounded-2xl cursor-pointer hover:ring-2 hover:ring-cyan-400/50 bg-transparent"
-                title="Find Hospitals & Clinics"
-                aria-label="Find Hospitals & Clinics"
-              />
-
-              {/* Hotspot 4: Location pin icon triggers Outbreak map */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenDiseaseMap();
-                }}
-                className="absolute bottom-[28%] right-[8%] w-[16%] h-[18%] rounded-2xl cursor-pointer hover:ring-2 hover:ring-rose-400/50 bg-transparent"
-                title="Outbreak Radar"
-                aria-label="Outbreak Radar"
-              />
-
-              {/* Hotspot 5: Green cross shield triggers Doctor consultation */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenVoiceChat();
-                }}
-                className="absolute top-[10%] left-[20%] w-[16%] h-[18%] rounded-2xl cursor-pointer hover:ring-2 hover:ring-emerald-400/50 bg-transparent"
-                title="Doctor Verified Advice"
-                aria-label="Doctor Verified Advice"
-              />
-            </div>
-
+            {renderMascotGraphic(false)}
           </div>
         </div>
 

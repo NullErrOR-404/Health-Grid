@@ -382,7 +382,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search medicines, salts (e.g. Metformin, Telmisartan, Inhaler), conditions..."
+              placeholder="Search generic medicines, salts (Metformin, Paracetamol)..."
               className="w-full pl-12 pr-32 py-3.5 bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm font-medium transition-all"
               id="medicine-search-input"
             />
@@ -410,7 +410,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
         </section>
 
         {/* Category Filter Pills (From UI Reference) */}
-        <section className="mt-6 overflow-x-auto scrollbar-none pb-2">
+        <section className="mt-6 overflow-x-auto no-scrollbar pb-2">
           <div className="flex items-center gap-2.5 min-w-max">
             {categories.map((cat) => {
               const isActive = selectedCategory === cat.id;
@@ -790,9 +790,9 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
 
       {/* Frictionless Checkout Modal */}
       {isCheckoutOpen && (
-        <div data-lenis-prevent className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div data-lenis-prevent className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-none sm:rounded-3xl max-w-lg w-full h-full sm:h-auto sm:max-h-[92vh] p-5 sm:p-6 shadow-2xl border-none sm:border border-slate-100 flex flex-col overflow-y-auto animate-scale-up">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Confirm PMBJP Medicine Dispatch</h3>
                 <p className="text-xs text-slate-500">Government of India Jan Aushadhi Dispensing</p>
@@ -963,8 +963,8 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
 
       {/* Order Confirmed Screen */}
       {confirmedOrder && (
-        <div data-lenis-prevent className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center animate-scale-up">
+        <div data-lenis-prevent className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-none sm:rounded-3xl max-w-md w-full h-full sm:h-auto p-6 sm:p-7 shadow-2xl border-none sm:border border-slate-100 text-center flex flex-col justify-center animate-scale-up">
             <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-10 h-10" />
             </div>

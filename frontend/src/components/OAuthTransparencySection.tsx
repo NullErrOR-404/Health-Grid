@@ -62,6 +62,19 @@ export const OAuthTransparencySection: React.FC<OAuthTransparencySectionProps> =
                 )}
               </h2>
 
+              {/* Mobile Graphic Visual Anchor: DocBot Mascot holding Security Shield */}
+              <div className="lg:hidden w-full h-44 sm:h-56 rounded-2xl overflow-hidden relative shadow-sm border border-blue-200/60 bg-[#D8EAFD] my-2">
+                <img
+                  src="/user_data_trust_bg.png"
+                  alt="DocBot with Google Security Shield"
+                  className="w-full h-full object-cover object-[78%_center] filter brightness-[1.02]"
+                />
+                <div className="absolute bottom-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Google Cloud Verified Architecture</span>
+                </div>
+              </div>
+
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                 {lang === 'en'
                   ? 'HealthGrid (நலம் AI) is an autonomous healthcare emergency network providing real-time AI triage (DocBot), 108 ambulance dispatch, Jan Aushadhi generic medicines (up to 89% savings), and hospital bed locator services across Tamil Nadu.'

@@ -1,27 +1,27 @@
 ---
-title: Hospital Information System (HIS / EHR) & Doctor Portal
+title: Hospital Information System (HIS / EHR) & Doctor Portal (Deprecated)
 tags:
   - module
   - his
-  - ehr
-  - doctor-chamber
-  - opd
+  - deprecated
 created: 2026-10-02
+status: deprecated
 parent: "[[00_Index]]"
 ---
 
-# 🩺 Hospital Information System (HIS / EHR) & Doctor Portal
+# 🩺 Hospital Information System (HIS / EHR) & Doctor Portal (Decommissioned)
 
 Back to [[00_Index]]
 
-## Overview
-A comprehensive clinical management portal for doctors and hospital staff, bridging digital triage with OPD chambers, electronic health records (EHR), and generic e-prescribing.
+> [!warning] Architecture Decommissioning Notice
+> This legacy prototype page (`HospitalInformationSystem.tsx`) and its navigation CTAs have been completely removed from the HealthGrid application.
+> All hospital operations, patient registrations, IPD/OPD management, and bed telemetry are now centrally consolidated in the production-grade **[[Hospital_ERP_Dashboard]]** accessed via Hospital Admin authentication.
+> The citizen OPD screening intake modal has been preserved and relocated to `frontend/src/components/PatientIntakeModal.tsx`.
 
-## Technical Architecture
-- **Component**: `frontend/src/components/his/HospitalInformationSystem.tsx`
-- **Intake Modal**: `frontend/src/components/his/PatientIntakeModal.tsx`
-- **Service Engine**: `frontend/src/services/hisService.ts`
-- **Route**: Accessible at `/his` or `/doctor-portal`
+## Historical Architecture (Removed)
+- **Component**: `frontend/src/components/his/HospitalInformationSystem.tsx` (Deleted)
+- **Current Replacement**: [[Hospital_ERP_Dashboard]] (`frontend/src/components/erp/HospitalErpDashboard.tsx`)
+- **Intake Modal**: `frontend/src/components/PatientIntakeModal.tsx`
 
 ## Core Subsystems
 1. **OPD Token Queue**:

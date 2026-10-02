@@ -49,8 +49,6 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   lang: Language;
-  onOpenDoctorHandover?: () => void;
-  onNavigateHis?: () => void;
   onNavigateHospitalErp?: (hospital: HospitalEntity, adminName: string) => void;
   contextNotice?: string | null;
   onSuccess?: (user: AuthUser) => void;
@@ -60,8 +58,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   isOpen,
   onClose,
   lang,
-  onOpenDoctorHandover,
-  onNavigateHis,
   onNavigateHospitalErp,
   contextNotice,
   onSuccess,
@@ -220,13 +216,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           onSuccess(user);
         }
         onClose();
-        if (role === 'HEALTHCARE_PROFESSIONAL') {
-          if (onNavigateHis) {
-            onNavigateHis();
-          } else if (onOpenDoctorHandover) {
-            onOpenDoctorHandover();
-          }
-        }
       }, 700);
     } catch (err: any) {
       setIsLoading(false);
@@ -276,7 +265,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-5 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
       {/* Toast Notifications */}
       {successToast && (
         <div className="fixed top-5 z-[110] bg-emerald-600 text-white font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-4 text-sm">
@@ -293,13 +282,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       )}
 
       {/* Main Container Card */}
-      <div className="bg-white rounded-[32px] shadow-2xl border border-slate-100/90 w-full max-w-[1020px] overflow-hidden relative my-auto">
+      <div className="bg-white rounded-none sm:rounded-[32px] shadow-2xl border-none sm:border border-slate-100/90 w-full h-full sm:h-auto sm:max-h-[95vh] max-w-[1020px] overflow-y-auto relative my-0 sm:my-auto">
         
         {/* Floating Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors shadow-xs"
-          title="Close"
+          className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full bg-white/80 sm:bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors shadow-xs cursor-pointer min-w-[36px] min-h-[36px]"
+          aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>

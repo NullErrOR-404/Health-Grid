@@ -54,11 +54,11 @@ export const AmbulanceModal: React.FC<AmbulanceModalProps> = ({ isOpen, onClose,
   ];
 
   return (
-    <div data-lenis-prevent className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div data-lenis-prevent className="bg-white rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-hidden shadow-2xl border border-slate-200 flex flex-col">
+    <div data-lenis-prevent className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div data-lenis-prevent className="bg-white rounded-none sm:rounded-3xl w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-3xl overflow-hidden shadow-2xl border-none sm:border border-slate-200 flex flex-col">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-600 to-rose-600 text-white p-4 sm:p-5 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-red-600 to-rose-600 text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
               <Siren className="w-5 h-5 text-white" />
@@ -78,7 +78,8 @@ export const AmbulanceModal: React.FC<AmbulanceModalProps> = ({ isOpen, onClose,
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+            className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors min-w-[36px] min-h-[36px] cursor-pointer"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>

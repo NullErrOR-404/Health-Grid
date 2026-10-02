@@ -104,22 +104,30 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
               <div
                 key={item.id}
                 id={`action-card-${item.id}`}
+                role="button"
+                tabIndex={0}
                 onClick={item.action}
-                className={`flex items-center gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer group select-none reveal-init reveal-delay-${idx + 1} ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    item.action();
+                  }
+                }}
+                className={`flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 min-h-[52px] sm:min-h-[56px] rounded-xl hover:bg-slate-50 active:bg-slate-100 active:scale-[0.98] transition-all duration-200 cursor-pointer group select-none reveal-init reveal-delay-${idx + 1} ${
                   idx !== 0 ? 'lg:pl-4' : ''
                 }`}
               >
                 {/* Rounded Icon Box */}
-                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 ${item.iconBg}`}>
+                <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 ${item.iconBg}`}>
                   <Icon className="w-5 h-5 stroke-[2.2]" />
                 </div>
 
                 {/* Service Copy */}
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-teal-700 transition-colors leading-snug truncate">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-teal-700 transition-colors leading-snug line-clamp-1 sm:line-clamp-none">
                     {lang === 'ta' ? item.titleTa : item.titleEn}
                   </h3>
-                  <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-0.5">
                     {lang === 'ta' ? item.subTa : item.subEn}
                   </p>
                 </div>

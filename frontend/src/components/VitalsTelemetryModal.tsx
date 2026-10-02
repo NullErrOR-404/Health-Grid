@@ -183,24 +183,24 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
   const filteredEntries = entries.filter((e) => e.type === activeTab);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white rounded-none sm:rounded-3xl border-0 sm:border border-slate-200/90 shadow-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-teal-50/70 via-white to-teal-50/40">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow-xs">
-              <Activity className="w-5 h-5" />
+        <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-teal-50/70 via-white to-teal-50/40 flex-shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow-xs flex-shrink-0">
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900 leading-tight">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-tight truncate">
                   {lang === 'en' ? 'Longitudinal Health Memory' : 'நீண்டகால மருத்துவ நினைவகம்'}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-teal-100 text-teal-800">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-teal-100 text-teal-800 flex-shrink-0">
                   {entries.length} {lang === 'en' ? 'Records' : 'பதிவுகள்'}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate sm:whitespace-normal">
                 {lang === 'en'
                   ? 'Continuous vitals tracking correlated across all your doctor consultations'
                   : 'உங்கள் மருத்துவ ஆலோசனைகளுடன் இணைக்கப்பட்ட உடல் அளவீட்டு வரலாறு'}
@@ -211,7 +211,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+            className="w-10 h-10 sm:w-8 sm:h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
             title="Close"
           >
             <X className="w-5 h-5" />
@@ -567,10 +567,11 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
         </div>
 
         {/* Footer info */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between text-[11px] text-slate-500 font-medium">
-          <span className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>
+        {/* Footer info */}
+        <div className="p-4 safe-area-pb border-t border-slate-100 bg-slate-50/80 flex items-center justify-between text-[11px] text-slate-500 font-medium flex-shrink-0">
+          <span className="flex items-center gap-1.5 min-w-0 pr-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <span className="truncate sm:whitespace-normal">
               {lang === 'en'
                 ? 'Grounded in ICMR & Indian Clinical Practice Standards'
                 : 'ICMR மருத்துவ நெறிமுறைகளின்படி சரிபார்க்கப்பட்டது'}
@@ -579,7 +580,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition-colors cursor-pointer"
+            className="px-5 py-2 min-h-[40px] rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition-colors cursor-pointer flex-shrink-0 active:scale-95"
           >
             {lang === 'en' ? 'Done' : 'முடிந்தது'}
           </button>

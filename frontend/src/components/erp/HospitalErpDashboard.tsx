@@ -37,6 +37,7 @@ import {
   X,
   CheckCircle2,
   Sparkles,
+  Menu,
 } from 'lucide-react';
 import { type HospitalEntity, getHospitalsList } from '../../data/hospitalsList';
 import {
@@ -95,6 +96,7 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
   }, [currentHospital.code, currentHospital.name, currentHospital.totalBeds, currentHospital.availableBeds]);
 
   const [activeMenu, setActiveMenu] = useState('Dashboard');
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isHospitalSwitcherOpen, setIsHospitalSwitcherOpen] = useState(false);
   const [quickActionModal, setQuickActionModal] = useState<string | null>(null);
   const [qaPatientName, setQaPatientName] = useState('');
@@ -170,14 +172,23 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
 
       {/* TOP APP BAR */}
       <header className="h-16 bg-white border-b border-slate-200/80 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-40 shadow-xs">
-        {/* Logo & Brand */}
-        <div className="flex items-center gap-6">
+        {/* Logo & Brand & Mobile Nav Toggle */}
+        <div className="flex items-center gap-3 sm:gap-6">
+          <button
+            type="button"
+            onClick={() => setIsMobileNavOpen(true)}
+            className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2 cursor-pointer"
+            aria-label="Open ERP Navigation"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-sm shadow-teal-600/30">
+            <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-sm shadow-teal-600/30 flex-shrink-0">
               <HeartPulse className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-lg font-black tracking-tight text-slate-900 leading-none block">
+              <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 leading-none block">
                 HealthGrid
               </span>
               <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase leading-none block mt-0.5">
@@ -296,6 +307,78 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
           </div>
         </div>
       </header>
+
+      {/* MOBILE NAVIGATION DRAWER & BACKDROP */}
+      {isMobileNavOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs"
+            onClick={() => setIsMobileNavOpen(false)}
+          />
+          <div className="relative w-72 max-w-[80vw] bg-white h-full shadow-2xl flex flex-col z-10 overflow-hidden animate-in slide-in-from-left duration-200">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-white">
+                  <HeartPulse className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-black text-sm text-slate-900 leading-none block">ERP Menu</span>
+                  <span className="text-[10px] text-slate-400 font-mono">{currentHospital.code}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileNavOpen(false)}
+                className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800 cursor-pointer"
+                title="Close navigation"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Nav sections list */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-4 safe-area-pb">
+              {navSections.map((sec, secIdx) => (
+                <div key={secIdx}>
+                  {sec.category !== 'MAIN' && (
+                    <div className="px-3 mb-1 text-[10px] font-extrabold text-slate-400 tracking-wider">
+                      {sec.category}
+                    </div>
+                  )}
+                  <div className="space-y-0.5">
+                    {sec.items.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeMenu === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveMenu(item.id);
+                            setIsMobileNavOpen(false);
+                            if (item.id !== 'Dashboard') {
+                              triggerToast(`Switched workspace tab to: ${item.label}`);
+                            }
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                            isActive
+                              ? 'bg-teal-50 text-teal-700 shadow-xs font-bold'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                          }`}
+                        >
+                          <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} />
+                          <span className="truncate">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MAIN LAYOUT: SIDEBAR + DASHBOARD CONTENT */}
       <div className="flex-1 flex overflow-hidden">
@@ -898,21 +981,23 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
 
       {/* QUICK ACTION MODAL SIMULATOR */}
       {quickActionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 animate-in zoom-in-95">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-none sm:rounded-2xl p-4 sm:p-6 w-full sm:max-w-md h-full sm:h-auto max-h-none sm:max-h-[92vh] flex flex-col overflow-y-auto shadow-2xl border-0 sm:border border-slate-100 animate-in zoom-in-95 safe-area-pb">
+            <div className="flex items-center justify-between mb-4 flex-shrink-0">
               <h3 className="text-base font-bold text-slate-900 capitalize">
                 {quickActionModal === 'register' && 'Register New Patient'}
                 {quickActionModal === 'appointment' && 'Book OPD Appointment'}
                 {quickActionModal === 'admit' && 'Admit Inpatient to Ward'}
               </h3>
               <button
+                type="button"
                 onClick={() => {
                   setQuickActionModal(null);
                   setQaPatientName('');
                   setQaPatientPhone('');
                 }}
-                className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800"
+                className="w-10 h-10 sm:w-7 sm:h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800 cursor-pointer flex-shrink-0"
+                title="Close"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -996,18 +1081,20 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
               )}
             </div>
 
-            <div className="flex justify-end gap-2 mt-5">
+            <div className="flex justify-end gap-2.5 mt-5 flex-shrink-0">
               <button
+                type="button"
                 onClick={() => {
                   setQuickActionModal(null);
                   setQaPatientName('');
                   setQaPatientPhone('');
                 }}
-                className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg"
+                className="px-4 py-2 min-h-[44px] text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => {
                   const targetName = qaPatientName.trim() || 'New Patient';
                   if (quickActionModal === 'register') {
@@ -1034,7 +1121,7 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                   setQaPatientDoctor('');
                   setQaPatientAge('');
                 }}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl"
+                className="px-5 py-2 min-h-[44px] bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer"
               >
                 Confirm &amp; Save
               </button>

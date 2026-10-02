@@ -70,11 +70,11 @@ export const DoctorHandoverModal: React.FC<DoctorHandoverModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-none sm:rounded-3xl shadow-2xl border-none sm:border border-slate-200 w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-2xl flex flex-col overflow-hidden relative">
         
         {/* Header Bar */}
-        <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between shadow-sm">
+        <div className="px-4 sm:px-5 py-3.5 sm:py-4 bg-slate-900 text-white flex items-center justify-between shadow-sm shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-red-600 flex items-center justify-center text-white shadow-md">
               <ShieldAlert className="w-5 h-5 animate-pulse" />
@@ -97,21 +97,22 @@ export const DoctorHandoverModal: React.FC<DoctorHandoverModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
               title="Print Handover Card"
             >
               <Printer className="w-4 h-4" />
             </button>
             <button
               onClick={handleShareWhatsApp}
-              className="p-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+              className="p-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
               title="Share on WhatsApp"
             >
               <Share2 className="w-4 h-4" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>

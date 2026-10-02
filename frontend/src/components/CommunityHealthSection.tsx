@@ -118,6 +118,18 @@ export const CommunityHealthSection: React.FC<CommunityHealthSectionProps> = ({
                 )}
               </h2>
 
+              {/* Mobile Graphic Visual Anchor (Headline -> Graphic -> Description & CTA) */}
+              <div 
+                onClick={onOpenDiseaseMap}
+                className="sm:hidden relative rounded-2xl overflow-hidden cursor-pointer shadow-sm border border-teal-200/80 bg-teal-100/50 my-2 max-w-xs"
+              >
+                <img
+                  src="/insights/community_map.png"
+                  alt="Dengue Activity Heatmap Map"
+                  className="w-full h-auto object-cover rounded-2xl"
+                />
+              </div>
+
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-sm">
                 {lang === 'en'
                   ? 'Track dengue and seasonal fever trends in your area.'
@@ -127,7 +139,7 @@ export const CommunityHealthSection: React.FC<CommunityHealthSectionProps> = ({
               <div className="pt-2">
                 <button
                   onClick={onOpenDiseaseMap}
-                  className="bg-[#0D7A70] hover:bg-[#0A625A] text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm shadow-md transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                  className="bg-[#0D7A70] hover:bg-[#0A625A] text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm shadow-md transition-all hover:scale-105 active:scale-95 flex items-center gap-2 cursor-pointer"
                 >
                   <span>{lang === 'en' ? 'View Disease Map' : 'நோய் வரைபடம் பார்க்க'}</span>
                   <ArrowRight className="w-4 h-4 text-white" />
@@ -135,8 +147,8 @@ export const CommunityHealthSection: React.FC<CommunityHealthSectionProps> = ({
               </div>
             </div>
 
-            {/* Right Map Graphic Column with Heatmap and Floating Badge */}
-            <div className="sm:col-span-5 relative flex items-center justify-center">
+            {/* Desktop Map Graphic Column with Heatmap */}
+            <div className="hidden sm:flex sm:col-span-5 relative items-center justify-center">
               <div 
                 onClick={onOpenDiseaseMap}
                 className="relative rounded-2xl overflow-hidden cursor-pointer transition-transform duration-300 group-hover:scale-105 shadow-sm"

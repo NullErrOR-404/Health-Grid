@@ -45,11 +45,11 @@ export const HealthGuideModal: React.FC<HealthGuideModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-none sm:rounded-3xl shadow-2xl border-none sm:border border-slate-200 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-xl overflow-hidden flex flex-col">
         
         {/* Header with image */}
-        <div className="relative h-44 sm:h-52 bg-slate-900 overflow-hidden flex items-end p-5 text-white">
+        <div className="relative h-44 sm:h-52 bg-slate-900 overflow-hidden flex items-end p-5 text-white shrink-0">
           <img
             src={guide.image}
             alt={guide.titleEn}
@@ -59,7 +59,8 @@ export const HealthGuideModal: React.FC<HealthGuideModalProps> = ({
 
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>

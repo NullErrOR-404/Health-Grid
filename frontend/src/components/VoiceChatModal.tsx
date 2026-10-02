@@ -403,8 +403,8 @@ Active Prescriptions: ${patientProfile.records
   ];
 
   return (
-    <div data-lenis-prevent className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div data-lenis-prevent className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl h-[92vh] max-h-[750px] flex flex-col overflow-hidden relative">
+    <div data-lenis-prevent className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div data-lenis-prevent className="bg-white rounded-none sm:rounded-3xl shadow-2xl border-none sm:border border-slate-200 w-full h-full sm:h-[92vh] sm:max-h-[750px] sm:max-w-2xl flex flex-col overflow-hidden relative">
         
         {/* Hidden Real File Input */}
         <input
@@ -548,7 +548,7 @@ Active Prescriptions: ${patientProfile.records
             {/* Speed Rate Pill */}
             <button
               onClick={() => setSpeechSpeedRate((prev) => (prev === 0.85 ? 1.0 : 0.85))}
-              className="text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center gap-1 border border-white/10"
+              className="hidden sm:flex text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors items-center gap-1 border border-white/10"
               title="Speech Speed"
             >
               <Gauge className="w-3.5 h-3.5 text-cyan-200" />
@@ -565,7 +565,7 @@ Active Prescriptions: ${patientProfile.records
                 setVoiceSpeechEnabled(!voiceSpeechEnabled);
               }}
               title={voiceSpeechEnabled ? 'Mute AI voice' : 'Unmute AI voice'}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
             >
               {voiceSpeechEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-rose-300" />}
             </button>
@@ -573,7 +573,8 @@ Active Prescriptions: ${patientProfile.records
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1016,7 +1017,7 @@ Active Prescriptions: ${patientProfile.records
         )}
 
         {/* Input Bar */}
-        <div className="p-3 sm:p-4 bg-white border-t border-slate-200">
+        <div className="p-3 sm:p-4 pb-4 sm:pb-4 safe-area-pb bg-white border-t border-slate-200">
           
           {/* Quick Voice & Doctor Persona Action Pills */}
           <div className="flex items-center justify-between gap-1.5 pb-2 mb-2 border-b border-slate-100 flex-wrap text-xs">

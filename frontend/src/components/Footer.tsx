@@ -112,7 +112,7 @@ Official HealthGrid Portal: https://healthgrid-app.vercel.app
 
   return (
     <>
-      <footer id="footer-section" className="relative bg-white pt-14 pb-10 border-t border-slate-200/80 overflow-hidden reveal-init">
+      <footer id="footer-section" className="relative bg-white pt-14 pb-28 md:pb-12 border-t border-slate-200/80 overflow-hidden reveal-init">
         
         {/* Decorative Mint Wave Background at Bottom Matching Footer ref.png */}
         <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none -z-0 opacity-70">

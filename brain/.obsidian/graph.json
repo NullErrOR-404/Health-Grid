@@ -9,27 +9,45 @@
   "colorGroups": [
     {
       "query": "file:00_Index",
-      "color": { "a": 1, "rgb": 444390 }
+      "color": {
+        "a": 1,
+        "rgb": 444390
+      }
     },
     {
       "query": "path:architecture",
-      "color": { "a": 1, "rgb": 1096001 }
+      "color": {
+        "a": 1,
+        "rgb": 1096001
+      }
     },
     {
       "query": "path:modules",
-      "color": { "a": 1, "rgb": 3899126 }
+      "color": {
+        "a": 1,
+        "rgb": 3899126
+      }
     },
     {
       "query": "path:integrations",
-      "color": { "a": 1, "rgb": 9133302 }
+      "color": {
+        "a": 1,
+        "rgb": 9133302
+      }
     },
     {
       "query": "path:decisions",
-      "color": { "a": 1, "rgb": 16096779 }
+      "color": {
+        "a": 1,
+        "rgb": 16096779
+      }
     },
     {
       "query": "path:context",
-      "color": { "a": 1, "rgb": 16007006 }
+      "color": {
+        "a": 1,
+        "rgb": 16007006
+      }
     }
   ],
   "collapse-display": false,
@@ -37,9 +55,11 @@
   "textFadeMultiplier": 0,
   "nodeSizeMultiplier": 1.2,
   "lineSizeMultiplier": 1,
-  "col-force": 0.5,
-  "repulsion": 1.5,
+  "collapse-forces": false,
+  "centerStrength": 0.518713248970312,
+  "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 1
+  "scale": 0.999999999999998,
+  "close": true
 }

@@ -13,14 +13,14 @@ import {
   Siren,
   Phone
 } from 'lucide-react';
-import type { Language } from '../../types';
+import type { Language } from '../types';
 import {
   hisService,
   type PatientToken,
   type HealthGridCvData,
   type PatientIntakeInput
-} from '../../services/hisService';
-import { authService } from '../../services/authService';
+} from '../services/hisService';
+import { authService } from '../services/authService';
 
 interface PatientIntakeModalProps {
   isOpen: boolean;
@@ -210,30 +210,30 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-5 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
         data-lenis-prevent
-        className="w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
+        className="w-full sm:max-w-2xl bg-white rounded-none sm:rounded-3xl overflow-hidden shadow-2xl border-0 sm:border border-slate-100 flex flex-col h-full sm:h-auto sm:max-h-[92vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-teal-700 via-teal-800 to-slate-900 text-white flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-teal-300">
-              <Stethoscope className="w-5 h-5" />
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-gradient-to-r from-teal-700 via-teal-800 to-slate-900 text-white flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-teal-300 flex-shrink-0">
+              <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-base sm:text-lg">
+                <h3 className="font-bold text-sm sm:text-base lg:text-lg truncate">
                   {lang === 'en' ? 'Clinical OPD Consultation & Triage Token' : 'மருத்துவ ஆலோசனைக் கூடம் & டோக்கன்'}
                 </h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-400/20 text-teal-200 border border-teal-400/30">
-                  {lang === 'en' ? 'First-Come First-Served' : 'வரிசை முறை'}
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-400/20 text-teal-200 border border-teal-400/30 flex-shrink-0">
+                  {lang === 'en' ? 'First-Come' : 'வரிசை முறை'}
                 </span>
               </div>
-              <p className="text-xs text-teal-100/80">
+              <p className="text-[11px] sm:text-xs text-teal-100/80 truncate sm:whitespace-normal">
                 {lang === 'en'
                   ? 'Screening intake generates your consultation token & shares HealthGrid CV with on-duty physician'
                   : 'மருத்துவரிடம் ஆலோசனை பெற டோக்கன் மற்றும் ஹெல்த்கிரிட் குறிப்பு உருவாக்கப்படுகிறது'}
@@ -244,7 +244,7 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-white/70 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+            className="text-white/70 hover:text-white w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors cursor-pointer flex-shrink-0"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -252,7 +252,7 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-5 sm:space-y-6 flex-1 safe-area-pb">
           {activeStep === 'INTAKE' ? (
             <form onSubmit={handleSubmitIntake} className="space-y-5">
               {validationError && (
@@ -649,7 +649,7 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveStep('INTAKE')}
-                    className="text-xs text-teal-700 hover:underline font-semibold cursor-pointer"
+                    className="text-xs text-teal-700 hover:underline font-semibold py-2.5 cursor-pointer"
                   >
                     {lang === 'en' ? '← Edit Intake Symptoms' : '← விவரங்களைத் திருத்த'}
                   </button>
@@ -657,7 +657,7 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+                    className="px-5 py-2.5 min-h-[44px] rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-semibold cursor-pointer"
                   >
                     {lang === 'en' ? 'Close & Keep Position' : 'மூடு (வரிசையில் தொடர்க)'}
                   </button>

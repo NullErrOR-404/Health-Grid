@@ -458,8 +458,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl max-h-[92vh] bg-white rounded-[28px] shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-5xl bg-white rounded-none sm:rounded-[28px] shadow-2xl border-none sm:border border-slate-200/90 flex flex-col overflow-hidden">
         
         {/* Hidden Canvas for High-Resolution Capture */}
         <canvas ref={canvasRef} className="hidden" />

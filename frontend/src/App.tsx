@@ -7,7 +7,6 @@ import { ActionCards } from './components/ActionCards';
 import { CommunityHealthSection } from './components/CommunityHealthSection';
 import { OAuthTransparencySection } from './components/OAuthTransparencySection';
 import { Footer } from './components/Footer';
-import { RoamingDocBot } from './components/RoamingDocBot';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { Siren, AlertCircle, X, Stethoscope, MapPin } from 'lucide-react';
 import { lenisService } from './services/lenisService';
@@ -25,7 +24,6 @@ const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage').th
 const NotFoundPage = lazy(() => import('./components/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const ThankYouPage = lazy(() => import('./components/ThankYouPage').then(m => ({ default: m.ThankYouPage })));
 const MedicineStorePage = lazy(() => import('./components/MedicineStorePage').then(m => ({ default: m.MedicineStorePage })));
-const HospitalInformationSystem = lazy(() => import('./components/his/HospitalInformationSystem').then(m => ({ default: m.HospitalInformationSystem })));
 const HospitalErpDashboard = lazy(() => import('./components/erp/HospitalErpDashboard').then(m => ({ default: m.HospitalErpDashboard })));
 
 // Lazy-loaded On-Demand Modals
@@ -35,7 +33,7 @@ const PrescriptionModal = lazy(() => import('./components/PrescriptionModal').th
 const DiseaseMapModal = lazy(() => import('./components/DiseaseMapModal').then(m => ({ default: m.DiseaseMapModal })));
 const BabyShotsModal = lazy(() => import('./components/BabyShotsModal').then(m => ({ default: m.BabyShotsModal })));
 const DoctorHandoverModal = lazy(() => import('./components/DoctorHandoverModal').then(m => ({ default: m.DoctorHandoverModal })));
-const PatientIntakeModal = lazy(() => import('./components/his/PatientIntakeModal').then(m => ({ default: m.PatientIntakeModal })));
+const PatientIntakeModal = lazy(() => import('./components/PatientIntakeModal').then(m => ({ default: m.PatientIntakeModal })));
 const HealthGuideModal = lazy(() => import('./components/HealthGuideModal').then(m => ({ default: m.HealthGuideModal })));
 const LoginModal = lazy(() => import('./components/LoginModal').then(m => ({ default: m.LoginModal })));
 
@@ -46,7 +44,7 @@ const ViewLoadingFallback = () => (
   </div>
 );
 
-export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'his' | 'hospital-erp';
+export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'hospital-erp';
 
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -129,9 +127,7 @@ export default function App() {
         setCurrentView('maps');
       } else if (pathname === '/medicines' || hash === '#medicines' || hash === '#/medicines') {
         setCurrentView('medicines');
-      } else if (pathname === '/his' || pathname === '/doctor-portal' || hash === '#his' || hash === '#/his' || hash === '#doctor-portal') {
-        setCurrentView('his');
-      } else if (pathname === '/hospital-erp' || pathname === '/hospital-portal' || hash === '#hospital-erp' || hash === '#hospital-portal' || hash === '#/hospital-erp') {
+      } else if (pathname === '/his' || pathname === '/doctor-portal' || hash === '#his' || hash === '#/his' || hash === '#doctor-portal' || pathname === '/hospital-erp' || pathname === '/hospital-portal' || hash === '#hospital-erp' || hash === '#hospital-portal' || hash === '#/hospital-erp') {
         setCurrentView('hospital-erp');
       } else if (pathname === '/' || pathname === '/index.html' || pathname === '') {
         // If there is an unknown anchor hash like #unknown
@@ -188,10 +184,6 @@ export default function App() {
       case 'medicines':
         title = lang === 'en' ? 'PMBJP Cheap Generic Medicines & Kendra Store | HealthGrid' : 'மலிவு விலை மக்கள் மருந்தகம் & பொது மருந்துகள் | HealthGrid';
         desc = lang === 'en' ? 'Order authentic Indian Pharmacopoeia PMBJP generic chronic medicines at up to 89% savings with doorstep delivery and Kendra store pickup.' : 'அரசு மக்கள் மருந்தக விலையில் 89% வரை குறைந்த விலையில் அத்தியாவசிய மருந்துகளை வீட்டிலேயே அல்லது அருகிலுள்ள மருந்தகத்தில் பெறலாம்.';
-        break;
-      case 'his':
-        title = lang === 'en' ? 'Hospital Information System (HIS / EHR) & Doctor Portal | HealthGrid' : 'மருத்துவமனை தகவல் அமைப்பு (HIS / EHR) & மருத்துவர் தளம் | HealthGrid';
-        desc = lang === 'en' ? 'Clinical Hospital Information System: OPD Token Queue, Live Tele-Consult Chamber with SOAP notes and generic e-prescribing, Inpatient Bed Census, and Diagnostic Lab Hub.' : 'மருத்துவர் தளம் மற்றும் மருத்துவமனை மேலாண்மை அமைப்பு: நோயாளிகள் டோக்கன் வரிசை, நேரடி ஆலோசனை, படுக்கைகள் நிலவரம்.';
         break;
       case 'hospital-erp':
         title = 'HealthGrid Hospital ERP | Autonomous Multi-Tenant Healthcare Operations';
@@ -412,7 +404,6 @@ export default function App() {
                 }, 250);
               }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
             }}
-            onNavigateHis={() => navigateToView('his')}
             onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
           />
         </header>
@@ -483,7 +474,6 @@ export default function App() {
                 }, 250);
               }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
             }}
-            onNavigateHis={() => navigateToView('his')}
             onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
           />
         </header>
@@ -573,7 +563,7 @@ export default function App() {
               onOpenAmbulance={() => setIsAmbulanceOpen(true)}
               onJoinConsultation={() => {
                 setIsPatientIntakeOpen(false);
-                navigateToView('his');
+                navigateToView('chat');
               }}
             />
           </Suspense>
@@ -590,7 +580,6 @@ export default function App() {
               lang={lang}
               contextNotice={loginNotice}
               onSuccess={handleGlobalLoginSuccess}
-              onNavigateHis={() => navigateToView('his')}
               onNavigateHospitalErp={(hospital, adminName) => {
                 setActiveErpHospital(hospital);
                 setActiveErpAdmin(adminName);
@@ -600,18 +589,6 @@ export default function App() {
           </Suspense>
         )}
       </div>
-    );
-  }
-
-  // Render Dedicated Hospital Information System (HIS / EHR) Workspace
-  if (currentView === 'his') {
-    return (
-      <Suspense fallback={<ViewLoadingFallback />}>
-        <HospitalInformationSystem
-          lang={lang}
-          onExitToCitizenView={() => navigateToView('landing')}
-        />
-      </Suspense>
     );
   }
 
@@ -727,7 +704,6 @@ export default function App() {
               lang={lang}
               contextNotice={loginNotice}
               onSuccess={handleGlobalLoginSuccess}
-              onNavigateHis={() => navigateToView('his')}
               onNavigateHospitalErp={(hospital, adminName) => {
                 setActiveErpHospital(hospital);
                 setActiveErpAdmin(adminName);
@@ -742,7 +718,7 @@ export default function App() {
 
   // Default: Public Landing Page matching Landing page new.png & Footer ref.png
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500 selection:text-white pb-16 md:pb-0">
+    <div className="min-h-screen w-full overflow-x-hidden flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500 selection:text-white pb-20 md:pb-0">
       {/* Top Government Health Bulletin Bar */}
       <GovAlertMarquee
         lang={lang}
@@ -782,7 +758,6 @@ export default function App() {
               }, 250);
             }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
           }}
-          onNavigateHis={() => navigateToView('his')}
           onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
         />
       </header>
@@ -838,12 +813,6 @@ export default function App() {
         onOpenPrivacy={() => navigateToView('privacy')}
         onOpenTerms={() => navigateToView('terms')}
         onNavigateMedicines={() => navigateToView('medicines')}
-      />
-
-      {/* Roaming AI Mascot Companion (DocBot) */}
-      <RoamingDocBot
-        lang={lang}
-        onOpenChat={() => navigateToView('chat')}
       />
 
       {/* Interactive Modals */}
@@ -925,7 +894,7 @@ export default function App() {
             onOpenAmbulance={() => setIsAmbulanceOpen(true)}
             onJoinConsultation={() => {
               setIsPatientIntakeOpen(false);
-              navigateToView('his');
+              navigateToView('chat');
             }}
           />
         </Suspense>
@@ -943,7 +912,6 @@ export default function App() {
             lang={lang}
             contextNotice={loginNotice}
             onSuccess={handleGlobalLoginSuccess}
-            onNavigateHis={() => navigateToView('his')}
             onNavigateHospitalErp={(hospital, adminName) => {
               setActiveErpHospital(hospital);
               setActiveErpAdmin(adminName);
@@ -978,35 +946,35 @@ export default function App() {
       )}
 
       {/* Sticky Mobile Bottom Quick Action Bar (<768px screens) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-3 py-2.5 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] flex items-center justify-between gap-2 safe-area-pb">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-3 py-2 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] flex items-center justify-between gap-2 safe-area-pb">
         <button
           type="button"
           onClick={() => handleOpenVoiceChat()}
-          className="flex-1 py-2 px-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform cursor-pointer"
+          className="flex-1 min-h-[48px] py-2.5 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform cursor-pointer"
         >
-          <span className="relative flex h-2 w-2">
+          <span className="relative flex h-2 w-2 flex-shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
           </span>
-          <Stethoscope className="w-3.5 h-3.5" />
+          <Stethoscope className="w-4 h-4 flex-shrink-0" />
           <span className="truncate">{lang === 'en' ? 'Consult AI' : 'AI ஆலோசனை'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Emergency 108' : '108 அவசரம்')}
-          className="py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform cursor-pointer"
+          className="min-h-[48px] py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform cursor-pointer flex-shrink-0"
         >
-          <Siren className="w-3.5 h-3.5" />
+          <Siren className="w-4 h-4 flex-shrink-0 animate-pulse" />
           <span>108</span>
         </button>
 
         <button
           type="button"
           onClick={() => navigateToView('maps')}
-          className="py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
+          className="min-h-[48px] py-2.5 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer flex-shrink-0"
         >
-          <MapPin className="w-3.5 h-3.5 text-teal-700" />
+          <MapPin className="w-4 h-4 text-teal-700 flex-shrink-0" />
           <span className="truncate">{lang === 'en' ? 'PHCs' : 'மருத்துவமனை'}</span>
         </button>
       </div>
