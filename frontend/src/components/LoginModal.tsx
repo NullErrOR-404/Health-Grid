@@ -6,13 +6,20 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  ArrowLeft,
   Stethoscope,
-  MessageSquareText,
+  Building2,
   ShieldCheck,
-  MapPin,
   Users,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  ChevronRight,
+  CalendarDays,
+  FileText,
+  HeartPulse,
+  HelpCircle,
+  Mail,
 } from 'lucide-react';
 import type { Language } from '../types';
 import { authService, type UserRole, type AuthUser } from '../services/authService';
@@ -29,6 +36,8 @@ const BLOOD_GROUP_OPTIONS = [
   { value: 'B Negative', label: 'B Negative (B-)', badge: 'B-' },
   { value: 'AB Negative', label: 'AB Negative (AB-)', badge: 'AB-' },
 ];
+
+type ModalViewMode = 'PERSONA_SELECT' | 'LOGIN_FORM';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -49,9 +58,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   contextNotice,
   onSuccess,
 }) => {
+  const [viewMode, setViewMode] = useState<ModalViewMode>('PERSONA_SELECT');
   const [role, setRole] = useState<UserRole>('PERSONAL');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -61,12 +72,34 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [infoToast, setInfoToast] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
+  const showNotification = (msg: string) => {
+    setInfoToast(msg);
+    setTimeout(() => setInfoToast(null), 3500);
+  };
+
+  const handleSelectPersona = (selectedRole: UserRole | 'HOSPITAL') => {
+    if (selectedRole === 'HEALTHCARE_PROFESSIONAL' || selectedRole === 'HOSPITAL') {
+      showNotification('Doctor & Hospital ERP portals are configuring. Continuing in Personal Account mode for now.');
+      setRole('PERSONAL');
+      setViewMode('LOGIN_FORM');
+      setIsRegisterMode(false);
+      return;
+    }
+    setRole('PERSONAL');
+    setViewMode('LOGIN_FORM');
+    setIsRegisterMode(false);
+  };
+
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!identifier || !password) return;
+    if (!identifier || !password) {
+      setErrorMessage(lang === 'en' ? 'Please fill in both email/mobile and password.' : 'மின்னஞ்சல்/கைபேசி மற்றும் கடவுச்சொல்லை நிரப்பவும்.');
+      return;
+    }
 
     setIsLoading(true);
     setErrorMessage(null);
@@ -88,8 +121,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
       setSuccessToast(
         lang === 'en'
-          ? `Welcome, ${user.name}! ${role === 'HEALTHCARE_PROFESSIONAL' ? '(Clinician Verified)' : ''}`
-          : `வரவேற்கிறோம், ${user.name}! ${role === 'HEALTHCARE_PROFESSIONAL' ? '(மருத்துவர் கணக்கு)' : ''}`
+          ? `Welcome, ${user.name}! Access granted.`
+          : `வரவேற்கிறோம், ${user.name}! உள்நுழைவு வெற்றிகரமானது.`
       );
 
       setTimeout(() => {
@@ -145,372 +178,561 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
-      {/* Success Notification Banner */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+      {/* Toast Notifications */}
       {successToast && (
-        <div className="fixed top-5 z-[60] bg-emerald-600 text-white font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-4 text-sm">
+        <div className="fixed top-5 z-[70] bg-emerald-600 text-white font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-4 text-sm">
           <CheckCircle2 className="w-5 h-5 text-emerald-200" />
           <span>{successToast}</span>
         </div>
       )}
 
-      {/* Main Container: Split Desktop / Stacked Mobile */}
-      <div className="bg-white rounded-[28px] sm:rounded-[36px] shadow-2xl border border-slate-200/90 w-full max-w-5xl overflow-hidden relative my-auto">
+      {infoToast && (
+        <div className="fixed top-5 z-[70] bg-sky-700 text-white font-medium px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-4 text-xs sm:text-sm max-w-md">
+          <AlertCircle className="w-5 h-5 text-sky-200 flex-shrink-0" />
+          <span>{infoToast}</span>
+        </div>
+      )}
+
+      {/* Main Container Card */}
+      <div className="bg-white rounded-[32px] shadow-2xl border border-slate-100/90 w-full max-w-[1020px] overflow-hidden relative my-auto">
         
         {/* Floating Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-slate-100/80 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors"
+          className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors shadow-xs"
           title="Close"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex flex-col lg:flex-row min-h-[640px]">
-          
-          {/* ========================================================= */}
-          {/* DESKTOP LEFT COLUMN / MOBILE HERO BANNER                  */}
-          {/* ========================================================= */}
-          
-          {/* Desktop Left Panel (Hidden on Mobile) */}
-          <div className="hidden lg:flex lg:w-[56%] relative p-10 xl:p-12 flex-col justify-between overflow-hidden bg-gradient-to-br from-[#E6FAF4] via-[#EEFBF7] to-[#D5F5ED]">
-            {/* Soft Ambient Glow Orbs */}
-            <div className="absolute top-1/4 -left-20 w-80 h-80 bg-teal-200/40 rounded-full blur-3xl pointer-events-none"></div>
-            <div className="absolute bottom-10 right-0 w-72 h-72 bg-cyan-200/40 rounded-full blur-3xl pointer-events-none"></div>
+        {/* ========================================================================= */}
+        {/* VIEW 1: PERSONA SELECTOR UI                                               */}
+        {/* ========================================================================= */}
+        {viewMode === 'PERSONA_SELECT' && (
+          <div className="flex flex-col lg:flex-row min-h-[660px]">
+            {/* Left Column: Hospital Atrium with DocBot & Value Pillars */}
+            <div
+              className="w-full lg:w-[49%] relative p-8 lg:p-10 flex flex-col justify-between overflow-hidden bg-no-repeat"
+              style={{
+                backgroundImage: "url('/login-persona-bg.png')",
+                backgroundPosition: "left bottom",
+                backgroundSize: "cover",
+                backgroundColor: '#e0f2fe',
+              }}
+            >
+              {/* Soft readability gradient mask */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/50 to-transparent pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-transparent pointer-events-none"></div>
 
-            {/* Top Brand Header */}
-            <div>
-              <div className="flex items-center gap-3">
-                <img
-                  src="/Logo.png"
-                  alt="HealthGrid நலம் AI"
-                  className="h-10 w-auto object-contain"
-                />
-              </div>
-              <div className="w-12 h-1 bg-[#0B7A75] rounded-full mt-2.5"></div>
-
-              {/* Main Headline */}
-              <h1 className="text-[40px] xl:text-[44px] font-black text-slate-900 tracking-tight leading-[1.12] mt-8">
-                Your Health<br />Companion<br />Always Here
-              </h1>
-
-              <p className="text-slate-600 text-sm leading-relaxed mt-4 max-w-sm">
-                Get instant answers, trusted health information, find nearby hospitals, call an ambulance and more, all in one place.
-              </p>
-
-              {/* 4 Feature Highlights */}
-              <div className="space-y-4 mt-8 max-w-xs relative z-10">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm text-[#0B7A75] border border-teal-100 flex items-center justify-center flex-shrink-0">
-                    <MessageSquareText className="w-5 h-5" />
+              {/* Top Row: Logo & Trust Shield Badge */}
+              <div className="relative z-10 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#009688] flex items-center justify-center text-white shadow-md shadow-teal-500/20">
+                    <HeartPulse className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900">AI Health Assistant</h4>
-                    <p className="text-[11px] text-slate-500">24/7 support in simple language</p>
+                    <div className="text-xl font-black text-slate-900 tracking-tight leading-none">HealthGrid</div>
+                    <div className="text-[10px] text-slate-500 font-medium mt-1">Your Health. Our Priority.</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm text-[#0B7A75] border border-teal-100 flex items-center justify-center flex-shrink-0">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Trusted Information</h4>
-                    <p className="text-[11px] text-slate-500">Doctor-verified medical facts</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm text-[#0B7A75] border border-teal-100 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Emergency Support</h4>
-                    <p className="text-[11px] text-slate-500">Find nearby hospitals & call ambulance</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm text-[#0B7A75] border border-teal-100 flex items-center justify-center flex-shrink-0">
-                    <Users className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">For Your Family</h4>
-                    <p className="text-[11px] text-slate-500">Care for everyone, always</p>
-                  </div>
+                <div className="inline-flex items-center gap-1.5 bg-emerald-50/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-emerald-200/70 shadow-xs">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100" />
+                  <span className="text-[11px] font-semibold text-emerald-800">Trusted by Hospitals Across India</span>
                 </div>
               </div>
-            </div>
 
-            {/* Desktop Hero Illustration Overlay */}
-            <div className="absolute right-[-40px] bottom-12 w-[380px] xl:w-[440px] pointer-events-none select-none z-0">
-              <img
-                src="/login_hero_desktop.png"
-                alt="DocBot Mascot & Floating Health Icons"
-                className="w-full h-auto object-contain filter drop-shadow-2xl"
-              />
-            </div>
+              {/* Main Headline & Subtitle */}
+              <div className="relative z-10 my-auto pt-6 pb-4">
+                <div className="text-[11px] font-bold tracking-[0.2em] text-slate-500 uppercase mb-2">
+                  SAFE • SMART • CONNECTED
+                </div>
+                <h1 className="text-3xl lg:text-[42px] font-black text-slate-900 leading-[1.12] tracking-tight">
+                  One Platform<br />
+                  for a <span className="text-[#0284c7]">Healthier</span><br />
+                  Tomorrow
+                </h1>
+                <p className="text-xs lg:text-sm text-slate-600 leading-relaxed mt-3.5 max-w-sm font-normal">
+                  Access personalized care, professional tools and hospital management — all in one secure healthcare platform.
+                </p>
 
-            {/* Bottom Handwritten Signature */}
-            <div className="pt-6 relative z-10">
-              <div className="flex items-center gap-1.5 font-serif italic text-slate-800 font-bold text-base tracking-wide">
-                <span>“A Healthier You, A Happier Tomorrow”</span>
-                <span className="text-[#0B7A75] not-italic ml-1">♡</span>
+                {/* DocBot Speech Bubble & Feature Pills */}
+                <div className="mt-8 flex flex-col items-end pr-2">
+                  {/* Mascot Speech Bubble with Left Tail */}
+                  <div className="relative bg-white/95 backdrop-blur-md rounded-2xl p-3.5 px-4 shadow-lg border border-slate-100 w-full max-w-[215px] mb-3">
+                    <div className="absolute -left-2 top-4 w-0 h-0 border-t-[6px] border-t-transparent border-r-[8px] border-r-white border-b-[6px] border-b-transparent"></div>
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="text-xs font-bold text-slate-900">Welcome to HealthGrid!</span>
+                      <Sparkles className="w-3.5 h-3.5 text-[#0284c7] fill-[#0284c7]" />
+                    </div>
+                    <p className="text-[11px] text-slate-600 mt-1 leading-snug">Choose how you want to continue.</p>
+                  </div>
+
+                  {/* 3 Pillar Cards */}
+                  <div className="space-y-2.5 w-full max-w-[230px]">
+                    <div className="bg-white/90 backdrop-blur-md rounded-2xl p-2.5 px-3 border border-white/80 shadow-xs flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center flex-shrink-0">
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-800 leading-tight">
+                        Better Care<br />for Patients
+                      </span>
+                    </div>
+
+                    <div className="bg-white/90 backdrop-blur-md rounded-2xl p-2.5 px-3 border border-white/80 shadow-xs flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center flex-shrink-0">
+                        <Stethoscope className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-800 leading-tight">
+                        Empowering<br />Healthcare Professionals
+                      </span>
+                    </div>
+
+                    <div className="bg-white/90 backdrop-blur-md rounded-2xl p-2.5 px-3 border border-white/80 shadow-xs flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center flex-shrink-0">
+                        <Building2 className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-800 leading-tight">
+                        Smarter Operations<br />for Hospitals
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="w-28 h-0.5 bg-[#0B7A75] rounded-full mt-1"></div>
-            </div>
-          </div>
 
-          {/* Mobile Top Navigation & Hero Banner (Visible only on < lg) */}
-          <div className="lg:hidden w-full bg-gradient-to-b from-[#E6FAF4] to-[#C9F3E9] pt-5 pb-8 px-5 relative overflow-hidden">
-            {/* Mobile Top Bar */}
-            <div className="flex items-center justify-between">
-              <img
-                src="/Logo.png"
-                alt="HealthGrid நலம் AI"
-                className="h-8 w-auto object-contain"
-              />
-
-              <div className="flex items-center gap-2 pr-8">
-                <span className="text-xs text-slate-500 font-medium">New here?</span>
-                <button
-                  type="button"
-                  onClick={() => setIsRegisterMode(!isRegisterMode)}
-                  className="text-xs font-bold text-slate-800 border border-slate-300 bg-white/80 hover:bg-white px-3 py-1 rounded-xl transition-all shadow-2xs"
-                >
-                  {isRegisterMode ? 'Sign In' : 'Create Account'}
-                </button>
+              {/* Bottom Trust Line */}
+              <div className="relative z-10 pt-4 border-t border-slate-200/50 flex items-center gap-2 text-[11px] font-medium text-slate-500">
+                <span>Trusted</span>
+                <span className="text-slate-300">|</span>
+                <span>Secure</span>
+                <span className="text-slate-300">|</span>
+                <span>HIPAA-Ready</span>
+                <span className="text-slate-300">|</span>
+                <span>India&apos;s Healthcare Network</span>
               </div>
             </div>
 
-            {/* Mobile Hero Illustration */}
-            <div className="flex justify-center mt-3 select-none">
-              <img
-                src="/login_hero_mobile.png"
-                alt="DocBot Mobile Companion"
-                className="w-full max-w-[320px] h-auto object-contain drop-shadow-lg"
-              />
-            </div>
-          </div>
-
-          {/* ========================================================= */}
-          {/* RIGHT COLUMN (DESKTOP) / ELEVATED BOTTOM SHEET (MOBILE)    */}
-          {/* ========================================================= */}
-          <div className="lg:w-[44%] bg-white p-6 sm:p-10 lg:p-10 xl:p-12 flex flex-col justify-between relative -mt-6 lg:mt-0 rounded-t-[32px] lg:rounded-none shadow-xl lg:shadow-none z-10">
-            
-            {/* Top Right: "New here? [ Create an Account ]" on Desktop */}
-            <div className="hidden lg:flex items-center justify-end gap-2 text-xs sm:text-sm">
-              <span className="text-slate-500 font-medium">
-                {isRegisterMode ? 'Already have an account?' : 'New here?'}
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsRegisterMode(!isRegisterMode)}
-                className="font-semibold text-slate-800 border border-slate-300 hover:border-slate-400 hover:bg-slate-50 px-3.5 py-1.5 rounded-xl transition-all shadow-2xs"
-              >
-                {isRegisterMode ? 'Sign In' : 'Create an Account'}
-              </button>
-            </div>
-
-            {/* Form Container */}
-            <div className="my-auto py-2">
-              
-              {/* Context Notice Banner (when prompted by chat or scanner action) */}
-              {contextNotice && (
-                <div className="mb-4 p-3 sm:p-3.5 rounded-2xl bg-teal-50 border border-teal-200/90 text-[#00695C] text-xs font-semibold flex items-center gap-2.5 shadow-2xs animate-in fade-in slide-in-from-top-2">
-                  <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                    ✓
-                  </div>
-                  <span className="leading-snug">{contextNotice}</span>
-                </div>
-              )}
-
-              {/* Form Title & Subtitle */}
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  {isRegisterMode ? 'Create Account' : 'Welcome Back'}
+            {/* Right Column: Persona Account Type Selection */}
+            <div className="w-full lg:w-[51%] p-8 lg:p-12 flex flex-col justify-center bg-white">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl lg:text-[28px] font-extrabold text-slate-900 tracking-tight">
+                  Welcome to HealthGrid
                 </h2>
-                <p className="text-slate-500 text-xs sm:text-sm mt-1">
-                  {isRegisterMode
-                    ? 'Register your profile to access your health vault'
-                    : 'Login to continue to HealthGrid'}
+                <p className="text-xs lg:text-sm text-slate-500 mt-1.5 font-normal">
+                  Please select your account type to continue
                 </p>
               </div>
 
-              {/* Segmented Control Role Tabs */}
-              <div className="mt-5 p-1 bg-slate-100 rounded-2xl flex items-center gap-1 border border-slate-200/60">
+              {/* Persona Cards */}
+              <div className="space-y-4">
+                {/* 1. Personal */}
                 <button
-                  type="button"
-                  onClick={() => setRole('PERSONAL')}
-                  className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-                    role === 'PERSONAL'
-                      ? 'bg-white shadow-sm text-slate-900 border border-slate-200/80'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
+                  onClick={() => handleSelectPersona('PERSONAL')}
+                  className="group w-full p-4 lg:p-4.5 rounded-2xl bg-[#f0fdfa] border border-[#ccfbf1] hover:border-teal-400 hover:shadow-md transition-all text-left flex items-center justify-between"
                 >
-                  <User className={`w-4 h-4 ${role === 'PERSONAL' ? 'text-[#0B7A75]' : 'text-slate-400'}`} />
-                  <span>Personal</span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-13 h-13 rounded-2xl bg-[#cffafe] flex items-center justify-center text-teal-600 flex-shrink-0 shadow-xs">
+                      <User className="w-6 h-6 text-teal-600 fill-teal-600/30" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
+                        Personal
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5 leading-snug">
+                        Manage your health, book appointments, view reports and more.
+                      </p>
+                      <span className="inline-block bg-[#e6fffa] text-teal-700 border border-teal-200/60 text-[11px] font-semibold px-2.5 py-0.5 rounded-full mt-2">
+                        For Patients &amp; Families
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-teal-100/70 text-teal-700 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-600 group-hover:text-white transition-all ml-2">
+                    <ChevronRight className="w-5 h-5" />
+                  </div>
                 </button>
 
+                {/* 2. Healthcare Professional */}
                 <button
-                  type="button"
-                  onClick={() => setRole('HEALTHCARE_PROFESSIONAL')}
-                  className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-                    role === 'HEALTHCARE_PROFESSIONAL'
-                      ? 'bg-white shadow-sm text-slate-900 border border-slate-200/80'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
+                  onClick={() => handleSelectPersona('HEALTHCARE_PROFESSIONAL')}
+                  className="group w-full p-4 lg:p-4.5 rounded-2xl bg-[#f0f9ff] border border-sky-100 hover:border-sky-400 hover:shadow-md transition-all text-left flex items-center justify-between"
                 >
-                  <Stethoscope className={`w-4 h-4 ${role === 'HEALTHCARE_PROFESSIONAL' ? 'text-[#0B7A75]' : 'text-slate-400'}`} />
-                  <span>Healthcare Professional</span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-13 h-13 rounded-2xl bg-[#e0f2fe] flex items-center justify-center text-sky-600 flex-shrink-0 shadow-xs">
+                      <Stethoscope className="w-6 h-6 text-sky-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 group-hover:text-sky-700 transition-colors">
+                        Healthcare Professional
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5 leading-snug">
+                        Access patient records, manage consultations, prescriptions and professional tools.
+                      </p>
+                      <span className="inline-block bg-sky-100/80 text-sky-700 border border-sky-200/60 text-[11px] font-semibold px-2.5 py-0.5 rounded-full mt-2">
+                        For Doctors, Nurses &amp; Allied Staff
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-sky-100/70 text-sky-600 flex items-center justify-center flex-shrink-0 group-hover:bg-sky-600 group-hover:text-white transition-all ml-2">
+                    <ChevronRight className="w-5 h-5" />
+                  </div>
+                </button>
+
+                {/* 3. Hospital */}
+                <button
+                  onClick={() => handleSelectPersona('HOSPITAL')}
+                  className="group w-full p-4 lg:p-4.5 rounded-2xl bg-[#faf5ff] border border-purple-100 hover:border-purple-400 hover:shadow-md transition-all text-left flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-13 h-13 rounded-2xl bg-[#f3e8ff] flex items-center justify-center text-purple-600 flex-shrink-0 shadow-xs">
+                      <Building2 className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 group-hover:text-purple-700 transition-colors">
+                        Hospital
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5 leading-snug">
+                        Access ERP tools to manage operations, staff, inventory, billing and more.
+                      </p>
+                      <span className="inline-block bg-purple-100/80 text-purple-700 border border-purple-200/60 text-[11px] font-semibold px-2.5 py-0.5 rounded-full mt-2">
+                        For Hospital Administrators &amp; Staff
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-purple-100/70 text-purple-600 flex items-center justify-center flex-shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-all ml-2">
+                    <ChevronRight className="w-5 h-5" />
+                  </div>
                 </button>
               </div>
 
-              {/* Clinician Badge when Healthcare Professional is active */}
-              {role === 'HEALTHCARE_PROFESSIONAL' && (
-                <div className="mt-3 p-2 bg-teal-50 border border-teal-200 rounded-xl text-[11px] text-teal-900 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-teal-600 flex-shrink-0" />
-                  <span>Verified Doctor, Nurse & 108 Paramedic Portal Access</span>
+              {/* Divider & Create Account Button */}
+              <div className="relative my-6 text-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-white px-4 text-xs text-slate-400 font-medium">New to HealthGrid?</span>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRole('PERSONAL');
+                    setIsRegisterMode(true);
+                    setViewMode('LOGIN_FORM');
+                  }}
+                  className="px-8 py-2.5 rounded-full border border-sky-600 text-sky-600 hover:bg-sky-50 font-semibold text-xs transition-colors"
+                >
+                  Create an Account
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* VIEW 2: ACTIVE PERSONAL LOGIN / REGISTRATION FORM                         */}
+        {/* ========================================================================= */}
+        {viewMode === 'LOGIN_FORM' && (
+          <div className="flex flex-col lg:flex-row min-h-[660px]">
+            {/* Left Column: Personal Background with Woman, Mascot & Feature Badges */}
+            <div
+              className="w-full lg:w-[49%] relative p-8 lg:p-10 flex flex-col justify-between overflow-hidden bg-no-repeat"
+              style={{
+                backgroundImage: "url('/personal-login-bg.png')",
+                backgroundPosition: "82% center",
+                backgroundSize: "cover",
+                backgroundColor: '#eff6ff',
+              }}
+            >
+              {/* Soft readability gradient mask */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/60 to-transparent pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-transparent pointer-events-none"></div>
+
+              {/* Top Row: Logo & 500+ Hospitals Trust Badge */}
+              <div className="relative z-10 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#009688] flex items-center justify-center text-white shadow-md shadow-teal-500/20">
+                    <HeartPulse className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xl font-black text-slate-900 tracking-tight leading-none">HealthGrid</div>
+                    <div className="text-[10px] text-slate-500 font-medium mt-1">Your Health. Our Priority.</div>
+                  </div>
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 bg-emerald-50/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-emerald-200/70 shadow-xs">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100" />
+                  <span className="text-[11px] font-semibold text-emerald-800">Trusted by 500+ Hospitals Across India</span>
+                </div>
+              </div>
+
+              {/* Main Headline & Subtitle */}
+              <div className="relative z-10 my-auto pt-6 pb-2">
+                <h1 className="text-3xl lg:text-[42px] font-black text-slate-900 leading-[1.12] tracking-tight">
+                  Your Health<br />
+                  in <span className="text-[#0284c7]">Your</span> Hands
+                </h1>
+                <p className="text-xs lg:text-sm text-slate-600 leading-relaxed mt-3 max-w-sm font-normal">
+                  Book appointments, access your health records, consult with specialists and take charge of your wellbeing — all in one place.
+                </p>
+
+                {/* 3 Left-Aligned Feature Pills */}
+                <div className="mt-6 space-y-3 max-w-[285px]">
+                  <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 px-3.5 border border-white/90 shadow-xs flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-600 flex items-center justify-center flex-shrink-0">
+                      <CalendarDays className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">Easy Appointments</h4>
+                      <p className="text-[10px] text-slate-500 leading-tight">
+                        Book online with top doctors across trusted hospitals.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 px-3.5 border border-white/90 shadow-xs flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">Your Health Records</h4>
+                      <p className="text-[10px] text-slate-500 leading-tight">
+                        Access lab reports, prescriptions and medical history securely.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 px-3.5 border border-white/90 shadow-xs flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-600 flex items-center justify-center flex-shrink-0">
+                      <HeartPulse className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">Personalized Care</h4>
+                      <p className="text-[10px] text-slate-500 leading-tight">
+                        Get reminders, follow-ups and health insights tailored for you.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Trusted Pill Badge */}
+              <div className="relative z-10 pt-4 flex items-center">
+                <div className="inline-flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-full py-2 px-3.5 shadow-md border border-slate-100 w-fit">
+                  <div className="flex -space-x-2">
+                    <img
+                      className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
+                      alt="Citizen User"
+                    />
+                    <img
+                      className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
+                      alt="Citizen User"
+                    />
+                    <img
+                      className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                      src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80"
+                      alt="Citizen User"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 leading-tight">Trusted by millions</div>
+                    <div className="text-[10px] text-slate-500 leading-tight">Patients across India</div>
+                  </div>
+                  <div className="flex items-center gap-1 ml-1 text-cyan-500">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Credentials Input Form */}
+            <div className="w-full lg:w-[51%] p-8 lg:p-12 flex flex-col justify-center bg-white relative">
+              {/* Back to Personas & Need Help Bar */}
+              <div className="flex items-center justify-between mb-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode('PERSONA_SELECT');
+                    setIsRegisterMode(false);
+                    setErrorMessage(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Change account type</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => showNotification('Support Desk: Contact care@healthgrid.in or call 1800-200-GRID for quick access.')}
+                  className="inline-flex items-center gap-1 text-xs text-sky-600 hover:text-sky-700 font-medium"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>Need help?</span>
+                </button>
+              </div>
+
+              {/* Persona Center Avatar & Title */}
+              <div className="text-center mb-6">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-[#cffafe] flex items-center justify-center text-teal-600 mb-3 shadow-xs">
+                  <User className="w-7 h-7 text-teal-600 fill-teal-600/30" />
+                </div>
+                <h2 className="text-2xl lg:text-[28px] font-black text-slate-900 tracking-tight">
+                  {isRegisterMode ? 'Create Personal Account' : 'Personal Account'}
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  {isRegisterMode
+                    ? 'Register for your secure personal health record'
+                    : 'Login to access your health dashboard'}
+                </p>
+              </div>
+
+              {/* Context Notice / Error Banner */}
+              {contextNotice && !errorMessage && (
+                <div className="mb-4 p-3 bg-teal-50 border border-teal-200 rounded-xl text-xs text-teal-800 font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                  <span>{contextNotice}</span>
                 </div>
               )}
 
-              {/* Error Message Alert */}
               {errorMessage && (
-                <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2 animate-in fade-in duration-150">
-                  <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1 leading-snug">{errorMessage}</div>
+                <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                  <span>{errorMessage}</span>
                 </div>
               )}
 
-              {/* Login / Register Form */}
-              <form onSubmit={handleLoginSubmit} className="mt-5 space-y-4">
-                
-                {/* Additional Full Name field if in Register mode */}
+              {/* Credentials Form */}
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                {/* Full Name in Register Mode */}
                 {isRegisterMode && (
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
                       Full Name
                     </label>
                     <div className="relative">
-                      <User className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
-                        required
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        placeholder={lang === 'en' ? 'e.g. Priya R.' : 'எ.கா: பிரியா ஆர்.'}
-                        className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7A75] focus:ring-2 focus:ring-teal-100 transition-all bg-slate-50/50 focus:bg-white"
+                        placeholder="e.g. Priya Sharma"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                        required={isRegisterMode}
                       />
                     </div>
                   </div>
                 )}
 
-                {/* Field 1: Email or Mobile Number (or Clinician License) */}
+                {/* Email or Mobile Number */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    {role === 'HEALTHCARE_PROFESSIONAL'
-                      ? 'Medical Reg No. / Hospital Email'
-                      : 'Email or Mobile Number'}
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Email or Mobile Number
                   </label>
                   <div className="relative">
-                    <User className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
-                      required
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
-                      placeholder={
-                        role === 'HEALTHCARE_PROFESSIONAL'
-                          ? 'Enter NMC license (e.g. TN-MC-84920) or hospital email'
-                          : 'Enter your email or mobile number'
-                      }
-                      className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7A75] focus:ring-2 focus:ring-teal-100 transition-all bg-slate-50/50 focus:bg-white"
-                    />
-                  </div>
-                </div>
-
-                {/* Field 2: Password */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-bold text-slate-700">
-                      Password
-                    </label>
-                    {!isRegisterMode && (
-                      <button
-                        type="button"
-                        onClick={() => alert(lang === 'en' ? 'Password reset link sent to your registered mobile/email.' : 'கடவுச்சொல் மீட்டெடுப்பு இணைப்பு உங்கள் மொபைலுக்கு அனுப்பப்பட்டது.')}
-                        className="text-xs font-semibold text-[#0B7A75] hover:underline"
-                      >
-                        Forgot Password?
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your email or mobile number"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
                       required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
-                      className="w-full pl-11 pr-11 py-3 rounded-2xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7A75] focus:ring-2 focus:ring-teal-100 transition-all bg-slate-50/50 focus:bg-white"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
                   </div>
                 </div>
 
-                {/* DOB, Auto-Calculated Age, and Blood Group if Registering */}
+                {/* DOB & Blood Group in Register Mode */}
                 {isRegisterMode && (
-                  <div className="space-y-3 pt-1">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Date of Birth</label>
-                        <CustomDatePicker
-                          value={dob}
-                          onChange={(newDob) => {
-                            setDob(newDob);
-                            const calculated = calculateAgeFromDob(newDob);
-                            setAge(calculated !== null ? calculated : 0);
-                          }}
-                          placeholder="Select Birth Date"
-                          size="sm"
-                          rounded="2xl"
-                          triggerClassName="!py-2.5 !rounded-2xl"
-                        />
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-xs font-bold text-slate-700">Age (Years)</label>
-                          <span className="text-[9px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.2 rounded border border-teal-200 inline-flex items-center gap-1">
-                            <Lock className="w-2.5 h-2.5 text-teal-600" />
-                            <span>Auto-Calculated</span>
-                          </span>
-                        </div>
-                        <div className="w-full bg-slate-100 border border-slate-200 rounded-2xl px-3 py-2.5 text-xs font-semibold text-slate-600 cursor-not-allowed select-none flex items-center justify-between shadow-inner">
-                          <span>{age > 0 ? `${age} years old` : 'Select DOB'}</span>
-                          <span className="text-[10px] text-slate-400 font-normal">Locked</span>
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Date of Birth {age > 0 && <span className="text-teal-600 font-normal">({age} yrs)</span>}
+                      </label>
+                      <CustomDatePicker
+                        value={dob}
+                        onChange={(val) => {
+                          setDob(val);
+                          setAge(calculateAgeFromDob(val) ?? 0);
+                        }}
+                        placeholder="YYYY-MM-DD"
+                        size="sm"
+                        rounded="xl"
+                        triggerClassName="!py-2.5 !rounded-xl"
+                      />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Blood Group</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Blood Group
+                      </label>
                       <CustomSelect
                         value={bloodGroup}
                         onChange={(val) => setBloodGroup(val)}
                         options={BLOOD_GROUP_OPTIONS}
                         placeholder="Select Blood Group"
                         size="xs"
-                        rounded="2xl"
-                        triggerClassName="!py-2.5 !rounded-2xl"
+                        rounded="xl"
+                        triggerClassName="!py-2.5 !rounded-xl"
                       />
                     </div>
+                  </div>
+                )}
+
+                {/* Password Field */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-slate-700">Password</label>
+                    {!isRegisterMode && (
+                      <button
+                        type="button"
+                        onClick={() => showNotification('Password reset link sent to your registered email/phone.')}
+                        className="text-xs text-sky-600 hover:text-sky-700 font-medium hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember Me Checkbox */}
+                {!isRegisterMode && (
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#009688] focus:ring-[#009688]/30 accent-[#009688] cursor-pointer"
+                    />
+                    <label htmlFor="rememberMe" className="text-xs text-slate-600 cursor-pointer select-none">
+                      Remember me
+                    </label>
                   </div>
                 )}
 
@@ -518,85 +740,103 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full mt-2 bg-[#0B7A75] hover:bg-[#08635F] active:scale-[0.99] text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                  className="w-full mt-2 py-3.5 px-6 rounded-xl bg-[#009688] hover:bg-[#00897b] active:scale-[0.99] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <span>{isLoading ? 'Verifying...' : isRegisterMode ? 'Complete Registration' : 'Login'}</span>
+                  <span>
+                    {isLoading
+                      ? 'Authenticating...'
+                      : isRegisterMode
+                      ? 'Create Account'
+                      : 'Login to HealthGrid'}
+                  </span>
                   {!isLoading && <ArrowRight className="w-4 h-4" />}
                 </button>
               </form>
 
-              {/* Divider: "or continue with" */}
-              <div className="relative my-5 flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
-                </div>
-                <span className="relative bg-white px-3 text-xs text-slate-400 font-medium">
-                  or continue with
-                </span>
+              {/* Social Login Options */}
+              {!isRegisterMode && (
+                <>
+                  <div className="relative my-4 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-200"></div>
+                    </div>
+                    <span className="relative bg-white px-3 text-xs text-slate-400 font-medium">
+                      OR
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      disabled={isLoading}
+                      className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-2xs"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                        />
+                      </svg>
+                      <span className="truncate">Continue with Google</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleAppleLogin}
+                      disabled={isLoading}
+                      className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-2xs"
+                    >
+                      <svg className="w-4 h-4 fill-current text-black" viewBox="0 0 170 170">
+                        <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.59-7.71-11.66-14-5.88-9.04-10.36-19.34-13.43-30.89-3.08-11.55-4.62-22.37-4.62-32.48 0-14.58 3.73-26.69 11.19-36.32 7.46-9.63 16.9-14.52 28.32-14.67 4.9 0 10.42 1.25 16.56 3.75 6.14 2.5 10.02 3.86 11.63 4.08 2.07-.33 6.08-1.74 12.04-4.24 5.96-2.5 11.24-3.65 15.84-3.45 13.93.65 24.83 5.49 32.7 14.52-12.18 7.39-18.15 17.51-17.9 30.34.25 10.22 4.19 18.76 11.83 25.62 7.64 6.86 16.59 10.66 26.85 11.41-2.18 6.53-4.79 13.1-7.83 19.72zM119.22 33.72c0-7.39 2.67-14.28 8.01-20.67 5.34-6.39 11.97-10.46 19.89-12.21.33 1.09.49 2.18.49 3.27 0 7.39-2.73 14.39-8.19 21-5.46 6.61-12.25 10.62-20.36 12.04-.22-1.09-.34-2.23-.34-3.43z" />
+                      </svg>
+                      <span className="truncate">Continue with Apple</span>
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Mode Toggle Footer */}
+              <div className="text-center mt-6">
+                {isRegisterMode ? (
+                  <p className="text-xs text-slate-500">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setIsRegisterMode(false)}
+                      className="text-sky-600 font-bold hover:underline"
+                    >
+                      Login
+                    </button>
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-500">
+                    New to HealthGrid?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setIsRegisterMode(true)}
+                      className="text-sky-600 font-bold hover:underline"
+                    >
+                      Create an account
+                    </button>
+                  </p>
+                )}
               </div>
-
-              {/* Social Login Buttons */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* Google Sign-In */}
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  disabled={isLoading}
-                  className="flex items-center justify-center gap-2 py-3 px-3 rounded-2xl border border-slate-200 hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-bold transition-all shadow-2xs"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span className="truncate">Continue with Google</span>
-                </button>
-
-                {/* Apple Sign-In */}
-                <button
-                  type="button"
-                  onClick={handleAppleLogin}
-                  disabled={isLoading}
-                  className="flex items-center justify-center gap-2 py-3 px-3 rounded-2xl border border-slate-200 hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-bold transition-all shadow-2xs"
-                >
-                  <svg className="w-4 h-4 fill-current text-black" viewBox="0 0 170 170">
-                    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.59-7.71-11.66-14-5.88-9.04-10.36-19.34-13.43-30.89-3.08-11.55-4.62-22.37-4.62-32.48 0-14.58 3.73-26.69 11.19-36.32 7.46-9.63 16.9-14.52 28.32-14.67 4.9 0 10.42 1.25 16.56 3.75 6.14 2.5 10.02 3.86 11.63 4.08 2.07-.33 6.08-1.74 12.04-4.24 5.96-2.5 11.24-3.65 15.84-3.45 13.93.65 24.83 5.49 32.7 14.52-12.18 7.39-18.15 17.51-17.9 30.34.25 10.22 4.19 18.76 11.83 25.62 7.64 6.86 16.59 10.66 26.85 11.41-2.18 6.53-4.79 13.1-7.83 19.72zM119.22 33.72c0-7.39 2.67-14.28 8.01-20.67 5.34-6.39 11.97-10.46 19.89-12.21.33 1.09.49 2.18.49 3.27 0 7.39-2.73 14.39-8.19 21-5.46 6.61-12.25 10.62-20.36 12.04-.22-1.09-.34-2.23-.34-3.43z" />
-                  </svg>
-                  <span className="truncate">Continue with Apple</span>
-                </button>
-              </div>
-
-              {/* Legal Footer Agreement */}
-              <p className="text-center text-[11px] sm:text-xs text-slate-500 mt-6 leading-relaxed">
-                By logging in, you agree to our{' '}
-                <a href="#" className="text-[#0B7A75] font-semibold underline hover:text-teal-900">
-                  Terms of Service
-                </a>{' '}
-                and{' '}
-                <a href="#" className="text-[#0B7A75] font-semibold underline hover:text-teal-900">
-                  Privacy Policy
-                </a>.
-              </p>
-
             </div>
-
           </div>
-
-        </div>
-
+        )}
       </div>
     </div>
   );
