@@ -655,7 +655,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
             onClick={() => setIsCartOpen(false)}
           />
           <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+            <div data-lenis-prevent className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
               {/* Drawer Header */}
               <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
                 <div className="flex items-center gap-2">
@@ -784,7 +784,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
 
       {/* Frictionless Checkout Modal */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div data-lenis-prevent className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
@@ -957,7 +957,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
 
       {/* Order Confirmed Screen */}
       {confirmedOrder && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div data-lenis-prevent className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center animate-scale-up">
             <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-10 h-10" />

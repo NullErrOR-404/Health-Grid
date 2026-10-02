@@ -26,6 +26,7 @@ import { MedicineStorePage } from './components/MedicineStorePage';
 import { Siren, AlertCircle, X, Stethoscope, MapPin } from 'lucide-react';
 import { lenisService } from './services/lenisService';
 import { authService, type AuthUser } from './services/authService';
+import { useScrollReveal } from './hooks/useScrollReveal';
 import './App.css';
 
 export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines';
@@ -81,6 +82,9 @@ export default function App() {
   useEffect(() => {
     lenisService.scrollTo(0, { immediate: true });
   }, [currentView]);
+
+  // Hardware-accelerated scroll reveal observer across view switches
+  useScrollReveal([currentView]);
 
   // Sync view state with browser routing (/privacy, /chat, /profile, /maps and custom 404s)
   useEffect(() => {
@@ -314,13 +318,15 @@ export default function App() {
   if (currentView === 'maps') {
     return (
       <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500 selection:text-white">
+        {/* Top Government Health Bulletin Bar */}
+        <GovAlertMarquee
+          lang={lang}
+          onOpenMaps={() => navigateToView('maps')}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+        />
+
         {/* Sticky Coordinated Header */}
         <header className="sticky top-0 z-40 w-full">
-          <GovAlertMarquee
-            lang={lang}
-            onOpenMaps={() => navigateToView('maps')}
-            onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
-          />
           <Navbar
             lang={lang}
             setLang={setLang}
@@ -379,13 +385,15 @@ export default function App() {
   if (currentView === 'medicines') {
     return (
       <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500 selection:text-white">
+        {/* Top Government Health Bulletin Bar */}
+        <GovAlertMarquee
+          lang={lang}
+          onOpenMaps={() => navigateToView('maps')}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+        />
+
         {/* Sticky Coordinated Header */}
         <header className="sticky top-0 z-40 w-full">
-          <GovAlertMarquee
-            lang={lang}
-            onOpenMaps={() => navigateToView('maps')}
-            onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
-          />
           <Navbar
             lang={lang}
             setLang={setLang}
@@ -573,13 +581,15 @@ export default function App() {
   // Default: Public Landing Page matching Landing page new.png & Footer ref.png
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500 selection:text-white pb-16 md:pb-0">
-      {/* Top Sticky Header with Dynamic Pull-Up Marquee */}
+      {/* Top Government Health Bulletin Bar */}
+      <GovAlertMarquee
+        lang={lang}
+        onOpenMaps={() => navigateToView('maps')}
+        onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+      />
+
+      {/* Top Sticky Header */}
       <header className="sticky top-0 z-40 w-full">
-        <GovAlertMarquee
-          lang={lang}
-          onOpenMaps={() => navigateToView('maps')}
-          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
-        />
         <Navbar
           lang={lang}
           setLang={setLang}

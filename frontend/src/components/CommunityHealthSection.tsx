@@ -93,11 +93,11 @@ export const CommunityHealthSection: React.FC<CommunityHealthSectionProps> = ({
   ];
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <section id="community-health" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
         {/* Left Card: Community Health (Span 7) */}
-        <div className="lg:col-span-7 bg-[#E8F8F4] border border-teal-200/70 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col justify-between relative overflow-hidden group">
+        <div className="lg:col-span-7 bg-[#E8F8F4] border border-teal-200/70 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col justify-between relative overflow-hidden group reveal-init reveal-delay-1">
           
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
             {/* Left Content Column */}
@@ -169,7 +169,7 @@ export const CommunityHealthSection: React.FC<CommunityHealthSectionProps> = ({
         </div>
 
         {/* Right Card: Quick Health Insights (Span 5) */}
-        <div className="lg:col-span-5 bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between reveal-init reveal-delay-2">
           <div>
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-2">

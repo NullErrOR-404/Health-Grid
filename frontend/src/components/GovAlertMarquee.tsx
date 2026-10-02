@@ -18,49 +18,6 @@ export const GovAlertMarquee: React.FC<GovAlertMarqueeProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [modalItem, setModalItem] = useState<BulletinItem | null>(null);
-  const [isPulledUp, setIsPulledUp] = useState(false);
-
-  // Pull up marquee when scrolling down down the hero section; reveal when scrolling up or at top
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-    let ticking = false;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      // Keep visible if user is interacting with detail modal or hovering
-      if (modalItem) {
-        ticking = false;
-        return;
-      }
-
-      // 1. At the very top of the page / top of hero section, always show marquee
-      if (currentScrollY <= 40) {
-        setIsPulledUp(false);
-      } 
-      // 2. When scrolling down down the hero section (past 60px and moving downwards), pull up
-      else if (currentScrollY > 60 && currentScrollY > lastScrollY) {
-        setIsPulledUp(true);
-      } 
-      // 3. When scrolling back up, pull back down into view
-      else if (currentScrollY < lastScrollY - 8) {
-        setIsPulledUp(false);
-      }
-
-      lastScrollY = currentScrollY;
-      ticking = false;
-    };
-
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(handleScroll);
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [modalItem]);
 
   // Sync daily verified 2026 data on mount
   useEffect(() => {
@@ -109,11 +66,7 @@ export const GovAlertMarquee: React.FC<GovAlertMarqueeProps> = ({
       {/* Top Thin Horizontal Government Health Bulletin Bar - Matching Marquee ref.png */}
       <aside 
         aria-label="Government Health Alerts"
-        className={`bg-[#0B132B] text-white border-slate-800/90 select-none px-3 sm:px-6 flex items-center justify-between text-xs shadow-sm transition-all duration-300 ease-in-out z-50 ${
-          isPulledUp
-            ? '-translate-y-full max-h-0 h-0 opacity-0 pointer-events-none py-0 border-b-0 overflow-hidden'
-            : 'translate-y-0 max-h-[42px] h-[42px] opacity-100 py-0 border-b overflow-hidden'
-        }`}
+        className="bg-[#0B132B] text-white border-b border-slate-800/90 select-none px-3 sm:px-6 flex items-center justify-between text-xs shadow-sm h-[40px] sm:h-[42px] overflow-hidden z-30 relative"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >

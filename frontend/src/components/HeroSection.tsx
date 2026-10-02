@@ -251,7 +251,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
         
         {/* Left Column: Headlines, Intelligent Search & Popular Queries */}
-        <div className="lg:col-span-6 space-y-6">
+        <div className="lg:col-span-6 space-y-6 reveal-init reveal-delay-1">
           
           {/* Overline Kicker */}
           <div className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
@@ -393,7 +393,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
 
         {/* Right Column: Doctor Robot at Desk Matching Landing page new.png */}
-        <div className="lg:col-span-6 relative flex items-center justify-center">
+        <div className="lg:col-span-6 relative flex items-center justify-center reveal-scale-init reveal-delay-2">
           <div className="relative w-full max-w-lg lg:max-w-none">
             
             {/* The Authentic 3D Doctor Robot Sitting at Desk */}

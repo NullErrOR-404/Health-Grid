@@ -18,10 +18,66 @@ html.lenis, html.lenis body {
   scroll-behavior: auto !important;
 }
 
+html.lenis-stopped, html.lenis-stopped body {
+  overflow: hidden !important;
+}
+
 /* Ensure data-lenis-prevent containers contain their own overscroll */
 [data-lenis-prevent] {
   overscroll-behavior: contain !important;
 }
+
+/* Smooth kinetic scrolling optimization */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Premium Hardware-Accelerated Scroll-Driven Reveal System */
+.reveal-init {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-init.revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.reveal-scale-init {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0) scale(0.96);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-scale-init.revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.reveal-delay-1 { transition-delay: 60ms; }
+.reveal-delay-2 { transition-delay: 120ms; }
+.reveal-delay-3 { transition-delay: 180ms; }
+.reveal-delay-4 { transition-delay: 240ms; }
+.reveal-delay-5 { transition-delay: 300ms; }
+.reveal-delay-6 { transition-delay: 360ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-init, .reveal-scale-init {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {

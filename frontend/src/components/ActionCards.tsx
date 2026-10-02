@@ -92,7 +92,7 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-4 sm:my-6">
+    <div id="action-cards-container" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-4 sm:my-6 reveal-init">
       {/* Unified Elevated Service Shelf Matching Landing page new.png */}
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-[0_4px_24px_rgba(15,23,42,0.06)] border border-slate-200/80 p-3 sm:p-5">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-2 lg:divide-x lg:divide-slate-100">
@@ -101,8 +101,9 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
             return (
               <div
                 key={item.id}
+                id={`action-card-${item.id}`}
                 onClick={item.action}
-                className={`flex items-center gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer group select-none ${
+                className={`flex items-center gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer group select-none reveal-init reveal-delay-${idx + 1} ${
                   idx !== 0 ? 'lg:pl-4' : ''
                 }`}
               >

@@ -85,7 +85,7 @@ const DOCBOT_THOUGHTS: DocBotThought[] = [
   },
   {
     id: 'clinic',
-    sectionId: 'action-card-clinic',
+    sectionId: 'community-health',
     type: 'alert',
     badgeEn: 'Dengue Prevention',
     badgeTa: 'டெங்கு எச்சரிக்கை',
@@ -97,7 +97,7 @@ const DOCBOT_THOUGHTS: DocBotThought[] = [
   },
   {
     id: 'babyshots',
-    sectionId: 'action-card-babyshots',
+    sectionId: 'action-card-shots',
     type: 'precaution',
     badgeEn: 'Child Wellness',
     badgeTa: 'குழந்தை நலம்',
@@ -109,7 +109,7 @@ const DOCBOT_THOUGHTS: DocBotThought[] = [
   },
   {
     id: 'sentinel',
-    sectionId: 'trust-strip',
+    sectionId: 'footer-section',
     type: 'pa_prompt',
     badgeEn: 'Civic Health',
     badgeTa: 'கள ஆய்வு புகார்',
@@ -239,112 +239,101 @@ export const RoamingDocBot: React.FC<RoamingDocBotProps> = ({
     };
   }, [isRoamingPaused, isHovered]);
 
-  // SMART SCROLL TRACKING: DocBot observes user scroll and points towards the active in-view card
+  // SMART SECTION TRACKING: DocBot observes sections using native IntersectionObserver without layout reflow
+  const currentThoughtIndexRef = useRef(currentThoughtIndex);
   useEffect(() => {
-    let scrollTimeout: ReturnType<typeof setTimeout>;
-    const container = botContainerRef.current;
+    currentThoughtIndexRef.current = currentThoughtIndex;
+  }, [currentThoughtIndex]);
+
+  useEffect(() => {
     const robot = robotWrapperRef.current;
-    if (!container || !robot) return;
+    if (!robot) return;
 
-    const handleScroll = () => {
-      // User is scrolling: immediately pause background patrol and clear walking state
-      if (roamingTweenRef.current) roamingTweenRef.current.pause();
-      setIsWalking(false);
-      gsap.killTweensOf(robot);
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
 
-      // If at top of page, always show hero greeting with friendly wave
-      if (window.scrollY < 120) {
-        if (currentThoughtIndex !== 0) {
-          setCurrentThoughtIndex(0);
+    let resumePatrolTimeout: ReturnType<typeof setTimeout>;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries.filter((e) => e.isIntersecting);
+        if (visibleEntries.length === 0) return;
+
+        // Choose entry with the highest intersection ratio
+        const bestEntry = visibleEntries.reduce((prev, curr) =>
+          curr.intersectionRatio > prev.intersectionRatio ? curr : prev
+        );
+
+        const matchedIndex = DOCBOT_THOUGHTS.findIndex(
+          (thought) => thought.sectionId === bestEntry.target.id
+        );
+
+        if (matchedIndex !== -1 && matchedIndex !== currentThoughtIndexRef.current) {
+          currentThoughtIndexRef.current = matchedIndex;
+          setCurrentThoughtIndex(matchedIndex);
           setBubbleVisible(true);
-          gsap.to(robot, {
-            rotation: 6,
-            duration: 0.2,
-            yoyo: true,
-            repeat: 4,
-            ease: 'sine.inOut',
-          });
-        }
-        return;
-      }
 
-      const viewportCenter = window.innerHeight * 0.45;
-      let matchedIndex = -1;
-      let closestDistance = Infinity;
+          if (roamingTweenRef.current) roamingTweenRef.current.pause();
 
-      DOCBOT_THOUGHTS.forEach((thought, idx) => {
-        if (!thought.sectionId) return;
-        const el = document.getElementById(thought.sectionId);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          // Element is in the active viewport band
-          if (rect.bottom > 120 && rect.top < window.innerHeight - 100) {
-            const elCenter = rect.top + rect.height / 2;
-            const dist = Math.abs(elCenter - viewportCenter);
-            if (dist < closestDistance) {
-              closestDistance = dist;
-              matchedIndex = idx;
-            }
+          const targetThought = DOCBOT_THOUGHTS[matchedIndex];
+          gsap.killTweensOf(robot);
+
+          if (targetThought.type === 'pa_prompt') {
+            gsap.to(robot, {
+              rotation: 6,
+              duration: 0.2,
+              yoyo: true,
+              repeat: 4,
+              ease: 'sine.inOut',
+            });
+          } else {
+            gsap.to(robot, {
+              y: -14,
+              scale: 1.06,
+              duration: 0.28,
+              yoyo: true,
+              repeat: 1,
+              ease: 'power2.out',
+            });
           }
+
+          if (speechBubbleRef.current) {
+            gsap.fromTo(
+              speechBubbleRef.current,
+              { scale: 0.8, opacity: 0, y: 10 },
+              { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.8)' }
+            );
+          }
+
+          clearTimeout(resumePatrolTimeout);
+          resumePatrolTimeout = setTimeout(() => {
+            if (!isRoamingPaused && !isHovered) {
+              if (roamingTweenRef.current) roamingTweenRef.current.resume();
+            }
+          }, 8000);
         }
-      });
-
-      if (matchedIndex !== -1 && matchedIndex !== currentThoughtIndex) {
-        const targetThought = DOCBOT_THOUGHTS[matchedIndex];
-        setIsWalking(false);
-        gsap.killTweensOf(robot);
-        setCurrentThoughtIndex(matchedIndex);
-        setBubbleVisible(true);
-
-        // Temporarily pause patrol during scroll tracking
-        if (roamingTweenRef.current) roamingTweenRef.current.pause();
-
-        // Responsive gesture: Point towards the active card or wave
-        if (targetThought.type === 'pa_prompt') {
-          gsap.to(robot, {
-            rotation: 6,
-            duration: 0.2,
-            yoyo: true,
-            repeat: 4,
-            ease: 'sine.inOut',
-          });
-        } else {
-          // Point index finger upwards directly towards the feature card message
-          gsap.to(robot, {
-            y: -16,
-            scale: 1.08,
-            duration: 0.28,
-            yoyo: true,
-            repeat: 1,
-            ease: 'power2.out',
-          });
-        }
-
-        // Animate speech bubble pop-in
-        if (speechBubbleRef.current) {
-          gsap.fromTo(
-            speechBubbleRef.current,
-            { scale: 0.75, opacity: 0, y: 12 },
-            { scale: 1, opacity: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }
-          );
-        }
+      },
+      {
+        root: null,
+        rootMargin: '-10% 0px -25% 0px',
+        threshold: [0.15, 0.4, 0.7],
       }
+    );
 
-      // Resume autonomous patrol after user stops scrolling for 10 seconds
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        if (!isRoamingPaused && !isHovered) {
-          if (roamingTweenRef.current) roamingTweenRef.current.resume();
-        }
-      }, 10000);
-    };
+    const targetIds = DOCBOT_THOUGHTS.map((t) => t.sectionId).filter(Boolean) as string[];
+    // Small timeout to allow DOM to be mounted and ready
+    const timer = setTimeout(() => {
+      targetIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
+    }, 100);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(scrollTimeout);
+      clearTimeout(timer);
+      clearTimeout(resumePatrolTimeout);
+      observer.disconnect();
     };
-  }, [currentThoughtIndex, isRoamingPaused, isHovered]);
+  }, [isRoamingPaused, isHovered]);
 
   const activeThought = DOCBOT_THOUGHTS[currentThoughtIndex];
 

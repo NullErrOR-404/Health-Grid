@@ -1,16 +1,19 @@
 import Lenis from 'lenis';
+import gsap from 'gsap';
 
 /**
  * HealthGrid Global Lenis Smooth Scroll Service
  * 
- * Configures inertia smooth scrolling across the application,
- * synchronizes with requestAnimationFrame, and coordinates with
- * full-screen modals & interactive maps using auto-pause and 'data-lenis-prevent'.
+ * Configures 60fps inertia smooth scrolling across desktop browsers,
+ * synchronizes with GSAP ticker for locked frame budgets, observes dynamic DOM
+ * resize events (medicine queries, image loads) to prevent scroll lockups,
+ * and preserves native mobile touch momentum without touch hijacking.
  */
 
 class LenisService {
   private lenisInstance: Lenis | null = null;
-  private rafId: number | null = null;
+  private tickerCallback: ((time: number) => void) | null = null;
+  private resizeObserver: ResizeObserver | null = null;
   private isPaused: boolean = false;
 
   init(): Lenis {
@@ -19,27 +22,53 @@ class LenisService {
     }
 
     this.lenisInstance = new Lenis({
-      duration: 1.1, // Smooth, responsive inertia feel
+      duration: 1.15, // Silky, responsive inertia feel
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential deceleration
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
       wheelMultiplier: 0.95,
-      touchMultiplier: 1.5,
+      touchMultiplier: 1.0,
+      syncTouch: false, // CRITICAL: Never hijack native touch momentum scrolling on mobile devices!
       infinite: false,
     });
 
-    const onRaf = (time: number) => {
-      this.lenisInstance?.raf(time);
-      this.rafId = requestAnimationFrame(onRaf);
+    // Synchronize Lenis RAF loop with GSAP ticker for 60fps compositor alignment
+    this.tickerCallback = (time: number) => {
+      // GSAP ticker gives time in seconds; Lenis expects milliseconds
+      this.lenisInstance?.raf(time * 1000);
     };
+    gsap.ticker.add(this.tickerCallback);
+    gsap.ticker.lagSmoothing(0);
 
-    this.rafId = requestAnimationFrame(onRaf);
+    // Auto-update Lenis scroll boundaries whenever dynamic content (medicines, images) resizes
+    if (typeof window !== 'undefined' && 'ResizeObserver' in window && document.body) {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.lenisInstance?.resize();
+      });
+      this.resizeObserver.observe(document.body);
+    }
+
+    // Backup listener for image loads and viewport orientation changes
+    window.addEventListener('resize', this.handleResize, { passive: true });
+    window.addEventListener('load', this.handleResize, { passive: true });
+
     return this.lenisInstance;
   }
 
+  private handleResize = () => {
+    this.lenisInstance?.resize();
+  };
+
   getInstance(): Lenis | null {
     return this.lenisInstance;
+  }
+
+  /**
+   * Recalculates document scroll height (e.g. after Supabase fetch or view toggle)
+   */
+  resize(): void {
+    this.lenisInstance?.resize();
   }
 
   /**
@@ -61,13 +90,17 @@ class LenisService {
       this.lenisInstance.start();
       this.isPaused = false;
       document.documentElement.classList.remove('lenis-stopped');
+      this.lenisInstance.resize();
     }
   }
 
   /**
    * Programmatic smooth scroll to target selector, offset, or DOM node
    */
-  scrollTo(target: string | number | HTMLElement, options?: { offset?: number; duration?: number; immediate?: boolean }): void {
+  scrollTo(
+    target: string | number | HTMLElement,
+    options?: { offset?: number; duration?: number; immediate?: boolean; lock?: boolean }
+  ): void {
     if (this.lenisInstance) {
       this.lenisInstance.scrollTo(target, options);
     } else {
@@ -83,16 +116,25 @@ class LenisService {
   }
 
   destroy(): void {
-    if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
+    if (this.tickerCallback) {
+      gsap.ticker.remove(this.tickerCallback);
+      this.tickerCallback = null;
     }
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+    window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('load', this.handleResize);
+
     if (this.lenisInstance) {
       this.lenisInstance.destroy();
       this.lenisInstance = null;
     }
     this.isPaused = false;
+    document.documentElement.classList.remove('lenis-stopped');
   }
 }
 
 export const lenisService = new LenisService();
+
