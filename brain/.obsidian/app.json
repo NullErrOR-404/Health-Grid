@@ -1,0 +1,11 @@
+{
+  "legacyEditor": false,
+  "livePreview": true,
+  "useMarkdownLinks": false,
+  "newFileLocation": "root",
+  "attachmentFolderPath": "assets",
+  "showLineNumber": true,
+  "readableLineLength": true,
+  "foldHeading": true,
+  "foldIndent": true
+}
