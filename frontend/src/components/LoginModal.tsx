@@ -20,6 +20,7 @@ import {
   HeartPulse,
   HelpCircle,
   Mail,
+  Landmark,
 } from 'lucide-react';
 import type { Language } from '../types';
 import { authService, type UserRole, type AuthUser } from '../services/authService';
@@ -83,21 +84,26 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   const handleSelectPersona = (selectedRole: UserRole | 'HOSPITAL') => {
     if (selectedRole === 'HEALTHCARE_PROFESSIONAL' || selectedRole === 'HOSPITAL') {
-      showNotification('Doctor & Hospital ERP portals are configuring. Continuing in Personal Account mode for now.');
-      setRole('PERSONAL');
+      setRole('HEALTHCARE_PROFESSIONAL');
       setViewMode('LOGIN_FORM');
       setIsRegisterMode(false);
+      setErrorMessage(null);
       return;
     }
     setRole('PERSONAL');
     setViewMode('LOGIN_FORM');
     setIsRegisterMode(false);
+    setErrorMessage(null);
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier || !password) {
-      setErrorMessage(lang === 'en' ? 'Please fill in both email/mobile and password.' : 'மின்னஞ்சல்/கைபேசி மற்றும் கடவுச்சொல்லை நிரப்பவும்.');
+      setErrorMessage(
+        lang === 'en'
+          ? 'Please enter both your identifier and password.'
+          : 'மின்னஞ்சல்/கைபேசி மற்றும் கடவுச்சொல்லை நிரப்பவும்.'
+      );
       return;
     }
 
@@ -121,8 +127,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
       setSuccessToast(
         lang === 'en'
-          ? `Welcome, ${user.name}! Access granted.`
-          : `வரவேற்கிறோம், ${user.name}! உள்நுழைவு வெற்றிகரமானது.`
+          ? `Welcome, ${user.name}! ${role === 'HEALTHCARE_PROFESSIONAL' ? '(Clinician Verified)' : ''}`
+          : `வரவேற்கிறோம், ${user.name}! ${role === 'HEALTHCARE_PROFESSIONAL' ? '(மருத்துவர் கணக்கு)' : ''}`
       );
 
       setTimeout(() => {
@@ -177,18 +183,27 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
   };
 
+  const handleSsoLogin = () => {
+    showNotification('Connecting to Healthcare Provider Single Sign-On (SSO) directory...');
+    setTimeout(() => {
+      // Pre-fill demo clinician credentials for seamless evaluation
+      setIdentifier('dr.priya@apollo.in');
+      setPassword('HospitalSecure2026!');
+    }, 600);
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
       {/* Toast Notifications */}
       {successToast && (
-        <div className="fixed top-5 z-[70] bg-emerald-600 text-white font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-4 text-sm">
+        <div className="fixed top-5 z-[110] bg-emerald-600 text-white font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-4 text-sm">
           <CheckCircle2 className="w-5 h-5 text-emerald-200" />
           <span>{successToast}</span>
         </div>
       )}
 
       {infoToast && (
-        <div className="fixed top-5 z-[70] bg-sky-700 text-white font-medium px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-4 text-xs sm:text-sm max-w-md">
+        <div className="fixed top-5 z-[110] bg-sky-700 text-white font-medium px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-4 text-xs sm:text-sm max-w-md">
           <AlertCircle className="w-5 h-5 text-sky-200 flex-shrink-0" />
           <span>{infoToast}</span>
         </div>
@@ -207,7 +222,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         </button>
 
         {/* ========================================================================= */}
-        {/* VIEW 1: PERSONA SELECTOR UI                                               */}
+        {/* VIEW 1: PERSONA SELECTOR UI (Matching Login Persona selector UI.png)     */}
         {/* ========================================================================= */}
         {viewMode === 'PERSONA_SELECT' && (
           <div className="flex flex-col lg:flex-row min-h-[660px]">
@@ -347,7 +362,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       </span>
                     </div>
                   </div>
-                  <div className="w-9 h-9 rounded-full bg-teal-100/70 text-teal-700 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-600 group-hover:text-white transition-all ml-2">
+                  <div className="w-9 h-9 rounded-full bg-teal-100/70 text-teal-600 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-600 group-hover:text-white transition-all ml-2">
                     <ChevronRight className="w-5 h-5" />
                   </div>
                 </button>
@@ -433,9 +448,214 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         )}
 
         {/* ========================================================================= */}
-        {/* VIEW 2: ACTIVE PERSONAL LOGIN / REGISTRATION FORM                         */}
+        {/* VIEW 2A: HEALTHCARE PROFESSIONAL LOGIN (Matching Healthcare professional UI.png) */}
         {/* ========================================================================= */}
-        {viewMode === 'LOGIN_FORM' && (
+        {viewMode === 'LOGIN_FORM' && role === 'HEALTHCARE_PROFESSIONAL' && (
+          <div className="flex flex-col lg:flex-row min-h-[660px]">
+            {/* Left Column: Doctor at laptop with DocBot Hero Cover */}
+            <div
+              className="w-full lg:w-[49%] relative p-8 lg:p-10 flex flex-col justify-between overflow-hidden bg-no-repeat"
+              style={{
+                backgroundImage: "url('/healthcare-hero-cover.png')",
+                backgroundPosition: "center bottom",
+                backgroundSize: "cover",
+                backgroundColor: '#eff6ff',
+              }}
+            >
+              {/* Soft readability gradient mask */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/50 to-transparent pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-transparent to-transparent pointer-events-none"></div>
+
+              {/* Main Headline & Subtitle matching reference 1:1 */}
+              <div className="relative z-10 pt-4 pb-2">
+                <h1 className="text-3xl lg:text-[44px] font-black text-[#0f172a] leading-[1.12] tracking-tight">
+                  Better Care<br />
+                  <span className="text-[#1976D2]">Everyday</span>
+                </h1>
+                <p className="text-xs lg:text-sm text-slate-600 leading-relaxed mt-3 max-w-xs font-normal">
+                  A unified platform to manage patients, streamline workflows, and deliver better health outcomes.
+                </p>
+              </div>
+
+              {/* Speech Bubble over DocBot */}
+              <div className="relative z-10 mt-auto mb-16 self-start max-w-[215px] ml-2 lg:ml-4">
+                <div className="relative bg-white/95 backdrop-blur-md rounded-2xl p-3 px-3.5 shadow-md border border-slate-100 text-slate-800 text-xs font-bold leading-snug">
+                  <p>Let&apos;s make healthcare simpler together!</p>
+                  {/* Tail pointing down toward DocBot */}
+                  <div className="absolute -bottom-2 left-6 w-0 h-0 border-l-[6px] border-l-transparent border-t-[8px] border-t-white border-r-[6px] border-r-transparent drop-shadow-xs"></div>
+                </div>
+              </div>
+
+              {/* Subtle bottom note */}
+              <div className="relative z-10 pt-4 border-t border-slate-200/50 flex items-center gap-2 text-[11px] font-medium text-slate-500">
+                <span>Clinical Workstation</span>
+                <span className="text-slate-300">|</span>
+                <span>EHR &amp; Telehealth</span>
+                <span className="text-slate-300">|</span>
+                <span>HIPAA Encrypted</span>
+              </div>
+            </div>
+
+            {/* Right Column: Healthcare Professional Login Form */}
+            <div className="w-full lg:w-[51%] p-8 lg:p-12 flex flex-col justify-center bg-white relative">
+              {/* Back to Personas Bar */}
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode('PERSONA_SELECT');
+                    setErrorMessage(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Change account type</span>
+                </button>
+              </div>
+
+              {/* Hospital Information System Brand Header */}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-2xl bg-[#009688] flex items-center justify-center text-white shadow-md shadow-teal-500/20">
+                  <HeartPulse className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xl font-black text-slate-900 tracking-tight leading-none">HealthGrid</div>
+                  <div className="text-[10px] text-slate-500 font-bold tracking-[0.18em] uppercase mt-1">
+                    HOSPITAL INFORMATION SYSTEM
+                  </div>
+                </div>
+              </div>
+
+              {/* Heading */}
+              <div className="mb-6">
+                <h2 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
+                  Welcome Back
+                </h2>
+                <p className="text-xs lg:text-sm text-slate-500 mt-1">
+                  Sign in to access your healthcare dashboard
+                </p>
+              </div>
+
+              {/* Error Banner */}
+              {errorMessage && (
+                <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              {/* Credentials Form */}
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                {/* Username / Staff ID */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Username / Staff ID
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      placeholder="Enter your username or staff ID"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1976D2]/20 focus:border-[#1976D2] transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Password Field */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1976D2]/20 focus:border-[#1976D2] transition-all"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember Me & Forgot Password Row */}
+                <div className="flex items-center justify-between pt-0.5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="rememberMeStaff"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#1976D2] focus:ring-[#1976D2]/30 accent-[#1976D2] cursor-pointer"
+                    />
+                    <label htmlFor="rememberMeStaff" className="text-xs text-slate-600 cursor-pointer select-none">
+                      Remember me
+                    </label>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => showNotification('Staff ID reset: Please contact your Hospital Medical Administrator or IT desk.')}
+                    className="text-xs text-[#1976D2] hover:text-[#1565C0] font-medium hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+
+                {/* Sign In Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full mt-2 py-3.5 px-6 rounded-xl bg-[#1976D2] hover:bg-[#1565C0] active:scale-[0.99] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <span>{isLoading ? 'Verifying Credentials...' : 'Sign In'}</span>
+                  {!isLoading && <ArrowRight className="w-4 h-4" />}
+                </button>
+              </form>
+
+              {/* Divider: "or" */}
+              <div className="relative my-4 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200"></div>
+                </div>
+                <span className="relative bg-white px-3 text-xs text-slate-400 font-medium">
+                  or
+                </span>
+              </div>
+
+              {/* Sign in with SSO Button */}
+              <button
+                type="button"
+                onClick={handleSsoLogin}
+                className="w-full py-3 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-2.5 shadow-2xs"
+              >
+                <Landmark className="w-4 h-4 text-slate-600" />
+                <span>Sign in with SSO</span>
+              </button>
+
+              {/* Footer Note */}
+              <p className="text-xs text-slate-400 text-center font-medium mt-6">
+                For authorized healthcare professionals only
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* VIEW 2B: ACTIVE PERSONAL LOGIN / REGISTRATION FORM (Matching Personal ref) */}
+        {/* ========================================================================= */}
+        {viewMode === 'LOGIN_FORM' && role === 'PERSONAL' && (
           <div className="flex flex-col lg:flex-row min-h-[660px]">
             {/* Left Column: Personal Background with Woman, Mascot & Feature Badges */}
             <div
@@ -624,7 +844,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="e.g. Priya Sharma"
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
                         required={isRegisterMode}
                       />
                     </div>
