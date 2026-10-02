@@ -395,8 +395,14 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
               </button>
             )}
             <button
-              onClick={() => {}}
-              className="absolute right-2 px-5 py-2 bg-[#0d9488] hover:bg-[#0f766e] text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+              type="button"
+              onClick={() => {
+                const listEl = document.getElementById('medicine-card-list');
+                if (listEl) {
+                  listEl.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="absolute right-2 px-5 py-2 bg-[#0d9488] hover:bg-[#0f766e] text-white text-sm font-semibold rounded-xl transition-colors shadow-sm cursor-pointer"
             >
               Search
             </button>

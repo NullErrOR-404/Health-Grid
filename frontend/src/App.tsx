@@ -1,35 +1,47 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import type { Language } from './types';
 import { Navbar } from './components/Navbar';
 import { GovAlertMarquee } from './components/GovAlertMarquee';
 import { HeroSection } from './components/HeroSection';
 import { ActionCards } from './components/ActionCards';
 import { CommunityHealthSection } from './components/CommunityHealthSection';
-import { HealthGuideModal, type GuideArticle } from './components/HealthGuideModal';
 import { Footer } from './components/Footer';
-import { AmbulanceModal } from './components/AmbulanceModal';
-import { VoiceChatModal } from './components/VoiceChatModal';
-import { PrescriptionModal } from './components/PrescriptionModal';
-import { DiseaseMapModal } from './components/DiseaseMapModal';
-import { BabyShotsModal } from './components/BabyShotsModal';
-import { DoctorHandoverModal } from './components/DoctorHandoverModal';
 import { RoamingDocBot } from './components/RoamingDocBot';
-import { LoginModal } from './components/LoginModal';
-import { ChatbotPage } from './components/ChatbotPage';
-import { ProfilePage } from './components/ProfilePage';
-import { FindCareNearYou } from './components/FindCareNearYou';
-import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
-import { NotFoundPage } from './components/NotFoundPage';
-import { ThankYouPage } from './components/ThankYouPage';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
-import { MedicineStorePage } from './components/MedicineStorePage';
-import { HospitalInformationSystem } from './components/his/HospitalInformationSystem';
-import { PatientIntakeModal } from './components/his/PatientIntakeModal';
 import { Siren, AlertCircle, X, Stethoscope, MapPin } from 'lucide-react';
 import { lenisService } from './services/lenisService';
 import { authService, type AuthUser } from './services/authService';
 import { useScrollReveal } from './hooks/useScrollReveal';
+import type { GuideArticle } from './components/HealthGuideModal';
 import './App.css';
+
+// Lazy-loaded Views (Code-splitting secondary routes)
+const ChatbotPage = lazy(() => import('./components/ChatbotPage').then(m => ({ default: m.ChatbotPage })));
+const ProfilePage = lazy(() => import('./components/ProfilePage').then(m => ({ default: m.ProfilePage })));
+const FindCareNearYou = lazy(() => import('./components/FindCareNearYou').then(m => ({ default: m.FindCareNearYou })));
+const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
+const NotFoundPage = lazy(() => import('./components/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const ThankYouPage = lazy(() => import('./components/ThankYouPage').then(m => ({ default: m.ThankYouPage })));
+const MedicineStorePage = lazy(() => import('./components/MedicineStorePage').then(m => ({ default: m.MedicineStorePage })));
+const HospitalInformationSystem = lazy(() => import('./components/his/HospitalInformationSystem').then(m => ({ default: m.HospitalInformationSystem })));
+
+// Lazy-loaded On-Demand Modals
+const AmbulanceModal = lazy(() => import('./components/AmbulanceModal').then(m => ({ default: m.AmbulanceModal })));
+const VoiceChatModal = lazy(() => import('./components/VoiceChatModal').then(m => ({ default: m.VoiceChatModal })));
+const PrescriptionModal = lazy(() => import('./components/PrescriptionModal').then(m => ({ default: m.PrescriptionModal })));
+const DiseaseMapModal = lazy(() => import('./components/DiseaseMapModal').then(m => ({ default: m.DiseaseMapModal })));
+const BabyShotsModal = lazy(() => import('./components/BabyShotsModal').then(m => ({ default: m.BabyShotsModal })));
+const DoctorHandoverModal = lazy(() => import('./components/DoctorHandoverModal').then(m => ({ default: m.DoctorHandoverModal })));
+const PatientIntakeModal = lazy(() => import('./components/his/PatientIntakeModal').then(m => ({ default: m.PatientIntakeModal })));
+const HealthGuideModal = lazy(() => import('./components/HealthGuideModal').then(m => ({ default: m.HealthGuideModal })));
+const LoginModal = lazy(() => import('./components/LoginModal').then(m => ({ default: m.LoginModal })));
+
+const ViewLoadingFallback = () => (
+  <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 space-y-4">
+    <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+    <span className="text-xs font-semibold text-slate-500 animate-pulse">Loading HealthGrid...</span>
+  </div>
+);
 
 export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'his';
 
@@ -266,7 +278,7 @@ export default function App() {
   // Render Full-Screen Chatbot Page matching Chatbot UI.png
   if (currentView === 'chat') {
     return (
-      <>
+      <Suspense fallback={<ViewLoadingFallback />}>
         <ChatbotPage
           lang={lang}
           setLang={setLang}
@@ -281,46 +293,68 @@ export default function App() {
         />
 
         {/* Global Modals Accessible within Chat */}
-        <AmbulanceModal
-          isOpen={isAmbulanceOpen}
-          onClose={() => setIsAmbulanceOpen(false)}
-          lang={lang}
-          onOpenHandover={() => setIsHandoverOpen(true)}
-        />
-        <PrescriptionModal
-          isOpen={isPrescriptionOpen}
-          onClose={() => setIsPrescriptionOpen(false)}
-          lang={lang}
-          onOpenDiseaseMap={() => navigateToView('maps')}
-          onNavigateMedicines={() => navigateToView('medicines')}
-        />
-        <DiseaseMapModal
-          isOpen={isDiseaseMapOpen}
-          onClose={() => setIsDiseaseMapOpen(false)}
-          lang={lang}
-        />
-        <BabyShotsModal
-          isOpen={isBabyShotsOpen}
-          onClose={() => setIsBabyShotsOpen(false)}
-          lang={lang}
-        />
-        <DoctorHandoverModal
-          isOpen={isHandoverOpen}
-          onClose={() => setIsHandoverOpen(false)}
-          lang={lang}
-        />
-      </>
+        {isAmbulanceOpen && (
+          <Suspense fallback={null}>
+            <AmbulanceModal
+              isOpen={isAmbulanceOpen}
+              onClose={() => setIsAmbulanceOpen(false)}
+              lang={lang}
+              onOpenHandover={() => setIsHandoverOpen(true)}
+            />
+          </Suspense>
+        )}
+        {isPrescriptionOpen && (
+          <Suspense fallback={null}>
+            <PrescriptionModal
+              isOpen={isPrescriptionOpen}
+              onClose={() => setIsPrescriptionOpen(false)}
+              lang={lang}
+              onOpenDiseaseMap={() => navigateToView('maps')}
+              onNavigateMedicines={() => navigateToView('medicines')}
+            />
+          </Suspense>
+        )}
+        {isDiseaseMapOpen && (
+          <Suspense fallback={null}>
+            <DiseaseMapModal
+              isOpen={isDiseaseMapOpen}
+              onClose={() => setIsDiseaseMapOpen(false)}
+              lang={lang}
+            />
+          </Suspense>
+        )}
+        {isBabyShotsOpen && (
+          <Suspense fallback={null}>
+            <BabyShotsModal
+              isOpen={isBabyShotsOpen}
+              onClose={() => setIsBabyShotsOpen(false)}
+              lang={lang}
+            />
+          </Suspense>
+        )}
+        {isHandoverOpen && (
+          <Suspense fallback={null}>
+            <DoctorHandoverModal
+              isOpen={isHandoverOpen}
+              onClose={() => setIsHandoverOpen(false)}
+              lang={lang}
+            />
+          </Suspense>
+        )}
+      </Suspense>
     );
   }
 
   // Render Profile Page (/profile)
   if (currentView === 'profile') {
     return (
-      <ProfilePage
-        lang={lang}
-        onNavigateChat={() => navigateToView('chat')}
-        onNavigateHome={() => navigateToView('landing')}
-      />
+      <Suspense fallback={<ViewLoadingFallback />}>
+        <ProfilePage
+          lang={lang}
+          onNavigateChat={() => navigateToView('chat')}
+          onNavigateHome={() => navigateToView('landing')}
+        />
+      </Suspense>
     );
   }
 
@@ -372,11 +406,13 @@ export default function App() {
           />
         </header>
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <FindCareNearYou
-            lang={lang}
-            onClose={() => navigateToView('landing')}
-            isModal={false}
-          />
+          <Suspense fallback={<ViewLoadingFallback />}>
+            <FindCareNearYou
+              lang={lang}
+              onClose={() => navigateToView('landing')}
+              isModal={false}
+            />
+          </Suspense>
         </main>
         <Footer
           lang={lang}
@@ -443,13 +479,15 @@ export default function App() {
 
         {/* Medicine Store Content */}
         <main className="flex-1 w-full">
-          <MedicineStorePage
-            lang={lang}
-            onNavigateHome={() => navigateToView('landing')}
-            onOpenLogin={() => setIsLoginOpen(true)}
-            onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
-            onOpenDiseaseMap={() => navigateToView('maps')}
-          />
+          <Suspense fallback={<ViewLoadingFallback />}>
+            <MedicineStorePage
+              lang={lang}
+              onNavigateHome={() => navigateToView('landing')}
+              onOpenLogin={() => setIsLoginOpen(true)}
+              onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+              onOpenDiseaseMap={() => navigateToView('maps')}
+            />
+          </Suspense>
         </main>
 
         {/* Global Footer */}
@@ -467,56 +505,84 @@ export default function App() {
         />
 
         {/* Global Modals Accessible within Medicine Store */}
-        <AmbulanceModal
-          isOpen={isAmbulanceOpen}
-          onClose={() => setIsAmbulanceOpen(false)}
-          lang={lang}
-          onOpenHandover={() => setIsHandoverOpen(true)}
-        />
-        <PrescriptionModal
-          isOpen={isPrescriptionOpen}
-          onClose={() => setIsPrescriptionOpen(false)}
-          lang={lang}
-          onOpenDiseaseMap={() => navigateToView('maps')}
-          onNavigateMedicines={() => navigateToView('medicines')}
-        />
-        <DiseaseMapModal
-          isOpen={isDiseaseMapOpen}
-          onClose={() => setIsDiseaseMapOpen(false)}
-          lang={lang}
-        />
-        <BabyShotsModal
-          isOpen={isBabyShotsOpen}
-          onClose={() => setIsBabyShotsOpen(false)}
-          lang={lang}
-        />
-        <DoctorHandoverModal
-          isOpen={isHandoverOpen}
-          onClose={() => setIsHandoverOpen(false)}
-          lang={lang}
-        />
-        <PatientIntakeModal
-          isOpen={isPatientIntakeOpen}
-          onClose={() => setIsPatientIntakeOpen(false)}
-          lang={lang}
-          onOpenAmbulance={() => setIsAmbulanceOpen(true)}
-          onJoinConsultation={() => {
-            setIsPatientIntakeOpen(false);
-            navigateToView('his');
-          }}
-        />
-        <LoginModal
-          isOpen={isLoginOpen}
-          onClose={() => {
-            setIsLoginOpen(false);
-            setLoginNotice(null);
-            pendingAuthActionRef.current = null;
-          }}
-          lang={lang}
-          contextNotice={loginNotice}
-          onSuccess={handleGlobalLoginSuccess}
-          onNavigateHis={() => navigateToView('his')}
-        />
+        {isAmbulanceOpen && (
+          <Suspense fallback={null}>
+            <AmbulanceModal
+              isOpen={isAmbulanceOpen}
+              onClose={() => setIsAmbulanceOpen(false)}
+              lang={lang}
+              onOpenHandover={() => setIsHandoverOpen(true)}
+            />
+          </Suspense>
+        )}
+        {isPrescriptionOpen && (
+          <Suspense fallback={null}>
+            <PrescriptionModal
+              isOpen={isPrescriptionOpen}
+              onClose={() => setIsPrescriptionOpen(false)}
+              lang={lang}
+              onOpenDiseaseMap={() => navigateToView('maps')}
+              onNavigateMedicines={() => navigateToView('medicines')}
+            />
+          </Suspense>
+        )}
+        {isDiseaseMapOpen && (
+          <Suspense fallback={null}>
+            <DiseaseMapModal
+              isOpen={isDiseaseMapOpen}
+              onClose={() => setIsDiseaseMapOpen(false)}
+              lang={lang}
+            />
+          </Suspense>
+        )}
+        {isBabyShotsOpen && (
+          <Suspense fallback={null}>
+            <BabyShotsModal
+              isOpen={isBabyShotsOpen}
+              onClose={() => setIsBabyShotsOpen(false)}
+              lang={lang}
+            />
+          </Suspense>
+        )}
+        {isHandoverOpen && (
+          <Suspense fallback={null}>
+            <DoctorHandoverModal
+              isOpen={isHandoverOpen}
+              onClose={() => setIsHandoverOpen(false)}
+              lang={lang}
+            />
+          </Suspense>
+        )}
+        {isPatientIntakeOpen && (
+          <Suspense fallback={null}>
+            <PatientIntakeModal
+              isOpen={isPatientIntakeOpen}
+              onClose={() => setIsPatientIntakeOpen(false)}
+              lang={lang}
+              onOpenAmbulance={() => setIsAmbulanceOpen(true)}
+              onJoinConsultation={() => {
+                setIsPatientIntakeOpen(false);
+                navigateToView('his');
+              }}
+            />
+          </Suspense>
+        )}
+        {isLoginOpen && (
+          <Suspense fallback={null}>
+            <LoginModal
+              isOpen={isLoginOpen}
+              onClose={() => {
+                setIsLoginOpen(false);
+                setLoginNotice(null);
+                pendingAuthActionRef.current = null;
+              }}
+              lang={lang}
+              contextNotice={loginNotice}
+              onSuccess={handleGlobalLoginSuccess}
+              onNavigateHis={() => navigateToView('his')}
+            />
+          </Suspense>
+        )}
       </div>
     );
   }
@@ -524,41 +590,47 @@ export default function App() {
   // Render Dedicated Hospital Information System (HIS / EHR) Workspace
   if (currentView === 'his') {
     return (
-      <HospitalInformationSystem
-        lang={lang}
-        onExitToCitizenView={() => navigateToView('landing')}
-      />
+      <Suspense fallback={<ViewLoadingFallback />}>
+        <HospitalInformationSystem
+          lang={lang}
+          onExitToCitizenView={() => navigateToView('landing')}
+        />
+      </Suspense>
     );
   }
 
   // Render Dedicated Privacy Policy & Data Sovereignty / Terms Page
   if (currentView === 'privacy' || currentView === 'terms') {
     return (
-      <PrivacyPolicyPage
-        lang={lang}
-        defaultTab={currentView === 'terms' ? 'terms' : 'privacy'}
-        onBack={() => navigateToView('landing')}
-      />
+      <Suspense fallback={<ViewLoadingFallback />}>
+        <PrivacyPolicyPage
+          lang={lang}
+          defaultTab={currentView === 'terms' ? 'terms' : 'privacy'}
+          onBack={() => navigateToView('landing')}
+        />
+      </Suspense>
     );
   }
 
   // Render Dedicated Thank You & Confirmation Page
   if (currentView === 'thank-you') {
     return (
-      <ThankYouPage
-        lang={lang}
-        onNavigateHome={() => navigateToView('landing')}
-        onNavigateChat={() => navigateToView('chat')}
-        onNavigateMaps={() => navigateToView('maps')}
-        onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
-      />
+      <Suspense fallback={<ViewLoadingFallback />}>
+        <ThankYouPage
+          lang={lang}
+          onNavigateHome={() => navigateToView('landing')}
+          onNavigateChat={() => navigateToView('chat')}
+          onNavigateMaps={() => navigateToView('maps')}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+        />
+      </Suspense>
     );
   }
 
   // Render Custom 404 Telemetry / Not Found Page for any unknown route
   if (currentView === 'not-found') {
     return (
-      <>
+      <Suspense fallback={<ViewLoadingFallback />}>
         <NotFoundPage
           lang={lang}
           setLang={setLang}
@@ -575,42 +647,62 @@ export default function App() {
         />
 
         {/* Global Modals Accessible within 404 Page */}
-        <AmbulanceModal
-          isOpen={isAmbulanceOpen}
-          onClose={() => setIsAmbulanceOpen(false)}
-          lang={lang}
-          onOpenHandover={() => setIsHandoverOpen(true)}
-        />
-        <PrescriptionModal
-          isOpen={isPrescriptionOpen}
-          onClose={() => setIsPrescriptionOpen(false)}
-          lang={lang}
-          onOpenDiseaseMap={() => navigateToView('maps')}
-          onNavigateMedicines={() => navigateToView('medicines')}
-        />
-        <BabyShotsModal
-          isOpen={isBabyShotsOpen}
-          onClose={() => setIsBabyShotsOpen(false)}
-          lang={lang}
-        />
-        <DoctorHandoverModal
-          isOpen={isHandoverOpen}
-          onClose={() => setIsHandoverOpen(false)}
-          lang={lang}
-        />
-        <LoginModal
-          isOpen={isLoginOpen}
-          onClose={() => {
-            setIsLoginOpen(false);
-            setLoginNotice(null);
-            pendingAuthActionRef.current = null;
-          }}
-          lang={lang}
-          contextNotice={loginNotice}
-          onSuccess={handleGlobalLoginSuccess}
-          onNavigateHis={() => navigateToView('his')}
-        />
-      </>
+        {isAmbulanceOpen && (
+          <Suspense fallback={null}>
+            <AmbulanceModal
+              isOpen={isAmbulanceOpen}
+              onClose={() => setIsAmbulanceOpen(false)}
+              lang={lang}
+              onOpenHandover={() => setIsHandoverOpen(true)}
+            />
+          </Suspense>
+        )}
+        {isPrescriptionOpen && (
+          <Suspense fallback={null}>
+            <PrescriptionModal
+              isOpen={isPrescriptionOpen}
+              onClose={() => setIsPrescriptionOpen(false)}
+              lang={lang}
+              onOpenDiseaseMap={() => navigateToView('maps')}
+              onNavigateMedicines={() => navigateToView('medicines')}
+            />
+          </Suspense>
+        )}
+        {isBabyShotsOpen && (
+          <Suspense fallback={null}>
+            <BabyShotsModal
+              isOpen={isBabyShotsOpen}
+              onClose={() => setIsBabyShotsOpen(false)}
+              lang={lang}
+            />
+          </Suspense>
+        )}
+        {isHandoverOpen && (
+          <Suspense fallback={null}>
+            <DoctorHandoverModal
+              isOpen={isHandoverOpen}
+              onClose={() => setIsHandoverOpen(false)}
+              lang={lang}
+            />
+          </Suspense>
+        )}
+        {isLoginOpen && (
+          <Suspense fallback={null}>
+            <LoginModal
+              isOpen={isLoginOpen}
+              onClose={() => {
+                setIsLoginOpen(false);
+                setLoginNotice(null);
+                pendingAuthActionRef.current = null;
+              }}
+              lang={lang}
+              contextNotice={loginNotice}
+              onSuccess={handleGlobalLoginSuccess}
+              onNavigateHis={() => navigateToView('his')}
+            />
+          </Suspense>
+        )}
+      </Suspense>
     );
   }
 
@@ -714,83 +806,119 @@ export default function App() {
       />
 
       {/* Interactive Modals */}
-      <AmbulanceModal
-        isOpen={isAmbulanceOpen}
-        onClose={() => setIsAmbulanceOpen(false)}
-        lang={lang}
-        onOpenHandover={() => setIsHandoverOpen(true)}
-      />
+      {isAmbulanceOpen && (
+        <Suspense fallback={null}>
+          <AmbulanceModal
+            isOpen={isAmbulanceOpen}
+            onClose={() => setIsAmbulanceOpen(false)}
+            lang={lang}
+            onOpenHandover={() => setIsHandoverOpen(true)}
+          />
+        </Suspense>
+      )}
 
-      <VoiceChatModal
-        isOpen={isVoiceChatOpen}
-        onClose={() => {
-          setIsVoiceChatOpen(false);
-          setVoiceChatQuery(undefined);
-        }}
-        lang={lang}
-        initialQuery={voiceChatQuery}
-        onOpenAmbulance={() => setIsAmbulanceOpen(true)}
-        onOpenHandover={() => setIsHandoverOpen(true)}
-      />
+      {isVoiceChatOpen && (
+        <Suspense fallback={null}>
+          <VoiceChatModal
+            isOpen={isVoiceChatOpen}
+            onClose={() => {
+              setIsVoiceChatOpen(false);
+              setVoiceChatQuery(undefined);
+            }}
+            lang={lang}
+            initialQuery={voiceChatQuery}
+            onOpenAmbulance={() => setIsAmbulanceOpen(true)}
+            onOpenHandover={() => setIsHandoverOpen(true)}
+          />
+        </Suspense>
+      )}
 
-      <PrescriptionModal
-        isOpen={isPrescriptionOpen}
-        onClose={() => setIsPrescriptionOpen(false)}
-        lang={lang}
-        onOpenDiseaseMap={() => navigateToView('maps')}
-        onNavigateMedicines={() => navigateToView('medicines')}
-      />
+      {isPrescriptionOpen && (
+        <Suspense fallback={null}>
+          <PrescriptionModal
+            isOpen={isPrescriptionOpen}
+            onClose={() => setIsPrescriptionOpen(false)}
+            lang={lang}
+            onOpenDiseaseMap={() => navigateToView('maps')}
+            onNavigateMedicines={() => navigateToView('medicines')}
+          />
+        </Suspense>
+      )}
 
-      <DiseaseMapModal
-        isOpen={isDiseaseMapOpen}
-        onClose={() => setIsDiseaseMapOpen(false)}
-        lang={lang}
-      />
+      {isDiseaseMapOpen && (
+        <Suspense fallback={null}>
+          <DiseaseMapModal
+            isOpen={isDiseaseMapOpen}
+            onClose={() => setIsDiseaseMapOpen(false)}
+            lang={lang}
+          />
+        </Suspense>
+      )}
 
-      <BabyShotsModal
-        isOpen={isBabyShotsOpen}
-        onClose={() => setIsBabyShotsOpen(false)}
-        lang={lang}
-      />
+      {isBabyShotsOpen && (
+        <Suspense fallback={null}>
+          <BabyShotsModal
+            isOpen={isBabyShotsOpen}
+            onClose={() => setIsBabyShotsOpen(false)}
+            lang={lang}
+          />
+        </Suspense>
+      )}
 
-      <DoctorHandoverModal
-        isOpen={isHandoverOpen}
-        onClose={() => setIsHandoverOpen(false)}
-        lang={lang}
-      />
+      {isHandoverOpen && (
+        <Suspense fallback={null}>
+          <DoctorHandoverModal
+            isOpen={isHandoverOpen}
+            onClose={() => setIsHandoverOpen(false)}
+            lang={lang}
+          />
+        </Suspense>
+      )}
 
-      <PatientIntakeModal
-        isOpen={isPatientIntakeOpen}
-        onClose={() => setIsPatientIntakeOpen(false)}
-        lang={lang}
-        onOpenAmbulance={() => setIsAmbulanceOpen(true)}
-        onJoinConsultation={() => {
-          setIsPatientIntakeOpen(false);
-          navigateToView('his');
-        }}
-      />
+      {isPatientIntakeOpen && (
+        <Suspense fallback={null}>
+          <PatientIntakeModal
+            isOpen={isPatientIntakeOpen}
+            onClose={() => setIsPatientIntakeOpen(false)}
+            lang={lang}
+            onOpenAmbulance={() => setIsAmbulanceOpen(true)}
+            onJoinConsultation={() => {
+              setIsPatientIntakeOpen(false);
+              navigateToView('his');
+            }}
+          />
+        </Suspense>
+      )}
 
-      <LoginModal
-        isOpen={isLoginOpen}
-        onClose={() => {
-          setIsLoginOpen(false);
-          setLoginNotice(null);
-          pendingAuthActionRef.current = null;
-        }}
-        lang={lang}
-        contextNotice={loginNotice}
-        onSuccess={handleGlobalLoginSuccess}
-        onNavigateHis={() => navigateToView('his')}
-      />
+      {isLoginOpen && (
+        <Suspense fallback={null}>
+          <LoginModal
+            isOpen={isLoginOpen}
+            onClose={() => {
+              setIsLoginOpen(false);
+              setLoginNotice(null);
+              pendingAuthActionRef.current = null;
+            }}
+            lang={lang}
+            contextNotice={loginNotice}
+            onSuccess={handleGlobalLoginSuccess}
+            onNavigateHis={() => navigateToView('his')}
+          />
+        </Suspense>
+      )}
 
-      <HealthGuideModal
-        guide={selectedGuide}
-        onClose={() => setSelectedGuide(null)}
-        lang={lang}
-        onOpenVoiceChat={handleOpenVoiceChat}
-        onOpenDiseaseMap={() => setIsDiseaseMapOpen(true)}
-        onOpenBabyShots={() => setIsBabyShotsOpen(true)}
-      />
+      {selectedGuide && (
+        <Suspense fallback={null}>
+          <HealthGuideModal
+            guide={selectedGuide}
+            onClose={() => setSelectedGuide(null)}
+            lang={lang}
+            onOpenVoiceChat={handleOpenVoiceChat}
+            onOpenDiseaseMap={() => setIsDiseaseMapOpen(true)}
+            onOpenBabyShots={() => setIsBabyShotsOpen(true)}
+          />
+        </Suspense>
+      )}
 
       {/* Floating Global Toast Notification */}
       {toastMessage && (
