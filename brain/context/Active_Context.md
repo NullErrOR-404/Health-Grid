@@ -41,10 +41,11 @@ Back to [[00_Index]]
 - [x] Decommissioned autonomous floating mascot (`RoamingDocBot.tsx`) and scroll-tracking thought bubbles completely from runtime and codebase (see [[ADR-007-Decommission-Roaming-Mascot]]).
 - [x] Implemented Mobile Navbar Zero-Overflow Architecture (`h-16 sm:h-20`, compact logo, hidden top SOS/bell on mobile, high-contrast 108 Emergency Banner in mobile drawer) (see [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]).
 - [x] Fixed Mobile Login Modal Scroll Trapping by hiding desktop marketing banners on mobile (`hidden lg:flex`), removing fixed minimum heights, and enabling smooth touch scrolling; overhauled ChatbotPage top header into ultra-minimal single-line pills (`[ 📹 Live ]`, `[ 🩺 Records ]`, `[ 🌐 EN ]`, `[ 👤 Sign In ]`) with zero text wrapping, and transformed in-chat suggestions, voice selectors, and docked controls into concise rounded-full pills (see [[ADR-009-Mobile-Login-Scroll-and-ChatUI-Minimal-Pills]]).
+- [x] Fixed Mobile Hamburger Drawer Scroll Trapping & Missing Back Option: Injected sticky top navigation bar with tactile `[← Back]` pill button, "Quick Navigation" label, and `[✕ Close]` button; added dual document body/HTML scroll locking and Lenis smooth scroll pausing/resuming; added backdrop tap-to-dismiss overlay; configured dynamic viewport height (`100dvh`), `overscroll-contain`, `-webkit-overflow-scrolling: touch`, and `touch-action: pan-y` (see [[ADR-010-Mobile-Hamburger-Drawer-Scroll-Lock-and-Navigation]]).
 
 ## In-Flight / Next Focus
 - [ ] Push changes to GitHub `origin/main` to trigger automated Vercel production deployment.
-- [ ] Verify zero overflow on all 4 live production aliases (`healthgrid-app.vercel.app`, etc.).
+- [ ] Verify zero overflow and smooth scrolling on all 4 live production aliases (`healthgrid-app.vercel.app`, etc.).
 - [ ] Submit Google Cloud Console OAuth consent screen for production branding verification.
 - [ ] Monitor Google Search Console indexing and crawler telemetry.
 - [ ] Real-time updates to this Second Brain whenever new clinical features or architectural modifications ship.
@@ -56,5 +57,6 @@ Back to [[00_Index]]
 - [[ADR-007-Decommission-Roaming-Mascot]]
 - [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]
 - [[ADR-009-Mobile-Login-Scroll-and-ChatUI-Minimal-Pills]]
+- [[ADR-010-Mobile-Hamburger-Drawer-Scroll-Lock-and-Navigation]]
 - [[Key_Credentials_and_Environments]]
 - [[Deployment_and_Domains]]
