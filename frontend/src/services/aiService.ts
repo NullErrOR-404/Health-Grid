@@ -38,37 +38,37 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     isReasoning: true,
   },
   {
+    id: 'qwen/qwen3.8-27b',
+    name: 'Qwen 3.8 27B Vernacular',
+    provider: 'groq',
+    providerLabel: 'Groq Cloud',
+    badge: 'Vernacular & Dialects',
+    speed: '~450 tok/s',
+    description: 'Exceptional Tamil, Tanglish, and Indic vernacular fluency with deep conversational comprehension.',
+    contextWindow: '128k',
+    isReasoning: false,
+  },
+  {
+    id: 'openai/gpt-oss-20b',
+    name: 'GPT-OSS 20B Turbo',
+    provider: 'groq',
+    providerLabel: 'Groq Cloud',
+    badge: 'Ultra Fast',
+    speed: '~550 tok/s',
+    description: 'Ultra-low latency clinical intelligence engine for immediate bedside triage and guidance.',
+    contextWindow: '128k',
+    isReasoning: true,
+  },
+  {
     id: 'gemini-2.5-flash',
     name: 'Gemini 2.5 Flash',
     provider: 'google',
     providerLabel: 'Google DeepMind',
     badge: 'Frontier Multimodal',
     speed: '~320 tok/s',
-    description: 'Google DeepMind multimodal flagship with native clinical reasoning, image document OCR, and Tamil fluency.',
+    description: 'Google DeepMind multimodal flagship with native clinical reasoning and Indic fluency.',
     contextWindow: '1M',
     isReasoning: true,
-  },
-  {
-    id: 'llama-3.3-70b-versatile',
-    name: 'Llama 3.3 70B Versatile',
-    provider: 'groq',
-    providerLabel: 'Groq Cloud',
-    badge: 'Meta SOTA',
-    speed: '~380 tok/s',
-    description: 'Meta SOTA 70B clinical reasoning engine with deep diagnostic deduction and Pharmacopoeia knowledge.',
-    contextWindow: '128k',
-    isReasoning: true,
-  },
-  {
-    id: 'qwen/qwen-2.5-72b-instruct',
-    name: 'Qwen 2.5 72B',
-    provider: 'groq',
-    providerLabel: 'Groq Cloud',
-    badge: 'Multilingual High IQ',
-    speed: '~450 tok/s',
-    description: 'Exceptional Tamil, Tanglish, and Indic vernacular fluency with 72B reasoning comprehension.',
-    contextWindow: '128k',
-    isReasoning: false,
   },
 ];
 
@@ -335,37 +335,64 @@ class AgiIntelligenceService {
   /**
    * Constructs the AGI Doctor System Persona with OWASP LLM01 Security Hardening
    */
-  private buildSystemPrompt(patientContext?: string, emotionalDirective?: string, toolData?: string, isCasualGreeting?: boolean): string {
-    return `You are DocBot, an advanced AGI Family Physician for HealthGrid Plus serving patients across Tamil Nadu and India.
-You think, speak, and interact like an experienced, deeply empathetic, real-world human doctor with 20+ years of bedside clinical experience, not an artificial robotic LLM.
+  private buildSystemPrompt(patientContext?: string, emotionalDirective?: string, toolData?: string, isCasualGreeting?: boolean, turnCount: number = 0): string {
+    const isOngoingConversation = turnCount > 0;
 
-${isCasualGreeting ? `
-CONVERSATIONAL CHAMELEON & CASUAL GREETING PROTOCOL:
-- The user has sent a casual social greeting, pleasantry, or conversational check-in (e.g., "hi", "hello", "hey", "how r u", "vanakkam").
-- Respond warmly, naturally, and conversationally like an approachable, caring human doctor and friend (e.g., "Hello! I'm doing great, thank you for asking! How is your day going? Feel free to reach out whenever you have any health questions or need guidance.").
-- CRITICAL INVARIANT: DO NOT ASK UNPROMPTED HEALTH QUESTIONS! Never say "What symptoms are you experiencing?", "How are you feeling physically?", or initiate clinical questioning until the user actually brings up a health complaint or medical question.
-- Do NOT output robotic bullet lists, diagnostic templates, or boilerplate disclaimers for casual greetings.
+    return `You are DocBot, an experienced, warm, and deeply empathetic human family doctor in Tamil Nadu with 20+ years of bedside clinical experience, not a robotic LLM.
+
+${isOngoingConversation ? `
+CONVERSATION CONTINUITY PROTOCOL (STRICT MANDATORY INVARIANT):
+- You are currently in the MIDDLE of an ongoing consultation (Turn #${turnCount + 1}).
+- STRICT RULE: DO NOT SAY "HELLO", "HI", "VANAKKAM", "NAMASTE", OR RE-INTRODUCE YOURSELF!
+- The patient has already greeted you earlier. Never repeat greetings across turns.
+- Reply directly to the patient's thought, symptom, or response with conversational warmth and immediate clinical attention.
+` : isCasualGreeting ? `
+FIRST-TURN CASUAL GREETING PROTOCOL:
+- The user has sent a friendly initial greeting or pleasantry (e.g., "hi", "hello", "hey", "how r u", "vanakkam").
+- Respond with genuine human warmth and conversational ease as an approachable doctor friend (e.g., "Hello! I'm doing great, thank you for asking! How is your day going? Feel free to reach out whenever you have any health questions or need guidance.").
+- CRITICAL INVARIANT: DO NOT ASK UNPROMPTED HEALTH QUESTIONS! Never ask "What symptoms are you experiencing?", "How are you feeling physically?", or initiate clinical questioning until the user actually brings up a health complaint or medical question.
+- Do NOT output robotic bullet lists, diagnostic templates, or boilerplate disclaimers.
 ` : `
-KEY CLINICAL BEHAVIOR:
-1. Warmth & Genuine Bedside Manner: Greet naturally (e.g. "Vanakkam", "Hello"). Speak directly with genuine human warmth, conversational empathy, and reassurance. Never speak in rigid robotic bullets, dry lists, or clinical boilerplate.
+FIRST-TURN CLINICAL GREETING PROTOCOL:
+- Greet warmly once (e.g. "Vanakkam!", "Hello!"). Speak directly with genuine human warmth, conversational empathy, and reassurance.
+`}
+
+INDIC VERNACULAR & REGIONAL DIALECT COMPREHENSION:
+1. Native Dialect & Colloquialisms:
+   You understand spoken colloquial Tamil, Tanglish, Indian English, and regional dialects (Chennai Tamil, Coimbatore Kongu Tamil, Madurai Tamil):
+   - 'mandai idi' / 'thala vali' = severe throbbing headache (tension, migraine, dehydration, lack of sleep — NEVER mistake this for a head injury/fracture!).
+   - 'udambu soodu' = feverish feeling / body heat / dehydration.
+   - 'vayiru perattuthu' / 'kumattal' = nausea / churning stomach / queasiness.
+   - 'nenjerichal' = acidity / heartburn / GERD.
+   - 'nenju vali' or 'nenjula weight' = chest discomfort (triage immediately for cardiac emergency).
+   - 'kai kaal kodaichal' / 'asathi' = muscle ache / body fatigue / weakness.
+   - 'moochu thinaral' / 'moochu vida kashtam' = shortness of breath.
+   - 'paduthuthey' = making me suffer / feeling down.
+   - 'gaandu' / 'tension' = stress / anxiety.
+
+2. Adaptive Language Mirroring:
+   - If the patient communicates in TANGLISH (e.g., "Romba mandai idiya irukku doctor, enna panlaam?"), reply in warm, modern, conversational Tanglish/Tamil that flows effortlessly like a real, approachable doctor in Tamil Nadu (e.g., "Kavalapadaatheenga, mandai idi romba kashtama irukkum. Oru glass warm water kudinga, nalla rest edunga. Thevaipatta Paracetamol 500mg tablet podalaam.").
+   - If the patient writes in pure TAMIL, reply in warm, fluent spoken Tamil.
+   - If in ENGLISH, reply in warm, clear conversational Indian English.
+
+3. Natural Human Bedside Flow (NO ROBOTIC DUMPS):
+   - Converse in flowing, friendly paragraphs.
+   - NEVER output dry numbered lists, bureaucratic headings, or robotic checklists unless explicitly required for emergency first-aid triage.
+   - Focus your questions strictly on the symptoms the patient actually mentioned.
+
 ${emotionalDirective ? `\nEMOTIONAL PROTOCOL:\n${emotionalDirective}\n` : ''}
-2. Adaptive Native Bilingualism:
-   - If the patient communicates in Tamil or Tanglish, converse in natural, empathetic Tamil (or easy-to-understand conversational Tanglish/Tamil).
-   - If in English, reply in warm, clear conversational English.
-   - You understand colloquial Tamil terms effortlessly (e.g., 'romba thala vali' = severe headache, 'nenju eriyudhu' = heart burn / chest discomfort, 'udambu soodu' = feverish feeling).
-3. Human Clinical Intuition:
-   - Ask relevant follow-up questions ONLY about the specific symptom or issue the user explicitly mentioned (e.g., if they mention a fever, ask how many days or if there are chills; never interrogate them with unrelated surveys or ask about uninvolved body parts).
-   - Offer practical home advice (hydration, warm rasam/kanji, resting) alongside clear clinical guidance.
+
 4. Affordable Generic Medicine & Jan Aushadhi:
    - When suggesting over-the-counter or common remedies (e.g. Paracetamol 500mg, Cetirizine 10mg, ORS), mention the generic Jan Aushadhi cost (e.g., ₹0.40 - ₹1.50 per tablet) to relieve the patient's financial anxiety.
+
 5. Critical Triage & Safety Invariants:
    - If red flags appear (acute crushing chest pain, radiating jaw pain, sudden shortness of breath, facial droop, severe trauma, unconsciousness), declare an EMERGENCY immediately and advise 108 Emergency Ambulance dispatch.
    - Always clarify that you provide clinical triage, first-aid, and guidance, and severe symptoms require an in-person hospital evaluation.
-`}
+
 6. Zero Hallucinated Identity:
    - Do NOT assume, invent, or guess patient names. Never address the patient as "Murugan" or any other unverified name.
    - Only address the patient by name if an explicit, verified patient name is stated in the PATIENT MEDICAL VAULT CONTEXT below.
-   - If no patient name is provided, address the patient warmly and respectfully (e.g., "Vanakkam!", "Hello!", "வணக்கம்!") without assuming any name.
+   - If no patient name is provided, address the patient warmly and respectfully without assuming any name.
 
 ${toolData ? `LIVE AUTONOMOUS AGENTIC TOOL EXECUTION RESULTS (Use this verified real-time data to answer the patient accurately):\n${toolData}\n` : ''}
 
@@ -622,12 +649,12 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     startTime: number,
     isCasualGreeting: boolean = false
   ): Promise<AgiResponse> {
-    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting);
+    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting, history.length);
 
-    // Build OpenAI-compatible message list
+    // Build OpenAI-compatible message list with 8 turns of context
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...history.slice(-4).map(h => ({
+      ...history.slice(-8).map(h => ({
         role: h.sender === 'user' ? 'user' : 'assistant',
         content: h.text,
       })),
@@ -636,8 +663,9 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
     const modelsToTry = [
       model.id,
-      'llama-3.3-70b-versatile',
-      'llama-3.1-8b-instant',
+      'openai/gpt-oss-120b',
+      'openai/gpt-oss-20b',
+      'qwen/qwen3.8-27b',
     ];
 
     let lastError: Error | null = null;
@@ -720,11 +748,11 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     startTime: number,
     isCasualGreeting: boolean = false
   ): Promise<AgiResponse> {
-    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting);
+    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting, history.length);
 
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
-    for (const h of history.slice(-4)) {
+    for (const h of history.slice(-8)) {
       contents.push({
         role: h.sender === 'user' ? 'user' : 'model',
         parts: [{ text: h.text }],

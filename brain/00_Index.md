@@ -56,6 +56,8 @@ graph TD
     DEC --> ADR11[[ADR-011-Family-and-Beneficiary-MultiProfile-System]]
     DEC --> ADR12[[ADR-012-Beneficiary-to-Independent-Account-Porting]]
     DEC --> ADR13[[ADR-013-Beneficiary-OTP-Verification-and-Emergency-Sync]]
+    DEC --> ADR14[[ADR-014-Conversational-Chameleon-and-Speech-Pipeline]]
+    DEC --> ADR15[[ADR-015-Vernacular-Speech-and-Conversational-Continuity]]
 
     CTX --> ACT[[Active_Context]]
     CTX --> CRED[[Key_Credentials_and_Environments]]

@@ -32,6 +32,20 @@ const TANGLISH_MAP: Record<string, { ta: string; en: string; isRedFlag?: boolean
   'sakkarai': { ta: 'சர்க்கரை நோய்', en: 'Diabetes' },
   'bp': { ta: 'ரத்த அழுத்தம்', en: 'Blood Pressure / Hypertension' },
   'ratha azhuththam': { ta: 'ரத்த அழுத்தம்', en: 'Blood Pressure' },
+  'udambu soodu': { ta: 'உடம்பு சூடு', en: 'Feverish Body Heat' },
+  'udambu vali': { ta: 'உடம்பு வலி', en: 'Body Ache' },
+  'kai kaal vali': { ta: 'கை கால் வலி', en: 'Limb Pain' },
+  'kai kaal kodaichal': { ta: 'கை கால் குடைச்சல்', en: 'Joint & Muscle Ache' },
+  'asathi': { ta: 'அசதி', en: 'Fatigue / Weakness' },
+  'vayiru perattuthu': { ta: 'குமட்டல்', en: 'Nausea' },
+  'kumattal': { ta: 'குமட்டல்', en: 'Nausea' },
+  'nenjerichal': { ta: 'நெஞ்செரிச்சல்', en: 'Heartburn / Acidity' },
+  'thondai vali': { ta: 'தொண்டை வலி', en: 'Sore Throat' },
+  'thondai kattu': { ta: 'தொண்டைக்கட்டு', en: 'Throat Congestion' },
+  'mootu vali': { ta: 'மூட்டு வலி', en: 'Joint / Knee Pain' },
+  'nadukkam': { ta: 'நடுக்கம்', en: 'Chills / Shivering' },
+  'kuliru': { ta: 'குளிர்', en: 'Chills' },
+  'paduthuthey': { ta: 'அசதி / பலவீனம்', en: 'Debilitating / Suffering' },
 };
 
 export interface NormalizedResult {
@@ -196,7 +210,6 @@ export class SpeechEngine {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private activeCallbacks: SpeechCallbacks | null = null;
-  private hasReceivedFinalTranscript: boolean = false;
   private currentListeningLang: 'ta' | 'en' = 'ta';
   private voiceSettings: VoiceSettings = DEFAULT_VOICE_SETTINGS;
   private settingsListeners: Array<(s: VoiceSettings) => void> = [];
@@ -268,8 +281,13 @@ export class SpeechEngine {
     const formData = new FormData();
     formData.append('file', audioBlob, 'speech_input.webm');
     formData.append('model', 'whisper-large-v3-turbo');
-    formData.append('language', lang === 'ta' ? 'ta' : 'en');
-    formData.append('prompt', 'Clinical medical health consultation symptoms in Tamil or Indian English');
+    if (lang === 'ta') {
+      formData.append('language', 'ta');
+    }
+    formData.append(
+      'prompt',
+      'Clinical medical symptoms in Tamil, Tanglish, and English: kaichal, thala vali, mandai idi, fever, headache, nenju vali, stomach pain, tablet, marunthu, udambu soodu, sali, irumal, nenjerichal, asathi'
+    );
 
     const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
       method: 'POST',
@@ -291,12 +309,10 @@ export class SpeechEngine {
   private latestTranscript: string = '';
 
   /**
-   * Resilient Single-Pipeline Speech Recognition (Mobile & Desktop):
-   * 1. If SpeechRecognition is supported (Chrome, Android Chrome, Edge, Safari 14.1+),
-   *    activates it directly as the primary real-time listener WITHOUT simultaneously opening
-   *    a competing getUserMedia stream (which causes hardware lock collisions on mobile).
-   * 2. If SpeechRecognition is unavailable or errors out, seamlessly falls back to getUserMedia + Groq Whisper AI.
-   * 3. If microphone permission is blocked in browser settings, guides the user clearly on how to unblock it.
+   * Hybrid Ultra-Fast Speech Recognition (Real-Time Live Typing + SOTA Whisper Polish):
+   * 1. Starts MediaRecorder to capture pristine background audio for Whisper Large-v3-Turbo.
+   * 2. Simultaneously activates Web Speech API for 0ms instantaneous live interim word streaming.
+   * 3. Upon stopping, Groq Whisper AI instantly refines any medical terms or Tanglish dialect with SOTA accuracy.
    */
   public async startListening(lang: 'ta' | 'en', callbacks: SpeechCallbacks): Promise<void> {
     this.stopSpeaking();
@@ -328,7 +344,6 @@ export class SpeechEngine {
 
     this.currentListeningLang = lang;
     this.activeCallbacks = callbacks;
-    this.hasReceivedFinalTranscript = false;
     this.latestTranscript = '';
     this.audioChunks = [];
 
@@ -350,10 +365,46 @@ export class SpeechEngine {
       }
     }
 
+    // 1. Acquire microphone stream for Whisper audio recording
+    try {
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+        this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (typeof MediaRecorder !== 'undefined') {
+          const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus'
+            : MediaRecorder.isTypeSupported('audio/webm')
+            ? 'audio/webm'
+            : 'audio/mp4';
+          const mr = new MediaRecorder(this.mediaStream, { mimeType });
+          mr.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) {
+              this.audioChunks.push(e.data);
+            }
+          };
+          mr.start(250);
+          this.mediaRecorder = mr;
+        }
+      }
+    } catch (permErr: any) {
+      console.warn('Microphone stream access error:', permErr);
+      if (permErr?.name === 'NotAllowedError') {
+        callbacks.onError?.(
+          lang === 'en'
+            ? 'Microphone is blocked in your browser settings. Tap the 🔒 lock icon in the address bar ➔ Site Settings ➔ Allow Microphone.'
+            : 'உலாவியில் மைக்ரோஃபோன் தடுக்கப்பட்டது. முகவரிப் பட்டியில் உள்ள 🔒 பூட்டைத் தட்டி அனுமதிக்கவும்.'
+        );
+        callbacks.onStateChange?.('error');
+        return;
+      }
+    }
+
+    this.isListening = true;
+    callbacks.onStateChange?.('listening');
+
+    // 2. Concurrently start Web Speech API for 0ms sub-second live word streaming
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-    // PIPELINE A: Web Speech API (Preferred: zero bandwidth & instant local streaming)
     if (SpeechRecognition) {
       try {
         const rec = new SpeechRecognition();
@@ -361,11 +412,6 @@ export class SpeechEngine {
         rec.interimResults = true;
         rec.maxAlternatives = 1;
         rec.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
-
-        rec.onstart = () => {
-          this.isListening = true;
-          callbacks.onStateChange?.('listening');
-        };
 
         rec.onresult = (event: any) => {
           let interim = '';
@@ -383,91 +429,33 @@ export class SpeechEngine {
           const text = (final || interim).trim();
           if (text) {
             this.latestTranscript = text;
-            if (final) this.hasReceivedFinalTranscript = true;
-            callbacks.onTranscript?.(text, !!final);
+            callbacks.onTranscript?.(text, false);
           }
         };
 
-        rec.onerror = async (event: any) => {
-          console.warn('Web Speech recognition status:', event.error);
-          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            this.isListening = false;
-            callbacks.onError?.(
-              lang === 'en'
-                ? 'Microphone is blocked in your browser settings. Tap the 🔒 lock icon in the address bar ➔ Site Settings ➔ Allow Microphone.'
-                : 'உலாவியில் மைக்ரோஃபோன் தடுக்கப்பட்டது. முகவரிப் பட்டியில் உள்ள 🔒 பூட்டைத் தட்டி அனுமதிக்கவும்.'
-            );
-            callbacks.onStateChange?.('error');
-          } else if (event.error === 'network') {
-            // Network failure on Web Speech server: seamless failover to Groq Whisper
-            await this.startHardwareFallback(lang, callbacks);
-          } else if (event.error !== 'no-speech') {
-            callbacks.onError?.(event.error);
-          }
+        rec.onerror = (event: any) => {
+          console.warn('Web Speech streaming note (Whisper recorder active):', event.error);
         };
 
         rec.onend = () => {
-          // Keep listening continuously while isListening flag is active
           if (this.isListening && this.recognition) {
             try {
               this.recognition.start();
             } catch (err) {
-              // Already started or terminated
+              // Already active or stopped
             }
           }
         };
 
         this.recognition = rec;
-        rec.start();
-        return;
+        try {
+          rec.start();
+        } catch {
+          // Handled via Whisper recording
+        }
       } catch (recErr: any) {
-        console.warn('Web Speech start error, falling back to hardware mic:', recErr);
+        console.warn('Web Speech start notice, relying on Whisper recorder:', recErr);
       }
-    }
-
-    // PIPELINE B: Hardware Microphone via getUserMedia + Groq Whisper AI fallback
-    await this.startHardwareFallback(lang, callbacks);
-  }
-
-  private async startHardwareFallback(lang: 'ta' | 'en', callbacks: SpeechCallbacks): Promise<void> {
-    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-      callbacks.onError?.(
-        lang === 'en'
-          ? 'Microphone access is not supported on this browser.'
-          : 'இந்த உலாவியில் மைக்ரோஃபோன் ஆதரிக்கப்படவில்லை.'
-      );
-      callbacks.onStateChange?.('error');
-      return;
-    }
-
-    try {
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.isListening = true;
-      callbacks.onStateChange?.('listening');
-
-      if (typeof MediaRecorder !== 'undefined') {
-        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : 'audio/mp4';
-        const mr = new MediaRecorder(this.mediaStream, { mimeType });
-        mr.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) {
-            this.audioChunks.push(e.data);
-          }
-        };
-        mr.start(250);
-        this.mediaRecorder = mr;
-      }
-    } catch (permErr: any) {
-      this.isListening = false;
-      callbacks.onError?.(
-        lang === 'en'
-          ? 'Microphone is blocked in your browser settings. Tap the 🔒 lock icon in the address bar ➔ Site Settings ➔ Allow Microphone.'
-          : 'உலாவியில் மைக்ரோஃபோன் தடுக்கப்பட்டது. முகவரிப் பட்டியில் உள்ள 🔒 பூட்டைத் தட்டி அனுமதிக்கவும்.'
-      );
-      callbacks.onStateChange?.('error');
     }
   }
 
@@ -479,6 +467,7 @@ export class SpeechEngine {
     if (this.recognition) {
       try {
         this.recognition.onend = null;
+        this.recognition.onerror = null;
         this.recognition.stop();
         this.recognition = null;
       } catch (err) {
@@ -486,7 +475,7 @@ export class SpeechEngine {
       }
     }
 
-    // Stop MediaRecorder and grab buffered audio
+    // Stop MediaRecorder and grab pristine buffered audio
     let recordedBlob: Blob | null = null;
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
       try {
@@ -512,19 +501,24 @@ export class SpeechEngine {
 
     const callbacks = this.activeCallbacks;
     const lang = this.currentListeningLang;
-    const hadWebSpeechResult = this.hasReceivedFinalTranscript || Boolean(this.latestTranscript.trim());
     this.activeCallbacks = null;
 
-    // If Web Speech did not yield final text, transcribe with Groq Whisper AI
-    if (!hadWebSpeechResult && recordedBlob && recordedBlob.size > 300) {
+    // SOTA Whisper Polish: Instantly refine transcript with Whisper Large-v3-Turbo
+    if (recordedBlob && recordedBlob.size > 800) {
       try {
         callbacks?.onStateChange?.('processing');
         const whisperText = await this.transcribeAudioWithGroqWhisper(recordedBlob, lang);
-        if (whisperText) {
-          callbacks?.onTranscript?.(whisperText, true);
+        if (whisperText && whisperText.trim()) {
+          this.latestTranscript = whisperText.trim();
+          callbacks?.onTranscript?.(whisperText.trim(), true);
+        } else if (this.latestTranscript) {
+          callbacks?.onTranscript?.(this.latestTranscript, true);
         }
       } catch (wErr: any) {
-        console.warn('Groq Whisper fallback transcription notice:', wErr);
+        console.warn('Groq Whisper polish notice, preserving live transcript:', wErr);
+        if (this.latestTranscript) {
+          callbacks?.onTranscript?.(this.latestTranscript, true);
+        }
       }
     } else if (this.latestTranscript) {
       callbacks?.onTranscript?.(this.latestTranscript, true);

@@ -184,6 +184,8 @@
   },
   "active": "287d32495fe46cef",
   "lastOpenFiles": [
+    "decisions/ADR-015-Vernacular-Speech-and-Conversational-Continuity.md",
+    "decisions/ADR-013-Vernacular-Speech-and-Conversational-Continuity.md",
     "decisions/ADR-014-Conversational-Chameleon-and-Speech-Pipeline.md",
     "Untitled.base",
     "modules/Hospital_ERP_Dashboard.md",

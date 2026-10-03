@@ -49,7 +49,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import type { Language } from '../types';
-import { speechEngine, type DoctorPersona } from '../services/speechService';
+import { speechEngine, TanglishNormalizer, type DoctorPersona } from '../services/speechService';
 import {
   agiService,
   AVAILABLE_MODELS,
@@ -428,6 +428,10 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           setInputText(transcript);
         }
         if (isFinal) {
+          const normalized = TanglishNormalizer.normalize(transcript);
+          if (normalized.isRedFlag) {
+            console.info('Urgent medical keyword detected in speech:', normalized.detectedKeywords);
+          }
           setToastMessage(
             lang === 'en'
               ? `Heard: "${transcript.slice(0, 32)}${transcript.length > 32 ? '...' : ''}"`
