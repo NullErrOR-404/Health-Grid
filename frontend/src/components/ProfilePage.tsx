@@ -218,6 +218,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       }, 300);
     }
 
+    if (
+      window.location.hash === '#manage-beneficiaries' ||
+      window.location.hash === '#family-beneficiaries' ||
+      window.location.hash === '#family'
+    ) {
+      setTimeout(() => {
+        const el = document.getElementById('manage-beneficiaries');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
+
     window.addEventListener('open-profile-edit', handleOpenEdit);
     return () => window.removeEventListener('open-profile-edit', handleOpenEdit);
   }, []);
@@ -644,6 +655,19 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               >
                 <Link2 className="w-3.5 h-3.5" />
                 <span>{lang === 'en' ? 'Claim Caregiver Records' : 'முந்தைய பதிவுகளை இணைக்க'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('manage-beneficiaries');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                title={lang === 'en' ? 'Jump to Beneficiaries section' : 'பயனாளிகள் பகுதிக்குச் செல்லவும்'}
+              >
+                <Users className="w-3.5 h-3.5 text-teal-700" />
+                <span>{lang === 'en' ? `Manage Beneficiaries (${familyMembers.length}/7)` : `பயனாளிகள் (${familyMembers.length}/7)`}</span>
               </button>
 
               <button
@@ -1287,8 +1311,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
         </div>
 
-        {/* Row: Family & Beneficiary Multi-Profiles (ABDM CoWIN Standard) */}
-        <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-4">
+        {/* Row: Manage Beneficiaries (ABDM CoWIN Multi-Profile • Cap: 7 Dependents) */}
+        <div id="manage-beneficiaries" className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-4 scroll-mt-24">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-700">
@@ -1297,27 +1321,28 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-bold text-sm sm:text-base text-slate-900 leading-tight">
-                    {lang === 'en' ? 'Family & Beneficiary Profiles' : 'குடும்ப உறுப்பினர்கள் & பயனாளிகள்'}
+                    {lang === 'en' ? 'Manage Beneficiaries' : 'பயனாளிகள் மேலாண்மை'}
                   </h3>
-                  <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
-                    ABDM Linked
+                  <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
+                    {familyMembers.length}/7 Slots
                   </span>
                 </div>
                 <div className="text-[11px] text-slate-500 font-medium">
                   {lang === 'en'
-                    ? 'Consult with doctors, book hospital OPD tokens, and manage care for family members without individual phones'
-                    : 'சொந்த ஸ்மார்ட்போன் இல்லாத குடும்ப உறுப்பினர்களுக்கு ஆலோசனை மற்றும் டோக்கன் பெறலாம்'}
+                    ? 'Add up to 7 family members with verified mobile numbers and optional 108 Emergency Contact sync'
+                    : 'அதிகபட்சம் 7 குடும்ப உறுப்பினர்களை சரிபார்க்கப்பட்ட மொபைல் எண்ணுடன் சேர்க்கலாம்'}
                 </div>
               </div>
             </div>
 
             <button
               type="button"
+              disabled={familyMembers.length >= 7}
               onClick={() => setIsBeneficiaryModalOpen(true)}
-              className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+              className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer self-start sm:self-auto"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>{lang === 'en' ? 'Add Family Member' : '+ உறுப்பினர் சேர்'}</span>
+              <span>{familyMembers.length >= 7 ? 'Max Limit (7/7)' : (lang === 'en' ? 'Add Beneficiary' : '+ பயனாளி சேர்')}</span>
             </button>
           </div>
 
@@ -1328,12 +1353,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <Users className="w-5 h-5" />
               </div>
               <div className="text-xs font-bold text-slate-800">
-                {lang === 'en' ? 'No Family Members Linked Yet' : 'குடும்ப உறுப்பினர்கள் யாரும் சேர்க்கப்படவில்லை'}
+                {lang === 'en' ? 'No Beneficiaries Added Yet' : 'பயனாளிகள் யாரும் சேர்க்கப்படவில்லை'}
               </div>
               <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
                 {lang === 'en'
-                  ? 'Add your parents, spouse, children, or elderly dependents so you can consult on their behalf and generate hospital OPD tokens.'
-                  : 'உங்கள் பெற்றோர், குழந்தைகள் அல்லது உறவினர்களைச் சேர்த்து அவர்களுக்காக மருத்துவ ஆலோசனைகளைப் பெறுங்கள்.'}
+                  ? 'Add your parents, spouse, children, or elderly dependents (up to 7) with OTP-verified mobile numbers.'
+                  : 'உங்கள் பெற்றோர், குழந்தைகள் அல்லது உறவினர்களைச் சேர்த்து (7 வரை) மருத்துவ ஆலோசனைகளைப் பெறுங்கள்.'}
               </p>
               <button
                 type="button"
@@ -1341,7 +1366,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>{lang === 'en' ? 'Add First Family Member' : 'முதல் உறுப்பினரைச் சேர்'}</span>
+                <span>{lang === 'en' ? 'Add First Beneficiary' : 'முதல் பயனாளியைச் சேர்'}</span>
               </button>
             </div>
           ) : (
@@ -1369,6 +1394,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           </span>
                         </div>
 
+                        {member.phone && (
+                          <div className="flex items-center gap-1 text-[11px] font-mono text-slate-600 mt-1">
+                            <Phone className="w-2.5 h-2.5 text-teal-600" />
+                            <span>+91 {member.phone}</span>
+                            {member.isPhoneVerified && (
+                              <span title="Verified via OTP">
+                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                              </span>
+                            )}
+                          </div>
+                        )}
+
                         {member.linkedIndependentAccountHealthId && (
                           <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md border border-emerald-300 flex items-center gap-1">
@@ -1388,6 +1425,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       onClick={async () => {
                         if (window.confirm(lang === 'en' ? 'Remove this family profile?' : 'இந்த சுயவிவரத்தை நீக்கவா?')) {
                           await familyMemberService.deleteFamilyMember(member.id);
+                          const updatedContacts = emergencyContacts.filter((c) => c.id !== `ec-beneficiary-${member.id}`);
+                          if (updatedContacts.length !== emergencyContacts.length) {
+                            persistEmergencyContacts(updatedContacts);
+                          }
                           setFamilyMembers(familyMemberService.getFamilyMembers());
                           showToast(lang === 'en' ? 'Profile removed' : 'சுயவிவரம் நீக்கப்பட்டது');
                         }
@@ -1396,6 +1437,59 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       title={lang === 'en' ? 'Remove' : 'நீக்கு'}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Emergency Contact Toggle */}
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs">🚨</span>
+                      <span className="text-[11px] font-semibold text-slate-700">
+                        {member.isEmergencyContact
+                          ? (lang === 'en' ? '108 SOS Contact: Active' : 'அவசரகால தொடர்பாளர்: ஆம்')
+                          : (lang === 'en' ? '108 SOS Contact: Off' : 'அவசரகால தொடர்பாளர்: இல்லை')}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const nextState = !member.isEmergencyContact;
+                        await familyMemberService.toggleBeneficiaryEmergencyContact(member.id, nextState);
+                        let updatedContacts = [...emergencyContacts];
+                        if (nextState) {
+                          if (!updatedContacts.some((c) => c.id === `ec-beneficiary-${member.id}` || (member.phone && c.phone === member.phone))) {
+                            updatedContacts.push({
+                              id: `ec-beneficiary-${member.id}`,
+                              name: member.name,
+                              relation: member.relationship,
+                              phone: member.phone || '',
+                              isActive: true,
+                              isPrimary: false,
+                            });
+                          }
+                        } else {
+                          updatedContacts = updatedContacts.filter((c) => c.id !== `ec-beneficiary-${member.id}`);
+                        }
+                        persistEmergencyContacts(updatedContacts);
+                        setFamilyMembers(familyMemberService.getFamilyMembers());
+                        showToast(
+                          nextState
+                            ? (lang === 'en' ? `${member.name} linked as Emergency Contact` : `${member.name} அவசரகால தொடர்பாளராக இணைக்கப்பட்டார்`)
+                            : (lang === 'en' ? `${member.name} removed from Emergency Contacts` : `${member.name} அவசரகால தொடர்பாளரிலிருந்து நீக்கப்பட்டார்`)
+                        );
+                      }}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
+                        member.isEmergencyContact ? 'bg-teal-600' : 'bg-slate-300'
+                      }`}
+                      title="Toggle 108 Emergency Contact"
+                      aria-pressed={member.isEmergencyContact}
+                    >
+                      <span
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                          member.isEmergencyContact ? 'translate-x-4.5' : 'translate-x-0.5'
+                        }`}
+                      />
                     </button>
                   </div>
 

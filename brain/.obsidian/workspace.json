@@ -184,6 +184,7 @@
   },
   "active": "287d32495fe46cef",
   "lastOpenFiles": [
+    "decisions/ADR-013-Beneficiary-OTP-Verification-and-Emergency-Sync.md",
     "decisions/ADR-012-Beneficiary-to-Independent-Account-Porting.md",
     "decisions/ADR-011-Family-and-Beneficiary-MultiProfile-System.md",
     "decisions/ADR-010-Mobile-Hamburger-Drawer-Scroll-Lock-and-Navigation.md",

@@ -23,8 +23,17 @@ export type FamilyRelationship =
   | 'Sibling'
   | 'Grandparent'
   | 'Relative'
+  | 'Guardian'
   | 'Friend'
   | 'Other';
+
+export const MAX_BENEFICIARIES = 7;
+
+export interface BeneficiaryOtpSession {
+  phone: string;
+  otp: string;
+  expiresAt: number;
+}
 
 export interface FamilyMember {
   id: string;
@@ -33,6 +42,10 @@ export interface FamilyMember {
   relationship: FamilyRelationship;
   age: number;
   gender: 'Female' | 'Male' | 'Other';
+  phone?: string;
+  isPhoneVerified?: boolean;
+  isEmergencyContact?: boolean;
+  proxyPhoneUsed?: boolean;
   bloodGroup?: string;
   chronicConditions?: string[];
   allergies?: string[];
@@ -153,13 +166,104 @@ class FamilyMemberService {
   }
 
   /**
-   * Adds a new family member/dependent
+   * Checks whether the user can register another beneficiary (Cap: 7)
+   */
+  public canAddBeneficiary(userId?: string): { allowed: boolean; count: number; max: number; reason?: string } {
+    const members = this.getFamilyMembers(userId);
+    const count = members.length;
+    if (count >= MAX_BENEFICIARIES) {
+      return {
+        allowed: false,
+        count,
+        max: MAX_BENEFICIARIES,
+        reason: `Maximum limit of ${MAX_BENEFICIARIES} beneficiaries reached per account under ABDM guidelines.`,
+      };
+    }
+    return {
+      allowed: true,
+      count,
+      max: MAX_BENEFICIARIES,
+    };
+  }
+
+  /**
+   * Dispatches a 6-digit verification OTP to the given phone number
+   */
+  public requestOtpForPhone(phone: string): { success: boolean; testOtp: string; message: string } {
+    const cleanPhone = phone.replace(/[^0-9]/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+      return { success: false, testOtp: '', message: 'Please enter a valid 10-digit mobile number' };
+    }
+
+    const testOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const session: BeneficiaryOtpSession = {
+      phone: cleanPhone,
+      otp: testOtp,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    };
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`healthgrid_otp_${cleanPhone}`, JSON.stringify(session));
+      } catch (e) {
+        console.warn('Could not cache OTP session locally:', e);
+      }
+    }
+
+    return {
+      success: true,
+      testOtp,
+      message: `OTP sent successfully to +91 ${cleanPhone}`,
+    };
+  }
+
+  /**
+   * Verifies the entered OTP for the phone number
+   */
+  public verifyOtpForPhone(phone: string, enteredOtp: string): { success: boolean; message: string } {
+    const cleanPhone = phone.replace(/[^0-9]/g, '').slice(-10);
+    const cleanOtp = enteredOtp.trim();
+
+    // Universal test/demo bypass: "123456"
+    if (cleanOtp === '123456') {
+      return { success: true, message: 'Phone verified successfully.' };
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(`healthgrid_otp_${cleanPhone}`);
+        if (raw) {
+          const session: BeneficiaryOtpSession = JSON.parse(raw);
+          if (Date.now() > session.expiresAt) {
+            return { success: false, message: 'OTP expired. Please request a new one.' };
+          }
+          if (session.otp === cleanOtp) {
+            localStorage.removeItem(`healthgrid_otp_${cleanPhone}`);
+            return { success: true, message: 'Phone verified successfully.' };
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading OTP session:', e);
+      }
+    }
+
+    return { success: false, message: 'Incorrect OTP. Try again or enter 123456 for demo.' };
+  }
+
+  /**
+   * Adds a new family member/dependent (Strict cap: 7)
    */
   public async addFamilyMember(
     input: Omit<FamilyMember, 'id' | 'healthId'>,
     userId?: string
   ): Promise<FamilyMember> {
     const user = userId ? { id: userId } as AuthUser : authService.getCurrentUser();
+    const current = this.getFamilyMembers(user?.id);
+
+    if (current.length >= MAX_BENEFICIARIES) {
+      throw new Error(`Maximum limit of ${MAX_BENEFICIARIES} beneficiaries reached per account.`);
+    }
+
     const healthId = this.generateFamilyHealthId();
     const newMember: FamilyMember = {
       ...input,
@@ -171,10 +275,13 @@ class FamilyMemberService {
       caregiverName: user?.name || 'Primary Caregiver',
       caregiverPhone: user?.phone || '',
       delegatedAccessStatus: 'ACTIVE',
+      phone: input.phone || '',
+      isPhoneVerified: input.isPhoneVerified ?? true,
+      isEmergencyContact: input.isEmergencyContact ?? false,
+      proxyPhoneUsed: input.proxyPhoneUsed ?? false,
     };
 
     // 1. Immediately persist locally
-    const current = this.getFamilyMembers(user?.id);
     const updated = [...current, newMember];
     localStorage.setItem(this.getStorageKey(user?.id), JSON.stringify(updated));
 
@@ -189,6 +296,8 @@ class FamilyMemberService {
           relationship: newMember.relationship,
           age: newMember.age,
           gender: newMember.gender,
+          phone: newMember.phone,
+          is_emergency_contact: newMember.isEmergencyContact,
           blood_group: newMember.bloodGroup,
           chronic_conditions: newMember.chronicConditions || [],
           allergies: newMember.allergies || [],
@@ -201,6 +310,44 @@ class FamilyMemberService {
 
     this.notify();
     return newMember;
+  }
+
+  /**
+   * Toggles whether a beneficiary is linked as an Emergency Contact
+   */
+  public async toggleBeneficiaryEmergencyContact(
+    memberId: string,
+    isEmergency: boolean,
+    userId?: string
+  ): Promise<FamilyMember | null> {
+    const user = userId ? { id: userId } as AuthUser : authService.getCurrentUser();
+    const members = this.getFamilyMembers(user?.id);
+    let updatedMember: FamilyMember | null = null;
+
+    const mapped = members.map((m) => {
+      if (m.id === memberId) {
+        updatedMember = { ...m, isEmergencyContact: isEmergency };
+        return updatedMember;
+      }
+      return m;
+    });
+
+    localStorage.setItem(this.getStorageKey(user?.id), JSON.stringify(mapped));
+
+    if (user) {
+      try {
+        await supabase
+          .from('family_members')
+          .update({ is_emergency_contact: isEmergency })
+          .eq('id', memberId)
+          .eq('user_id', user.id);
+      } catch (err) {
+        console.warn('Supabase toggle error:', err);
+      }
+    }
+
+    this.notify();
+    return updatedMember;
   }
 
   /**

@@ -515,15 +515,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                             setUserDropdownOpen(false);
                             if (onNavigateProfile) {
                               onNavigateProfile();
+                              setTimeout(() => {
+                                const el = document.getElementById('manage-beneficiaries') || document.getElementById('family-beneficiaries');
+                                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                              }, 150);
                             } else {
-                              window.history.pushState({}, '', '/profile');
+                              window.history.pushState({}, '', '/profile#manage-beneficiaries');
                               window.dispatchEvent(new PopStateEvent('popstate'));
                             }
                           }}
                           className="w-full flex items-center gap-3 px-3 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-xl text-xs font-medium transition-colors cursor-pointer text-left"
                         >
                           <Users className="w-4 h-4 text-teal-600" />
-                          <span>{lang === 'en' ? 'Family & Dependents' : 'குடும்ப உறுப்பினர்கள்'}</span>
+                          <span>{lang === 'en' ? 'Manage Beneficiaries' : 'பயனாளிகள் மேலாண்மை'}</span>
                         </button>
 
                         {/* Health Records */}
