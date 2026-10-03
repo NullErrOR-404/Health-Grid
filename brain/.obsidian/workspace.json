@@ -184,6 +184,7 @@
   },
   "active": "287d32495fe46cef",
   "lastOpenFiles": [
+    "decisions/ADR-016-Autonomous-Hybrid-Vector-RAG-and-Ambient-Clinical-Automations.md",
     "decisions/ADR-015-Vernacular-Speech-and-Conversational-Continuity.md",
     "decisions/ADR-013-Vernacular-Speech-and-Conversational-Continuity.md",
     "decisions/ADR-014-Conversational-Chameleon-and-Speech-Pipeline.md",

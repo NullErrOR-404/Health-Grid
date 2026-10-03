@@ -12,6 +12,9 @@
 import { rateLimiter, RATE_LIMIT_CONFIGS } from './rateLimiter';
 import { agenticTools, type AgentToolCall, type JanAushadhiResult } from './agenticToolsService';
 import { healthMemoryService } from './healthMemoryService';
+import { vectorRagService } from './vectorRagService';
+import { careLoopService } from './careLoopService';
+import { authService } from './authService';
 
 export interface ModelOption {
   id: string;
@@ -607,11 +610,81 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       console.warn('Longitudinal health memory processing error:', memErr);
     }
 
+    const isCasualGreeting = isCasualGreetingOrSocial(cleanQuery);
+
+    // Tool 6: Autonomous Hybrid Vector RAG Retrieval (<5ms)
+    try {
+      const ragResults = vectorRagService.queryKnowledgeBase(cleanQuery, 3);
+      if (ragResults && ragResults.length > 0) {
+        executedTools.push({
+          id: `tool-${Date.now()}-rag`,
+          name: 'vectorRagKnowledge',
+          label: 'Hybrid Vector Clinical Grounding Radar',
+          status: 'success',
+          resultSummary: `Retrieved ${ragResults.length} vector chunks from ICMR Protocols & Jan Aushadhi Formulary`,
+          data: ragResults.map(r => ({ source: r.chunk.source, title: r.chunk.title, similarity: r.similarityScore })),
+        });
+
+        toolContextPrompt += `\n[AUTONOMOUS HYBRID VECTOR RAG GROUNDED KNOWLEDGE BASE]:\n` +
+          ragResults.map(r => `• [${r.chunk.source}] ${r.chunk.title} (Cosine Relevance: ${(r.similarityScore * 100).toFixed(0)}%):\n  ${r.chunk.content}`).join('\n\n') +
+          `\nStrict Clinical Requirement: Ground your advice directly in these verified protocols and authentic Jan Aushadhi prices to prevent hallucinations.\n`;
+      }
+    } catch (ragErr) {
+      console.warn('Vector RAG query error:', ragErr);
+    }
+
+    // Automation 1: Autonomous SBAR Doctor Handover Detection
+    const doctorVisitTriggers = ['see doctor', 'seeing doctor', 'going to hospital', 'visiting clinic', 'doctor note', 'referral', 'handover', 'மருத்துவரிடம்', 'மருத்துவமனை செல்கிறேன்', 'consulting dr'];
+    if (doctorVisitTriggers.some(t => lowerQuery.includes(t))) {
+      try {
+        const sbar = vectorRagService.generateAutonomousSbar(cleanQuery);
+        toolContextPrompt += `\n[AUTONOMOUS CLINICAL AUTOMATION - SBAR DOCTOR HANDOVER BRIEF GENERATOR]:\n` +
+          `The patient is visiting a clinic or doctor. Format a crisp, professional, ready-to-show clinical SBAR summary in your response:\n` +
+          `- Situation: ${sbar.situation}\n` +
+          `- Background: ${sbar.background}\n` +
+          `- Assessment: ${sbar.assessment}\n` +
+          `- Recommendation: ${sbar.recommendation}\n` +
+          `Advise the patient to show this exact summary to their consulting physician.\n`;
+      } catch (sbarErr) {
+        console.warn('SBAR generation error:', sbarErr);
+      }
+    }
+
+    // Automation 2: Autonomous Pharmacy Savings Slip
+    try {
+      const slip = vectorRagService.generatePharmacySavingsSlip(cleanQuery);
+      if (slip && slip.totalSavingsAmount > 0) {
+        toolContextPrompt += `\n[AUTONOMOUS CLINICAL AUTOMATION - JAN AUSHADHI PHARMACY SAVINGS SLIP]:\n` +
+          `Original Brand Cost: ₹${slip.totalBrandCost} | Jan Aushadhi Cost: ₹${slip.totalGenericCost} | Total Patient Savings: ₹${slip.totalSavingsAmount} (${slip.overallSavingsPercentage}% savings).\n` +
+          `Itemized Generic Breakdown:\n` +
+          slip.janAushadhiSubstitutes.map(s => `  • ${s.brand} (₹${s.brandPrice}) -> ${s.generic} (₹${s.genericPrice}, ${s.savingsPct}% off)`).join('\n') +
+          `\nEncourage the patient with these exact savings and suggest showing this to the Jan Aushadhi pharmacy counter.\n`;
+      }
+    } catch (slipErr) {
+      console.warn('Pharmacy slip error:', slipErr);
+    }
+
+    // Automation 3: Autonomous Proactive Care-Loop Scheduler
+    const acuteIllnessTriggers = ['fever', 'kaichal', 'cough', 'wheezing', 'chest pain', 'stomach pain', 'vomiting', 'diarrhea', 'காய்ச்சல்', 'இருமல்'];
+    if (acuteIllnessTriggers.some(t => lowerQuery.includes(t)) && !isCasualGreeting) {
+      try {
+        const currentUser = authService.getCurrentUser();
+        const userId = currentUser?.id || 'guest_consultation';
+        careLoopService.scheduleCareLoop({
+          userId,
+          condition: cleanQuery.slice(0, 40),
+          initialSymptoms: cleanQuery,
+          hoursDelay: 24,
+        });
+      } catch (careLoopErr) {
+        console.warn('Auto care-loop schedule error:', careLoopErr);
+      }
+    }
+
     const model = overrideModelId
       ? AVAILABLE_MODELS.find(m => m.id === overrideModelId) || this.getCurrentModel()
       : this.getCurrentModel();
 
-    const isCasualGreeting = isCasualGreetingOrSocial(cleanQuery);
     const startTime = performance.now();
 
     try {

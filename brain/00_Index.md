@@ -58,6 +58,7 @@ graph TD
     DEC --> ADR13[[ADR-013-Beneficiary-OTP-Verification-and-Emergency-Sync]]
     DEC --> ADR14[[ADR-014-Conversational-Chameleon-and-Speech-Pipeline]]
     DEC --> ADR15[[ADR-015-Vernacular-Speech-and-Conversational-Continuity]]
+    DEC --> ADR16[[ADR-016-Autonomous-Hybrid-Vector-RAG-and-Ambient-Clinical-Automations]]
 
     CTX --> ACT[[Active_Context]]
     CTX --> CRED[[Key_Credentials_and_Environments]]
