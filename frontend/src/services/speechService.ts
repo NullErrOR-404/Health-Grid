@@ -90,17 +90,32 @@ export interface VoiceSettings {
   engine: VoiceEngineType;
   persona: DoctorPersona;
   sarvamApiKey: string;
-  speedRate: number; // 0.85 gentle, 1.0 normal
+  speedRate: number; // 1.1 brisk natural conversational pace
   streamingQueue: boolean;
 }
 
 const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
-  engine: 'gemini-live',
+  engine: 'browser-tts',
   persona: 'meera',
   sarvamApiKey: '',
-  speedRate: 0.85,
-  streamingQueue: true,
+  speedRate: 1.1,
+  streamingQueue: false,
 };
+
+/**
+ * Strips markdown symbols, asterisks, URLs, headers, and bullet markers
+ * so text-to-speech sounds like a warm, natural human doctor.
+ */
+export function cleanTextForSpeech(text: string): string {
+  return text
+    .replace(/https?:\/\/\S+/g, '') // remove URLs
+    .replace(/[*_#`~>]/g, '') // strip markdown asterisks/formatting
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // keep link label only
+    .replace(/^[•*\-\d.]+\s+/gm, '') // remove bullet points
+    .replace(/<[^>]*>/g, '') // strip HTML tags
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 export interface SpeechCallbacks {
   onTranscript?: (transcript: string, isFinal: boolean) => void;
@@ -276,15 +291,17 @@ export class SpeechEngine {
   private latestTranscript: string = '';
 
   /**
-   * Resilient Dual-Mode Speech Recognition:
-   * 1. Safely requests microphone access and spins up MediaRecorder for Groq Whisper AI.
-   * 2. Runs native Web Speech API in parallel for instantaneous real-time transcription.
-   * 3. If Web Speech API is absent, blocked, or silent, Groq Whisper transcribes the recording automatically.
+   * Resilient Single-Pipeline Speech Recognition (Mobile & Desktop):
+   * 1. If SpeechRecognition is supported (Chrome, Android Chrome, Edge, Safari 14.1+),
+   *    activates it directly as the primary real-time listener WITHOUT simultaneously opening
+   *    a competing getUserMedia stream (which causes hardware lock collisions on mobile).
+   * 2. If SpeechRecognition is unavailable or errors out, seamlessly falls back to getUserMedia + Groq Whisper AI.
+   * 3. If microphone permission is blocked in browser settings, guides the user clearly on how to unblock it.
    */
   public async startListening(lang: 'ta' | 'en', callbacks: SpeechCallbacks): Promise<void> {
     this.stopSpeaking();
-    
-    // Stop any existing session without invoking old callbacks
+
+    // Stop any existing session cleanly
     this.isListening = false;
     if (this.recognition) {
       try {
@@ -315,55 +332,28 @@ export class SpeechEngine {
     this.latestTranscript = '';
     this.audioChunks = [];
 
-    let mediaAcquired = false;
-
-    // 1. Attempt getUserMedia for hardware mic access & Groq Whisper buffer
-    try {
-      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
-        this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaAcquired = true;
-
-        if (typeof MediaRecorder !== 'undefined') {
-          try {
-            const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-              ? 'audio/webm;codecs=opus'
-              : MediaRecorder.isTypeSupported('audio/webm')
-              ? 'audio/webm'
-              : 'audio/mp4';
-            const mr = new MediaRecorder(this.mediaStream, { mimeType });
-            mr.ondataavailable = (e) => {
-              if (e.data && e.data.size > 0) {
-                this.audioChunks.push(e.data);
-              }
-            };
-            mr.start(250);
-            this.mediaRecorder = mr;
-          } catch (mrErr) {
-            console.warn('MediaRecorder buffer setup skipped:', mrErr);
-          }
+    // Pre-flight permission check when supported
+    if (typeof navigator !== 'undefined' && (navigator as any).permissions?.query) {
+      try {
+        const permStatus = await (navigator as any).permissions.query({ name: 'microphone' });
+        if (permStatus?.state === 'denied') {
+          callbacks.onError?.(
+            lang === 'en'
+              ? 'Microphone is blocked in your browser settings. Tap the 🔒 lock icon in the address bar ➔ Site Settings ➔ Allow Microphone.'
+              : 'உலாவியில் மைக்ரோஃபோன் தடுக்கப்பட்டுள்ளது. முகவரிப் பட்டியில் உள்ள 🔒 பூட்டைத் தட்டி அனுமதிக்கவும்.'
+          );
+          callbacks.onStateChange?.('error');
+          return;
         }
+      } catch {
+        // Permissions query not supported for microphone on this platform, proceed
       }
-    } catch (permErr: any) {
-      console.warn('Microphone getUserMedia warning:', permErr);
     }
 
-    // 2. Setup Web Speech Recognition
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-    if (!mediaAcquired && !SpeechRecognition) {
-      callbacks.onError?.(
-        lang === 'en'
-          ? 'Microphone access is not supported or was blocked. Please check browser permissions.'
-          : 'மைக்ரோஃபோன் அணுகல் ஆதரிக்கப்படவில்லை அல்லது தடுக்கப்பட்டது.'
-      );
-      callbacks.onStateChange?.('error');
-      return;
-    }
-
-    this.isListening = true;
-    callbacks.onStateChange?.('listening');
-
+    // PIPELINE A: Web Speech API (Preferred: zero bandwidth & instant local streaming)
     if (SpeechRecognition) {
       try {
         const rec = new SpeechRecognition();
@@ -371,6 +361,11 @@ export class SpeechEngine {
         rec.interimResults = true;
         rec.maxAlternatives = 1;
         rec.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
+
+        rec.onstart = () => {
+          this.isListening = true;
+          callbacks.onStateChange?.('listening');
+        };
 
         rec.onresult = (event: any) => {
           let interim = '';
@@ -393,33 +388,86 @@ export class SpeechEngine {
           }
         };
 
-        rec.onerror = (event: any) => {
+        rec.onerror = async (event: any) => {
           console.warn('Web Speech recognition status:', event.error);
-          if (event.error === 'not-allowed') {
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            this.isListening = false;
             callbacks.onError?.(
               lang === 'en'
-                ? 'Microphone permission denied. Please allow microphone access in your browser.'
-                : 'மைக்ரோஃபோன் அனுமதி மறுக்கப்பட்டது. உலாவியில் அனுமதிக்கவும்.'
+                ? 'Microphone is blocked in your browser settings. Tap the 🔒 lock icon in the address bar ➔ Site Settings ➔ Allow Microphone.'
+                : 'உலாவியில் மைக்ரோஃபோன் தடுக்கப்பட்டது. முகவரிப் பட்டியில் உள்ள 🔒 பூட்டைத் தட்டி அனுமதிக்கவும்.'
             );
+            callbacks.onStateChange?.('error');
+          } else if (event.error === 'network') {
+            // Network failure on Web Speech server: seamless failover to Groq Whisper
+            await this.startHardwareFallback(lang, callbacks);
+          } else if (event.error !== 'no-speech') {
+            callbacks.onError?.(event.error);
           }
         };
 
         rec.onend = () => {
-          // Keep listening continuously while isListening is active
+          // Keep listening continuously while isListening flag is active
           if (this.isListening && this.recognition) {
             try {
               this.recognition.start();
             } catch (err) {
-              // Recognition already active or stopped
+              // Already started or terminated
             }
           }
         };
 
         this.recognition = rec;
         rec.start();
+        return;
       } catch (recErr: any) {
-        console.warn('Web Speech start warning, continuing with Groq Whisper buffer:', recErr);
+        console.warn('Web Speech start error, falling back to hardware mic:', recErr);
       }
+    }
+
+    // PIPELINE B: Hardware Microphone via getUserMedia + Groq Whisper AI fallback
+    await this.startHardwareFallback(lang, callbacks);
+  }
+
+  private async startHardwareFallback(lang: 'ta' | 'en', callbacks: SpeechCallbacks): Promise<void> {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      callbacks.onError?.(
+        lang === 'en'
+          ? 'Microphone access is not supported on this browser.'
+          : 'இந்த உலாவியில் மைக்ரோஃபோன் ஆதரிக்கப்படவில்லை.'
+      );
+      callbacks.onStateChange?.('error');
+      return;
+    }
+
+    try {
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.isListening = true;
+      callbacks.onStateChange?.('listening');
+
+      if (typeof MediaRecorder !== 'undefined') {
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : 'audio/mp4';
+        const mr = new MediaRecorder(this.mediaStream, { mimeType });
+        mr.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            this.audioChunks.push(e.data);
+          }
+        };
+        mr.start(250);
+        this.mediaRecorder = mr;
+      }
+    } catch (permErr: any) {
+      this.isListening = false;
+      callbacks.onError?.(
+        lang === 'en'
+          ? 'Microphone is blocked in your browser settings. Tap the 🔒 lock icon in the address bar ➔ Site Settings ➔ Allow Microphone.'
+          : 'உலாவியில் மைக்ரோஃபோன் தடுக்கப்பட்டது. முகவரிப் பட்டியில் உள்ள 🔒 பூட்டைத் தட்டி அனுமதிக்கவும்.'
+      );
+      callbacks.onStateChange?.('error');
     }
   }
 
@@ -493,7 +541,7 @@ export class SpeechEngine {
   public speak(
     text: string,
     lang: 'ta' | 'en',
-    speedRate: number = 0.85,
+    speedRate: number = 1.1,
     onStart?: () => void,
     onEnd?: () => void
   ): void {
@@ -503,12 +551,12 @@ export class SpeechEngine {
     this.stopSpeaking();
 
     this.currentLang = lang;
-    this.currentSpeedRate = speedRate || this.voiceSettings.speedRate || 0.85;
+    this.currentSpeedRate = speedRate || 1.1;
     this.onSpeakingStart = onStart;
     this.onSpeakingEnd = onEnd;
 
-    // If browser-tts is explicitly selected, use native synthesis
-    if (this.voiceSettings.engine === 'browser-tts') {
+    // Zero-lag fast path: default to instant native browser speech synthesis unless Sarvam API key is active
+    if (this.voiceSettings.engine === 'browser-tts' || !this.voiceSettings.sarvamApiKey) {
       this.speakWithBrowserFallback(text, lang, this.currentSpeedRate, onStart, onEnd);
       return;
     }
@@ -810,7 +858,7 @@ export class SpeechEngine {
   private speakWithBrowserFallback(
     text: string,
     lang: 'ta' | 'en',
-    speedRate: number = 0.85,
+    speedRate: number = 1.1,
     onStart?: () => void,
     onEnd?: () => void
   ): void {
@@ -820,9 +868,17 @@ export class SpeechEngine {
     }
 
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Clean markdown, links, bullets, and symbols so voice sounds smooth and natural
+    const clean = cleanTextForSpeech(text);
+    if (!clean) {
+      onEnd?.();
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(clean);
     utterance.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
-    utterance.rate = speedRate;
+    utterance.rate = speedRate || 1.1;
     utterance.pitch = 1.0;
 
     const voices = window.speechSynthesis.getVoices();
@@ -834,9 +890,18 @@ export class SpeechEngine {
       utterance.voice = bestVoice;
     }
 
-    utterance.onstart = () => onStart?.();
-    utterance.onend = () => onEnd?.();
-    utterance.onerror = () => onEnd?.();
+    utterance.onstart = () => {
+      this.isSpeaking = true;
+      onStart?.();
+    };
+    utterance.onend = () => {
+      this.isSpeaking = false;
+      onEnd?.();
+    };
+    utterance.onerror = () => {
+      this.isSpeaking = false;
+      onEnd?.();
+    };
 
     window.speechSynthesis.speak(utterance);
   }

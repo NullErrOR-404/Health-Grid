@@ -1057,7 +1057,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       speechEngine.speak(
         text,
         lang,
-        0.85,
+        1.1,
         () => setIsVoiceSpeaking(true),
         () => setIsVoiceSpeaking(false)
       );

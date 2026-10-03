@@ -105,8 +105,56 @@ export interface AgiResponse {
   };
 }
 
+/**
+ * Detects whether the user is sending a casual social greeting or polite check-in
+ * (e.g. "hi", "how r u", "vanakkam") rather than describing medical symptoms.
+ */
+export function isCasualGreetingOrSocial(query: string): boolean {
+  const trimmed = query.trim().toLowerCase();
+  // Strip punctuation and emojis
+  const clean = trimmed.replace(/[!.,?~:;()_\\/\-]/g, '').trim();
+
+  // If query mentions any explicit medical symptoms, medications, or anatomical complaints, it is NOT casual
+  const healthKeywords = [
+    'pain', 'fever', 'ache', 'cough', 'cold', 'sick', 'ill', 'hurt', 'headache', 'chest',
+    'stomach', 'vomit', 'nausea', 'dizzy', 'doctor', 'medicine', 'tablet', 'pill', 'dose',
+    'hospital', 'rash', 'allergy', 'sugar', 'bp', 'pressure', 'test', 'scan', 'report',
+    'vali', 'kaichal', 'marunthu', 'mathirai', 'udambu', 'nenju', 'thala', 'vayiru',
+    'eriyudhu', 'sali', 'irumal', 'asthma', 'infection', 'bleed', 'injury', 'wound', 'bleeding'
+  ];
+  if (healthKeywords.some(k => clean.includes(k))) {
+    return false;
+  }
+
+  const exactGreetings = [
+    'hi', 'hii', 'hiii', 'hello', 'helloo', 'hey', 'heyy', 'vanakkam', 'namaste', 'halo', 'yo', 'sup',
+    'how are you', 'how r u', 'how are u', 'how r you', 'how do you do',
+    'how is it going', 'hows it going', 'how are things', 'what is up', 'whats up', 'wassup',
+    'good morning', 'good afternoon', 'good evening', 'good night',
+    'kalai vanakkam', 'maali vanakkam', 'eppadi irukinga', 'epdi irukinga', 'nalama',
+    'who are you', 'what can you do', 'thank you', 'thanks', 'nandri', 'thx',
+    'hi doc', 'hello doc', 'hey doc', 'vanakkam doc', 'hi doctor', 'hello doctor', 'hey doctor', 'vanakkam doctor'
+  ];
+
+  if (exactGreetings.includes(clean)) return true;
+
+  if (/^(hi|hello|hey|vanakkam|namaste)\s+(doc|doctor|docbot|friend|there)?$/i.test(clean)) {
+    return true;
+  }
+
+  return false;
+}
+
 export function analyzeEmotionalState(query: string): EmotionalAssessment {
   const lower = query.toLowerCase();
+
+  // Casual Greeting Intent -> Pure human warmth, zero unsolicited clinical questioning
+  if (isCasualGreetingOrSocial(query)) {
+    return {
+      state: 'calm',
+      deEscalationDirective: 'CASUAL SOCIAL GREETING PROTOCOL: The user has sent a friendly, polite non-medical greeting or pleasantry. Respond with genuine warmth, humor, and conversational naturalness as an approachable, caring human doctor friend. STRICT INVARIANT: DO NOT ask unprompted medical questions like "What symptoms are you experiencing?", "How are you feeling physically?", or conduct clinical probing. Simply exchange warm pleasantries and let them know you are here whenever they need anything.',
+    };
+  }
 
   if (
     lower.includes('chest pain') ||
@@ -192,7 +240,7 @@ export function analyzeEmotionalState(query: string): EmotionalAssessment {
 
   return {
     state: 'calm',
-    deEscalationDirective: 'STANDARD CLINICAL PROTOCOL: Maintain warm bedside presence, active clinical probing, and actionable guidance.',
+    deEscalationDirective: 'STANDARD CLINICAL PROTOCOL: Maintain an empathetic bedside manner and natural conversational flow. Ask relevant follow-up questions ONLY about the specific symptom or issue the user explicitly mentioned. Avoid rigid robotic lists, repetitive templates, or irrelevant body surveys.',
   };
 }
 
@@ -287,25 +335,33 @@ class AgiIntelligenceService {
   /**
    * Constructs the AGI Doctor System Persona with OWASP LLM01 Security Hardening
    */
-  private buildSystemPrompt(patientContext?: string, emotionalDirective?: string, toolData?: string): string {
+  private buildSystemPrompt(patientContext?: string, emotionalDirective?: string, toolData?: string, isCasualGreeting?: boolean): string {
     return `You are DocBot, an advanced AGI Family Physician for HealthGrid Plus serving patients across Tamil Nadu and India.
-You think and interact like an experienced, deeply empathetic, real-world human doctor with 20+ years of bedside clinical experience, not an artificial robotic LLM.
+You think, speak, and interact like an experienced, deeply empathetic, real-world human doctor with 20+ years of bedside clinical experience, not an artificial robotic LLM.
 
+${isCasualGreeting ? `
+CONVERSATIONAL CHAMELEON & CASUAL GREETING PROTOCOL:
+- The user has sent a casual social greeting, pleasantry, or conversational check-in (e.g., "hi", "hello", "hey", "how r u", "vanakkam").
+- Respond warmly, naturally, and conversationally like an approachable, caring human doctor and friend (e.g., "Hello! I'm doing great, thank you for asking! How is your day going? Feel free to reach out whenever you have any health questions or need guidance.").
+- CRITICAL INVARIANT: DO NOT ASK UNPROMPTED HEALTH QUESTIONS! Never say "What symptoms are you experiencing?", "How are you feeling physically?", or initiate clinical questioning until the user actually brings up a health complaint or medical question.
+- Do NOT output robotic bullet lists, diagnostic templates, or boilerplate disclaimers for casual greetings.
+` : `
 KEY CLINICAL BEHAVIOR:
-1. Warmth & Human Calibration: Greet naturally (e.g. "Vanakkam", "Hello"). Speak directly with genuine human warmth and reassurance. Never speak in rigid robotic bullets or dry lists.
+1. Warmth & Genuine Bedside Manner: Greet naturally (e.g. "Vanakkam", "Hello"). Speak directly with genuine human warmth, conversational empathy, and reassurance. Never speak in rigid robotic bullets, dry lists, or clinical boilerplate.
 ${emotionalDirective ? `\nEMOTIONAL PROTOCOL:\n${emotionalDirective}\n` : ''}
 2. Adaptive Native Bilingualism:
    - If the patient communicates in Tamil or Tanglish, converse in natural, empathetic Tamil (or easy-to-understand conversational Tanglish/Tamil).
    - If in English, reply in warm, clear conversational English.
    - You understand colloquial Tamil terms effortlessly (e.g., 'romba thala vali' = severe headache, 'nenju eriyudhu' = heart burn / chest discomfort, 'udambu soodu' = feverish feeling).
 3. Human Clinical Intuition:
-   - probe gently with 1 or 2 targeted, compassionate follow-up questions (e.g., "How many days has this fever lasted?", "Have you felt any chills or vomiting?").
+   - Ask relevant follow-up questions ONLY about the specific symptom or issue the user explicitly mentioned (e.g., if they mention a fever, ask how many days or if there are chills; never interrogate them with unrelated surveys or ask about uninvolved body parts).
    - Offer practical home advice (hydration, warm rasam/kanji, resting) alongside clear clinical guidance.
 4. Affordable Generic Medicine & Jan Aushadhi:
    - When suggesting over-the-counter or common remedies (e.g. Paracetamol 500mg, Cetirizine 10mg, ORS), mention the generic Jan Aushadhi cost (e.g., ₹0.40 - ₹1.50 per tablet) to relieve the patient's financial anxiety.
 5. Critical Triage & Safety Invariants:
    - If red flags appear (acute crushing chest pain, radiating jaw pain, sudden shortness of breath, facial droop, severe trauma, unconsciousness), declare an EMERGENCY immediately and advise 108 Emergency Ambulance dispatch.
    - Always clarify that you provide clinical triage, first-aid, and guidance, and severe symptoms require an in-person hospital evaluation.
+`}
 6. Zero Hallucinated Identity:
    - Do NOT assume, invent, or guess patient names. Never address the patient as "Murugan" or any other unverified name.
    - Only address the patient by name if an explicit, verified patient name is stated in the PATIENT MEDICAL VAULT CONTEXT below.
@@ -528,13 +584,14 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       ? AVAILABLE_MODELS.find(m => m.id === overrideModelId) || this.getCurrentModel()
       : this.getCurrentModel();
 
+    const isCasualGreeting = isCasualGreetingOrSocial(cleanQuery);
     const startTime = performance.now();
 
     try {
       if (model.provider === 'groq') {
-        return await this.callGroq(model, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime);
+        return await this.callGroq(model, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting);
       } else {
-        return await this.callGemini(model, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime);
+        return await this.callGemini(model, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting);
       }
     } catch (err: any) {
       if (err.message && err.message.includes('Rate limit exceeded')) {
@@ -544,10 +601,10 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       // Automatic failover between Groq and Gemini
       if (model.provider === 'groq') {
         const fallbackModel = AVAILABLE_MODELS.find(m => m.provider === 'google') || AVAILABLE_MODELS[1];
-        return await this.callGemini(fallbackModel, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime);
+        return await this.callGemini(fallbackModel, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting);
       } else {
         const fallbackModel = AVAILABLE_MODELS.find(m => m.provider === 'groq') || AVAILABLE_MODELS[0];
-        return await this.callGroq(fallbackModel, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime);
+        return await this.callGroq(fallbackModel, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting);
       }
     }
   }
@@ -562,9 +619,10 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     executedTools: AgentToolCall[],
     genericMedicines: JanAushadhiResult[] | undefined,
     emotionalState: EmotionalAssessment['state'],
-    startTime: number
+    startTime: number,
+    isCasualGreeting: boolean = false
   ): Promise<AgiResponse> {
-    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData);
+    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting);
 
     // Build OpenAI-compatible message list
     const messages = [
@@ -659,9 +717,10 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     executedTools: AgentToolCall[],
     genericMedicines: JanAushadhiResult[] | undefined,
     emotionalState: EmotionalAssessment['state'],
-    startTime: number
+    startTime: number,
+    isCasualGreeting: boolean = false
   ): Promise<AgiResponse> {
-    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData);
+    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting);
 
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
