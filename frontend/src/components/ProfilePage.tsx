@@ -22,13 +22,19 @@ import {
   ChevronDown,
   LogOut,
   Trash2,
-  Users
+  Users,
+  Link2
 } from 'lucide-react';
 import type { Language } from '../types';
 import { supabase } from '../services/supabaseClient';
 import { authService, generateImmutableHealthId } from '../services/authService';
-import { familyMemberService, type FamilyMember } from '../services/familyMemberService';
+import {
+  familyMemberService,
+  type FamilyMember,
+  type LinkedHistoricalAlias,
+} from '../services/familyMemberService';
 import { ConsultationBeneficiaryModal } from './ConsultationBeneficiaryModal';
+import { ClaimBeneficiaryRecordsModal } from './ClaimBeneficiaryRecordsModal';
 import { EmergencyContactSkeleton, HealthRecordSkeleton } from './SkeletonLoader';
 import { CustomSelect } from './CustomSelect';
 import { CustomDatePicker, calculateAgeFromDob } from './CustomDatePicker';
@@ -149,9 +155,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(() => familyMemberService.getFamilyMembers());
   const [isBeneficiaryModalOpen, setIsBeneficiaryModalOpen] = useState(false);
 
+  // ABDM Historical Aliases & Caregiver Record Porting State (ADR-012)
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [historicalAliases, setHistoricalAliases] = useState<LinkedHistoricalAlias[]>(() =>
+    familyMemberService.getLinkedHistoricalAliases()
+  );
+
   useEffect(() => {
+    setHistoricalAliases(familyMemberService.getLinkedHistoricalAliases());
     return familyMemberService.subscribe((members) => {
       setFamilyMembers(members);
+      setHistoricalAliases(familyMemberService.getLinkedHistoricalAliases());
     });
   }, []);
 
@@ -620,15 +634,28 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               </div>
             </div>
 
-            {/* Right: Edit Demographics Button */}
-            <button
-              onClick={() => toggleDropdown('edit-profile')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-all shadow-2xs"
-            >
-              <Edit2 className="w-3.5 h-3.5 text-teal-700" />
-              <span>{lang === 'en' ? 'Edit Demographics' : 'சுயவிவரம் திருத்து'}</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${openDropdown === 'edit-profile' ? 'rotate-180' : ''}`} />
-            </button>
+            {/* Right: Actions */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsClaimModalOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                title={lang === 'en' ? 'Claim past records from family caregiver' : 'குடும்ப பராமரிப்பாளரிடமிருந்து பழைய பதிவுகளை இணைக்கவும்'}
+              >
+                <Link2 className="w-3.5 h-3.5" />
+                <span>{lang === 'en' ? 'Claim Caregiver Records' : 'முந்தைய பதிவுகளை இணைக்க'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => toggleDropdown('edit-profile')}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+              >
+                <Edit2 className="w-3.5 h-3.5 text-teal-700" />
+                <span>{lang === 'en' ? 'Edit Demographics' : 'சுயவிவரம் திருத்து'}</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${openDropdown === 'edit-profile' ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
           </div>
 
           {/* Edit Demographics Dropdown Drawer */}
@@ -744,6 +771,108 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             </div>
           )}
         </div>
+
+        {/* Historical ABDM Aliases & Caregiver Lineage Card (ADR-012) */}
+        {historicalAliases.length > 0 && (
+          <div className="bg-gradient-to-br from-teal-900 via-slate-900 to-[#0A2528] text-white rounded-3xl p-5 sm:p-6 shadow-md border border-teal-700/50 space-y-4 animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-teal-800/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 shadow-inner flex-shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-teal-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-base text-white">
+                      {lang === 'en' ? 'Verified Historical Aliases & Caregiver Lineage' : 'வரலாற்று அடையாள எண்கள் & பராமரிப்பாளர் விவரம்'}
+                    </h3>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">
+                      ABDM Linked
+                    </span>
+                  </div>
+                  <p className="text-xs text-teal-200/80 mt-0.5">
+                    {lang === 'en'
+                      ? 'Past beneficiary IDs and records consulted on your behalf by family caregivers are cryptographically linked to your sovereign account.'
+                      : 'உங்கள் குடும்பத்தினர் உங்களுக்காக பெற்ற பழைய மருத்துவ பதிவுகள் உங்கள் புதிய கணக்குடன் இணைக்கப்பட்டுள்ளன.'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsClaimModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-teal-700/40 hover:bg-teal-600/50 text-teal-100 text-xs font-bold border border-teal-500/40 transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{lang === 'en' ? 'Link Another ID' : '+ மற்றொரு எண்'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {historicalAliases.map((alias) => (
+                <div
+                  key={alias.historicalHealthId}
+                  className="bg-slate-800/90 rounded-2xl border border-teal-700/40 p-4 space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-teal-300 bg-teal-950 px-2.5 py-1 rounded-lg border border-teal-600/60 inline-flex shadow-2xs">
+                        <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
+                        <span>{alias.historicalHealthId}</span>
+                      </div>
+                      <div className="text-sm font-bold text-slate-100 mt-2">
+                        {alias.beneficiaryName}
+                      </div>
+                      <div className="text-[11px] text-teal-200/80 mt-0.5">
+                        {alias.notes || `Consulted via Caregiver ${alias.caregiverName}`}
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Caregiver</span>
+                      <span className="text-xs font-bold text-teal-200 block">{alias.caregiverName}</span>
+                      <span className="text-[10px] text-slate-400">({alias.relationship})</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs">
+                    <div className="text-[11px] text-slate-300">
+                      <span className="font-semibold text-emerald-400">{alias.transferredRecordsCount}</span> records unified
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          alias.delegatedAccessStatus === 'ACTIVE'
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                        }`}
+                      >
+                        {alias.delegatedAccessStatus === 'ACTIVE' ? 'Co-Caregiver: Active' : 'Access Paused'}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newStatus = alias.delegatedAccessStatus === 'ACTIVE' ? 'REVOKED' : 'ACTIVE';
+                          familyMemberService.updateDelegatedAccess(alias.historicalHealthId, newStatus);
+                          setHistoricalAliases(familyMemberService.getLinkedHistoricalAliases());
+                          showToast(
+                            lang === 'en'
+                              ? `Caregiver access ${newStatus === 'ACTIVE' ? 'restored' : 'paused/revoked'}`
+                              : 'அணுகல் நிலை மாற்றப்பட்டது'
+                          );
+                        }}
+                        className="text-[11px] font-bold text-teal-300 hover:text-white underline cursor-pointer"
+                      >
+                        {alias.delegatedAccessStatus === 'ACTIVE' ? 'Revoke' : 'Restore'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Row 1: Personal Information & Emergency Contacts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1239,6 +1368,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             {member.age}y • {member.gender}
                           </span>
                         </div>
+
+                        {member.linkedIndependentAccountHealthId && (
+                          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md border border-emerald-300 flex items-center gap-1">
+                              <Link2 className="w-2.5 h-2.5" />
+                              <span>Linked Sovereign ID: {member.linkedIndependentAccountHealthId}</span>
+                            </span>
+                            <span className="text-[10px] bg-teal-50 text-teal-800 font-bold px-1.5 py-0.5 rounded border border-teal-200">
+                              {member.delegatedAccessStatus === 'REVOKED' ? 'Access Paused' : 'Co-Caregiver Active'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1951,6 +2092,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 : `${member.name} சேர்க்கப்பட்டார்`
             );
           }
+        }}
+      />
+
+      {/* ABDM Record Porting & Historical Alias Claiming Modal (ADR-012) */}
+      <ClaimBeneficiaryRecordsModal
+        isOpen={isClaimModalOpen}
+        onClose={() => setIsClaimModalOpen(false)}
+        lang={lang}
+        onSuccess={(alias) => {
+          setHistoricalAliases(familyMemberService.getLinkedHistoricalAliases());
+          setFamilyMembers(familyMemberService.getFamilyMembers());
+          showToast(
+            lang === 'en'
+              ? `Unified records from ${alias.historicalHealthId} (${alias.caregiverName})`
+              : `${alias.historicalHealthId} பதிவுகள் இணைக்கப்பட்டன`
+          );
         }}
       />
 
