@@ -16,8 +16,8 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `27c2e58` (`fix(profile): polish Manage Beneficiaries section styling directly below personal info and emergency contacts grid`)
-- **Vercel Production Deployment**: `dpl_FK6bjQ3kvkiZLkEjoqnQoLNHBgCV`
+- **Latest Commit**: `6b209ad` (`feat(chat-voice): implement Conversational Chameleon AI, single-pipeline mobile mic capture, and instant 1.1x Read Aloud TTS (ADR-014)`)
+- **Vercel Production Deployment**: `dpl_EAqEMHV8bRQ61nY24tDa4qfqKWKS`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
