@@ -68,15 +68,14 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500 selection:text-white">
-      {/* Top Government Health Bulletin Bar */}
-      <GovAlertMarquee
-        lang={lang}
-        onOpenMaps={onNavigateMaps}
-        onOpenAmbulance={onOpenAmbulance}
-      />
-
       {/* Coordinated Sticky Top Navigation */}
       <header className="sticky top-0 z-40 w-full">
+        {/* Top Government Health Bulletin Bar */}
+        <GovAlertMarquee
+          lang={lang}
+          onOpenMaps={onNavigateMaps}
+          onOpenAmbulance={onOpenAmbulance}
+        />
         <Navbar
           lang={lang}
           setLang={setLang}
