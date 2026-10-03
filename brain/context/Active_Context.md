@@ -16,8 +16,8 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `ea22570` (`fix(navbar): zero-overflow mobile header layout, compact brand logo, and high-priority drawer emergency banner`)
-- **Vercel Production Deployment**: `dpl_2r8jrjcU4QXP9nLGuKyvtbHknHob`
+- **Latest Commit**: `7c2368f` (`fix(navbar): add mobile drawer sticky back navigation, backdrop dismiss, and body scroll lock`)
+- **Vercel Production Deployment**: `dpl_B3saBuEFYVeM5FzNCyjNo9Tj3d17`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
