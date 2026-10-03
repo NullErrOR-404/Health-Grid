@@ -16,8 +16,8 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `7c2368f` (`fix(navbar): add mobile drawer sticky back navigation, backdrop dismiss, and body scroll lock`)
-- **Vercel Production Deployment**: `dpl_B3saBuEFYVeM5FzNCyjNo9Tj3d17`
+- **Latest Commit**: `77b6a09` (`fix(mobile): seamlessly align hamburger section below marquee and enable fluid native touch scrolling`)
+- **Vercel Production Deployment**: `dpl_EEf82DM4WRraZWNKYSVSairWBos1`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
@@ -41,7 +41,7 @@ Back to [[00_Index]]
 - [x] Decommissioned autonomous floating mascot (`RoamingDocBot.tsx`) and scroll-tracking thought bubbles completely from runtime and codebase (see [[ADR-007-Decommission-Roaming-Mascot]]).
 - [x] Implemented Mobile Navbar Zero-Overflow Architecture (`h-16 sm:h-20`, compact logo, hidden top SOS/bell on mobile, high-contrast 108 Emergency Banner in mobile drawer) (see [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]).
 - [x] Fixed Mobile Login Modal Scroll Trapping by hiding desktop marketing banners on mobile (`hidden lg:flex`), removing fixed minimum heights, and enabling smooth touch scrolling; overhauled ChatbotPage top header into ultra-minimal single-line pills (`[ 📹 Live ]`, `[ 🩺 Records ]`, `[ 🌐 EN ]`, `[ 👤 Sign In ]`) with zero text wrapping, and transformed in-chat suggestions, voice selectors, and docked controls into concise rounded-full pills (see [[ADR-009-Mobile-Login-Scroll-and-ChatUI-Minimal-Pills]]).
-- [x] Fixed Mobile Hamburger Drawer Scroll Trapping & Missing Back Option: Injected sticky top navigation bar with tactile `[← Back]` pill button, "Quick Navigation" label, and `[✕ Close]` button; added dual document body/HTML scroll locking and Lenis smooth scroll pausing/resuming; added backdrop tap-to-dismiss overlay; configured dynamic viewport height (`100dvh`), `overscroll-contain`, `-webkit-overflow-scrolling: touch`, and `touch-action: pan-y` (see [[ADR-010-Mobile-Hamburger-Drawer-Scroll-Lock-and-Navigation]]).
+- [x] Seamlessly Aligned Mobile Hamburger Drawer Below Marquee with Unrestricted Native Touch Scrolling: Placed `<GovAlertMarquee>` inside sticky `<header className="sticky top-0 z-40 w-full">` across all views, anchored hamburger drawer at `top-[40px] sm:top-[42px]` directly touching the marquee's bottom border; built two-tier flex layout with fixed top header (`[← Back]` + `[✕ Close]`) and `flex-1 overflow-y-scroll overscroll-contain` content container; eliminated `document.documentElement.style.overflow = 'hidden'` which was freezing iOS Safari touch scrolling; enforced `touch-action: pan-y !important` and `-webkit-overflow-scrolling: touch` via `[data-lenis-prevent="true"]` in `index.css` (see [[ADR-010-Mobile-Hamburger-Drawer-Scroll-Lock-and-Navigation]]).
 
 ## In-Flight / Next Focus
 - [ ] Push changes to GitHub `origin/main` to trigger automated Vercel production deployment.
