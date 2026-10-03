@@ -17,7 +17,8 @@ import {
   Check,
   Settings,
   Home,
-  ArrowLeft
+  ArrowLeft,
+  Users
 } from 'lucide-react';
 import type { Language } from '../types';
 import { authService, type AuthUser } from '../services/authService';
@@ -505,6 +506,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                         >
                           <User className="w-4 h-4 text-[#00A896]" />
                           <span>{lang === 'en' ? 'View Profile' : 'சுயவிவரம் காண்க'}</span>
+                        </button>
+
+                        {/* Family & Beneficiaries */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            if (onNavigateProfile) {
+                              onNavigateProfile();
+                            } else {
+                              window.history.pushState({}, '', '/profile');
+                              window.dispatchEvent(new PopStateEvent('popstate'));
+                            }
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-xl text-xs font-medium transition-colors cursor-pointer text-left"
+                        >
+                          <Users className="w-4 h-4 text-teal-600" />
+                          <span>{lang === 'en' ? 'Family & Dependents' : 'குடும்ப உறுப்பினர்கள்'}</span>
                         </button>
 
                         {/* Health Records */}

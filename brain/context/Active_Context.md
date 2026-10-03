@@ -42,10 +42,10 @@ Back to [[00_Index]]
 - [x] Implemented Mobile Navbar Zero-Overflow Architecture (`h-16 sm:h-20`, compact logo, hidden top SOS/bell on mobile, high-contrast 108 Emergency Banner in mobile drawer) (see [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]).
 - [x] Fixed Mobile Login Modal Scroll Trapping by hiding desktop marketing banners on mobile (`hidden lg:flex`), removing fixed minimum heights, and enabling smooth touch scrolling; overhauled ChatbotPage top header into ultra-minimal single-line pills (`[ 📹 Live ]`, `[ 🩺 Records ]`, `[ 🌐 EN ]`, `[ 👤 Sign In ]`) with zero text wrapping, and transformed in-chat suggestions, voice selectors, and docked controls into concise rounded-full pills (see [[ADR-009-Mobile-Login-Scroll-and-ChatUI-Minimal-Pills]]).
 - [x] Seamlessly Aligned Mobile Hamburger Drawer Below Marquee with Unrestricted Native Touch Scrolling: Placed `<GovAlertMarquee>` inside sticky `<header className="sticky top-0 z-40 w-full">` across all views, anchored hamburger drawer at `top-[40px] sm:top-[42px]` directly touching the marquee's bottom border; built two-tier flex layout with fixed top header (`[← Back]` + `[✕ Close]`) and `flex-1 overflow-y-scroll overscroll-contain` content container; eliminated `document.documentElement.style.overflow = 'hidden'` which was freezing iOS Safari touch scrolling; enforced `touch-action: pan-y !important` and `-webkit-overflow-scrolling: touch` via `[data-lenis-prevent="true"]` in `index.css` (see [[ADR-010-Mobile-Hamburger-Drawer-Scroll-Lock-and-Navigation]]).
+- [x] Architected and Implemented Family & Beneficiary Multi-Profile System (ABDM CoWIN Caregiver Model): Built `familyMemberService.ts` and `ConsultationBeneficiaryModal.tsx` allowing primary users to register dependents (Mother, Father, Child, Spouse, etc.) with unique auto-generated Health IDs (`HG-FAM-XXXX`); integrated top header patient switcher pill in `ChatbotPage.tsx`, third-person caregiver AI bedside prompting, caregiver banner in chat, hospital OPD triage token beneficiary selector in `PatientIntakeModal.tsx`, and dedicated Family & Beneficiaries management hub in `ProfilePage.tsx` and `Navbar.tsx` (see [[ADR-011-Family-and-Beneficiary-MultiProfile-System]]).
 
 ## In-Flight / Next Focus
-- [ ] Push changes to GitHub `origin/main` to trigger automated Vercel production deployment.
-- [ ] Verify zero overflow and smooth scrolling on all 4 live production aliases (`healthgrid-app.vercel.app`, etc.).
+- [ ] Deploy production build to Vercel and verify on all 4 live production aliases (`healthgrid-app.vercel.app`, etc.).
 - [ ] Submit Google Cloud Console OAuth consent screen for production branding verification.
 - [ ] Monitor Google Search Console indexing and crawler telemetry.
 - [ ] Real-time updates to this Second Brain whenever new clinical features or architectural modifications ship.
@@ -58,5 +58,6 @@ Back to [[00_Index]]
 - [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]
 - [[ADR-009-Mobile-Login-Scroll-and-ChatUI-Minimal-Pills]]
 - [[ADR-010-Mobile-Hamburger-Drawer-Scroll-Lock-and-Navigation]]
+- [[ADR-011-Family-and-Beneficiary-MultiProfile-System]]
 - [[Key_Credentials_and_Environments]]
 - [[Deployment_and_Domains]]

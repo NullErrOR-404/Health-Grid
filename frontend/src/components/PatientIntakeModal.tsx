@@ -21,6 +21,8 @@ import {
   type PatientIntakeInput
 } from '../services/hisService';
 import { authService } from '../services/authService';
+import { familyMemberService, type FamilyMember } from '../services/familyMemberService';
+import { ConsultationBeneficiaryModal } from './ConsultationBeneficiaryModal';
 
 interface PatientIntakeModalProps {
   isOpen: boolean;
@@ -78,15 +80,51 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
   const [redFlagNotice, setRedFlagNotice] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Initialize with current user profile if available
-  useEffect(() => {
-    if (isOpen) {
+  // Beneficiary & Family Member Multi-Profile State
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [selectedBeneficiary, setSelectedBeneficiary] = useState<FamilyMember | null>(null);
+  const [isBeneficiaryModalOpen, setIsBeneficiaryModalOpen] = useState(false);
+
+  const handleSelectBeneficiary = (member: FamilyMember | null) => {
+    setSelectedBeneficiary(member);
+    if (member) {
+      setPatientName(member.name);
+      setAge(member.age);
+      setGender(member.gender);
+      if (member.bloodGroup) setBloodGroup(member.bloodGroup);
+    } else {
       const currentUser = authService.getCurrentUser();
       if (currentUser) {
         setPatientName(currentUser.name || '');
         if (currentUser.age) setAge(currentUser.age);
         if (currentUser.bloodGroup) setBloodGroup(currentUser.bloodGroup);
         if (currentUser.phone) setPhone(currentUser.phone);
+      }
+    }
+  };
+
+  // Initialize with current user profile or active family beneficiary if available
+  useEffect(() => {
+    if (isOpen) {
+      const members = familyMemberService.getFamilyMembers();
+      setFamilyMembers(members);
+
+      const active = familyMemberService.getActiveBeneficiary();
+      if (active) {
+        setSelectedBeneficiary(active);
+        setPatientName(active.name);
+        setAge(active.age);
+        setGender(active.gender);
+        if (active.bloodGroup) setBloodGroup(active.bloodGroup);
+      } else {
+        setSelectedBeneficiary(null);
+        const currentUser = authService.getCurrentUser();
+        if (currentUser) {
+          setPatientName(currentUser.name || '');
+          if (currentUser.age) setAge(currentUser.age);
+          if (currentUser.bloodGroup) setBloodGroup(currentUser.bloodGroup);
+          if (currentUser.phone) setPhone(currentUser.phone);
+        }
       }
 
       // Check if user already has an active waiting token
@@ -145,18 +183,25 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
       return;
     }
 
-    // Assemble HealthGrid CV from current memory or local state
     const currentUser = authService.getCurrentUser();
+    const patientHealthId = selectedBeneficiary
+      ? selectedBeneficiary.healthId
+      : (currentUser?.healthId || `HG-PAT-${Math.floor(1000 + Math.random() * 9000)}`);
+
     const cv: HealthGridCvData = {
-      patientId: currentUser?.healthId || `HG-PAT-${Math.floor(1000 + Math.random() * 9000)}`,
+      patientId: patientHealthId,
       fullName: patientName,
       age,
       gender,
       bloodGroup,
       contactPhone: phone,
       abhaId: `${Math.floor(10 + Math.random() * 89)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`,
-      chronicConditions: ['Type 2 Diabetes (5 yrs)', 'Mild Hypertension'],
-      allergies: ['Penicillin (Moderate Rash)'],
+      chronicConditions: (selectedBeneficiary?.chronicConditions && selectedBeneficiary.chronicConditions.length > 0)
+        ? selectedBeneficiary.chronicConditions
+        : ['Type 2 Diabetes (5 yrs)', 'Mild Hypertension'],
+      allergies: (selectedBeneficiary?.allergies && selectedBeneficiary.allergies.length > 0)
+        ? selectedBeneficiary.allergies
+        : ['Penicillin (Moderate Rash)'],
       currentMedications: ['Metformin 500mg', 'Telmisartan 40mg'],
       lastVitals: {
         bp: '122/82 mmHg',
@@ -264,6 +309,48 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
 
               {/* Patient Basic Identity */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                {/* Beneficiary Quick Selector */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
+                    <User className="w-3.5 h-3.5 text-teal-600" />
+                    <span>{lang === 'en' ? 'Who is this consultation for?' : 'யாருக்கு இந்த ஆலோசனை?'}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectBeneficiary(null)}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                        selectedBeneficiary === null
+                          ? 'bg-teal-600 text-white shadow-2xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {lang === 'en' ? 'Myself' : 'எனக்கு'}
+                    </button>
+                    {familyMembers.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => handleSelectBeneficiary(m)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                          selectedBeneficiary?.id === m.id
+                            ? 'bg-teal-600 text-white shadow-2xs'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {m.relationship}: {m.name.split(' ')[0]}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setIsBeneficiaryModalOpen(true)}
+                      className="px-2.5 py-1 rounded-full text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 transition-colors cursor-pointer"
+                    >
+                      + {lang === 'en' ? 'Add Family' : 'சேர்'}
+                    </button>
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-teal-600" />
@@ -667,6 +754,17 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
           )}
         </div>
       </div>
+
+      {/* Family Member Add & Select Modal */}
+      <ConsultationBeneficiaryModal
+        isOpen={isBeneficiaryModalOpen}
+        onClose={() => setIsBeneficiaryModalOpen(false)}
+        lang={lang}
+        onSelectBeneficiary={(member) => {
+          setFamilyMembers(familyMemberService.getFamilyMembers());
+          handleSelectBeneficiary(member);
+        }}
+      />
     </div>
   );
 };

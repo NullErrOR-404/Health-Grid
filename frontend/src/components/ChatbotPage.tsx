@@ -66,6 +66,8 @@ import { authService, type AuthUser } from '../services/authService';
 import { LoginModal } from './LoginModal';
 import { LiveVisionDoctorModal } from './LiveVisionDoctorModal';
 import { VitalsTelemetryModal } from './VitalsTelemetryModal';
+import { ConsultationBeneficiaryModal } from './ConsultationBeneficiaryModal';
+import { familyMemberService, type FamilyMember } from '../services/familyMemberService';
 
 export interface ChatMessage {
   id: string;
@@ -144,10 +146,19 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isLiveVisionOpen, setIsLiveVisionOpen] = useState(false);
   const [isVitalsModalOpen, setIsVitalsModalOpen] = useState(false);
+  const [isBeneficiaryModalOpen, setIsBeneficiaryModalOpen] = useState(false);
+  const [activeBeneficiary, setActiveBeneficiary] = useState<FamilyMember | null>(() => familyMemberService.getActiveBeneficiary());
   const [activeCareLoops, setActiveCareLoops] = useState<CareLoopFollowUp[]>([]);
   const pendingActionRef = useRef<(() => void) | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const isSendingRef = useRef(false);
+
+  // Subscribe to active family beneficiary updates
+  useEffect(() => {
+    return familyMemberService.subscribe((_members, active) => {
+      setActiveBeneficiary(active);
+    });
+  }, []);
 
   // Keep voice persona synchronized with global speech settings
   useEffect(() => {
@@ -534,26 +545,48 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     }
 
     try {
-      const patientProfile = medicalRecordService.getProfile();
-      const conditions = (patientProfile.chronicConditions || []).filter(c => Boolean(c) && !c.toLowerCase().includes('seasonal'));
-      const allergies = (patientProfile.allergies || []).filter(a => Boolean(a) && !a.toLowerCase().includes('penicillin'));
-      const hasName = Boolean(
-        patientProfile.name &&
-        patientProfile.name.trim() &&
-        !patientProfile.name.toLowerCase().includes('murugan') &&
-        !patientProfile.name.toLowerCase().includes('verified patient')
-      );
-
       let patientContext: string | undefined = undefined;
-      // Only attach clinical context if user is signed in with legitimate, non-mock profile data
-      if (currentUser && (hasName || conditions.length > 0 || allergies.length > 0)) {
-        const parts: string[] = [];
-        if (hasName) parts.push(`Patient: ${patientProfile.name.trim()}`);
-        if (patientProfile.age > 0) parts.push(`Age: ${patientProfile.age}y`);
-        if (conditions.length > 0) parts.push(`Chronic Conditions: ${conditions.join(', ')}`);
-        if (allergies.length > 0) parts.push(`Drug Allergies: ${allergies.join(', ')}`);
-        if (parts.length > 0) {
-          patientContext = parts.join('. ') + '.';
+
+      const currentBeneficiary = familyMemberService.getActiveBeneficiary();
+      if (currentBeneficiary) {
+        // Third-Person Caregiver Consultation Mode
+        const parts: string[] = [
+          `CAREGIVER CONSULTATION MODE: The user is consulting on behalf of their ${currentBeneficiary.relationship}, ${currentBeneficiary.name}`,
+          `Patient: ${currentBeneficiary.name}`,
+          `Relationship to user: ${currentBeneficiary.relationship}`,
+          `Age: ${currentBeneficiary.age} years old`,
+          `Gender: ${currentBeneficiary.gender}`,
+          `Health ID: ${currentBeneficiary.healthId}`,
+          `BEDSIDE MANNER DIRECTIVE: You MUST address the user in the third person regarding the patient as a caring family member/caregiver (e.g. "I understand you are consulting for your ${currentBeneficiary.relationship.toLowerCase()}, ${currentBeneficiary.name}. What symptoms is she/he currently experiencing?"). Calibrate triage questions, red flags, and safe dosages for a ${currentBeneficiary.age}-year-old ${currentBeneficiary.gender}. Inquire gently about any chronic conditions or daily medications ${currentBeneficiary.name} takes.`
+        ];
+        if (currentBeneficiary.chronicConditions && currentBeneficiary.chronicConditions.length > 0) {
+          parts.push(`Known Conditions: ${currentBeneficiary.chronicConditions.join(', ')}`);
+        }
+        if (currentBeneficiary.allergies && currentBeneficiary.allergies.length > 0) {
+          parts.push(`Known Allergies: ${currentBeneficiary.allergies.join(', ')}`);
+        }
+        patientContext = parts.join('. ') + '.';
+      } else {
+        const patientProfile = medicalRecordService.getProfile();
+        const conditions = (patientProfile.chronicConditions || []).filter(c => Boolean(c) && !c.toLowerCase().includes('seasonal'));
+        const allergies = (patientProfile.allergies || []).filter(a => Boolean(a) && !a.toLowerCase().includes('penicillin'));
+        const hasName = Boolean(
+          patientProfile.name &&
+          patientProfile.name.trim() &&
+          !patientProfile.name.toLowerCase().includes('murugan') &&
+          !patientProfile.name.toLowerCase().includes('verified patient')
+        );
+
+        // Only attach clinical context if user is signed in with legitimate, non-mock profile data
+        if (currentUser && (hasName || conditions.length > 0 || allergies.length > 0)) {
+          const parts: string[] = [];
+          if (hasName) parts.push(`Patient: ${patientProfile.name.trim()}`);
+          if (patientProfile.age > 0) parts.push(`Age: ${patientProfile.age}y`);
+          if (conditions.length > 0) parts.push(`Chronic Conditions: ${conditions.join(', ')}`);
+          if (allergies.length > 0) parts.push(`Drug Allergies: ${allergies.join(', ')}`);
+          if (parts.length > 0) {
+            patientContext = parts.join('. ') + '.';
+          }
         }
       }
 
@@ -1031,37 +1064,68 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     }
   };
 
-  // Suggestion action card triggers
-  const suggestionCards = [
-    {
-      titleEn: 'Ask about a symptom',
-      titleTa: 'அறிகுறிகள் பற்றி கேட்க',
-      icon: <Stethoscope className="w-5 h-5 text-blue-600" />,
-      bg: 'bg-blue-50',
-      query: 'I have had a sore throat, dry cough, and mild chills for 2 days.'
-    },
-    {
-      titleEn: 'Check a medicine',
-      titleTa: 'மருந்து விவரம் பார்க்க',
-      icon: <Pill className="w-5 h-5 text-emerald-600" />,
-      bg: 'bg-emerald-50',
-      query: 'Can I take Paracetamol 500mg and Montelukast together?'
-    },
-    {
-      titleEn: 'Find a nearby hospital',
-      titleTa: 'அருகிலுள்ள மருத்துவமனை',
-      icon: <Building2 className="w-5 h-5 text-rose-600" />,
-      bg: 'bg-rose-50',
-      query: 'Where is the nearest 24/7 Government Emergency Hospital in Chennai?'
-    },
-    {
-      titleEn: 'Get first-aid guidance',
-      titleTa: 'முதலுதவி வழிகாட்டுதல்',
-      icon: <ShieldAlert className="w-5 h-5 text-teal-600" />,
-      bg: 'bg-teal-50',
-      query: 'What is the immediate first-aid for a sudden burn or cut at home?'
-    }
-  ];
+  // Suggestion action card triggers (Tailored for Caregiver Mode when activeBeneficiary is chosen)
+  const suggestionCards = activeBeneficiary
+    ? [
+        {
+          titleEn: `Report symptoms for ${activeBeneficiary.name.split(' ')[0]}`,
+          titleTa: `${activeBeneficiary.name.split(' ')[0]}-ன் அறிகுறிகள் கூற`,
+          icon: <Stethoscope className="w-5 h-5 text-blue-600" />,
+          bg: 'bg-blue-50',
+          query: `My ${activeBeneficiary.relationship.toLowerCase()}, ${activeBeneficiary.name} (${activeBeneficiary.age}y ${activeBeneficiary.gender}), has had a persistent fever and fatigue for 2 days. What should we do?`,
+        },
+        {
+          titleEn: `Check medicine doses for ${activeBeneficiary.name.split(' ')[0]}`,
+          titleTa: `மருந்து டோஸ் சரிபார்க்க`,
+          icon: <Pill className="w-5 h-5 text-emerald-600" />,
+          bg: 'bg-emerald-50',
+          query: `What is the safe medication dosage and precautions for a ${activeBeneficiary.age}-year-old ${activeBeneficiary.gender}?`,
+        },
+        {
+          titleEn: 'Find hospital / specialist',
+          titleTa: 'சிறப்பு மருத்துவமனை தேட',
+          icon: <Building2 className="w-5 h-5 text-rose-600" />,
+          bg: 'bg-rose-50',
+          query: `Where is the nearest multi-specialty hospital with geriatric/pediatric care in Chennai?`,
+        },
+        {
+          titleEn: 'Home care & diet tips',
+          titleTa: 'வீட்டுப் பராமரிப்பு & உணவு',
+          icon: <ShieldAlert className="w-5 h-5 text-teal-600" />,
+          bg: 'bg-teal-50',
+          query: `What diet, hydration, and home monitoring steps should I take for my ${activeBeneficiary.relationship.toLowerCase()} right now?`,
+        },
+      ]
+    : [
+        {
+          titleEn: 'Ask about a symptom',
+          titleTa: 'அறிகுறிகள் பற்றி கேட்க',
+          icon: <Stethoscope className="w-5 h-5 text-blue-600" />,
+          bg: 'bg-blue-50',
+          query: 'I have had a sore throat, dry cough, and mild chills for 2 days.'
+        },
+        {
+          titleEn: 'Check a medicine',
+          titleTa: 'மருந்து விவரம் பார்க்க',
+          icon: <Pill className="w-5 h-5 text-emerald-600" />,
+          bg: 'bg-emerald-50',
+          query: 'Can I take Paracetamol 500mg and Montelukast together?'
+        },
+        {
+          titleEn: 'Find a nearby hospital',
+          titleTa: 'அருகிலுள்ள மருத்துவமனை',
+          icon: <Building2 className="w-5 h-5 text-rose-600" />,
+          bg: 'bg-rose-50',
+          query: 'Where is the nearest 24/7 Government Emergency Hospital in Chennai?'
+        },
+        {
+          titleEn: 'Get first-aid guidance',
+          titleTa: 'முதலுதவி வழிகாட்டுதல்',
+          icon: <ShieldAlert className="w-5 h-5 text-teal-600" />,
+          bg: 'bg-teal-50',
+          query: 'What is the immediate first-aid for a sudden burn or cut at home?'
+        }
+      ];
 
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden font-sans bg-white text-slate-800">
@@ -1381,6 +1445,37 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
           {/* Right: Actions Header Pills (Clean, Minimal, Single Line, Zero Wrap) */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Beneficiary Switcher Pill (ABDM Multi-Profile Standard) */}
+            <button
+              type="button"
+              onClick={() => {
+                ensureAuth(
+                  () => setIsBeneficiaryModalOpen(true),
+                  lang === 'en'
+                    ? 'Sign in to consult for family members'
+                    : 'குடும்ப உறுப்பினர்களுக்காக ஆலோசிக்க உள்நுழையவும்'
+                );
+              }}
+              className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full border text-[11px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-2xs group cursor-pointer ${
+                activeBeneficiary
+                  ? 'bg-amber-500/15 border-amber-500/40 text-amber-900 hover:bg-amber-500/25 ring-1 ring-amber-400/30'
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+              title={
+                activeBeneficiary
+                  ? `Consulting for: ${activeBeneficiary.name} (${activeBeneficiary.relationship})`
+                  : 'Consulting for Myself'
+              }
+            >
+              <User className={`w-3.5 h-3.5 ${activeBeneficiary ? 'text-amber-700' : 'text-teal-600'} group-hover:scale-110 transition-transform shrink-0`} />
+              <span className="font-bold truncate max-w-[85px] sm:max-w-[130px]">
+                {activeBeneficiary
+                  ? `${activeBeneficiary.relationship}: ${activeBeneficiary.name.split(' ')[0]}`
+                  : (lang === 'en' ? 'Myself' : 'எனக்கு')}
+              </span>
+              <ChevronDown className="w-3 h-3 text-slate-400 group-hover:text-slate-600 shrink-0" />
+            </button>
+
             {/* Live Vision & Voice Tele-Clinic Launch Pill */}
             <button
               type="button"
@@ -1468,6 +1563,38 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
         {/* Messages Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 bg-[#FAFCFB]">
+          {/* Active Caregiver Consultation Mode Banner */}
+          {activeBeneficiary && (
+            <div className="max-w-3xl mx-auto p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50/50 to-amber-50 border border-amber-200/90 text-amber-900 shadow-xs flex items-center justify-between gap-3 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-amber-200/80 text-amber-800 flex items-center justify-center font-bold text-base flex-shrink-0 shadow-2xs">
+                  {activeBeneficiary.gender === 'Female' ? '👩' : '👨'}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold truncate">
+                      {lang === 'en' ? 'Caregiver Mode' : 'பராமரிப்பாளர் முறை'}: {activeBeneficiary.name}
+                    </span>
+                    <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.2 rounded-full font-bold border border-amber-300 flex-shrink-0">
+                      {activeBeneficiary.relationship}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-amber-700 font-medium truncate">
+                    {activeBeneficiary.age}y • {activeBeneficiary.gender} • <span className="font-mono font-semibold">{activeBeneficiary.healthId}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsBeneficiaryModalOpen(true)}
+                className="px-2.5 py-1 rounded-xl bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold shadow-2xs transition-colors flex-shrink-0 cursor-pointer"
+              >
+                {lang === 'en' ? 'Switch Patient' : 'நோயாளி மாற்று'}
+              </button>
+            </div>
+          )}
+
           {/* Pinned Autonomous Proactive Care-Loop Recovery Monitor */}
           {activeCareLoops.length > 0 && (
             <div className="max-w-3xl mx-auto p-3.5 rounded-2xl bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50/50 border border-teal-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-300">
@@ -1517,12 +1644,22 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
               <div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  {lang === 'en' ? 'Hello! How can I help you today?' : 'வணக்கம்! இன்று உங்களுக்கு எவ்வாறு உதவலாம்?'}
+                  {activeBeneficiary
+                    ? (lang === 'en'
+                        ? `Consulting for ${activeBeneficiary.name}`
+                        : `${activeBeneficiary.name} - மருத்துவ ஆலோசனை`)
+                    : (lang === 'en'
+                        ? 'Hello! How can I help you today?'
+                        : 'வணக்கம்! இன்று உங்களுக்கு எவ்வாறு உதவலாம்?')}
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 mt-2 font-medium">
-                  {lang === 'en'
-                    ? 'Get trusted, easy-to-understand health information, 24/7.'
-                    : 'நம்பகமான, எளிதில் புரியக்கூடிய மருத்துவ ஆலோசனைகள் 24 மணி நேரமும்.'}
+                  {activeBeneficiary
+                    ? (lang === 'en'
+                        ? `Describe symptoms or concerns regarding your ${activeBeneficiary.relationship.toLowerCase()} (${activeBeneficiary.age}y). Clinical guidance and triage will be calibrated for them.`
+                        : `உங்கள் ${activeBeneficiary.relationship}-க்கான அறிகுறிகளை விவரிக்கவும். மருத்துவ ஆலோசனைகள் அதற்கேற்ப வழங்கப்படும்.`)
+                    : (lang === 'en'
+                        ? 'Get trusted, easy-to-understand health information, 24/7.'
+                        : 'நம்பகமான, எளிதில் புரியக்கூடிய மருத்துவ ஆலோசனைகள் 24 மணி நேரமும்.')}
                 </p>
               </div>
 
@@ -2211,6 +2348,29 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         isOpen={isVitalsModalOpen}
         onClose={() => setIsVitalsModalOpen(false)}
         lang={lang}
+      />
+
+      {/* Consultation Beneficiary & Family Member Multi-Profile Modal */}
+      <ConsultationBeneficiaryModal
+        isOpen={isBeneficiaryModalOpen}
+        onClose={() => setIsBeneficiaryModalOpen(false)}
+        lang={lang}
+        onSelectBeneficiary={(member) => {
+          setActiveBeneficiary(member);
+          if (member) {
+            setToastMessage(
+              lang === 'en'
+                ? `Switched patient to ${member.name} (${member.relationship})`
+                : `நோயாளி மாற்றப்பட்டார்: ${member.name} (${member.relationship})`
+            );
+          } else {
+            setToastMessage(
+              lang === 'en'
+                ? 'Switched consultation to Myself'
+                : 'ஆலோசனை எனக்கான முறைக்கு மாற்றப்பட்டது'
+            );
+          }
+        }}
       />
 
     </div>

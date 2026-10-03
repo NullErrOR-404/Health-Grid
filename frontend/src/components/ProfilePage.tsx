@@ -21,11 +21,14 @@ import {
   ArrowLeft,
   ChevronDown,
   LogOut,
-  Trash2
+  Trash2,
+  Users
 } from 'lucide-react';
 import type { Language } from '../types';
 import { supabase } from '../services/supabaseClient';
 import { authService, generateImmutableHealthId } from '../services/authService';
+import { familyMemberService, type FamilyMember } from '../services/familyMemberService';
+import { ConsultationBeneficiaryModal } from './ConsultationBeneficiaryModal';
 import { EmergencyContactSkeleton, HealthRecordSkeleton } from './SkeletonLoader';
 import { CustomSelect } from './CustomSelect';
 import { CustomDatePicker, calculateAgeFromDob } from './CustomDatePicker';
@@ -141,6 +144,16 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
   // AI Assistant permissions state
   const [isAiHealthAccessEnabled, setIsAiHealthAccessEnabled] = useState(true);
+
+  // Beneficiary & Family Member Multi-Profile State
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(() => familyMemberService.getFamilyMembers());
+  const [isBeneficiaryModalOpen, setIsBeneficiaryModalOpen] = useState(false);
+
+  useEffect(() => {
+    return familyMemberService.subscribe((members) => {
+      setFamilyMembers(members);
+    });
+  }, []);
 
   // Dropdown / Modal state
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -1145,6 +1158,130 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
         </div>
 
+        {/* Row: Family & Beneficiary Multi-Profiles (ABDM CoWIN Standard) */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-700">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-sm sm:text-base text-slate-900 leading-tight">
+                    {lang === 'en' ? 'Family & Beneficiary Profiles' : 'குடும்ப உறுப்பினர்கள் & பயனாளிகள்'}
+                  </h3>
+                  <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
+                    ABDM Linked
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium">
+                  {lang === 'en'
+                    ? 'Consult with doctors, book hospital OPD tokens, and manage care for family members without individual phones'
+                    : 'சொந்த ஸ்மார்ட்போன் இல்லாத குடும்ப உறுப்பினர்களுக்கு ஆலோசனை மற்றும் டோக்கன் பெறலாம்'}
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsBeneficiaryModalOpen(true)}
+              className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{lang === 'en' ? 'Add Family Member' : '+ உறுப்பினர் சேர்'}</span>
+            </button>
+          </div>
+
+          {/* Beneficiaries Grid or Empty State */}
+          {familyMembers.length === 0 ? (
+            <div className="p-6 text-center rounded-2xl bg-slate-50/70 border border-dashed border-slate-200 space-y-2.5">
+              <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center mx-auto">
+                <Users className="w-5 h-5" />
+              </div>
+              <div className="text-xs font-bold text-slate-800">
+                {lang === 'en' ? 'No Family Members Linked Yet' : 'குடும்ப உறுப்பினர்கள் யாரும் சேர்க்கப்படவில்லை'}
+              </div>
+              <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
+                {lang === 'en'
+                  ? 'Add your parents, spouse, children, or elderly dependents so you can consult on their behalf and generate hospital OPD tokens.'
+                  : 'உங்கள் பெற்றோர், குழந்தைகள் அல்லது உறவினர்களைச் சேர்த்து அவர்களுக்காக மருத்துவ ஆலோசனைகளைப் பெறுங்கள்.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsBeneficiaryModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{lang === 'en' ? 'Add First Family Member' : 'முதல் உறுப்பினரைச் சேர்'}</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+              {familyMembers.map((member) => (
+                <div
+                  key={member.id}
+                  className="p-4 rounded-2xl bg-[#FAFBFB] border border-slate-200/80 hover:border-teal-300 transition-all space-y-3 flex flex-col justify-between"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-200/80 flex items-center justify-center text-lg shadow-2xs">
+                        {member.gender === 'Female' ? '👩' : '👨'}
+                      </div>
+                      <div>
+                        <div className="font-bold text-sm text-slate-900 leading-tight">
+                          {member.name}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[10px] bg-teal-100/70 text-teal-800 px-2 py-0.2 rounded-full font-bold border border-teal-200">
+                            {member.relationship}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {member.age}y • {member.gender}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (window.confirm(lang === 'en' ? 'Remove this family profile?' : 'இந்த சுயவிவரத்தை நீக்கவா?')) {
+                          await familyMemberService.deleteFamilyMember(member.id);
+                          setFamilyMembers(familyMemberService.getFamilyMembers());
+                          showToast(lang === 'en' ? 'Profile removed' : 'சுயவிவரம் நீக்கப்பட்டது');
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title={lang === 'en' ? 'Remove' : 'நீக்கு'}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1 font-mono text-[11px] text-teal-700 font-semibold">
+                      <ShieldCheck className="w-3 h-3 text-teal-600" />
+                      <span>{member.healthId}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        familyMemberService.setActiveBeneficiary(member);
+                        onNavigateChat();
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold border border-teal-200 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>{lang === 'en' ? 'Consult AI' : 'ஆலோசனை'}</span>
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Row 2: Health Information Container (4 Tiles - Allergies, Conditions, Medicines, Vaccinations) */}
         <div id="health-information" className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-4 scroll-mt-24">
           <div className="flex items-center gap-2.5 pb-2">
@@ -1799,6 +1936,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
 
       </main>
+
+      {/* Consultation Beneficiary & Family Member Multi-Profile Modal */}
+      <ConsultationBeneficiaryModal
+        isOpen={isBeneficiaryModalOpen}
+        onClose={() => setIsBeneficiaryModalOpen(false)}
+        lang={lang}
+        onSelectBeneficiary={(member) => {
+          setFamilyMembers(familyMemberService.getFamilyMembers());
+          if (member) {
+            showToast(
+              lang === 'en'
+                ? `Added ${member.name} (${member.relationship})`
+                : `${member.name} சேர்க்கப்பட்டார்`
+            );
+          }
+        }}
+      />
 
     </div>
   );
