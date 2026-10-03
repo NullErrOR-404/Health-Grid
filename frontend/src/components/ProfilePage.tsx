@@ -1312,24 +1312,32 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
 
         {/* Row: Manage Beneficiaries (ABDM CoWIN Multi-Profile • Cap: 7 Dependents) */}
-        <div id="manage-beneficiaries" className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-4 scroll-mt-24">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-700">
-                <Users className="w-4 h-4" />
+        <div 
+          id="manage-beneficiaries" 
+          className="bg-gradient-to-b from-white to-[#F9FCFC] rounded-3xl border-2 border-teal-500/30 hover:border-teal-500/50 p-5 sm:p-6 shadow-xs space-y-4 scroll-mt-24 transition-colors relative"
+        >
+          <span id="family-beneficiaries" className="absolute -top-24 left-0 pointer-events-none" />
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-teal-100/80 gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-700 shadow-2xs">
+                <Users className="w-5 h-5 text-teal-600" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm sm:text-base text-slate-900 leading-tight">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-extrabold text-base sm:text-lg text-slate-900 leading-tight">
                     {lang === 'en' ? 'Manage Beneficiaries' : 'பயனாளிகள் மேலாண்மை'}
                   </h3>
-                  <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
-                    {familyMembers.length}/7 Slots
+                  <span className="text-[10px] font-extrabold text-teal-800 bg-teal-100/70 px-2.5 py-0.5 rounded-full border border-teal-300">
+                    {familyMembers.length}/7 Slots Used
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                    ABDM Multi-Profile
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-500 font-medium">
+                <div className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
                   {lang === 'en'
-                    ? 'Add up to 7 family members with verified mobile numbers and optional 108 Emergency Contact sync'
+                    ? 'Add up to 7 family members with OTP-verified mobile numbers & optional 108 Emergency Contact sync'
                     : 'அதிகபட்சம் 7 குடும்ப உறுப்பினர்களை சரிபார்க்கப்பட்ட மொபைல் எண்ணுடன் சேர்க்கலாம்'}
                 </div>
               </div>
@@ -1339,35 +1347,47 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               type="button"
               disabled={familyMembers.length >= 7}
               onClick={() => setIsBeneficiaryModalOpen(true)}
-              className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-teal-600 to-emerald-700 hover:from-teal-700 hover:to-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer self-start sm:self-auto"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{familyMembers.length >= 7 ? 'Max Limit (7/7)' : (lang === 'en' ? 'Add Beneficiary' : '+ பயனாளி சேர்')}</span>
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>{familyMembers.length >= 7 ? 'Max Limit (7/7)' : (lang === 'en' ? '+ Add Beneficiary' : '+ பயனாளி சேர்')}</span>
             </button>
           </div>
 
           {/* Beneficiaries Grid or Empty State */}
           {familyMembers.length === 0 ? (
-            <div className="p-6 text-center rounded-2xl bg-slate-50/70 border border-dashed border-slate-200 space-y-2.5">
-              <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center mx-auto">
-                <Users className="w-5 h-5" />
+            <div className="p-6 sm:p-8 text-center rounded-2xl bg-teal-50/40 border-2 border-dashed border-teal-200/90 space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-white border border-teal-200 text-teal-700 flex items-center justify-center mx-auto shadow-xs">
+                <Users className="w-6 h-6 text-teal-600" />
               </div>
-              <div className="text-xs font-bold text-slate-800">
-                {lang === 'en' ? 'No Beneficiaries Added Yet' : 'பயனாளிகள் யாரும் சேர்க்கப்படவில்லை'}
+              <div className="space-y-1">
+                <div className="text-sm font-bold text-slate-900">
+                  {lang === 'en' ? 'No Beneficiaries Added Yet' : 'பயனாளிகள் யாரும் சேர்க்கப்படவில்லை'}
+                </div>
+                <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                  {lang === 'en'
+                    ? 'Add your parents, spouse, children, or elderly dependents (up to 7). Consult with AI doctors on their behalf, generate OPD tokens, and toggle them as 108 Emergency Contacts.'
+                    : 'உங்கள் பெற்றோர், குழந்தைகள் அல்லது உறவினர்களைச் சேர்த்து (7 வரை) மருத்துவ ஆலோசனைகளையும் 108 அவசர தொடர்பையும் நிர்வகிக்கலாம்.'}
+                </p>
               </div>
-              <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
-                {lang === 'en'
-                  ? 'Add your parents, spouse, children, or elderly dependents (up to 7) with OTP-verified mobile numbers.'
-                  : 'உங்கள் பெற்றோர், குழந்தைகள் அல்லது உறவினர்களைச் சேர்த்து (7 வரை) மருத்துவ ஆலோசனைகளைப் பெறுங்கள்.'}
-              </p>
-              <button
-                type="button"
-                onClick={() => setIsBeneficiaryModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{lang === 'en' ? 'Add First Beneficiary' : 'முதல் பயனாளியைச் சேர்'}</span>
-              </button>
+
+              {/* Guarantees Pill */}
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1 text-[11px] font-semibold text-slate-600">
+                <span className="bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">✓ SMS OTP Verified</span>
+                <span className="bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">✓ 108 SOS Dispatch Sync</span>
+                <span className="bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">✓ Up to 7 Family Members</span>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsBeneficiaryModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>{lang === 'en' ? 'Add First Beneficiary (OTP Verified)' : 'முதல் பயனாளியைச் சேர்'}</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
