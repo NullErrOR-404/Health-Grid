@@ -16,8 +16,8 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `f2dee1d` (`feat(family-profiles): implement ABDM family and beneficiary multi-profile architecture with caregiver AI mode`)
-- **Vercel Production Deployment**: Automated GitHub Deployment (`main`)
+- **Latest Commit**: `27c2e58` (`fix(profile): polish Manage Beneficiaries section styling directly below personal info and emergency contacts grid`)
+- **Vercel Production Deployment**: `dpl_FK6bjQ3kvkiZLkEjoqnQoLNHBgCV`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
