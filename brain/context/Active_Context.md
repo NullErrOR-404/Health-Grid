@@ -16,8 +16,8 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `77b6a09` (`fix(mobile): seamlessly align hamburger section below marquee and enable fluid native touch scrolling`)
-- **Vercel Production Deployment**: `dpl_EEf82DM4WRraZWNKYSVSairWBos1`
+- **Latest Commit**: `f2dee1d` (`feat(family-profiles): implement ABDM family and beneficiary multi-profile architecture with caregiver AI mode`)
+- **Vercel Production Deployment**: Automated GitHub Deployment (`main`)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
