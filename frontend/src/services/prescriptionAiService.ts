@@ -103,6 +103,7 @@ export interface PrescriptionAnalysisResult {
 class PrescriptionAiService {
   private geminiKey: string = (import.meta.env.VITE_GEMINI_API_KEY as string) || '';
   private groqKey: string = (import.meta.env.VITE_GROQ_API_KEY as string) || '';
+  private nvidiaKey: string = (import.meta.env.VITE_NVIDIA_API_KEY as string) || '';
   private hfKey: string = (import.meta.env.VITE_HF_API_KEY as string) || (import.meta.env.VITE_HUGGINGFACE_API_KEY as string) || '';
 
   /**
@@ -255,43 +256,55 @@ class PrescriptionAiService {
   }
 
   /**
-   * Run Hugging Face Open-Source Model (microsoft/trocr-base-stage1)
+   * Run Hugging Face Open-Source Model (microsoft/trocr-base-handwritten / trocr-base-stage1)
    */
   private async runHuggingFaceOCR(imageData: { base64: string; mimeType: string }): Promise<string | null> {
-    const model = 'microsoft/trocr-base-stage1';
-    const endpoint = `https://api-inference.huggingface.co/models/${model}`;
+    const models = ['microsoft/trocr-base-handwritten', 'microsoft/trocr-base-stage1'];
+    const endpoints = (m: string) => [
+      `https://router.huggingface.co/hf-inference/models/${m}`,
+      `https://api-inference.huggingface.co/models/${m}`,
+    ];
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
     if (this.hfKey) {
       headers['Authorization'] = `Bearer ${this.hfKey}`;
     }
 
-    const binaryString = atob(imageData.base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
+    try {
+      const binaryString = atob(imageData.base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        ...headers,
-        'Content-Type': imageData.mimeType,
-      },
-      body: bytes,
-    });
+      for (const model of models) {
+        for (const endpoint of endpoints(model)) {
+          try {
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                ...headers,
+                'Content-Type': imageData.mimeType,
+              },
+              body: bytes,
+              signal: AbortSignal.timeout(12000),
+            });
 
-    if (!response.ok) {
-      throw new Error(`Hugging Face API returned HTTP ${response.status}`);
+            if (response.ok) {
+              const data = await response.json();
+              if (Array.isArray(data) && data[0]?.generated_text) {
+                return data[0].generated_text;
+              }
+              if (typeof data === 'string') return data;
+            }
+          } catch {
+            // Silently try next endpoint/model
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Hugging Face inference error:', e);
     }
-
-    const data = await response.json();
-    if (Array.isArray(data) && data[0]?.generated_text) {
-      return data[0].generated_text;
-    }
-    if (typeof data === 'string') return data;
     return null;
   }
 
@@ -403,7 +416,7 @@ Return ONLY valid JSON matching this exact structure:
   "allergyWarnings": []
 }`;
 
-    // 1. Tier 1: Multimodal Vision with Google Gemini (Fixed inlineData & responseMimeType)
+    // 1. Tier 1: Multimodal Vision with Google Gemini 3.8 / 3.5 Flash
     if (this.geminiKey && imagesData.length > 0) {
       const imageParts = imagesData.map((img) => ({
         inlineData: {
@@ -424,7 +437,7 @@ Return ONLY valid JSON matching this exact structure:
         },
       };
 
-      const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+      const geminiModels = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
       for (const model of geminiModels) {
         try {
           const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.geminiKey}`;
@@ -432,6 +445,7 @@ Return ONLY valid JSON matching this exact structure:
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody),
+            signal: AbortSignal.timeout(15000),
           });
 
           if (response.ok) {
@@ -450,9 +464,9 @@ Return ONLY valid JSON matching this exact structure:
       }
     }
 
-    // 2. Tier 2: Groq Multimodal Vision (LLaMA 3.2 Vision Cascade)
+    // 2. Tier 2: Groq Multimodal Vision (Qwen 3.8 27B Vision)
     if (this.groqKey && imagesData.length > 0) {
-      const groqModels = ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview'];
+      const groqModels = ['qwen/qwen3.8-27b'];
       for (const groqModel of groqModels) {
         try {
           const groqImage = imagesData[0];
@@ -481,6 +495,7 @@ Return ONLY valid JSON matching this exact structure:
               temperature: 0.1,
               response_format: { type: 'json_object' },
             }),
+            signal: AbortSignal.timeout(15000),
           });
 
           if (groqResponse.ok) {
@@ -499,7 +514,57 @@ Return ONLY valid JSON matching this exact structure:
       }
     }
 
-    // 3. Adaptive Offline Clinical & Contextual Engine fallback
+    // 3. Tier 3: NVIDIA NIM Multimodal VLM (Hot-swappable when VITE_NVIDIA_API_KEY is present)
+    if (this.nvidiaKey && imagesData.length > 0) {
+      const nvidiaModels = ['meta/llama-3.2-90b-vision-instruct', 'nvidia/neva-22b'];
+      for (const nvModel of nvidiaModels) {
+        try {
+          const nvImage = imagesData[0];
+          const nvResponse = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${this.nvidiaKey}`,
+            },
+            body: JSON.stringify({
+              model: nvModel,
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: prompt },
+                    {
+                      type: 'image_url',
+                      image_url: {
+                        url: `data:${nvImage.mimeType};base64,${nvImage.base64}`,
+                      },
+                    },
+                  ],
+                },
+              ],
+              temperature: 0.1,
+              response_format: { type: 'json_object' },
+            }),
+            signal: AbortSignal.timeout(15000),
+          });
+
+          if (nvResponse.ok) {
+            const nvData = await nvResponse.json();
+            const nvText = nvData.choices?.[0]?.message?.content;
+            if (nvText) {
+              return this.parseAndEnrichResult(nvText, imagesData.length);
+            }
+          } else {
+            const nvErrText = await nvResponse.text();
+            console.warn(`NVIDIA NIM Vision model ${nvModel} HTTP ${nvResponse.status}:`, nvErrText);
+          }
+        } catch (nvErr) {
+          console.warn(`NVIDIA NIM Vision model ${nvModel} attempt caught:`, nvErr);
+        }
+      }
+    }
+
+    // 4. Adaptive Offline Clinical & Contextual Engine fallback
     return this.getAdaptiveFallbackResult(imagesData, knownAllergies);
   }
 
@@ -524,7 +589,7 @@ Extract medications, Jan Aushadhi generic equivalents, authentic price differenc
 Return ONLY valid JSON matching the exact schema with keys:
 patientName, patientAge, patientGender, patientAddress, doctorName, doctorLicenseNo, doctorPtrNo, clinicOrHospital, date, diagnosisNotes, clinicalSynergyInsight, clinicalSynergyInsightTa, medications, dosageSchedule, safetyRadar, refillCountdown, humanDoctorExplanationEn, humanDoctorExplanationTa, allergyWarnings.`;
 
-    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
     for (const model of modelsToTry) {
       if (!this.geminiKey) break;
       try {
@@ -536,6 +601,7 @@ patientName, patientAge, patientGender, patientAddress, doctorName, doctorLicens
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: { temperature: 0.1, responseMimeType: 'application/json' },
           }),
+          signal: AbortSignal.timeout(15000),
         });
 
         if (response.ok) {
@@ -551,29 +617,61 @@ patientName, patientAge, patientGender, patientAddress, doctorName, doctorLicens
     }
 
     if (this.groqKey) {
+      const groqModels = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
+      for (const groqModel of groqModels) {
+        try {
+          const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${this.groqKey}`,
+            },
+            body: JSON.stringify({
+              model: groqModel,
+              messages: [{ role: 'user', content: prompt }],
+              temperature: 0.1,
+              response_format: { type: 'json_object' },
+            }),
+            signal: AbortSignal.timeout(15000),
+          });
+          if (groqResponse.ok) {
+            const groqData = await groqResponse.json();
+            const groqText = groqData.choices?.[0]?.message?.content;
+            if (groqText) {
+              return this.parseAndEnrichResult(groqText, pagesCount);
+            }
+          }
+        } catch (groqErr) {
+          console.warn(`structureClinicalData Groq fallback (${groqModel}) caught:`, groqErr);
+        }
+      }
+    }
+
+    if (this.nvidiaKey) {
       try {
-        const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const nvResponse = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.groqKey}`,
+            Authorization: `Bearer ${this.nvidiaKey}`,
           },
           body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
+            model: 'meta/llama-3.1-70b-instruct',
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.1,
             response_format: { type: 'json_object' },
           }),
+          signal: AbortSignal.timeout(15000),
         });
-        if (groqResponse.ok) {
-          const groqData = await groqResponse.json();
-          const groqText = groqData.choices?.[0]?.message?.content;
-          if (groqText) {
-            return this.parseAndEnrichResult(groqText, pagesCount);
+        if (nvResponse.ok) {
+          const nvData = await nvResponse.json();
+          const nvText = nvData.choices?.[0]?.message?.content;
+          if (nvText) {
+            return this.parseAndEnrichResult(nvText, pagesCount);
           }
         }
-      } catch (groqErr) {
-        console.warn('structureClinicalData Groq fallback caught:', groqErr);
+      } catch (nvErr) {
+        console.warn('structureClinicalData NVIDIA fallback caught:', nvErr);
       }
     }
 

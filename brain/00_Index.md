@@ -59,6 +59,8 @@ graph TD
     DEC --> ADR14[[ADR-014-Conversational-Chameleon-and-Speech-Pipeline]]
     DEC --> ADR15[[ADR-015-Vernacular-Speech-and-Conversational-Continuity]]
     DEC --> ADR16[[ADR-016-Autonomous-Hybrid-Vector-RAG-and-Ambient-Clinical-Automations]]
+    DEC --> ADR17[[ADR-017-Clinical-Synergy-and-Prescription-Demographic-OCR]]
+    DEC --> ADR18[[ADR-018-Top-Tier-Multimodal-Prescription-Vision-and-HTR-Cascade]]
 
     CTX --> ACT[[Active_Context]]
     CTX --> CRED[[Key_Credentials_and_Environments]]
@@ -116,6 +118,7 @@ graph TD
 - [[ADR-015-Vernacular-Speech-and-Conversational-Continuity]]: Vernacular speech generation and bidirectional conversational continuity.
 - [[ADR-016-Autonomous-Hybrid-Vector-RAG-and-Ambient-Clinical-Automations]]: Autonomous hybrid vector RAG and ambient clinical note generation.
 - [[ADR-017-Clinical-Synergy-and-Prescription-Demographic-OCR]]: Clinical-grade prescription OCR engine capturing patient demographics, physician credentials (Lic/PTR), dispensed quantities, chemical formulas, and automated pharmacological synergy insights (e.g., FeSO4 + Vitamin C).
+- [[ADR-018-Top-Tier-Multimodal-Prescription-Vision-and-HTR-Cascade]]: 4-tier autonomous multimodal vision & HTR cascade (Gemini 3.8/3.5, Groq Qwen 3.8 27B, hot-swappable NVIDIA NIM & Hugging Face TrOCR) with 15s timeouts and zero UI clutter.
 
 ---
 
