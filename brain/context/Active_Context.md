@@ -16,8 +16,8 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `6b209ad` (`feat(chat-voice): implement Conversational Chameleon AI, single-pipeline mobile mic capture, and instant 1.1x Read Aloud TTS (ADR-014)`)
-- **Vercel Production Deployment**: `dpl_EAqEMHV8bRQ61nY24tDa4qfqKWKS`
+- **Latest Commit**: `d14bfb1` (`fix(vision-prescription): strengthen vision model cascade and error sanitization`)
+- **Vercel Production Deployment**: Verified Live (200 OK)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
