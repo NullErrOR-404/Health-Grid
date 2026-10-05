@@ -14,7 +14,7 @@
     <artifactId>healthgrid-backend</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>HealthGrid Backend</name>
-    <description>100% Java 21 Spring Boot 3.3 Backend for HealthGrid (SIH25049)</description>
+    <description>HealthGrid Enterprise Core Backend (Java 21 LTS + Spring Boot 3.3)</description>
 
     <properties>
         <java.version>21</java.version>

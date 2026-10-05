@@ -1,7 +1,7 @@
 # ==============================================================================
 # HealthGrid Backend - Production Multi-Stage Dockerfile
 # Java 21 LTS (Project Loom Virtual Threads) + Spring Boot 3.3.4
-# Built for SIH25049 - 100,000+ Concurrent User Scalability Target
+# Enterprise Healthcare Telemetry - 100,000+ Concurrent User Scalability Target
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
