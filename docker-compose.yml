@@ -1,6 +1,6 @@
 # ==============================================================================
 # HealthGrid (நலம் AI) - Production Full-Stack Docker Compose Orchestration
-# Built for Smart India Hackathon (SIH 2025 - Problem Statement SIH25049)
+# National Community Healthcare & Emergency Response Platform
 # 
 # Services:
 # 1. postgres: PostgreSQL 16 with pgvector extension (for vector semantic search)
