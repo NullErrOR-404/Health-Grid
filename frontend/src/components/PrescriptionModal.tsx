@@ -7,7 +7,6 @@ import {
   FileText,
   ShoppingBag,
   MapPin,
-  RefreshCw,
   Volume2,
   VolumeX,
   AlertTriangle,
@@ -21,18 +20,26 @@ import {
   CalendarPlus,
   Trash2,
   Sun,
-  Sunset,
   Moon,
   ChevronRight,
-  ShieldAlert,
+  ChevronLeft,
+  ChevronDown,
   Sparkles,
   Lightbulb,
   CheckCircle2,
   ImageIcon,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Maximize2,
+  Edit3,
+  Bookmark,
+  Utensils
 } from 'lucide-react';
 import type { Language } from '../types';
-import { prescriptionAiService, type PrescriptionAnalysisResult } from '../services/prescriptionAiService';
+import { prescriptionAiService, type PrescriptionAnalysisResult, type ScannedMedicine } from '../services/prescriptionAiService';
 import { speechEngine } from '../services/speechService';
 import { supabase } from '../services/supabaseClient';
 import { medicineStoreService } from '../services/medicineStoreService';
@@ -76,6 +83,22 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   const [analysisStep, setAnalysisStep] = useState<string>('');
   const [analysisResult, setAnalysisResult] = useState<PrescriptionAnalysisResult | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Redesigned Post-Scan UI State (Matches Reference Visual)
+  const [activePageIndex, setActivePageIndex] = useState<number>(0);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [rotation, setRotation] = useState<number>(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
+  const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
+  const [isEditAllOpen, setIsEditAllOpen] = useState<boolean>(false);
+  const [editingCardIndex, setEditingCardIndex] = useState<number | null>(null);
+  const [tempMedicines, setTempMedicines] = useState<ScannedMedicine[]>([]);
+
+  useEffect(() => {
+    if (isEditAllOpen && analysisResult) {
+      setTempMedicines(JSON.parse(JSON.stringify(analysisResult.medicines)));
+    }
+  }, [isEditAllOpen, analysisResult]);
 
   // Bedside Doctor Audio State
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -369,6 +392,13 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     setIsSavedToProfile(false);
     setSaveFeedback(null);
     setIsCameraActive(false);
+    setActivePageIndex(0);
+    setZoomLevel(1);
+    setRotation(0);
+    setIsLightboxOpen(false);
+    setExpandedCardIndex(null);
+    setIsEditAllOpen(false);
+    setEditingCardIndex(null);
   };
 
   // Audio Doctor voice advice playback
@@ -409,14 +439,74 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       setIsSavedToProfile(true);
       setSaveFeedback(
         lang === 'en'
-          ? 'Confidential prescription securely saved to your health profile!'
+          ? 'Prescription securely saved to your health profile!'
           : 'மருத்துவ விவரங்கள் உங்கள் பாதுகாப்பான சுயவிவரத்தில் சேர்க்கப்பட்டன!'
+      );
+      window.dispatchEvent(
+        new CustomEvent('healthgrid:toast', {
+          detail: {
+            message: lang === 'en'
+              ? 'Prescription saved to your Health Profile!'
+              : 'மருந்துச் சீட்டு உங்கள் மருத்துவ சுயவிவரத்தில் பாதுகாப்பாகச் சேமிக்கப்பட்டது!',
+          },
+        })
       );
       // Refresh dynamic recent uploads
       prescriptionAiService.fetchRecentPrescriptions().then(setRecentUploads);
     } else {
       setSaveFeedback(res.error || (lang === 'en' ? 'Unable to save. Please sign in.' : 'சேமிக்க முடியவில்லை. உள்நுழையவும்.'));
     }
+  };
+
+  // Update single medicine inline
+  const handleUpdateMedicine = (index: number, updatedFields: Partial<ScannedMedicine>) => {
+    if (!analysisResult) return;
+    const updatedMeds = [...analysisResult.medicines];
+    updatedMeds[index] = { ...updatedMeds[index], ...updatedFields };
+
+    const totalBrandCost = updatedMeds.reduce((acc, m) => acc + (m.brandPrice || 0), 0);
+    const totalGenericCost = updatedMeds.reduce((acc, m) => acc + (m.genericPrice || 0), 0);
+    const totalSavings = Math.max(0, totalBrandCost - totalGenericCost);
+    const savingsPercentage = totalBrandCost > 0 ? Math.round((totalSavings / totalBrandCost) * 100) : 0;
+
+    setAnalysisResult({
+      ...analysisResult,
+      medicines: updatedMeds,
+      totalBrandCost,
+      totalGenericCost,
+      totalSavings,
+      savingsPercentage,
+    });
+    setEditingCardIndex(null);
+  };
+
+  // Batch update all medicines from Edit All modal
+  const handleSaveAllEditedMedicines = (newMeds: ScannedMedicine[]) => {
+    if (!analysisResult) return;
+    const totalBrandCost = newMeds.reduce((acc, m) => acc + (m.brandPrice || 0), 0);
+    const totalGenericCost = newMeds.reduce((acc, m) => acc + (m.genericPrice || 0), 0);
+    const totalSavings = Math.max(0, totalBrandCost - totalGenericCost);
+    const savingsPercentage = totalBrandCost > 0 ? Math.round((totalSavings / totalBrandCost) * 100) : 0;
+
+    setAnalysisResult({
+      ...analysisResult,
+      medicines: newMeds,
+      totalBrandCost,
+      totalGenericCost,
+      totalSavings,
+      savingsPercentage,
+    });
+    setIsEditAllOpen(false);
+
+    window.dispatchEvent(
+      new CustomEvent('healthgrid:toast', {
+        detail: {
+          message: lang === 'en'
+            ? 'Prescription medicines updated successfully!'
+            : 'மருந்துகள் விவரங்கள் புதுப்பிக்கப்பட்டன!',
+        },
+      })
+    );
   };
 
   // Export dosage timetable to WhatsApp
@@ -461,52 +551,93 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-5xl bg-white rounded-none sm:rounded-[28px] shadow-2xl border-none sm:border border-slate-200/90 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className={`relative w-full h-full sm:h-auto sm:max-h-[94vh] ${analysisResult && !isAnalyzing ? 'sm:max-w-6xl lg:max-w-7xl' : 'sm:max-w-5xl'} bg-[#F8FAFC] rounded-none sm:rounded-[28px] shadow-2xl border-none sm:border border-slate-200/90 flex flex-col overflow-hidden transition-all duration-300`}>
         
         {/* Hidden Canvas for High-Resolution Capture */}
         <canvas ref={canvasRef} className="hidden" />
 
-        {/* TOP MODAL HEADER (Matches Reference Exactly) */}
-        <div className="px-6 py-5 bg-white border-b border-slate-100 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-[#E8F5F3] flex items-center justify-center text-[#147D6F] shadow-2xs">
-              <Camera className="w-6 h-6 stroke-[1.8]" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-slate-900 text-base sm:text-lg leading-tight">
-                {lang === 'en' ? 'Prescription Scanner & Medicine Saver' : 'மருந்துச் சீட்டு ஸ்கேனர் & மலிவு மருந்து சேமிப்பு'}
-              </h3>
-              <p className="text-xs text-slate-500 font-normal mt-0.5">
-                {lang === 'en'
-                  ? "Upload or capture your prescription. We'll extract the medicines and save them to your profile."
-                  : 'உங்கள் மருந்துச் சீட்டைப் பதிவேற்றவும் அல்லது படம் எடுக்கவும். மருந்துகளை பிரித்தெடுத்து உங்கள் சுயவிவரத்தில் சேமிப்போம்.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {analysisResult && (
+        {/* TOP MODAL HEADER (Dynamic: Upload mode vs Post-Scan Redesigned Header) */}
+        {analysisResult && !isAnalyzing ? (
+          <div className="px-5 sm:px-8 py-4 sm:py-5 bg-white border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 flex-shrink-0">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={handleResetScan}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer"
-                title={lang === 'en' ? 'Scan another prescription' : 'மறுபடி ஸ்கேன் செய்'}
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer flex-shrink-0"
+                aria-label="Back"
+                title={lang === 'en' ? 'Back to upload' : 'பின்செல்'}
               >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{lang === 'en' ? 'Scan Another' : 'புதிய ஸ்கேன்'}</span>
+                <ArrowLeft className="w-4 h-4" />
               </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h3 className="font-extrabold text-slate-900 text-base sm:text-xl leading-tight">
+                    {lang === 'en' ? 'Prescription Scanned' : 'மருந்துச் சீட்டு ஸ்கேன் செய்யப்பட்டது'}
+                  </h3>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-[#E8F8F4] text-[#0F766E] border border-teal-200/70">
+                    <Check className="w-3 h-3 stroke-[2.5]" />
+                    <span>{lang === 'en' ? 'Completed' : 'முடிந்தது'}</span>
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-normal mt-0.5">
+                  {lang === 'en'
+                    ? `We found ${analysisResult.medicines.length} medicines. Please check the details before saving.`
+                    : `${analysisResult.medicines.length} மருந்துகள் கண்டறியப்பட்டன. சேமிக்கும் முன் விவரங்களைச் சரிபார்க்கவும்.`}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 self-end sm:self-center">
+              <button
+                type="button"
+                onClick={handleResetScan}
+                className="px-3.5 sm:px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-2 shadow-2xs transition-all cursor-pointer active:scale-95"
+              >
+                <Camera className="w-3.5 h-3.5 text-slate-600" />
+                <span>{lang === 'en' ? 'Scan Another' : 'புதிய ஸ்கேன்'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="px-6 py-5 bg-white border-b border-slate-100 flex items-center justify-between gap-4 flex-shrink-0">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-[#E8F5F3] flex items-center justify-center text-[#147D6F] shadow-2xs">
+                <Camera className="w-6 h-6 stroke-[1.8]" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base sm:text-lg leading-tight">
+                  {lang === 'en' ? 'Prescription Scanner & Medicine Saver' : 'மருந்துச் சீட்டு ஸ்கேனர் & மலிவு மருந்து சேமிப்பு'}
+                </h3>
+                <p className="text-xs text-slate-500 font-normal mt-0.5">
+                  {lang === 'en'
+                    ? "Upload or capture your prescription. We'll extract the medicines and save them to your profile."
+                    : 'உங்கள் மருந்துச் சீட்டைப் பதிவேற்றவும் அல்லது படம் எடுக்கவும். மருந்துகளை பிரித்தெடுத்து உங்கள் சுயவிவரத்தில் சேமிப்போம்.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* MODAL BODY */}
         <div className="p-5 sm:p-7 overflow-y-auto flex-1 space-y-6">
@@ -1015,9 +1146,9 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
             </div>
           )}
 
-          {/* RESULTS STATE (Unified 2-Column Split: Clinical Findings + Smart Timetable & Radar) */}
+          {/* RESULTS STATE (Pixel-Perfect Match with Reference Visual: After prescription scanned ref.png) */}
           {analysisResult && !isAnalyzing && (
-            <div className="space-y-5 animate-in fade-in duration-300">
+            <div className="space-y-6 animate-in fade-in duration-300">
               
               {/* Feedback Alert for Save Action */}
               {saveFeedback && (
@@ -1031,547 +1162,826 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                 </div>
               )}
 
-              {/* 2-Column Split Grid */}
+              {/* MAIN 2-COLUMN BALANCED GRID (Matches Reference) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
-                {/* LEFT COLUMN: Clinical Header + Audio Doctor + Savings + Deciphered Medicines */}
-                <div className="lg:col-span-7 space-y-4">
-                  
-                  {/* Doctor & Clinic Slip Header */}
-                  <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs space-y-2.5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider">
-                            {analysisResult.clinicOrHospital}
-                          </span>
-                          {(analysisResult.doctorLicenseNo || analysisResult.doctorPtrNo) && (
-                            <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                              {[analysisResult.doctorLicenseNo, analysisResult.doctorPtrNo].filter(Boolean).join(' • ')}
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
-                          {analysisResult.doctorName}
-                        </h4>
-                        <p className="text-xs text-slate-600 flex items-center gap-2">
-                          <span className="font-semibold text-slate-700">Diagnosis:</span>
-                          <span>{analysisResult.diagnosisNotes}</span>
-                        </p>
+                {/* LEFT COLUMN: SCANNED PRESCRIPTION CARD */}
+                <div className="lg:col-span-6 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs space-y-4">
+                  {/* Card Header: Icon + Title + Page Badge */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-[#E8F8F4] text-[#0F766E] flex items-center justify-center flex-shrink-0 shadow-2xs">
+                        <FileText className="w-5 h-5 stroke-[1.8]" />
                       </div>
-
-                      <div className="flex items-center gap-2 text-xs text-slate-500 self-start sm:self-center">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{analysisResult.date}</span>
-                        {analysisResult.pagesCount > 1 && (
-                          <span className="bg-teal-50 text-teal-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-teal-200">
-                            {analysisResult.pagesCount} Pages
-                          </span>
-                        )}
-                      </div>
+                      <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                        {lang === 'en' ? 'Scanned Prescription' : 'ஸ்கேன் செய்யப்பட்ட மருந்துச் சீட்டு'}
+                      </h4>
                     </div>
 
-                    {/* Patient Demographics Banner */}
-                    {analysisResult.patientName && (
-                      <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                        <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">
-                          Patient: {analysisResult.patientName}
-                        </span>
-                        {(analysisResult.patientAge || analysisResult.patientGender) && (
-                          <span className="bg-slate-100 px-2 py-0.5 rounded-md font-medium text-slate-700">
-                            {[analysisResult.patientAge ? `${analysisResult.patientAge} Y` : '', analysisResult.patientGender].filter(Boolean).join(' / ')}
+                    {/* Page Indicator (with pagination if multiple pages) */}
+                    <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-xl text-xs font-semibold text-slate-600">
+                      {capturedPages.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setActivePageIndex((prev) => Math.max(0, prev - 1))}
+                          disabled={activePageIndex === 0}
+                          className="hover:text-slate-900 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                          title="Previous Page"
+                        >
+                          <ChevronLeft className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <span>
+                        {lang === 'en'
+                          ? `Page ${activePageIndex + 1} of ${capturedPages.length || 1}`
+                          : `பக்கம் ${activePageIndex + 1} / ${capturedPages.length || 1}`}
+                      </span>
+                      {capturedPages.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setActivePageIndex((prev) => Math.min((capturedPages.length || 1) - 1, prev + 1))}
+                          disabled={activePageIndex === (capturedPages.length || 1) - 1}
+                          className="hover:text-slate-900 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                          title="Next Page"
+                        >
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Prescription Preview Viewport */}
+                  <div className="relative w-full aspect-[4/3] sm:aspect-[1/1] max-h-[480px] bg-slate-100/70 border border-slate-200/80 rounded-2xl overflow-hidden flex items-center justify-center p-3 select-none group">
+                    {capturedPages.length > 0 ? (
+                      <img
+                        src={capturedPages[activePageIndex]}
+                        alt="Scanned Prescription"
+                        className="max-w-full max-h-full object-contain pointer-events-none transition-transform duration-200"
+                        style={{
+                          transform: `scale(${zoomLevel}) rotate(${rotation}deg)`,
+                        }}
+                      />
+                    ) : (
+                      /* High-fidelity Prescription Slip Mockup (Matches Reference Photo Exactly) */
+                      <div
+                        className="w-full h-full bg-[#FAF7F0] border border-[#E4DEC9] rounded-xl p-4 sm:p-6 flex flex-col justify-between text-slate-800 shadow-inner overflow-hidden font-sans transition-transform duration-200"
+                        style={{
+                          transform: `scale(${zoomLevel}) rotate(${rotation}deg)`,
+                        }}
+                      >
+                        {/* Clinic & Doctor Letterhead */}
+                        <div className="flex items-start justify-between border-b border-[#E4DEC9] pb-3">
+                          <div className="flex items-start gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-slate-800 text-[#FAF7F0] flex items-center justify-center font-serif text-sm font-bold flex-shrink-0">
+                              ⚕
+                            </div>
+                            <div>
+                              <div className="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">
+                                {analysisResult.doctorName || 'Dr. R. Kumar, MBBS, MD'}
+                              </div>
+                              <div className="text-[10px] sm:text-[11px] text-slate-600">
+                                General Physician
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-right text-[10px] sm:text-[11px] text-slate-600 leading-tight">
+                            <div className="font-bold text-slate-900">Apollo Clinic</div>
+                            <div>Anna Nagar, Chennai - 600040</div>
+                            <div>Ph: 044-2820 1234</div>
+                          </div>
+                        </div>
+
+                        {/* Patient Demographics */}
+                        <div className="grid grid-cols-3 gap-2 py-2 border-b border-[#E4DEC9] text-[11px] sm:text-xs">
+                          <div>
+                            <span className="text-slate-500">Name: </span>
+                            <span className="font-semibold text-blue-900 italic font-serif">
+                              {analysisResult.patientName || 'S. Ravi'}
+                            </span>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-slate-500">Age: </span>
+                            <span className="font-semibold text-blue-900 italic font-serif">
+                              {analysisResult.patientAge || '45'} / {analysisResult.patientGender || 'M'}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-semibold text-blue-900 italic font-serif">
+                              {analysisResult.date || '12/08/2024'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Rx Symbol & Medication Entries in Doctor Script Style */}
+                        <div className="flex-1 py-3 space-y-2 text-xs sm:text-[13px] font-serif text-blue-950">
+                          <div className="text-base sm:text-lg font-black text-slate-900 font-sans">
+                            ℞
+                          </div>
+                          {analysisResult.medicines.slice(0, 4).map((med, idx) => (
+                            <div key={idx} className="flex items-center justify-between gap-2 italic leading-tight">
+                              <div>
+                                <span className="font-bold mr-1">{idx + 1}.</span>
+                                <span>{med.form || 'Tab.'} {med.brandName || med.genericName} {med.dosage}</span>
+                                <span className="ml-2 text-slate-600 font-sans text-[11px]">({med.frequency})</span>
+                              </div>
+                              <span className="text-[11px] text-slate-600 font-sans font-medium flex-shrink-0">
+                                {med.duration || '30 days'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Doctor's Signature */}
+                        <div className="text-right pt-2 border-t border-[#E4DEC9]">
+                          <span className="font-serif italic text-blue-900 text-sm font-bold">
+                            R. Kumar
                           </span>
-                        )}
-                        {analysisResult.patientAddress && (
-                          <span className="text-slate-500 text-[11px] truncate max-w-[260px]" title={analysisResult.patientAddress}>
-                            📍 {analysisResult.patientAddress}
-                          </span>
-                        )}
-                        <span className="ml-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                          HTA Verified ✓
-                        </span>
+                        </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Clinical Synergy & Pharmacological Insight Banner */}
-                  {analysisResult.clinicalSynergyInsight && (
-                    <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3.5 space-y-1 shadow-2xs">
-                      <div className="flex items-center gap-2 text-amber-900 font-extrabold text-xs">
-                        <Sparkles className="w-4 h-4 text-amber-600" />
-                        <span>{lang === 'en' ? 'Clinical Synergy & Bioavailability Insight' : 'மருத்துவ கூட்டு நற்பயன் விளக்கம்'}</span>
-                      </div>
-                      <p className="text-xs text-amber-900/90 leading-relaxed font-medium">
-                        {lang === 'ta' && analysisResult.clinicalSynergyInsightTa
-                          ? analysisResult.clinicalSynergyInsightTa
-                          : analysisResult.clinicalSynergyInsight}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Bedside Audio Doctor Card */}
-                  <div className="bg-gradient-to-br from-teal-800 via-teal-900 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-teal-700 flex items-center justify-center text-teal-200 shadow-xs">
-                          <Volume2 className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h5 className="font-bold text-sm text-teal-100">
-                            {lang === 'en' ? "Bedside Doctor's Audio Advice" : 'மருத்துவரின் குரல் வழிகாட்டல்'}
-                          </h5>
-                          <p className="text-[11px] text-teal-300">
-                            {lang === 'en' ? 'Gentle spoken instructions for taking medicines' : 'மருந்துகளை உட்கொள்ள எளிய குரல் விளக்கம்'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Language Switcher for Voice */}
-                      <div className="flex items-center bg-teal-950/60 p-1 rounded-xl border border-teal-700/50 text-[11px]">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            speechEngine.stopSpeaking();
-                            setIsPlayingAudio(false);
-                            setAudioLang('en');
-                          }}
-                          className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                            audioLang === 'en' ? 'bg-teal-600 text-white shadow-xs' : 'text-teal-300 hover:text-white'
-                          }`}
-                        >
-                          English
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            speechEngine.stopSpeaking();
-                            setIsPlayingAudio(false);
-                            setAudioLang('ta');
-                          }}
-                          className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                            audioLang === 'ta' ? 'bg-teal-600 text-white shadow-xs' : 'text-teal-300 hover:text-white'
-                          }`}
-                        >
-                          தமிழ்
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-teal-50/95 leading-relaxed bg-white/10 p-3 rounded-xl border border-white/10 italic">
-                      "{audioLang === 'ta' ? analysisResult.humanDoctorExplanationTa : analysisResult.humanDoctorExplanationEn}"
-                    </p>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <button
-                        type="button"
-                        onClick={handleToggleAudio}
-                        className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-xl font-extrabold text-xs transition-all shadow-md cursor-pointer ${
-                          isPlayingAudio
-                            ? 'bg-rose-500 hover:bg-rose-600 text-white animate-pulse'
-                            : 'bg-emerald-400 hover:bg-emerald-300 text-teal-950'
-                        }`}
-                      >
-                        {isPlayingAudio ? (
-                          <>
-                            <VolumeX className="w-4 h-4" />
-                            <span>{lang === 'en' ? 'Pause Audio Voice' : 'குரலை நிறுத்து'}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Volume2 className="w-4 h-4" />
-                            <span>{lang === 'en' ? 'Listen to Doctor Voice' : 'மருத்துவர் குரலைக் கேளுங்கள்'}</span>
-                          </>
-                        )}
-                      </button>
-
-                      {isPlayingAudio && (
-                        <div className="flex items-center gap-1">
-                          <div className="w-1 h-3 bg-emerald-400 rounded-full animate-bounce"></div>
-                          <div className="w-1 h-5 bg-emerald-300 rounded-full animate-bounce [animation-delay:0.15s]"></div>
-                          <div className="w-1 h-4 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.3s]"></div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Jan Aushadhi Generic Savings Banner */}
-                  <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-emerald-950 shadow-2xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#059669] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
-                        <ShoppingBag className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold uppercase tracking-wider text-[#065F46]">
-                          {lang === 'en' ? 'PMBJP Jan Aushadhi Savings' : 'ஜன் அவுஷதி மலிவு மருந்து சேமிப்பு'}
-                        </div>
-                        <div className="text-sm sm:text-base font-black text-emerald-950">
-                          {lang === 'en'
-                            ? `You save ₹${analysisResult.totalSavings} (${analysisResult.savingsPercentage}% off) with generics!`
-                            : `ஜெனரிக் மருந்துகளில் ₹${analysisResult.totalSavings} (${analysisResult.savingsPercentage}%) சேமிப்பு!`}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-emerald-200">
-                      <div className="text-right">
-                        <div className="text-xs text-slate-500 line-through">Brand: ₹{analysisResult.totalBrandCost}</div>
-                        <div className="text-base font-black text-[#059669]">₹{analysisResult.totalGenericCost} only</div>
-                      </div>
-
-                      {/* Breakthrough Action: Directly Auto-fill Generic Cart */}
-                      <button
-                        type="button"
-                        onClick={handleAddAllToGenericCart}
-                        className="py-2 px-3.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
-                      >
-                        <ShoppingBag className="w-3.5 h-3.5" />
-                        <span>{lang === 'en' ? 'Add All to Generic Cart' : 'கூடையில் சேர்க்க'}</span>
-                      </button>
-
-                      {/* Breakthrough Action: Auto-Schedule 30-Day Chronic Refill */}
-                      <button
-                        type="button"
-                        onClick={handleCreateChronicRefillFromRx}
-                        className="py-2 px-3 rounded-xl bg-teal-800 hover:bg-teal-900 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
-                        title="Set up automated 30-day refills with Day-25 WhatsApp and Calendar alerts"
-                      >
-                        <Clock className="w-3.5 h-3.5 text-teal-300" />
-                        <span>{lang === 'en' ? 'Start 30-Day Auto-Refill' : 'தொடர் மறுவரவு'}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onClose();
-                          if (onOpenDiseaseMap) {
-                            onOpenDiseaseMap();
-                          } else {
-                            window.history.pushState({}, '', '/maps');
-                            window.dispatchEvent(new PopStateEvent('popstate'));
-                          }
-                        }}
-                        className="py-2 px-2.5 rounded-xl border border-emerald-300 text-emerald-800 hover:bg-emerald-100/50 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer"
-                        title={lang === 'en' ? 'Find Nearest Jan Aushadhi Kendra' : 'மருந்தகம் காண்க'}
-                      >
-                        <MapPin className="w-3.5 h-3.5" />
-                        <span>{lang === 'en' ? 'Kendra Map' : 'வரைபடம்'}</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Deciphered Medications List */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                        {lang === 'en' ? 'Deciphered Medicines & Generic Equivalents' : 'பரிந்துரைக்கப்பட்ட மருந்துகள் & ஜெனரிக் மாற்று'}
-                      </h5>
-                      <span className="text-[11px] text-[#0F766E] font-semibold">
-                        PMBJP Verified
-                      </span>
-                    </div>
-
-                    {analysisResult.medicines.map((med, idx) => (
-                      <div
-                        key={med.id || idx}
-                        className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:border-slate-300 transition-all space-y-2.5"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                          <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h6 className="font-extrabold text-slate-900 text-sm">
-                                {med.brandName}
-                              </h6>
-                              {med.dosage && (
-                                <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
-                                  {med.dosage}
-                                </span>
-                              )}
-                              {med.quantity && (
-                                <span className="text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200/80 px-2 py-0.5 rounded-md">
-                                  Qty: {med.quantity}
-                                </span>
-                              )}
-                              {med.chemicalNotation && (
-                                <span className="text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 px-1.5 py-0.5 rounded-md">
-                                  {med.chemicalNotation}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-xs text-[#0F766E] font-semibold mt-0.5 flex items-center gap-1.5">
-                              <ShieldCheck className="w-3.5 h-3.5 text-[#0D9488] flex-shrink-0" />
-                              <span>{med.genericName}</span>
-                            </div>
-                            {med.clinicalVerification?.patientContextNoteEn && (
-                              <div className="text-[11px] text-teal-800 bg-teal-50/70 border border-teal-200/60 px-2 py-0.5 rounded-md mt-1.5 flex items-center gap-1.5">
-                                <Sparkles className="w-3 h-3 text-teal-600 flex-shrink-0" />
-                                <span>{lang === 'ta' && med.clinicalVerification.patientContextNoteTa ? med.clinicalVerification.patientContextNoteTa : med.clinicalVerification.patientContextNoteEn}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2 sm:text-right">
-                            <span className="text-xs text-slate-400 line-through">₹{med.brandPrice}</span>
-                            <span className="text-sm font-black text-emerald-700">₹{med.genericPrice}</span>
-                            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-md">
-                              {med.savingsPct}% off
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                medicineStoreService.addScannedMedicinesToCart([med]);
-                                window.dispatchEvent(
-                                  new CustomEvent('healthgrid:toast', {
-                                    detail: {
-                                      message: lang === 'en'
-                                        ? `Added ${med.genericName} to Generic Cart!`
-                                        : `${med.genericName} கூடையில் சேர்க்கப்பட்டது!`,
-                                    },
-                                  })
-                                );
-                              }}
-                              className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer border border-emerald-200/60"
-                              title="Add to generic cart"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Frequency, Timing, Duration badges */}
-                        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
-                          <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 px-2.5 py-1 rounded-lg font-medium">
-                            <Clock className="w-3 h-3 text-blue-600" />
-                            <span>{med.frequency}</span>
-                          </span>
-
-                          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg font-medium">
-                            <Pill className="w-3 h-3 text-amber-600" />
-                            <span>{lang === 'ta' ? med.timingTa : med.timing}</span>
-                          </span>
-
-                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-800 px-2.5 py-1 rounded-lg font-medium">
-                            <Calendar className="w-3 h-3 text-purple-600" />
-                            <span>{lang === 'ta' ? med.durationTa : med.duration}</span>
-                          </span>
-
-                          <span className="text-slate-500 text-[11px] ml-auto">
-                            {lang === 'ta' ? med.purposeTa : med.purposeEn}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Actions Footer */}
-                  <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                  {/* Viewer Toolbar: Zoom In, Zoom Out, Rotate, Full Screen */}
+                  <div className="grid grid-cols-4 gap-2 pt-1 border-t border-slate-100">
                     <button
                       type="button"
-                      onClick={handleSaveToProfile}
-                      disabled={isSaving || isSavedToProfile}
-                      className={`flex-1 w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer ${
-                        isSavedToProfile
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : 'bg-[#0F766E] hover:bg-[#115E59] text-white'
-                      }`}
+                      onClick={() => setZoomLevel((z) => Math.min(Number((z + 0.25).toFixed(2)), 2.5))}
+                      className="py-2 px-2 sm:px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200/60 active:scale-95"
+                      title="Zoom In"
                     >
-                      {isSavedToProfile ? (
-                        <>
-                          <Check className="w-4 h-4 text-emerald-700" />
-                          <span>{lang === 'en' ? 'Saved to Your Health Profile' : 'சுயவிவரத்தில் சேர்க்கப்பட்டது'}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4" />
-                          <span>
-                            {isSaving
-                              ? (lang === 'en' ? 'Saving Securely...' : 'சேமிக்கிறது...')
-                              : (lang === 'en' ? 'Save to My Profile Medications' : 'என் மருத்துவ விவரத்தில் சேர்')}
-                          </span>
-                        </>
-                      )}
+                      <ZoomIn className="w-3.5 h-3.5 text-slate-600" />
+                      <span className="hidden sm:inline">{lang === 'en' ? 'Zoom In' : 'பெரிதாக்கு'}</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={handleResetScan}
-                      className="w-full sm:w-auto py-2.5 px-4 rounded-xl font-bold text-xs bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                      onClick={() => setZoomLevel((z) => Math.max(Number((z - 0.25).toFixed(2)), 0.75))}
+                      className="py-2 px-2 sm:px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200/60 active:scale-95"
+                      title="Zoom Out"
                     >
-                      <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
-                      <span>{lang === 'en' ? 'Scan Another Slip' : 'மற்றொரு சீட்டு ஸ்கேன்'}</span>
+                      <ZoomOut className="w-3.5 h-3.5 text-slate-600" />
+                      <span className="hidden sm:inline">{lang === 'en' ? 'Zoom Out' : 'சிறிதாக்கு'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setRotation((r) => (r + 90) % 360)}
+                      className="py-2 px-2 sm:px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200/60 active:scale-95"
+                      title="Rotate 90 Degrees"
+                    >
+                      <RotateCw className="w-3.5 h-3.5 text-slate-600" />
+                      <span className="hidden sm:inline">{lang === 'en' ? 'Rotate' : 'சுழற்று'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsLightboxOpen(true)}
+                      className="py-2 px-2 sm:px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200/60 active:scale-95"
+                      title="Open Fullscreen Lightbox"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5 text-slate-600" />
+                      <span className="hidden sm:inline">{lang === 'en' ? 'Full Screen' : 'முழுத்திரை'}</span>
                     </button>
                   </div>
-
                 </div>
 
-                {/* RIGHT COLUMN: SMART DOSAGE TIMETABLE + SAFETY RADAR + REFILL TRACKER */}
-                <div className="lg:col-span-5 space-y-4">
-
-                  {/* Smart Daily Dosage Routine & Exporter */}
-                  <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-[#0F766E]" />
-                        <h5 className="font-extrabold text-slate-900 text-xs sm:text-sm">
-                          {lang === 'en' ? 'Daily Medication Routine' : 'தினசரி மருந்து அட்டவணை'}
-                        </h5>
+                {/* RIGHT COLUMN: EXTRACTED MEDICINES CARD */}
+                <div className="lg:col-span-6 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs space-y-4">
+                  {/* Card Header: Icon + Title + Edit All Button */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-[#E8F8F4] text-[#0F766E] flex items-center justify-center flex-shrink-0 shadow-2xs">
+                        <Pill className="w-5 h-5 stroke-[1.8]" />
                       </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={handleExportWhatsApp}
-                          className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-2xs cursor-pointer"
-                          title="Share schedule to WhatsApp"
-                        >
-                          <Share2 className="w-3.5 h-3.5" />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={handleAddCalendarReminder}
-                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all cursor-pointer"
-                          title="Add to Google Calendar"
-                        >
-                          <CalendarPlus className="w-3.5 h-3.5 text-blue-600" />
-                        </button>
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 text-sm sm:text-base leading-tight">
+                          {lang === 'en' ? 'Extracted Medicines' : 'கண்டறியப்பட்ட மருந்துகள்'}
+                        </h4>
+                        <p className="text-xs text-slate-500 font-normal mt-0.5">
+                          {lang === 'en'
+                            ? `We found ${analysisResult.medicines.length} medicines in this prescription.`
+                            : `இந்த மருந்துச் சீட்டில் ${analysisResult.medicines.length} மருந்துகள் உள்ளன.`}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Morning */}
-                    <div className="bg-amber-50/70 rounded-xl p-3 border border-amber-200/70 space-y-1.5">
-                      <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
-                        <Sun className="w-3.5 h-3.5 text-amber-600" />
-                        <span>{lang === 'en' ? 'Morning (Breakfast)' : 'காலை (உணவுக்குப் பின்)'}</span>
-                      </div>
-                      {analysisResult.dosageSchedule.morning.length > 0 ? (
-                        <ul className="text-xs text-slate-800 space-y-1">
-                          {analysisResult.dosageSchedule.morning.map((m, idx) => (
-                            <li key={idx} className="bg-white/80 p-2 rounded-lg border border-amber-200/50 font-medium">
-                              {m}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-[11px] text-slate-400 italic">No morning doses</p>
-                      )}
-                    </div>
-
-                    {/* Afternoon */}
-                    <div className="bg-blue-50/70 rounded-xl p-3 border border-blue-200/70 space-y-1.5">
-                      <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
-                        <Sunset className="w-3.5 h-3.5 text-blue-600" />
-                        <span>{lang === 'en' ? 'Afternoon (Lunch)' : 'மதியம் (உணவுக்குப் பின்)'}</span>
-                      </div>
-                      {analysisResult.dosageSchedule.afternoon.length > 0 ? (
-                        <ul className="text-xs text-slate-800 space-y-1">
-                          {analysisResult.dosageSchedule.afternoon.map((m, idx) => (
-                            <li key={idx} className="bg-white/80 p-2 rounded-lg border border-blue-200/50 font-medium">
-                              {m}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-[11px] text-slate-400 italic">No afternoon doses</p>
-                      )}
-                    </div>
-
-                    {/* Night */}
-                    <div className="bg-indigo-50/70 rounded-xl p-3 border border-indigo-200/70 space-y-1.5">
-                      <div className="flex items-center gap-2 text-xs font-bold text-indigo-900">
-                        <Moon className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>{lang === 'en' ? 'Night (Dinner)' : 'இரவு (உணவுக்குப் பின்)'}</span>
-                      </div>
-                      {analysisResult.dosageSchedule.night.length > 0 ? (
-                        <ul className="text-xs text-slate-800 space-y-1">
-                          {analysisResult.dosageSchedule.night.map((m, idx) => (
-                            <li key={idx} className="bg-white/80 p-2 rounded-lg border border-indigo-200/50 font-medium">
-                              {m}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-[11px] text-slate-400 italic">No night doses</p>
-                      )}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditAllOpen(true)}
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-slate-600" />
+                      <span>{lang === 'en' ? 'Edit All' : 'அனைத்தையும் திருத்து'}</span>
+                    </button>
                   </div>
 
-                  {/* Drug Safety & Food Precaution Radar */}
-                  {analysisResult.safetyRadar && (
-                    <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-2.5">
-                      <div className="flex items-center gap-2 font-extrabold text-xs sm:text-sm text-slate-900">
-                        <ShieldAlert className="w-4 h-4 text-amber-600" />
-                        <span>{lang === 'en' ? 'Safety & Food Interaction Radar' : 'உணவு & மருந்து பாதுகாப்பு எச்சரிக்கை'}</span>
-                      </div>
+                  {/* Medicines Cards List */}
+                  <div className="space-y-3.5">
+                    {analysisResult.medicines.map((med, idx) => {
+                      const isExpanded = expandedCardIndex === idx;
+                      const isEditing = editingCardIndex === idx;
+                      const isNight = (med.frequency || '').toLowerCase().includes('night') || (med.frequency || '').toLowerCase().includes('dinner');
 
-                      <div className="space-y-2">
-                        {analysisResult.safetyRadar.foodInteractions.map((item, idx) => (
-                          <div key={idx} className="p-2.5 bg-amber-50/70 border border-amber-200 rounded-xl text-xs space-y-0.5">
-                            <span className="font-bold text-amber-950">{item.medicine}:</span>
-                            <p className="text-slate-700">
-                              {lang === 'ta' ? item.cautionTa : item.cautionEn}
-                            </p>
+                      return (
+                        <div
+                          key={med.id || idx}
+                          className={`border rounded-2xl p-4 sm:p-4.5 transition-all shadow-2xs bg-white space-y-3 ${
+                            isExpanded ? 'border-[#0F766E] ring-1 ring-teal-500/20' : 'border-slate-200/90 hover:border-slate-300'
+                          }`}
+                        >
+                          {/* Card Top Row: Number Circle + Name + Verified Badge + Actions */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                              <div className="w-7 h-7 rounded-lg bg-[#E8F8F4] text-[#0F766E] font-extrabold text-xs flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+                                {idx + 1}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <h5 className="font-extrabold text-slate-900 text-sm sm:text-base leading-tight">
+                                    {med.brandName || med.genericName}
+                                  </h5>
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 fill-emerald-50 flex-shrink-0" />
+                                </div>
+                                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                                  {med.dosage || 'Standard'} • {med.form || 'Tablet'}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setEditingCardIndex(isEditing ? null : idx)}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                                  isEditing
+                                    ? 'bg-teal-600 text-white shadow-xs'
+                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                                }`}
+                              >
+                                <Edit3 className="w-3 h-3" />
+                                <span>{isEditing ? (lang === 'en' ? 'Close' : 'மூடு') : (lang === 'en' ? 'Edit' : 'திருத்து')}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => setExpandedCardIndex(isExpanded ? null : idx)}
+                                className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer"
+                                aria-label="Expand details"
+                              >
+                                <ChevronDown
+                                  className={`w-4 h-4 transition-transform duration-200 ${
+                                    isExpanded ? 'rotate-180 text-[#0F766E]' : ''
+                                  }`}
+                                />
+                              </button>
+                            </div>
                           </div>
-                        ))}
 
-                        <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-0.5">
-                          <span className="font-bold text-slate-800">
-                            {lang === 'en' ? 'Missed Dose Protocol: ' : 'மருந்து விடுபட்டால்: '}
-                          </span>
-                          <p className="text-slate-600">
-                            {lang === 'ta'
-                              ? analysisResult.safetyRadar.missedDoseGuidanceTa
-                              : analysisResult.safetyRadar.missedDoseGuidanceEn}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                          {/* 4 Metadata Columns (Pill Grid Matching Reference Visual) */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2.5 border-t border-slate-100 text-xs">
+                            {/* 1. Dose */}
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 flex-shrink-0">
+                                <Pill className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="font-extrabold text-slate-900 text-xs leading-tight">
+                                  {med.dosage?.toLowerCase().includes('tab') || med.dosage?.toLowerCase().includes('cap')
+                                    ? med.dosage
+                                    : `1 ${med.form ? med.form.toLowerCase() : 'tablet'}`}
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                  {lang === 'en' ? 'Dose' : 'அளவு'}
+                                </div>
+                              </div>
+                            </div>
 
-                  {/* Course Duration & Refill Countdown */}
-                  {analysisResult.refillCountdown && (
-                    <div className="bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-200 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs text-teal-950 shadow-2xs">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-[#0F766E] text-white flex items-center justify-center font-black text-sm">
-                          {analysisResult.refillCountdown.courseDurationDays}d
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-900">
-                            {lang === 'en' ? `${analysisResult.refillCountdown.courseDurationDays}-Day Treatment Course` : `${analysisResult.refillCountdown.courseDurationDays} நாட்கள் சிகிச்சை`}
+                            {/* 2. Frequency */}
+                            <div className="flex items-center gap-2">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                isNight ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
+                              }`}>
+                                {isNight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                              </div>
+                              <div>
+                                <div className="font-extrabold text-slate-900 text-xs leading-tight truncate max-w-[100px]" title={med.frequency}>
+                                  {med.frequency || '1-0-1'}
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                  {lang === 'en' ? 'Frequency' : 'முறை'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 3. When to take */}
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center flex-shrink-0">
+                                <Utensils className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="font-extrabold text-slate-900 text-xs leading-tight truncate max-w-[95px]" title={lang === 'ta' ? med.timingTa : med.timing}>
+                                  {lang === 'ta' ? med.timingTa : med.timing || 'After food'}
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                  {lang === 'en' ? 'When to take' : 'உட்கொள்ளும் நேரம்'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 4. Duration */}
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                                <Calendar className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="font-extrabold text-slate-900 text-xs leading-tight">
+                                  {lang === 'ta' ? med.durationTa : med.duration || '30 days'}
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                  {lang === 'en' ? 'Duration' : 'கால அளவு'}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-slate-600 text-[11px]">
-                            {analysisResult.refillCountdown.dailyPillsCount} {lang === 'en' ? 'pills/day' : 'மாத்திரைகள்/நாள்'} · {analysisResult.refillCountdown.refillDateText}
-                          </div>
+
+                          {/* INLINE EDIT FORM (When this card is being edited) */}
+                          {isEditing && (
+                            <div className="pt-3 border-t border-slate-200 space-y-3 bg-slate-50 p-3.5 rounded-xl animate-in fade-in duration-200">
+                              <div className="font-bold text-xs text-slate-800">
+                                {lang === 'en' ? 'Edit Medicine Details' : 'மருந்து விவரங்களைத் திருத்துக'}
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <label className="text-[10px] font-semibold text-slate-500">Name</label>
+                                  <input
+                                    type="text"
+                                    defaultValue={med.brandName}
+                                    id={`med-name-${idx}`}
+                                    className="w-full mt-0.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-semibold text-slate-500">Dosage</label>
+                                  <input
+                                    type="text"
+                                    defaultValue={med.dosage}
+                                    id={`med-dosage-${idx}`}
+                                    className="w-full mt-0.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-semibold text-slate-500">Frequency</label>
+                                  <input
+                                    type="text"
+                                    defaultValue={med.frequency}
+                                    id={`med-freq-${idx}`}
+                                    className="w-full mt-0.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-semibold text-slate-500">When to take</label>
+                                  <input
+                                    type="text"
+                                    defaultValue={med.timing}
+                                    id={`med-timing-${idx}`}
+                                    className="w-full mt-0.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-end gap-2 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingCardIndex(null)}
+                                  className="px-3 py-1.5 rounded-lg text-xs text-slate-600 bg-white border border-slate-200 hover:bg-slate-100"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const nameEl = document.getElementById(`med-name-${idx}`) as HTMLInputElement;
+                                    const dosageEl = document.getElementById(`med-dosage-${idx}`) as HTMLInputElement;
+                                    const freqEl = document.getElementById(`med-freq-${idx}`) as HTMLInputElement;
+                                    const timingEl = document.getElementById(`med-timing-${idx}`) as HTMLInputElement;
+                                    handleUpdateMedicine(idx, {
+                                      brandName: nameEl?.value || med.brandName,
+                                      dosage: dosageEl?.value || med.dosage,
+                                      frequency: freqEl?.value || med.frequency,
+                                      timing: timingEl?.value || med.timing,
+                                    });
+                                  }}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[#0F766E] hover:bg-[#115E59]"
+                                >
+                                  Save Updates
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* ACCORDION EXPANDED SECTION (Clinical Insights & PMBJP Generic Comparison) */}
+                          {isExpanded && !isEditing && (
+                            <div className="pt-3 border-t border-slate-100 space-y-2.5 animate-in fade-in duration-200">
+                              {/* PMBJP Generic Savings Card */}
+                              <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs text-emerald-950">
+                                <div>
+                                  <div className="font-extrabold text-[#065F46] flex items-center gap-1.5">
+                                    <ShoppingBag className="w-3.5 h-3.5 text-[#059669]" />
+                                    <span>PMBJP Generic Equivalent: {med.genericName}</span>
+                                  </div>
+                                  <div className="text-[11px] text-emerald-800 mt-0.5">
+                                    Brand MRP: <span className="line-through">₹{med.brandPrice}</span> · Jan Aushadhi:{' '}
+                                    <span className="font-black text-emerald-900">₹{med.genericPrice}</span> ({med.savingsPct}% savings)
+                                  </div>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    medicineStoreService.addScannedMedicinesToCart([med]);
+                                    window.dispatchEvent(
+                                      new CustomEvent('healthgrid:toast', {
+                                        detail: {
+                                          message: lang === 'en'
+                                            ? `Added ${med.genericName} to Generic Cart!`
+                                            : `${med.genericName} கூடையில் சேர்க்கப்பட்டது!`,
+                                        },
+                                      })
+                                    );
+                                  }}
+                                  className="px-3 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  <span>{lang === 'en' ? 'Add to Cart' : 'கூடையில் சேர்'}</span>
+                                </button>
+                              </div>
+
+                              {/* Patient Context Note */}
+                              {med.clinicalVerification?.patientContextNoteEn && (
+                                <div className="p-2.5 rounded-xl bg-teal-50 border border-teal-200 text-xs text-teal-900 flex items-start gap-2">
+                                  <Lightbulb className="w-3.5 h-3.5 text-teal-600 flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <span className="font-bold">Context Advisory: </span>
+                                    <span>{lang === 'ta' && med.clinicalVerification.patientContextNoteTa ? med.clinicalVerification.patientContextNoteTa : med.clinicalVerification.patientContextNoteEn}</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Precautions & Purpose */}
+                              <div className="text-[11px] text-slate-600 flex flex-wrap items-center justify-between gap-2 px-1">
+                                <span>
+                                  <span className="font-semibold text-slate-700">Purpose: </span>
+                                  {lang === 'ta' ? med.purposeTa : med.purposeEn}
+                                </span>
+                                {med.chemicalNotation && (
+                                  <span className="font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                                    Formula: {med.chemicalNotation}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-
-                      <span className="px-2.5 py-1 rounded-full bg-teal-100 text-teal-800 font-extrabold text-[10px]">
-                        {lang === 'en' ? 'Active' : 'நடப்பு'}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Allergy Warnings */}
-                  {analysisResult.allergyWarnings && analysisResult.allergyWarnings.length > 0 && (
-                    <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-300 text-rose-950 space-y-1.5">
-                      <div className="flex items-center gap-1.5 font-bold text-xs text-rose-900">
-                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-                        <span>{lang === 'en' ? 'Profile Allergy Conflict' : 'ஒவ்வாமை எச்சரிக்கை'}</span>
-                      </div>
-                      {analysisResult.allergyWarnings.map((aw, idx) => (
-                        <div key={idx} className="text-xs bg-white/80 p-2 rounded-lg border border-rose-200">
-                          <span className="font-bold text-rose-900">{aw.medicine}</span> matches <span className="font-bold text-rose-700">{aw.allergen}</span>.
-                          <p className="text-[11px] text-slate-600">
-                            {lang === 'ta' ? aw.warningTa : aw.warningEn}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
+                      );
+                    })}
+                  </div>
                 </div>
 
               </div>
 
+              {/* BOTTOM SECTION: DISCLAIMER (LEFT) + ACTION TRAY (RIGHT) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch pt-2">
+                
+                {/* LEFT BOTTOM: DISCLAIMER BANNER (Matches Reference Photo Exactly) */}
+                <div className="lg:col-span-6 bg-[#E8F8F4] border border-teal-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex items-start gap-3.5 text-teal-950 shadow-2xs h-full">
+                  <div className="w-9 h-9 rounded-2xl bg-[#0F766E] text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-xs">
+                    <ShieldCheck className="w-5 h-5 stroke-[2]" />
+                  </div>
+                  <div>
+                    <h5 className="font-extrabold text-xs sm:text-sm text-teal-950 leading-tight">
+                      {lang === 'en' ? 'Please verify the extracted information' : 'பிரித்தெடுக்கப்பட்ட விவரங்களைச் சரிபார்க்கவும்'}
+                    </h5>
+                    <p className="text-xs text-teal-900/80 leading-relaxed mt-1">
+                      {lang === 'en'
+                        ? "HealthGrid helps read your prescription but does not replace your doctor's instructions. If anything here differs from the original prescription, follow the original prescription and ask your doctor or pharmacist."
+                        : 'ஹெல்த்கிரிட் உங்கள் மருந்துச் சீட்டைப் படிக்க உதவுகிறது, ஆனால் மருத்துவரின் நேரடி வழிகாட்டுதலுக்கு மாற்றாகாது. ஏதேனும் வேறுபாடு இருந்தால், அசல் மருந்துச் சீட்டைப் பின்பற்றி மருத்துவரிடம் ஆலோசிக்கவும்.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* RIGHT BOTTOM: "WHAT WOULD YOU LIKE TO DO NEXT?" ACTION TRAY */}
+                <div className="lg:col-span-6 space-y-2 flex flex-col justify-between">
+                  <h5 className="font-extrabold text-xs sm:text-sm text-slate-900">
+                    {lang === 'en' ? 'What would you like to do next?' : 'அடுத்து என்ன செய்ய விரும்புகிறீர்கள்?'}
+                  </h5>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
+                    {/* Action 1: Save to Health Profile (Solid Teal Card) */}
+                    <button
+                      type="button"
+                      onClick={handleSaveToProfile}
+                      disabled={isSaving || isSavedToProfile}
+                      className={`rounded-2xl p-3.5 flex items-center justify-between gap-2 shadow-xs transition-all cursor-pointer group active:scale-95 text-left border ${
+                        isSavedToProfile
+                          ? 'bg-emerald-700 text-white border-emerald-600'
+                          : 'bg-[#0F766E] hover:bg-[#115E59] text-white border-teal-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                          {isSavedToProfile ? <Check className="w-4 h-4 text-emerald-200" /> : <Bookmark className="w-4 h-4 text-teal-100" />}
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-xs sm:text-[13px] leading-tight text-white">
+                            {isSavedToProfile
+                              ? (lang === 'en' ? 'Saved to Profile ✓' : 'சேமிக்கப்பட்டது ✓')
+                              : (lang === 'en' ? 'Save to Health Profile' : 'சுயவிவரத்தில் சேமி')}
+                          </div>
+                          <div className="text-[10px] text-teal-100/80 leading-tight mt-0.5">
+                            {lang === 'en' ? 'Keep this prescription safe' : 'பாதுகாப்பாக சேமிக்கவும்'}
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-teal-200 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+                    </button>
+
+                    {/* Action 2: Find Medicines (White Card with Pill Icon) */}
+                    <button
+                      type="button"
+                      onClick={handleAddAllToGenericCart}
+                      className="bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-900 rounded-2xl p-3.5 flex items-center justify-between gap-2 shadow-2xs transition-all cursor-pointer group active:scale-95 text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-teal-50 text-[#0F766E] flex items-center justify-center flex-shrink-0">
+                          <Pill className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-xs sm:text-[13px] leading-tight text-slate-900">
+                            {lang === 'en' ? 'Find Medicines' : 'மருந்துகள் காண்க'}
+                          </div>
+                          <div className="text-[10px] text-slate-500 leading-tight mt-0.5">
+                            {lang === 'en' ? 'Check availability & lower cost' : 'மலிவு விலை ஜெனரிக் மாற்று'}
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+                    </button>
+
+                    {/* Action 3: Hear Instructions (White Card with Speaker Icon) */}
+                    <button
+                      type="button"
+                      onClick={handleToggleAudio}
+                      className={`border rounded-2xl p-3.5 flex items-center justify-between gap-2 shadow-2xs transition-all cursor-pointer group active:scale-95 text-left ${
+                        isPlayingAudio
+                          ? 'bg-rose-50 border-rose-200 text-rose-950 animate-pulse'
+                          : 'bg-white hover:bg-slate-50 border-slate-200/90 text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                          isPlayingAudio ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-700'
+                        }`}>
+                          {isPlayingAudio ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-xs sm:text-[13px] leading-tight">
+                            {isPlayingAudio
+                              ? (lang === 'en' ? 'Pause Audio' : 'குரலை நிறுத்து')
+                              : (lang === 'en' ? 'Hear Instructions' : 'குரல் வழிகாட்டல்')}
+                          </div>
+                          <div className="text-[10px] text-slate-500 leading-tight mt-0.5">
+                            {lang === 'en' ? 'Listen to dosage details' : 'அளவு விவரங்களைக் கேளுங்கள்'}
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+                    </button>
+                  </div>
+
+                  {/* SECONDARY QUICK CLINICAL TOOLS (WhatsApp, Calendar, 30d Refill, Kendra Map) */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-200/80">
+                    <div className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                      <span>{lang === 'en' ? 'Quick Tools:' : 'விரைவு கருவிகள்:'}</span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {/* WhatsApp Export */}
+                      <button
+                        type="button"
+                        onClick={handleExportWhatsApp}
+                        className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title={lang === 'en' ? 'Share timetable on WhatsApp' : 'வாட்ஸ்அப்பில் பகிரவும்'}
+                      >
+                        <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{lang === 'en' ? 'WhatsApp' : 'வாட்ஸ்அப்'}</span>
+                      </button>
+
+                      {/* Calendar Alarm */}
+                      <button
+                        type="button"
+                        onClick={handleAddCalendarReminder}
+                        className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title={lang === 'en' ? 'Add reminder to Google Calendar' : 'கூகிள் காலெண்டரில் சேர்க்க'}
+                      >
+                        <CalendarPlus className="w-3.5 h-3.5 text-blue-600" />
+                        <span>{lang === 'en' ? 'Calendar' : 'காலெண்டர்'}</span>
+                      </button>
+
+                      {/* 30-Day PMBJP Chronic Refill */}
+                      <button
+                        type="button"
+                        onClick={handleCreateChronicRefillFromRx}
+                        className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title={lang === 'en' ? 'Setup 30-day automatic Jan Aushadhi refill' : '30-நாள் மாதாந்திர ரீஃபில் அமைக்க'}
+                      >
+                        <Clock className="w-3.5 h-3.5 text-purple-600" />
+                        <span>{lang === 'en' ? '30d Refill' : 'ரீஃபில்'}</span>
+                      </button>
+
+                      {/* Nearby Kendra Map */}
+                      {onOpenDiseaseMap && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClose();
+                            onOpenDiseaseMap();
+                          }}
+                          className="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          title={lang === 'en' ? 'Locate PMBJP Kendras on map' : 'கேந்திரா வரைபடம்'}
+                        >
+                          <MapPin className="w-3.5 h-3.5 text-teal-600" />
+                          <span>{lang === 'en' ? 'Kendra Map' : 'வரைபடம்'}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* EDIT ALL MEDICINES MODAL SHEET */}
+          {isEditAllOpen && analysisResult && (
+            <div className="fixed inset-0 z-60 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+              <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Edit3 className="w-4 h-4 text-[#0F766E]" />
+                    <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                      {lang === 'en' ? 'Edit Extracted Medicines' : 'அனைத்து மருந்து விவரங்களையும் திருத்து'}
+                    </h4>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditAllOpen(false)}
+                    className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="p-5 overflow-y-auto space-y-4 flex-1">
+                  {tempMedicines.map((m, idx) => (
+                    <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
+                      <div className="font-extrabold text-[#0F766E]">
+                        Medicine #{idx + 1}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500">Brand Name</label>
+                          <input
+                            type="text"
+                            value={m.brandName}
+                            onChange={(e) => {
+                              const updated = [...tempMedicines];
+                              updated[idx].brandName = e.target.value;
+                              setTempMedicines(updated);
+                            }}
+                            className="w-full mt-0.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500">Dosage</label>
+                          <input
+                            type="text"
+                            value={m.dosage}
+                            onChange={(e) => {
+                              const updated = [...tempMedicines];
+                              updated[idx].dosage = e.target.value;
+                              setTempMedicines(updated);
+                            }}
+                            className="w-full mt-0.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500">Frequency</label>
+                          <input
+                            type="text"
+                            value={m.frequency}
+                            onChange={(e) => {
+                              const updated = [...tempMedicines];
+                              updated[idx].frequency = e.target.value;
+                              setTempMedicines(updated);
+                            }}
+                            className="w-full mt-0.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500">When to take</label>
+                          <input
+                            type="text"
+                            value={m.timing}
+                            onChange={(e) => {
+                              const updated = [...tempMedicines];
+                              updated[idx].timing = e.target.value;
+                              setTempMedicines(updated);
+                            }}
+                            className="w-full mt-0.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="px-5 py-3 border-t border-slate-100 flex justify-end gap-2 bg-slate-50">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditAllOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveAllEditedMedicines(tempMedicines)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#0F766E] hover:bg-[#115E59] shadow-xs cursor-pointer active:scale-95"
+                  >
+                    Save All Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* LIGHTBOX FULLSCREEN PREVIEW MODAL */}
+          {isLightboxOpen && (
+            <div className="fixed inset-0 z-60 bg-slate-950/90 backdrop-blur-md flex flex-col p-4 sm:p-6 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between text-white pb-3 border-b border-white/10">
+                <div className="font-extrabold text-sm sm:text-base">
+                  Prescription Inspection Lightbox
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setZoomLevel((z) => Math.min(Number((z + 0.25).toFixed(2)), 3))}
+                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold cursor-pointer"
+                  >
+                    + Zoom
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setZoomLevel((z) => Math.max(Number((z - 0.25).toFixed(2)), 0.5))}
+                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold cursor-pointer"
+                  >
+                    - Zoom
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRotation((r) => (r + 90) % 360)}
+                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold cursor-pointer"
+                  >
+                    ↻ Rotate
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsLightboxOpen(false)}
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer ml-2"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 flex items-center justify-center overflow-auto p-4 select-none">
+                {capturedPages.length > 0 ? (
+                  <img
+                    src={capturedPages[activePageIndex]}
+                    alt="Prescription High-Res"
+                    className="max-w-full max-h-full object-contain transition-transform duration-200"
+                    style={{
+                      transform: `scale(${zoomLevel}) rotate(${rotation}deg)`,
+                    }}
+                  />
+                ) : (
+                  <div className="text-white/60 text-sm">
+                    No physical image uploaded. Displaying parsed clinical findings.
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
