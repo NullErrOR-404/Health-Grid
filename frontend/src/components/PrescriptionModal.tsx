@@ -76,7 +76,6 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
   // Multi-page batch captures
   const [capturedPages, setCapturedPages] = useState<string[]>([]);
-  const [showMultiPageToast, setShowMultiPageToast] = useState(false);
 
   // Analysis State
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -116,6 +115,36 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const modalBodyRef = useRef<HTMLDivElement>(null);
+
+  // Guarantee native mobile touch scrolling by shielding modal body touch events from outer listeners
+  useEffect(() => {
+    const el = modalBodyRef.current;
+    if (!el) return;
+    const handleTouch = (e: TouchEvent) => {
+      // Prevent outside touch listeners (e.g. window virtualScroll) from cancelling the gesture
+      e.stopPropagation();
+    };
+    el.addEventListener('touchstart', handleTouch, { passive: true });
+    el.addEventListener('touchmove', handleTouch, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', handleTouch);
+      el.removeEventListener('touchmove', handleTouch);
+    };
+  }, []);
+
+  // When a prescription page is uploaded/captured, gently ensure the Analyze button is brought into full view
+  useEffect(() => {
+    if (capturedPages.length > 0 && modalBodyRef.current) {
+      const timer = setTimeout(() => {
+        modalBodyRef.current?.scrollTo({
+          top: 140,
+          behavior: 'smooth',
+        });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [capturedPages.length]);
 
   // Stop device camera
   const stopCamera = () => {
@@ -301,16 +330,12 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
     const updated = [...capturedPages, dataUrl];
     setCapturedPages(updated);
-    setShowMultiPageToast(true);
   };
 
   // Remove a captured page thumbnail
   const handleRemovePage = (index: number) => {
     const updated = capturedPages.filter((_, idx) => idx !== index);
     setCapturedPages(updated);
-    if (updated.length === 0) {
-      setShowMultiPageToast(false);
-    }
   };
 
   // Handle uploaded files
@@ -329,14 +354,12 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     Promise.all(readPromises).then((dataUrls) => {
       const updated = [...capturedPages, ...dataUrls];
       setCapturedPages(updated);
-      setShowMultiPageToast(true);
     });
   };
 
   // Proceed to analyze all captured pages
   const handleProceedToAnalysis = async () => {
     if (capturedPages.length === 0) return;
-    setShowMultiPageToast(false);
     setIsCameraActive(false);
     stopCamera();
 
@@ -386,7 +409,6 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     speechEngine.stopSpeaking();
     setIsPlayingAudio(false);
     setCapturedPages([]);
-    setShowMultiPageToast(false);
     setAnalysisResult(null);
     setErrorMsg(null);
     setIsSavedToProfile(false);
@@ -640,7 +662,15 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         )}
 
         {/* MODAL BODY */}
-        <div data-lenis-prevent="true" className="p-4 sm:p-7 overflow-y-auto flex-1 space-y-6 overscroll-contain touch-pan-y pb-28 sm:pb-8 safe-area-pb">
+        <div
+          data-lenis-prevent="true"
+          ref={modalBodyRef}
+          className="p-4 sm:p-7 overflow-y-scroll flex-1 min-h-0 space-y-6 overscroll-contain pb-32 sm:pb-8 safe-area-pb"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
+          }}
+        >
 
           {/* ERROR ALERT BANNER */}
           {errorMsg && (
@@ -813,8 +843,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                   </div>
                 )}
 
-                {/* DASHED UPLOAD DROPZONE (Matches Reference Graphic & Style Exactly) */}
-                {!isCameraActive && (
+                {/* DASHED UPLOAD DROPZONE: Full View When 0 Pages Captured */}
+                {!isCameraActive && capturedPages.length === 0 && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className="border-2 border-dashed border-[#CCFBF1] hover:border-[#14B8A6] rounded-[24px] bg-[#F0FDFA]/30 hover:bg-[#F0FDFA]/60 p-8 sm:p-12 text-center flex flex-col items-center justify-center transition-all cursor-pointer group shadow-2xs"
@@ -857,6 +887,40 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                   </div>
                 )}
 
+                {/* COMPACT DROPZONE BAR: Sleek, Space-Saving Layout When 1+ Pages Already Uploaded */}
+                {!isCameraActive && capturedPages.length > 0 && (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-[#CCFBF1] hover:border-[#14B8A6] rounded-2xl bg-[#F0FDFA]/50 hover:bg-[#F0FDFA]/80 p-3 sm:p-4 flex items-center justify-between gap-3 transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-[#CCFBF1] text-[#0F766E] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                        <Plus className="w-4 h-4 stroke-[3]" />
+                      </div>
+                      <div>
+                        <div className="text-xs sm:text-sm font-bold text-slate-800 leading-tight">
+                          {lang === 'en' ? 'Add More Pages or Replace' : 'கூடுதல் பக்கங்கள் சேர்க்கவும் / மாற்றவும்'}
+                        </div>
+                        <div className="text-[10px] sm:text-xs text-slate-500 mt-0.5">
+                          {lang === 'en' ? 'Tap to choose file (JPG, PNG, PDF, WebP)' : 'கோப்பைத் தேர்ந்தெடுக்க தட்டவும்'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fileInputRef.current?.click();
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs shadow-2xs inline-flex items-center gap-1.5 cursor-pointer hover:bg-slate-50 active:scale-95"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#0F766E]" />
+                      <span>{lang === 'en' ? 'Upload More' : 'மேலும் பதிவேற்று'}</span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Hidden File Inputs */}
                 <input
                   ref={fileInputRef}
@@ -884,12 +948,12 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                         <FileText className="w-3.5 h-3.5 text-[#0F766E]" />
                         <span>{capturedPages.length} {capturedPages.length === 1 ? 'Page' : 'Pages'} Captured</span>
                       </span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-[11px] text-[#0F766E] font-bold bg-[#E8F8F4] px-2 py-0.5 rounded-full">
                         {lang === 'en' ? 'Ready to analyze' : 'பரிசீலிக்க தயார்'}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 touch-pan-x overscroll-contain">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 touch-auto overscroll-contain">
                       {capturedPages.map((pageData, idx) => (
                         <div
                           key={idx}
@@ -913,19 +977,20 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                   </div>
                 )}
 
-                {/* MULTI-PAGE TOAST OVERLAY */}
-                {showMultiPageToast && capturedPages.length > 0 && (
-                  <div className="bg-teal-900 text-white p-4 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200 border border-teal-700">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-teal-800 flex items-center justify-center text-teal-300 flex-shrink-0">
-                        <FileText className="w-4 h-4" />
+                {/* PROMINENT AI ANALYSIS CARD (Always rendered front & center when 1+ pages uploaded) */}
+                {capturedPages.length > 0 && (
+                  <div className="bg-gradient-to-r from-teal-900 via-teal-800 to-cyan-950 text-white p-4 sm:p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 animate-in fade-in duration-200 border border-teal-700/80">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <div className="w-10 h-10 rounded-2xl bg-teal-800/80 border border-teal-600/50 flex items-center justify-center text-teal-300 flex-shrink-0 shadow-xs">
+                        <FileText className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-teal-200">
-                          {lang === 'en' ? `Page ${capturedPages.length} Captured!` : `பக்கம் ${capturedPages.length} எடுக்கப்பட்டது!`}
+                        <div className="text-xs font-bold text-teal-200 flex items-center gap-1.5">
+                          <span>{lang === 'en' ? `${capturedPages.length} ${capturedPages.length === 1 ? 'Page' : 'Pages'} Captured` : `${capturedPages.length} பக்கங்கள் எடுக்கப்பட்டன`}</span>
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         </div>
-                        <div className="text-sm font-semibold">
-                          {lang === 'en' ? 'Want to scan another page or bill?' : 'மற்றொரு பக்கம் அல்லது பில் ஸ்கேன் செய்ய வேண்டுமா?'}
+                        <div className="text-xs sm:text-sm font-semibold text-slate-100 mt-0.5">
+                          {lang === 'en' ? 'Click below to extract medicines & dosages' : 'மருந்துகள் & அளவுகளைப் பிரித்தெடுக்கவும்'}
                         </div>
                       </div>
                     </div>
@@ -934,22 +999,22 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          setShowMultiPageToast(false);
                           setIsCameraActive(true);
+                          startCamera(cameraFacingMode);
                         }}
-                        className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-teal-800 hover:bg-teal-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer border border-teal-600"
+                        className="flex-1 sm:flex-initial px-3.5 py-2.5 rounded-xl bg-teal-800/90 hover:bg-teal-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-teal-600 active:scale-95"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        <span>{lang === 'en' ? '+ Snap Another Page' : '+ மேலும் பக்கம்'}</span>
+                        <span>{lang === 'en' ? '+ Camera' : '+ கேமரா'}</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={handleProceedToAnalysis}
-                        className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-teal-950 text-xs font-extrabold transition-all flex items-center justify-center gap-1 shadow-sm cursor-pointer"
+                        className="flex-2 sm:flex-initial px-5 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 active:scale-95 text-teal-950 text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
                       >
-                        <span>{lang === 'en' ? `Analyze ${capturedPages.length > 1 ? `All (${capturedPages.length})` : 'Prescription'}` : 'பரிசீலிக்க ➔'}</span>
-                        <ChevronRight className="w-4 h-4" />
+                        <span>{lang === 'en' ? `Analyze Prescription (${capturedPages.length})` : 'பரிசீலிக்க ➔'}</span>
+                        <ChevronRight className="w-4 h-4 stroke-[3]" />
                       </button>
                     </div>
                   </div>

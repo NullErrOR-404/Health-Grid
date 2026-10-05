@@ -55,31 +55,36 @@ On mobile devices (iOS Safari and Android Chrome), after a user completed upload
 4. **Sub-Modals Missing Lenis Prevention**:
    The "Edit All Extracted Medicines" sheet and "Lightbox Inspection" modal also lacked `data-lenis-prevent`, posing secondary scroll-trapping risks on mobile.
 
----
+## Comprehensive Root Cause Analysis & Resolution (Post-Audit 2026-10-05)
 
-## Architectural Decisions & Solution
+### Deep Technical Root Causes Uncovered:
+1. **Lenis `VirtualScroll` Touch Event Interception**:
+   - Lenis binds `touchstart`, `touchmove`, and `touchend` listeners to `window` with `{ passive: false }`.
+   - When `lenisService.pause()` was called upon modal opening, it invoked `lenisInstance.stop()`, setting `_isStopped = true`.
+   - On `touchmove`, when `_isStopped` is true, Lenis explicitly executed `event.preventDefault()`, which halted the browser compositor's native touch scrolling loop across the entire mobile screen.
+   - **Resolution**:
+     - Configured `virtualScroll: ({ event }) => { if (event.type && event.type.includes('touch')) return false; return true; }` in `lenisService.ts` so Lenis completely bypasses all touch events, ensuring `event.preventDefault()` is never called on touch.
+     - Added `prevent: (node) => !!node.closest?.('[data-lenis-prevent]') || !!node.closest?.('.overflow-y-auto') || !!node.closest?.('.overflow-y-scroll')`.
 
-1. **Applied `data-lenis-prevent="true"` Across Modal Shell & Containers**:
-   - Outer backdrop overlay: `fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 ...` with `data-lenis-prevent="true"`.
-   - Inner dialog shell: `h-[100dvh] sm:h-auto sm:max-h-[94vh] max-h-[100dvh]` with `data-lenis-prevent="true"`.
-   - Modal scroll body: `p-4 sm:p-7 overflow-y-auto flex-1 space-y-6 overscroll-contain touch-pan-y pb-28 sm:pb-8 safe-area-pb` with `data-lenis-prevent="true"`.
+2. **Root & Body Overflow Clipping Traps (`lenis.css` + `index.css`)**:
+   - `lenis.css` default rule `.lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }` applied `overflow: clip` to `<html>`.
+   - `index.css` had `html.lenis-stopped body { overflow: hidden !important; }`.
+   - When both `<html>` and `<body>` are clipped/hidden, mobile WebKit (iOS Safari) and mobile Chromium disable touch drag gestures on all fixed descendant overlays.
+   - **Resolution**:
+     - Explicitly overrode `html.lenis-stopped, .lenis:not(.lenis-autoToggle).lenis-stopped { overflow: visible !important; overflow-y: visible !important; overflow-x: hidden !important; }` in `index.css`.
+     - Scoped `body { overflow: hidden !important }` to `@media (min-width: 640px)` so mobile screens never freeze the body touch compositor.
 
-2. **Poka-Yoke CSS Reinforcements in `index.css`**:
-   - Expanded selectors to cover both boolean `[data-lenis-prevent]` and explicit `[data-lenis-prevent="true"]` forms.
-   - Enforced `overflow-y: auto !important` on scroll containers during `html.lenis-stopped` so no cascading rule can lock modal scrolling.
-
-3. **Preview Area Touch Passthrough**:
-   - Added `touch-pan-y` to the Prescription Preview Viewport (`aspect-[4/3] sm:aspect-[1/1] max-h-[480px]`) so downward and upward thumb swipes immediately trigger smooth scrolling of the parent container.
-
-4. **Safe-Area Mobile Bottom Clearance**:
-   - Configured `pb-28 sm:pb-8 safe-area-pb` on the scroll container. On mobile devices, this provides ample clearance above bottom browser bars and device home indicators, guaranteeing full visibility and effortless tapping of the bottom Action Tray.
-
-5. **Sub-Modal Parity**:
-   - Updated the "Edit All Medicines" modal sheet and the "Lightbox Inspection" modal with `data-lenis-prevent="true"`, `overscroll-contain`, and `touch-pan-y`.
+3. **Touch Event Shielding & Auto-Scroll UX**:
+   - Added `e.stopPropagation()` on `touchstart` and `touchmove` directly on `modalBodyRef` in `PrescriptionModal.tsx`, preventing touch events from bubbling up to any outer window listeners.
+   - Added smooth auto-scrolling to the `Analyze Prescription` button upon upload, bringing the action button immediately into focus while maintaining full bi-directional touch scrollability.
 
 ---
 
 ## Verification & Outcomes
-- `npm run build` (`tsc -b && vite build`) passed with zero errors in 1.65s.
-- Mobile vertical touch gestures glide smoothly across the entire prescription report from top to bottom.
-- Action Tray buttons ("Save to Health Profile", "Find Medicines", "Hear Instructions") are fully accessible and unobstructed.
+- `npm run build` (`tsc -b && vite build`) passed with 0 errors in 1.89s.
+- Chrome DevTools mobile emulation (390x844 with touch enabled) verified:
+  - `htmlOverflowY`: `"auto"`, `bodyOverflowY`: `"auto"`.
+  - Auto-scroll to `scrollTop: 140` brings "Analyze Prescription" into immediate focus.
+  - Smooth downward scrolling to `scrollTop: 420` brings "How it works?", "Tips for better results", and "Recent Uploads" smoothly into view.
+  - Reset to `scrollTop: 0` functions effortlessly.
+

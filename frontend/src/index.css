@@ -18,8 +18,29 @@ html.lenis, html.lenis body {
   scroll-behavior: auto !important;
 }
 
-html.lenis-stopped, html.lenis-stopped body {
-  overflow: hidden !important;
+/* CRITICAL: Override lenis.css default overflow:clip which freezes mobile touch compositor */
+html.lenis-stopped,
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: visible !important;
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+}
+
+/* On mobile viewports (<640px), never apply overflow: hidden to body because mobile WebKit halts touch scrolling on fixed child modals */
+@media (max-width: 639px) {
+  html.lenis-stopped body,
+  body.lenis-stopped {
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+  }
+}
+
+/* On desktop viewports (>=640px), lock body scrolling when modals are open */
+@media (min-width: 640px) {
+  html.lenis-stopped body {
+    overflow: hidden !important;
+  }
 }
 
 /* Ensure data-lenis-prevent containers contain their own overscroll and maintain fluid touch scrolling */
@@ -27,22 +48,29 @@ html.lenis-stopped, html.lenis-stopped body {
 [data-lenis-prevent="true"] {
   overscroll-behavior: contain !important;
   -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
 }
 
 html.lenis-stopped [data-lenis-prevent],
 html.lenis-stopped [data-lenis-prevent="true"],
 body [data-lenis-prevent],
-body [data-lenis-prevent="true"],
-[data-lenis-prevent],
-[data-lenis-prevent="true"] {
+body [data-lenis-prevent="true"] {
   touch-action: pan-y !important;
   overscroll-behavior: contain !important;
   -webkit-overflow-scrolling: touch !important;
 }
 
 html.lenis-stopped [data-lenis-prevent].overflow-y-auto,
-html.lenis-stopped [data-lenis-prevent="true"].overflow-y-auto {
-  overflow-y: auto !important;
+html.lenis-stopped [data-lenis-prevent="true"].overflow-y-auto,
+html.lenis-stopped [data-lenis-prevent].overflow-y-scroll,
+html.lenis-stopped [data-lenis-prevent="true"].overflow-y-scroll,
+[data-lenis-prevent].overflow-y-auto,
+[data-lenis-prevent="true"].overflow-y-auto,
+[data-lenis-prevent].overflow-y-scroll,
+[data-lenis-prevent="true"].overflow-y-scroll {
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
 }
 
 /* Smooth kinetic scrolling optimization */

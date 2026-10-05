@@ -129,9 +129,12 @@ export default function App() {
         setCurrentView('medicines');
       } else if (pathname === '/his' || pathname === '/doctor-portal' || hash === '#his' || hash === '#/his' || hash === '#doctor-portal' || pathname === '/hospital-erp' || pathname === '/hospital-portal' || hash === '#hospital-erp' || hash === '#hospital-portal' || hash === '#/hospital-erp') {
         setCurrentView('hospital-erp');
+      } else if (hash === '#prescription' || hash === '#/prescription' || hash === '#scan-prescription') {
+        setCurrentView('landing');
+        setIsPrescriptionOpen(true);
       } else if (pathname === '/' || pathname === '/index.html' || pathname === '') {
         // If there is an unknown anchor hash like #unknown
-        if (hash && !['', '#', '#/', '#landing', '#home'].includes(hash) && !hash.startsWith('#section-') && !hash.startsWith('#guide-')) {
+        if (hash && !['', '#', '#/', '#landing', '#home', '#prescription', '#/prescription', '#scan-prescription'].includes(hash) && !hash.startsWith('#section-') && !hash.startsWith('#guide-')) {
           setCurrentView('not-found');
         } else {
           setCurrentView('landing');
@@ -215,11 +218,16 @@ export default function App() {
         setToastMessage(e.detail.message);
       }
     };
+    const handleOpenPrescription = () => {
+      setIsPrescriptionOpen(true);
+    };
     window.addEventListener('healthgrid:require-login', handleRequireLogin);
     window.addEventListener('healthgrid:toast', handleShowToast);
+    window.addEventListener('healthgrid:open-prescription', handleOpenPrescription);
     return () => {
       window.removeEventListener('healthgrid:require-login', handleRequireLogin);
       window.removeEventListener('healthgrid:toast', handleShowToast);
+      window.removeEventListener('healthgrid:open-prescription', handleOpenPrescription);
     };
   }, []);
 

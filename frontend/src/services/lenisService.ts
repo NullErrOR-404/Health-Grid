@@ -31,6 +31,19 @@ class LenisService {
       touchMultiplier: 1.0,
       syncTouch: false, // CRITICAL: Never hijack native touch momentum scrolling on mobile devices!
       infinite: false,
+      prevent: (node) => {
+        // Exempt any scrollable dialog or lenis-prevent container from Lenis interception
+        return !!node.closest?.('[data-lenis-prevent]') || 
+               !!node.closest?.('.overflow-y-auto') || 
+               !!node.closest?.('.overflow-y-scroll');
+      },
+      virtualScroll: ({ event }) => {
+        // ALWAYS bypass Lenis entirely on touch events so mobile devices retain 100% native momentum scrolling
+        if (event.type && event.type.includes('touch')) {
+          return false;
+        }
+        return true;
+      },
     });
 
     // Synchronize Lenis RAF loop with GSAP ticker for 60fps compositor alignment
