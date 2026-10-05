@@ -344,14 +344,17 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         setIsAnalyzing(false);
       }, 500);
     } catch (err: any) {
-      console.error('Prescription processing error:', err);
+      console.error('Prescription processing caught:', err);
       setIsAnalyzing(false);
-      setErrorMsg(
-        err.message ||
-          (lang === 'en'
-            ? 'Could not analyze prescription. Please retake photo with clearer lighting.'
-            : 'மருந்துச் சீட்டைப் படிக்க முடியவில்லை. தெளிவான வெளிச்சத்தில் மீண்டும் படம் எடுக்கவும்.')
-      );
+      let friendlyMsg = lang === 'en'
+        ? 'Could not decipher prescription clearly. Please retake photo with better lighting or focus.'
+        : 'மருந்துச் சீட்டைப் படிக்க முடியவில்லை. தெளிவான வெளிச்சத்தில் மீண்டும் படம் எடுக்கவும்.';
+
+      // Only display message if it is human-readable (not a raw JSON dump or API 404/500 code)
+      if (err?.message && !err.message.includes('{') && !err.message.includes('404') && !err.message.includes('status') && !err.message.includes('API') && !err.message.includes('models/')) {
+        friendlyMsg = err.message;
+      }
+      setErrorMsg(friendlyMsg);
     }
   };
 
