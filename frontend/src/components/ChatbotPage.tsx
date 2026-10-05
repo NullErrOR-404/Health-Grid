@@ -40,6 +40,7 @@ import {
   Clock,
   CalendarCheck,
   Square,
+  CheckSquare,
   ArrowRight
 } from 'lucide-react';
 import type { Language } from '../types';
@@ -48,7 +49,8 @@ import {
   agiService,
   AVAILABLE_MODELS,
   type ModelOption,
-  type UsageStats
+  type UsageStats,
+  type InteractiveOptions
 } from '../services/aiService';
 import { agenticTools, type AgentToolCall, type JanAushadhiResult } from '../services/agenticToolsService';
 import { type PrescriptionAnalysisResult } from '../services/prescriptionAiService';
@@ -80,6 +82,7 @@ export interface ChatMessage {
   genericMedicines?: JanAushadhiResult[];
   attachmentName?: string;
   prescriptionAnalysis?: PrescriptionAnalysisResult;
+  suggestedOptions?: InteractiveOptions;
 }
 
 export interface ChatSession {
@@ -143,9 +146,85 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [isBeneficiaryModalOpen, setIsBeneficiaryModalOpen] = useState(false);
   const [activeBeneficiary, setActiveBeneficiary] = useState<FamilyMember | null>(() => familyMemberService.getActiveBeneficiary());
   const [activeCareLoops, setActiveCareLoops] = useState<CareLoopFollowUp[]>([]);
+  const [selectedMultiOptions, setSelectedMultiOptions] = useState<Record<string, string[]>>({});
   const pendingActionRef = useRef<(() => void) | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const isSendingRef = useRef(false);
+
+  const toggleMultiOption = (messageId: string, option: string) => {
+    // Auditory feedback for rural & visually impaired patients
+    const speechText = option.replace(/[🚨🏥💊📹🩺]/g, '').trim();
+    if (speechText) {
+      speechEngine.speak(speechText, lang === 'ta' ? 'ta' : 'en');
+    }
+
+    setSelectedMultiOptions((prev) => {
+      const current = prev[messageId] || [];
+      if (current.includes(option)) {
+        return { ...prev, [messageId]: current.filter((x) => x !== option) };
+      }
+      return { ...prev, [messageId]: [...current, option] };
+    });
+  };
+
+  const speakAllOptions = (items: string[]) => {
+    const cleanList = items.map((i) => i.replace(/[🚨🏥💊📹🩺]/g, '').trim()).join('. ');
+    const prefix = lang === 'ta' ? 'கிடைக்கக்கூடிய தேர்வுகள்: ' : 'Available choices: ';
+    speechEngine.speak(prefix + cleanList, lang === 'ta' ? 'ta' : 'en');
+  };
+
+  const handleSendMultiOptions = (messageId: string) => {
+    const selected = selectedMultiOptions[messageId] || [];
+    if (selected.length === 0 || isThinking) return;
+    const prompt = selected.join(', ');
+    handleSendMessage(prompt);
+  };
+
+  const handleOptionSelect = (opt: string) => {
+    // Auditory confirmation
+    const speechText = opt.replace(/[🚨🏥💊📹🩺]/g, '').trim();
+    if (speechText) {
+      speechEngine.speak(speechText, lang === 'ta' ? 'ta' : 'en');
+    }
+
+    const cleanOpt = opt.toLowerCase();
+    if (cleanOpt.includes('108') || cleanOpt.includes('emergency') || cleanOpt.includes('ambulance')) {
+      if (onOpenAmbulance) {
+        onOpenAmbulance();
+        return;
+      }
+      window.location.href = 'tel:108';
+      return;
+    }
+    if (cleanOpt.includes('kendra') || cleanOpt.includes('jan aushadhi') || cleanOpt.includes('generic store') || cleanOpt.includes('find medicines')) {
+      if (_onNavigateMedicines) {
+        _onNavigateMedicines();
+        return;
+      }
+    }
+    if (cleanOpt.includes('video doctor') || cleanOpt.includes('live vision') || cleanOpt.includes('video consult')) {
+      setIsLiveVisionOpen(true);
+      return;
+    }
+    if (cleanOpt.includes('vitals') || cleanOpt.includes('record bp') || cleanOpt.includes('telemetry')) {
+      setIsVitalsModalOpen(true);
+      return;
+    }
+    if (cleanOpt.includes('upload prescription') || cleanOpt.includes('scan prescription')) {
+      if (_onOpenPrescription) {
+        _onOpenPrescription();
+        return;
+      }
+    }
+    if (cleanOpt.includes('nearest hospital') || cleanOpt.includes('casualty')) {
+      if (onOpenAmbulance) {
+        onOpenAmbulance();
+        return;
+      }
+    }
+    // Otherwise standard conversational query
+    handleSendMessage(opt);
+  };
 
   // Subscribe to active family beneficiary updates
   useEffect(() => {
@@ -608,6 +687,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         emotionalState: response.emotionalState,
         executedTools: response.executedTools,
         genericMedicines: response.genericMedicines,
+        suggestedOptions: response.suggestedOptions,
         usageMeta: {
           latencyMs: response.usage.latencyMs,
           totalTokens: response.usage.totalTokens,
@@ -1771,6 +1851,124 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Interactive Adaptive Choosing Options (Single-Tap Pills or Multi-Select Checkboxes) */}
+                    {!isUser && msg.suggestedOptions && msg.suggestedOptions.items && msg.suggestedOptions.items.length > 0 && (
+                      <div className="mt-3.5 pt-3 border-t border-slate-100/90 animate-in fade-in duration-200">
+                        {msg.suggestedOptions.type === 'single_tap' ? (
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                              <span className="flex items-center gap-1.5">
+                                <Sparkles className="w-3 h-3 text-[#0B7A75]" />
+                                <span>{lang === 'en' ? 'Quick Follow-ups & Responses' : 'விரைவு பதில்கள்'}</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => speakAllOptions(msg.suggestedOptions!.items)}
+                                className="text-[10px] text-teal-700 hover:text-teal-900 font-medium flex items-center gap-1 cursor-pointer bg-teal-50 hover:bg-teal-100 px-2 py-0.5 rounded-full border border-teal-200/80 transition-colors"
+                                title={lang === 'en' ? 'Listen to all options' : 'தேர்வுகளைக் கேளுங்கள்'}
+                              >
+                                <Volume2 className="w-2.5 h-2.5 text-teal-600" />
+                                <span>{lang === 'en' ? 'Listen' : 'கேளுங்கள்'}</span>
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {msg.suggestedOptions.items.map((opt, oIdx) => {
+                                const clean = opt.toLowerCase();
+                                const isEmergency = clean.includes('108') || clean.includes('emergency') || clean.includes('ambulance');
+                                const isStore = clean.includes('kendra') || clean.includes('jan aushadhi') || clean.includes('medicine');
+                                const isVideo = clean.includes('video') || clean.includes('vision');
+                                const isVitals = clean.includes('vital') || clean.includes('telemetry');
+
+                                let colorStyles = 'bg-[#0B7A75]/5 hover:bg-[#0B7A75]/15 text-[#0B7A75] border-[#0B7A75]/25 hover:border-[#0B7A75]/50';
+                                if (isEmergency) {
+                                  colorStyles = 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 hover:border-rose-400 font-semibold';
+                                } else if (isStore) {
+                                  colorStyles = 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200 hover:border-emerald-400';
+                                } else if (isVideo) {
+                                  colorStyles = 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200 hover:border-blue-400';
+                                } else if (isVitals) {
+                                  colorStyles = 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200 hover:border-amber-400';
+                                }
+
+                                return (
+                                  <button
+                                    key={oIdx}
+                                    type="button"
+                                    disabled={isThinking}
+                                    onClick={() => handleOptionSelect(opt)}
+                                    className={`group px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 flex items-center gap-1.5 shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer disabled:opacity-50 disabled:pointer-events-none text-left ${colorStyles}`}
+                                  >
+                                    <span>{opt}</span>
+                                    <ArrowRight className="w-3 h-3 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-2xl bg-slate-50/90 border border-slate-200/90 space-y-2.5">
+                            <div className="flex items-center justify-between text-[11px] font-semibold text-slate-700">
+                              <span className="flex items-center gap-1.5">
+                                <CheckSquare className="w-3.5 h-3.5 text-[#0B7A75]" />
+                                <span>{lang === 'en' ? 'Select all that apply:' : 'பொருந்துபவற்றைத் தேர்ந்தெடுக்கவும்:'}</span>
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => speakAllOptions(msg.suggestedOptions!.items)}
+                                  className="text-[10px] text-teal-700 hover:text-teal-900 font-medium flex items-center gap-1 cursor-pointer bg-teal-50 hover:bg-teal-100 px-2 py-0.5 rounded-full border border-teal-200/80 transition-colors"
+                                  title={lang === 'en' ? 'Listen to options' : 'தேர்வுகளைக் கேளுங்கள்'}
+                                >
+                                  <Volume2 className="w-2.5 h-2.5 text-teal-600" />
+                                  <span>{lang === 'en' ? 'Listen' : 'கேளுங்கள்'}</span>
+                                </button>
+                                <span className="text-[10px] text-slate-500 font-medium">
+                                  {(selectedMultiOptions[msg.id] || []).length} {lang === 'en' ? 'selected' : 'தேர்ந்தெடுக்கப்பட்டது'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                              {msg.suggestedOptions.items.map((opt, oIdx) => {
+                                const isChecked = (selectedMultiOptions[msg.id] || []).includes(opt);
+                                return (
+                                  <button
+                                    key={oIdx}
+                                    type="button"
+                                    disabled={isThinking}
+                                    onClick={() => toggleMultiOption(msg.id, opt)}
+                                    className={`px-2.5 py-1.5 rounded-xl text-xs font-medium text-left flex items-center gap-2 border transition-all cursor-pointer ${
+                                      isChecked
+                                        ? 'bg-teal-50 border-teal-500 text-teal-950 font-semibold shadow-2xs'
+                                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                                    }`}
+                                  >
+                                    {isChecked ? (
+                                      <CheckSquare className="w-3.5 h-3.5 text-[#0B7A75] shrink-0" />
+                                    ) : (
+                                      <Square className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    )}
+                                    <span className="truncate">{opt}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <div className="pt-1 flex items-center justify-between">
+                              <button
+                                type="button"
+                                disabled={isThinking || (selectedMultiOptions[msg.id] || []).length === 0}
+                                onClick={() => handleSendMultiOptions(msg.id)}
+                                className="px-3.5 py-1.5 rounded-xl bg-[#0B7A75] hover:bg-[#09635f] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
+                              >
+                                <span>{lang === 'en' ? 'Send Selected' : 'தேர்ந்தெடுத்தவற்றை அனுப்பு'}</span>
+                                <span>({(selectedMultiOptions[msg.id] || []).length})</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 

@@ -15,6 +15,12 @@ import { healthMemoryService } from './healthMemoryService';
 import { vectorRagService } from './vectorRagService';
 import { careLoopService } from './careLoopService';
 import { authService } from './authService';
+import { fuzzyClinicalMatcher } from './fuzzyClinicalMatcher';
+
+export interface InteractiveOptions {
+  type: 'single_tap' | 'multi_select';
+  items: string[];
+}
 
 export interface ModelOption {
   id: string;
@@ -99,6 +105,7 @@ export interface AgiResponse {
   emotionalState?: EmotionalAssessment['state'];
   executedTools?: AgentToolCall[];
   genericMedicines?: JanAushadhiResult[];
+  suggestedOptions?: InteractiveOptions;
   usage: {
     promptTokens: number;
     completionTokens: number;
@@ -341,7 +348,7 @@ class AgiIntelligenceService {
   private buildSystemPrompt(patientContext?: string, emotionalDirective?: string, toolData?: string, isCasualGreeting?: boolean, turnCount: number = 0): string {
     const isOngoingConversation = turnCount > 0;
 
-    return `You are DocBot, an experienced, warm, and deeply empathetic human family doctor in Tamil Nadu with 20+ years of bedside clinical experience, not a robotic LLM.
+    return `You are DocBot, an experienced, warm, and deeply empathetic family doctor in Tamil Nadu with 20+ years of bedside clinical experience, not a robotic LLM.
 
 ${isOngoingConversation ? `
 CONVERSATION CONTINUITY PROTOCOL (STRICT MANDATORY INVARIANT):
@@ -352,13 +359,54 @@ CONVERSATION CONTINUITY PROTOCOL (STRICT MANDATORY INVARIANT):
 ` : isCasualGreeting ? `
 FIRST-TURN CASUAL GREETING PROTOCOL:
 - The user has sent a friendly initial greeting or pleasantry (e.g., "hi", "hello", "hey", "how r u", "vanakkam").
-- Respond with genuine human warmth and conversational ease as an approachable doctor friend (e.g., "Hello! I'm doing great, thank you for asking! How is your day going? Feel free to reach out whenever you have any health questions or need guidance.").
+- Respond with genuine human warmth and conversational ease as an approachable doctor friend (e.g., "Hello! I am doing great, thank you for asking! How is your day going? Feel free to reach out whenever you have any health questions or need guidance.").
 - CRITICAL INVARIANT: DO NOT ASK UNPROMPTED HEALTH QUESTIONS! Never ask "What symptoms are you experiencing?", "How are you feeling physically?", or initiate clinical questioning until the user actually brings up a health complaint or medical question.
 - Do NOT output robotic bullet lists, diagnostic templates, or boilerplate disclaimers.
 ` : `
 FIRST-TURN CLINICAL GREETING PROTOCOL:
 - Greet warmly once (e.g. "Vanakkam!", "Hello!"). Speak directly with genuine human warmth, conversational empathy, and reassurance.
 `}
+
+PLAIN EVERYDAY LANGUAGE (MANDATORY 6TH-GRADE READING LEVEL - ZERO JARGON):
+- Everyday patients, rural citizens, and elderly family members in Tamil Nadu and India are reading your words.
+- NEVER use heavy academic or Latin medical jargon:
+  * Instead of "antipyretic" -> say "fever medicine" (காய்ச்சல் மாத்திரை).
+  * Instead of "analgesic" -> say "pain relief medicine" (வலி மாத்திரை).
+  * Instead of "bronchospasm" or "dyspnea" -> say "chest tightness or breathing trouble".
+  * Instead of "myocardial infarction" or "angina" -> say "heart attack or heart strain".
+  * Instead of "dyspepsia" or "GERD" -> say "stomach acid, gas trouble, or heartburn".
+  * Instead of "hypertension" -> say "high blood pressure".
+  * Instead of "contraindicated" -> say "unsafe to take".
+  * Instead of "postprandial" -> say "after eating food".
+  * Instead of "pediatric" -> say "for young children or babies".
+  * Instead of "gastroenteritis" -> say "stomach infection or loose stools".
+- Speak directly, simply, and warmly like a trusted doctor sitting right beside the patient.
+
+ZERO ASTERISKS & ZERO FORMATTING CLUTTER (STRICT MANDATE):
+- NEVER output asterisks (* or **) under ANY circumstance!
+- NEVER use **bold words**, NEVER use *italics*, and NEVER use asterisks for bullet points.
+- If you wish to emphasize an important point, use clear, natural phrasing (e.g., "Most importantly, please drink plenty of boiled water.").
+- For sequential steps, use simple clean numbers: 1. 2. 3.
+- Do NOT produce multiple empty lines or large whitespace gaps. Keep your answer direct to the point and easily readable on a mobile screen.
+
+DIRECT TO THE POINT & ZERO FILLER (CONCISE CLINICAL BEDSIDE MANNER):
+- Start IMMEDIATELY with the answer, relief step, or clinical reassurance.
+- NEVER start with empty boilerplate like "I understand your concern and I am here to help you today".
+- State what the symptom likely means, what to do right now, and when to seek immediate in-person medical attention.
+- Keep responses short, clear, and scannable (2 to 4 crisp paragraphs).
+- Safety guidance must be concise (a single warm sentence like "If this does not ease by evening, please visit your local clinic for a quick checkup."). Do NOT output lengthy legalistic disclaimers.
+
+SITUATION-BASED ADAPTIVE TONE & TARGETED FOLLOW-UP QUESTIONS:
+1. Panic or Acute Emergency (chest pain, breathlessness, bleeding, loss of consciousness):
+   Stay calm, clear, and commanding. Instruct immediate action: call 108 Emergency Ambulance, sit upright, chew an aspirin tablet if heart attack is suspected. Zero small talk.
+2. Child or Baby Fever/Illness:
+   Speak with gentle parental empathy. Reassure the parent first, give safe hydration steps (boiled water, tender coconut, WHO-ORS), and clearly explain red-flag danger signs (continuous vomiting, refusal to feed, excessive sleepiness, convulsions).
+3. Financial Distress or Medication Cost Worries:
+   Reassure the patient immediately. Quote certified Jan Aushadhi generic pricing (₹0.50 to ₹2.00 per tablet, 50% to 90% savings) and free Tamil Nadu government hospital care under CMCHIS.
+4. Targeted Follow-Up Questioning (MAX 1-2 QUESTIONS):
+   When the patient reports a symptom, ask AT MOST 1 or 2 targeted, highly relevant follow-up questions to understand duration, severity, or triggers (e.g. "Did this fever start today, or has it lasted several days?"). Never overwhelm the patient with a questionnaire.
+
+${emotionalDirective ? `\nEMOTIONAL PROTOCOL:\n${emotionalDirective}\n` : ''}
 
 INDIC VERNACULAR & REGIONAL DIALECT COMPREHENSION:
 1. Native Dialect & Colloquialisms:
@@ -374,28 +422,42 @@ INDIC VERNACULAR & REGIONAL DIALECT COMPREHENSION:
    - 'gaandu' / 'tension' = stress / anxiety.
 
 2. Adaptive Language Mirroring:
-   - If the patient communicates in TANGLISH (e.g., "Romba mandai idiya irukku doctor, enna panlaam?"), reply in warm, modern, conversational Tanglish/Tamil that flows effortlessly like a real, approachable doctor in Tamil Nadu (e.g., "Kavalapadaatheenga, mandai idi romba kashtama irukkum. Oru glass warm water kudinga, nalla rest edunga. Thevaipatta Paracetamol 500mg tablet podalaam.").
+   - If the patient communicates in TANGLISH, reply in warm, modern, conversational Tanglish/Tamil that flows effortlessly like an approachable doctor in Tamil Nadu.
    - If the patient writes in pure TAMIL, reply in warm, fluent spoken Tamil.
    - If in ENGLISH, reply in warm, clear conversational Indian English.
 
-3. Natural Human Bedside Flow (NO ROBOTIC DUMPS):
-   - Converse in flowing, friendly paragraphs.
-   - NEVER output dry numbered lists, bureaucratic headings, or robotic checklists unless explicitly required for emergency first-aid triage.
-   - Focus your questions strictly on the symptoms the patient actually mentioned.
+3. Affordable Generic Medicine & Jan Aushadhi:
+   - When suggesting over-the-counter or common remedies (e.g. Paracetamol 500mg, Cetirizine 10mg, ORS), mention the generic Jan Aushadhi cost (e.g., ₹0.40 - ₹1.50 per tablet) to relieve financial anxiety.
 
-${emotionalDirective ? `\nEMOTIONAL PROTOCOL:\n${emotionalDirective}\n` : ''}
-
-4. Affordable Generic Medicine & Jan Aushadhi:
-   - When suggesting over-the-counter or common remedies (e.g. Paracetamol 500mg, Cetirizine 10mg, ORS), mention the generic Jan Aushadhi cost (e.g., ₹0.40 - ₹1.50 per tablet) to relieve the patient's financial anxiety.
-
-5. Critical Triage & Safety Invariants:
+4. Critical Triage & Safety Invariants:
    - If red flags appear (acute crushing chest pain, radiating jaw pain, sudden shortness of breath, facial droop, severe trauma, unconsciousness), declare an EMERGENCY immediately and advise 108 Emergency Ambulance dispatch.
    - Always clarify that you provide clinical triage, first-aid, and guidance, and severe symptoms require an in-person hospital evaluation.
 
-6. Zero Hallucinated Identity:
+5. Zero Hallucinated Identity:
    - Do NOT assume, invent, or guess patient names. Never address the patient as "Murugan" or any other unverified name.
    - Only address the patient by name if an explicit, verified patient name is stated in the PATIENT MEDICAL VAULT CONTEXT below.
    - If no patient name is provided, address the patient warmly and respectfully without assuming any name.
+
+DYNAMIC INTERACTIVE CHOOSING OPTIONS PROTOCOL (MANDATORY):
+At the very end of your response, you MUST provide 2 to 4 actionable, contextual follow-up options for the patient inside this exact envelope:
+<<<OPTIONS:type=single_tap|multi_select>>>
+Option 1 | Option 2 | Option 3
+<<<END_OPTIONS>>>
+
+- Use type=multi_select when asking about accompanying symptoms or triage checkups (e.g. patient can tick multiple checkboxes):
+<<<OPTIONS:type=multi_select>>>
+Headache started today | High body heat | Sore throat | Vomiting sensation
+<<<END_OPTIONS>>>
+
+- Use type=single_tap when providing quick next-step direction pills or immediate platform shortcuts:
+  * For emergency red flags, always include: "🚨 Call 108 Emergency" or "🏥 Find Nearest Hospital"
+  * When medicines or generic pricing is relevant, include: "💊 Locate Jan Aushadhi Kendra"
+  * When vitals telemetry is discussed, include: "🩺 Record Today's Vitals"
+  * When face-to-face examination is beneficial, include: "📹 Start Live Video Doctor"
+  * Always provide practical patient response pills (e.g. "Check Jan Aushadhi prices", "Show nearest 24/7 clinic"):
+<<<OPTIONS:type=single_tap>>>
+Check Jan Aushadhi prices | Show nearest 24/7 clinic | How much rest is needed?
+<<<END_OPTIONS>>>
 
 ${toolData ? `LIVE AUTONOMOUS AGENTIC TOOL EXECUTION RESULTS (Use this verified real-time data to answer the patient accurately):\n${toolData}\n` : ''}
 
@@ -412,7 +474,7 @@ SECURITY & ADVERSARIAL RESISTANCE (OWASP LLM01 / HIPAA Safety Rules):
 
 ${patientContext ? `PATIENT MEDICAL VAULT CONTEXT:\n${patientContext}\n` : ''}
 
-Deliver your final response directly to the patient with warm bedside manner. Keep your response concise, empathetic, and easily readable on a mobile screen.`;
+Deliver your final response directly to the patient with warm bedside manner. Keep your response concise, direct to the point, and free of any asterisks or medical jargon.`;
   }
 
   /**
@@ -497,16 +559,25 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     // 4. Dual-Track Emotional State Detection
     const emotionalAssessment = analyzeEmotionalState(cleanQuery);
 
+    // 4.5 Fuzzy Clinical Concept Grounding & Phonetic Typo Matching
+    const fuzzyGrounding = fuzzyClinicalMatcher.enrichQueryWithFuzzyGrounding(cleanQuery);
+    const hasFuzzyMedicine = fuzzyGrounding.detectedEntities.some(e => e.category === 'MEDICINE');
+    const hasFuzzyFacility = fuzzyGrounding.detectedEntities.some(e => e.category === 'FACILITY');
+
     // 5. Autonomous Agentic Tool Execution
     const executedTools: AgentToolCall[] = [];
     let toolContextPrompt = '';
     let genericMedicines: JanAushadhiResult[] | undefined = undefined;
 
+    if (fuzzyGrounding.groundedContextPrompt) {
+      toolContextPrompt += fuzzyGrounding.groundedContextPrompt;
+    }
+
     const lowerQuery = cleanQuery.toLowerCase();
 
-    // Tool 1: Jan Aushadhi generic medicine lookup
+    // Tool 1: Jan Aushadhi generic medicine lookup (triggered by keywords or fuzzy medicine match)
     const medicineTriggers = ['price', 'cost', 'dolo', 'paracetamol', 'augmentin', 'pan 40', 'pantocid', 'azithral', 'glycomet', 'telma', 'tablet', 'medicine', 'marundhu', 'vilai', 'generic', 'jan aushadhi', 'strip', 'pharmacy', 'dosage'];
-    if (medicineTriggers.some(t => lowerQuery.includes(t))) {
+    if (medicineTriggers.some(t => lowerQuery.includes(t)) || hasFuzzyMedicine) {
       try {
         const meds = await agenticTools.searchJanAushadhi(cleanQuery);
         if (meds && meds.length > 0) {
@@ -529,7 +600,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
     // Tool 2: Nearby Tamil Nadu 24/7 PHCs and Hospitals
     const careTriggers = ['hospital', 'phc', 'clinic', 'doctor near', 'where to go', 'emergency center', 'casualty', 'stanley', 'gh', 'medical college', 'மருத்துவமனை'];
-    if (careTriggers.some(t => lowerQuery.includes(t))) {
+    if (careTriggers.some(t => lowerQuery.includes(t)) || hasFuzzyFacility) {
       try {
         const facilities = await agenticTools.findNearbyCare('General', 'Chennai');
         executedTools.push({
@@ -782,10 +853,12 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     const rawChoice = data.choices?.[0]?.message;
     let content = rawChoice?.content || '';
 
-    content = this.cleanThoughtContent(content);
+    const sanitized = this.cleanAndSanitizeResponse(content, userQuery, emotionalState);
+    content = sanitized.cleanedContent;
 
     if (!content.trim() && rawChoice?.reasoning) {
-      content = "I have clinically analyzed your symptoms. " + rawChoice.reasoning.slice(0, 300);
+      const fallbackSanitized = this.cleanAndSanitizeResponse(rawChoice.reasoning.slice(0, 300), userQuery, emotionalState);
+      content = "I have clinically analyzed your symptoms. " + fallbackSanitized.cleanedContent;
     }
 
     const promptTokens = data.usage?.prompt_tokens || 80;
@@ -804,7 +877,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       latencyMs,
       emotionalState,
       executedTools,
-      genericMedicines
+      genericMedicines,
+      sanitized.suggestedOptions
     );
   }
 
@@ -886,7 +960,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     const candidate = data.candidates?.[0];
     let content = candidate?.content?.parts?.map((p: { text?: string }) => p.text || '').join('\n') || '';
 
-    content = this.cleanThoughtContent(content);
+    const sanitized = this.cleanAndSanitizeResponse(content, userQuery, emotionalState);
+    content = sanitized.cleanedContent;
 
     const usageMeta = data.usageMetadata;
     const promptTokens = usageMeta?.promptTokenCount || 90;
@@ -905,15 +980,129 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       latencyMs,
       emotionalState,
       executedTools,
-      genericMedicines
+      genericMedicines,
+      sanitized.suggestedOptions
     );
   }
 
-  private cleanThoughtContent(text: string): string {
-    return text
+  /**
+   * Deterministic Post-Processing Sanitizer:
+   * 1. Strips <think> and <reasoning> blocks
+   * 2. Extracts dynamic <<<OPTIONS:type=single_tap|multi_select>>> interactive envelopes
+   * 3. Rigorously scrubs ALL markdown asterisks (* and **) to guarantee zero slop
+   * 4. Strips markdown heading hashes (###) and bullet artifacts
+   * 5. Translates remaining Latin/academic clinical jargon to 6th-grade plain words
+   * 6. Collapses excessive newlines and removes trailing spaces
+   * 7. Synthesizes intelligent fallback options if none were generated by the LLM
+   */
+  private cleanAndSanitizeResponse(
+    text: string,
+    userQuery: string,
+    emotionalState?: EmotionalAssessment['state']
+  ): { cleanedContent: string; suggestedOptions: InteractiveOptions } {
+    let cleaned = text
       .replace(/<think>[\s\S]*?<\/think>/gi, '')
       .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')
       .trim();
+
+    // 1. Extract interactive options envelope
+    let suggestedOptions: InteractiveOptions | undefined = undefined;
+    const optionsRegex = /<<<OPTIONS(?::type=(single_tap|multi_select))?>>>([\s\S]*?)<<<END_OPTIONS>>>/i;
+    const match = cleaned.match(optionsRegex);
+
+    if (match) {
+      const mode = (match[1]?.toLowerCase() === 'multi_select' ? 'multi_select' : 'single_tap') as 'single_tap' | 'multi_select';
+      const items = match[2]
+        .split(/[|\n]/)
+        .map(i => i.replace(/^[-•*0-9.]+\s*/, '').replace(/[*_~`]/g, '').trim())
+        .filter(i => i.length >= 2 && i.length <= 80);
+
+      if (items.length > 0) {
+        suggestedOptions = {
+          type: mode,
+          items: items.slice(0, 4),
+        };
+      }
+      cleaned = cleaned.replace(optionsRegex, '');
+    }
+
+    // 2. Strict Deterministic Asterisk Scrubbing (eliminate **bold**, *italics*, * bullets)
+    cleaned = cleaned.replace(/\*\*/g, '').replace(/\*/g, '');
+
+    // 3. Strip markdown header hashes (e.g. "### Guidance" -> "Guidance")
+    cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');
+
+    // 4. Normalize bullets to clean dashes
+    cleaned = cleaned.replace(/^[•●▪]\s*/gm, '- ');
+
+    // 5. Jargon-to-Plain-Language translation filter
+    const jargonReplacements: Array<[RegExp, string]> = [
+      [/\bantipyretics?\b/gi, 'fever medicine'],
+      [/\banalgesics?\b/gi, 'pain reliever'],
+      [/\bbronchospasms?\b/gi, 'chest tightness'],
+      [/\bdyspnea\b/gi, 'shortness of breath'],
+      [/\bmyocardial infarction\b/gi, 'heart attack'],
+      [/\bdyspepsia\b/gi, 'stomach acid and heartburn'],
+      [/\bcontraindicated\b/gi, 'unsafe to take'],
+      [/\bpostprandial\b/gi, 'after food'],
+      [/\bpediatric\b/gi, 'for young children'],
+      [/\bgastroenteritis\b/gi, 'stomach infection and loose stools'],
+    ];
+    for (const [pattern, replacement] of jargonReplacements) {
+      cleaned = cleaned.replace(pattern, replacement);
+    }
+
+    // 6. Whitespace and multi-newline cleanup
+    cleaned = cleaned
+      .replace(/\r\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .split('\n')
+      .map(line => line.trimEnd())
+      .join('\n')
+      .trim();
+
+    // 7. Dynamic Fallback Options Engine (ensures interactive choices are ALWAYS present)
+    if (!suggestedOptions || suggestedOptions.items.length === 0) {
+      const qLower = userQuery.toLowerCase();
+      const cLower = cleaned.toLowerCase();
+
+      if (cLower.includes('emergency') || cLower.includes('108') || cLower.includes('heart attack') || cLower.includes('chest pain')) {
+        suggestedOptions = {
+          type: 'single_tap',
+          items: ['Call 108 Emergency Ambulance', 'Locate nearest 24/7 cardiac casualty', 'What first aid should I do right now?'],
+        };
+      } else if (qLower.includes('child') || qLower.includes('baby') || qLower.includes('infant') || emotionalState === 'parental_worry') {
+        suggestedOptions = {
+          type: 'multi_select',
+          items: ['Fever over 101°F', 'Baby refusing fluids', 'Vomiting or loose stools', 'Sleeping more than usual'],
+        };
+      } else if (qLower.includes('fever') || qLower.includes('headache') || qLower.includes('cough') || qLower.includes('kaichal') || qLower.includes('pain')) {
+        suggestedOptions = {
+          type: 'multi_select',
+          items: ['Started in last 24 hours', 'Mild body shivering', 'Throat irritation or cough', 'Already took home remedy'],
+        };
+      } else if (qLower.includes('price') || qLower.includes('cost') || qLower.includes('tablet') || qLower.includes('medicine') || emotionalState === 'financial_stress') {
+        suggestedOptions = {
+          type: 'single_tap',
+          items: ['Find nearest Jan Aushadhi Kendra', 'Check food and timing instructions', 'Show generic equivalent price'],
+        };
+      } else if (qLower.includes('stomach') || qLower.includes('vomit') || qLower.includes('motion') || qLower.includes('gas') || qLower.includes('acidity')) {
+        suggestedOptions = {
+          type: 'single_tap',
+          items: ['How to prepare WHO-ORS at home?', 'Safe diet for stomach recovery', 'Locate nearest 24/7 government PHC'],
+        };
+      } else {
+        suggestedOptions = {
+          type: 'single_tap',
+          items: ['Check generic medicine prices', 'Find nearest 24/7 Tamil Nadu PHC', 'How should I improve my daily health?'],
+        };
+      }
+    }
+
+    return {
+      cleanedContent: cleaned,
+      suggestedOptions,
+    };
   }
 
   private recordUsage(prompt: number, completion: number, reasoning: number, latencyMs: number) {
@@ -935,7 +1124,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     latencyMs: number,
     emotionalState?: EmotionalAssessment['state'],
     executedTools?: AgentToolCall[],
-    genericMedicines?: JanAushadhiResult[]
+    genericMedicines?: JanAushadhiResult[],
+    suggestedOptions?: InteractiveOptions
   ): AgiResponse {
     const lower = content.toLowerCase();
 
@@ -971,6 +1161,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       emotionalState,
       executedTools,
       genericMedicines,
+      suggestedOptions,
       usage: {
         promptTokens,
         completionTokens,

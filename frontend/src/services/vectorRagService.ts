@@ -14,6 +14,8 @@
 
 import { authService } from './authService';
 import { medicalRecordService, type MedicalRecord } from './medicalRecordService';
+import { fuzzyClinicalMatcher } from './fuzzyClinicalMatcher';
+import { healthMemoryService } from './healthMemoryService';
 
 export interface VectorChunk {
   id: string;
@@ -59,10 +61,12 @@ export interface PharmacySavingsSlip {
 const CLINICAL_VOCAB_WEIGHTS: Record<string, string[]> = {
   diabetes: ['diabetes', 'sugar', 'glucose', 'hba1c', 'metformin', 'glycomet', 'glimepiride', 'sitagliptin', 'insulin', 'fasting', 'postprandial', 'சர்க்கரை', 'நீரிழிவு'],
   hypertension: ['bp', 'blood pressure', 'hypertension', 'systolic', 'diastolic', 'telmisartan', 'amlodipine', 'atenolol', 'diltiazem', 'high bp', 'இரத்த அழுத்தம்'],
-  cardiac: ['chest pain', 'angina', 'heart attack', 'myocardial', 'troponin', 'sorbitrate', 'aspirin', 'clopidogrel', 'statin', 'atorvastatin', 'nenju vali', 'நெஞ்சு வலி', 'மார்பு வலி'],
+  cardiac: ['chest pain', 'angina', 'heart attack', 'myocardial', 'troponin', 'sorbitrate', 'aspirin', 'clopidogrel', 'statin', 'atorvastatin', 'nenju vali', 'நெஞ்சு வலி', 'மார்பu வலி'],
   respiratory: ['asthma', 'wheezing', 'cough', 'shortness of breath', 'inhaler', 'levolin', 'budecort', 'salbutamol', 'montelukast', 'bronchospasm', 'phlegm', 'sali', 'மூச்சுத்திணறல்', 'இருமல்', 'சளி'],
   fever_infection: ['fever', 'kaichal', 'dengue', 'platelet', 'ns1', 'paracetamol', 'dolo', 'calpol', 'azithromycin', 'amoxicillin', 'augmentin', 'typhoid', 'malaria', 'viral', 'காய்ச்சல்'],
-  gastro_acidity: ['acidity', 'gerd', 'gas', 'pantocid', 'pantoprazole', 'omeprazole', 'rabeprazole', 'gelusil', 'digene', 'stomach pain', 'ulcer', 'nenjerichal', 'நெஞ்செரிச்சல்', 'வயிறு வலி'],
+  gastro_acidity: ['acidity', 'gerd', 'gas', 'pantocid', 'pantoprazole', 'omeprazole', 'rabeprazole', 'gelusil', 'digene', 'stomach pain', 'ulcer', 'nenjerichal', 'நெஞ்செரிச்சல்', 'வயிறு வலி', 'diarrhea', 'loose motion', 'vomiting', 'ors'],
+  pediatrics_child: ['baby', 'child', 'infant', 'toddler', 'pediatric', 'குழந்தை', 'பாப்பா', 'sponging', 'hydration', 'syrup', 'drops'],
+  pregnancy_safety: ['pregnant', 'pregnancy', 'lactation', 'breastfeeding', 'trimester', 'fetal', 'கர்ப்பம்', 'தாய்'],
   allergies_safety: ['allergy', 'penicillin', 'nsaid', 'ibuprofen', 'brufen', 'combiflam', 'contraindication', 'hives', 'rash', 'anaphylaxis', 'ஒவ்வாமை'],
   wellness_diet: ['weight', 'diet', 'bmi', 'exercise', 'water', 'ors', 'salt', 'hydration', 'nutrition', 'உடல் எடை', 'உணவு']
 };
@@ -173,6 +177,27 @@ class VectorRagService {
         content: 'Patients with confirmed Penicillin allergy must strictly avoid Amoxicillin, Augmentin, Ampicillin, and Ampiclox due to cross-reactivity and anaphylaxis risk. Safe alternatives for respiratory or skin bacterial infections: Azithromycin 500mg, Erythromycin, or Doxycycline under physician supervision.',
         metadata: { category: 'allergies_safety', level: 'CRITICAL' },
       },
+      {
+        id: 'icmr-pediatrics-fever-2026',
+        source: 'ICMR_PROTOCOL',
+        title: 'ICMR Pediatric Fever, Dehydration & Paracetamol Dosing Protocol',
+        content: 'For infants and young children: Paracetamol pediatric oral suspension (10-15mg/kg/dose every 4-6 hours, maximum 4 doses in 24 hours). NEVER give Aspirin to children due to fatal Reye syndrome risk. Keep the child hydrated with breast milk, water, or WHO-ORS. Lukewarm water sponging for forehead and body if temperature > 101°F. Urgent hospital danger signs: continuous vomiting, refusal to feed, abnormal sleepiness/lethargy, stiff neck, or seizures/convulsions.',
+        metadata: { category: 'pediatrics_child', level: 'CRITICAL' },
+      },
+      {
+        id: 'icmr-pregnancy-drug-safety-2026',
+        source: 'ICMR_PROTOCOL',
+        title: 'National Health Guidelines on Medication Safety in Pregnancy & Lactation',
+        content: 'Pregnancy safety: Paracetamol is the first-line safe pain and fever medication across all trimesters. NSAIDs (Ibuprofen, Brufen, Combiflam, Diclofenac) are strictly avoided, especially in the 3rd trimester due to premature closure of fetal ductus arteriosus. Safe antibiotics: Amoxicillin, Ampicillin, Erythromycin. Strictly contraindicated: Tetracyclines, ACE inhibitors (Enalapril), ARBs (Telmisartan), and Statins. All pregnant patients with fever, swelling, or high BP must be evaluated at a nearby PHC or hospital.',
+        metadata: { category: 'pregnancy_safety', level: 'MANDATORY' },
+      },
+      {
+        id: 'icmr-gastroenteritis-ors-2026',
+        source: 'ICMR_PROTOCOL',
+        title: 'National Protocol for Acute Diarrhea, Food Poisoning & Dehydration',
+        content: 'First-line therapy for loose motion, acute gastroenteritis, or vomiting is immediate oral rehydration therapy using WHO-standard ORS (1 packet dissolved in 1 liter clean drinking water). Sip slowly throughout the day. Continue soft foods (congee, banana, curd rice, tender coconut water). Avoid anti-motility tablets (like Loperamide) during active infectious dysentery or fever. Seek immediate hospital care if blood in stools, high fever, sunken eyes, or severe weakness.',
+        metadata: { category: 'gastro_acidity', level: 'STANDARD' },
+      },
 
       // 2. Jan Aushadhi Top Generic Formulary (PMBJP)
       {
@@ -238,6 +263,27 @@ class VectorRagService {
         content: 'Commercial Brand: Levolin Inhaler (₹220.00 / 200 puffs). Jan Aushadhi Generic: Levosalbutamol Inhaler (₹55.00 / 200 puffs). Authentic Savings: 75%. Rapid bronchodilator for wheezing.',
         metadata: { brandName: 'Levolin Inhaler', genericPrice: 55.0, brandPrice: 220.0, savingsPct: 75, category: 'respiratory' },
       },
+      {
+        id: 'jan-ors-sachet',
+        source: 'JAN_AUSHADHI',
+        title: 'WHO Oral Rehydration Salts (ORS) Sachet 21.8g (Jan Aushadhi)',
+        content: 'Commercial Brand: Electral ORS (₹22.50 / sachet). Jan Aushadhi Generic: WHO-ORS Sachet 21.8g (₹4.50 / sachet). Authentic Savings: 80%. Complete electrolyte replacement for dehydration, loose stools, and vomiting.',
+        metadata: { brandName: 'Electral', genericPrice: 4.5, brandPrice: 22.5, savingsPct: 80, category: 'gastro_acidity' },
+      },
+      {
+        id: 'jan-cetirizine-10',
+        source: 'JAN_AUSHADHI',
+        title: 'Cetirizine Hydrochloride Tablets IP 10mg (Jan Aushadhi)',
+        content: 'Commercial Brand: Cetzine 10 / Okacet (₹45.00 / 10 tabs). Jan Aushadhi Generic: Cetirizine 10mg (₹4.50 / 10 tabs). Authentic Savings: 90%. Non-drowsy relief for running nose, sneezing, and skin allergies.',
+        metadata: { brandName: 'Cetzine 10', genericPrice: 4.5, brandPrice: 45.0, savingsPct: 90, category: 'allergies_safety' },
+      },
+      {
+        id: 'jan-amox-clav-625',
+        source: 'JAN_AUSHADHI',
+        title: 'Amoxicillin and Potassium Clavulanate Tablets IP 625mg (Jan Aushadhi)',
+        content: 'Commercial Brand: Augmentin 625 Duo / Moxikind CV 625 (₹220.00 / 10 tabs). Jan Aushadhi Generic: Amoxicillin + Clavulanic Acid 625mg (₹60.00 / 10 tabs). Authentic Savings: 73%. Broad-spectrum antibiotic for bacterial infections.',
+        metadata: { brandName: 'Augmentin 625', genericPrice: 60.0, brandPrice: 220.0, savingsPct: 73, category: 'fever_infection' },
+      },
 
       // 3. Tamil Nadu Healthcare & CMCHIS Specialization Radar
       {
@@ -253,6 +299,27 @@ class VectorRagService {
         title: 'Government Stanley Medical College Hospital (Royapuram)',
         content: 'Renowned for Plastic & Hand Surgery, Gastroenterology, 24/7 Casualty & Regional Dengue / Infectious Disease Isolation Ward. Empanelled under Chief Minister Comprehensive Health Insurance Scheme (CMCHIS). Emergency: 108.',
         metadata: { area: 'North Chennai', hasEmergency: true, cmchisEmpanelled: true },
+      },
+      {
+        id: 'tn-kmc-chennai',
+        source: 'FACILITY_RADAR',
+        title: 'Government Kilpauk Medical College Hospital (KMC Chennai)',
+        content: 'Tamil Nadu Apex Center for Comprehensive Burn Care, Plastic Surgery, Nephrology, 24/7 Casualty & Emergency Trauma. Empanelled under CMCHIS. Located at Poonamallee High Road, Kilpauk. Emergency: 044-28364951 / 108.',
+        metadata: { area: 'Central West Chennai', hasEmergency: true, cmchisEmpanelled: true },
+      },
+      {
+        id: 'tn-cmch-coimbatore',
+        source: 'FACILITY_RADAR',
+        title: 'Coimbatore Medical College Hospital (CMCH Coimbatore)',
+        content: 'Western Tamil Nadu Apex Tertiary Referral Center. 24/7 Multi-specialty Trauma, Acute Cardiac Care, Pediatric Emergency Ward, and Dialysis. Empanelled under CMCHIS. Located at Trichy Road, Coimbatore. Emergency: 108.',
+        metadata: { area: 'Coimbatore / Western TN', hasEmergency: true, cmchisEmpanelled: true },
+      },
+      {
+        id: 'tn-grh-madurai',
+        source: 'FACILITY_RADAR',
+        title: 'Government Rajaji Hospital (GRH Madurai)',
+        content: 'Southern Tamil Nadu Apex Super-Specialty Medical Center. 24/7 Comprehensive Emergency Trauma Care, Neurosurgery, Regional Dengue Ward, and Neonatal Intensive Care. Empanelled under CMCHIS. Located at Panagal Road, Madurai. Emergency: 108.',
+        metadata: { area: 'Madurai / Southern TN', hasEmergency: true, cmchisEmpanelled: true },
       },
     ];
 
@@ -293,16 +360,21 @@ class VectorRagService {
 
   /**
    * Retrieves the top relevant clinical, formulary, or patient chunks for a query.
+   * Combines fuzzy term expansion with dense cosine similarity vector search.
    * Runs in <2ms with zero UI disruption.
    */
   public queryKnowledgeBase(query: string, topK: number = 3): RagRetrievalResult[] {
     this.initializeKnowledgeBases();
 
-    const queryVec = this.generateEmbedding(query);
+    // 1. Expand query tokens using fuzzy clinical matcher (handles typos, Tanglish terms)
+    const fuzzyEnrichment = fuzzyClinicalMatcher.enrichQueryWithFuzzyGrounding(query);
+    const enrichedQueryText = [query, ...fuzzyEnrichment.normalizedSearchTokens].join(' ');
+    const queryVec = this.generateEmbedding(enrichedQueryText);
+
     const currentUser = authService.getCurrentUser();
     const userChunks = (currentUser?.id && this.patientVaultChunks.get(currentUser.id)) || [];
 
-    // Also index current medicalRecordService records if not indexed
+    // 2. Index live medicalRecordService profile records
     const profile = medicalRecordService.getProfile();
     const liveProfileChunks: VectorChunk[] = profile.records.map(r => ({
       id: `live-${r.id}`,
@@ -313,16 +385,44 @@ class VectorRagService {
       embedding: this.generateEmbedding(`${r.title} ${r.diagnoses.join(' ')} ${r.knownAllergies.join(' ')}`),
     }));
 
-    const allChunks = [...this.precomputedChunks, ...userChunks, ...liveProfileChunks];
+    // 3. Index live vitals telemetry from healthMemoryService
+    const vitalsSynthesis = healthMemoryService.getClinicalTrendSynthesis();
+    const vitalsChunks: VectorChunk[] = [];
+    if (vitalsSynthesis.hasRecords) {
+      vitalsChunks.push({
+        id: 'patient-vitals-synthesis',
+        source: 'PATIENT_VAULT',
+        title: 'Recent Patient Vitals & Physiological Baseline',
+        content: `Longitudinal Vitals: ${vitalsSynthesis.summaryEn}. Status: ${vitalsSynthesis.hasAnomalies ? 'Anomalous vital parameters detected' : 'Stable physiological baseline'}.`,
+        metadata: { hasAnomalies: vitalsSynthesis.hasAnomalies, anomalies: vitalsSynthesis.anomalies },
+        embedding: this.generateEmbedding(`blood pressure sugar heart rate ${vitalsSynthesis.summaryEn}`),
+      });
+    }
 
-    const results: RagRetrievalResult[] = allChunks
+    const allChunks = [...this.precomputedChunks, ...userChunks, ...liveProfileChunks, ...vitalsChunks];
+
+    let results: RagRetrievalResult[] = allChunks
       .map(chunk => ({
         chunk,
         similarityScore: this.cosineSimilarity(queryVec, chunk.embedding),
       }))
-      .filter(r => r.similarityScore > 0.08)
+      .filter(r => r.similarityScore > 0.07)
       .sort((a, b) => b.similarityScore - a.similarityScore)
       .slice(0, topK);
+
+    // Fallback: If no vector chunk cleared threshold, synthesize grounding from fuzzy match if available
+    if (results.length === 0 && fuzzyEnrichment.detectedEntities.length > 0) {
+      const topEntity = fuzzyEnrichment.detectedEntities[0];
+      const fallbackChunk: VectorChunk = {
+        id: `fuzzy-fallback-${Date.now()}`,
+        source: topEntity.category === 'MEDICINE' ? 'JAN_AUSHADHI' : 'ICMR_PROTOCOL',
+        title: `Clinical Standard: ${topEntity.corrected}`,
+        content: `Standardized clinical reference for "${topEntity.original}": Classified as ${topEntity.corrected} (${topEntity.category}). Advice must follow Indian Pharmacopoeia and ICMR guidelines.`,
+        metadata: { matchedEntity: topEntity },
+        embedding: queryVec,
+      };
+      results = [{ chunk: fallbackChunk, similarityScore: topEntity.similarity }];
+    }
 
     return results;
   }
