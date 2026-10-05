@@ -1301,6 +1301,12 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                               <ShieldCheck className="w-3.5 h-3.5 text-[#0D9488] flex-shrink-0" />
                               <span>{med.genericName}</span>
                             </div>
+                            {med.clinicalVerification?.patientContextNoteEn && (
+                              <div className="text-[11px] text-teal-800 bg-teal-50/70 border border-teal-200/60 px-2 py-0.5 rounded-md mt-1.5 flex items-center gap-1.5">
+                                <Sparkles className="w-3 h-3 text-teal-600 flex-shrink-0" />
+                                <span>{lang === 'ta' && med.clinicalVerification.patientContextNoteTa ? med.clinicalVerification.patientContextNoteTa : med.clinicalVerification.patientContextNoteEn}</span>
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex items-center gap-2 sm:text-right">
