@@ -516,7 +516,7 @@ Return ONLY valid JSON matching this exact structure:
 
     // 3. Tier 3: NVIDIA NIM Multimodal VLM (Hot-swappable when VITE_NVIDIA_API_KEY is present)
     if (this.nvidiaKey && imagesData.length > 0) {
-      const nvidiaModels = ['meta/llama-3.2-90b-vision-instruct', 'nvidia/neva-22b'];
+      const nvidiaModels = ['meta/llama-3.2-11b-vision-instruct', 'meta/llama-3.2-90b-vision-instruct'];
       for (const nvModel of nvidiaModels) {
         try {
           const nvImage = imagesData[0];
