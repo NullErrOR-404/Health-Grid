@@ -63,6 +63,7 @@ graph TD
     DEC --> ADR18[[ADR-018-Top-Tier-Multimodal-Prescription-Vision-and-HTR-Cascade]]
     DEC --> ADR19[[ADR-019-Clinical-Pharmacology-Engine-Formulary-Grounding-and-Context-Matching]]
     DEC --> ADR20[[ADR-020-Prescription-Post-Scan-UI-Redesign-and-Interactive-Viewer]]
+    DEC --> ADR21[[ADR-021-Persistent-Header-Navbar-Throughout-Chat-Tab]]
 
     CTX --> ACT[[Active_Context]]
     CTX --> CRED[[Key_Credentials_and_Environments]]
@@ -123,6 +124,7 @@ graph TD
 - [[ADR-018-Top-Tier-Multimodal-Prescription-Vision-and-HTR-Cascade]]: 4-tier autonomous multimodal vision & HTR cascade (Gemini 3.8/3.5, Groq Qwen 3.8 27B, hot-swappable NVIDIA NIM & Hugging Face TrOCR) with 15s timeouts and zero UI clutter.
 - [[ADR-019-Clinical-Pharmacology-Engine-Formulary-Grounding-and-Context-Matching]]: Intelligent context-reading clinical engine matching prescription tokens against authentic Indian Pharmacopeia formulations and Jan Aushadhi (PMBJP) catalogues, grounding smudged dosages, evaluating pediatric and allergy patient context, and consolidating multi-page daily routines.
 - [[ADR-020-Prescription-Post-Scan-UI-Redesign-and-Interactive-Viewer]]: Post-scan prescription UI redesign matching visual reference (`After prescription scanned ref.png`) with side-by-side interactive document canvas (zoom/rotate/fullscreen lightbox), 4-column medicine metadata badges, inline & batch "Edit All" modal, and 3-card primary action tray with secondary clinical tools (WhatsApp, Calendar, 30d Refill).
+- [[ADR-021-Persistent-Header-Navbar-Throughout-Chat-Tab]]: Persistent unified header (`GovAlertMarquee` + `Navbar activeView="chat"`) throughout active AI Doctor consultations, eliminating navigation loss, dedicating the left sidebar strictly to consultation history, and introducing an explicit `[ 💬 History ]` mobile pill to eliminate dual-hamburger confusion.
 
 ---
 

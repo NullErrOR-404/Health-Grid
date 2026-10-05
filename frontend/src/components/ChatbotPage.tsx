@@ -1,16 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus,
-  Home,
   MessageSquare,
-  Phone,
-  Siren,
   Pill,
-  Shield,
   ChevronDown,
   User,
   CheckCircle2,
-  Globe,
   Stethoscope,
   Building2,
   ShieldAlert,
@@ -45,7 +40,6 @@ import {
   Clock,
   CalendarCheck,
   Square,
-  Menu,
   ArrowRight
 } from 'lucide-react';
 import type { Language } from '../types';
@@ -119,14 +113,14 @@ const createFreshSession = (title = 'New Consultation'): ChatSession => ({
 
 export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   lang,
-  setLang,
-  onNavigateHome,
+  setLang: _setLang,
+  onNavigateHome: _onNavigateHome,
   onNavigateProfile,
   onOpenAmbulance,
-  onOpenPrescription,
-  onOpenDiseaseMap,
-  onOpenBabyShots,
-  onNavigateMedicines,
+  onOpenPrescription: _onOpenPrescription,
+  onOpenDiseaseMap: _onOpenDiseaseMap,
+  onOpenBabyShots: _onOpenBabyShots,
+  onNavigateMedicines: _onNavigateMedicines,
   initialQuery,
 }) => {
   // Zero-Disk Pure Cloud Storage: Sessions live strictly in memory and Supabase PostgreSQL RLS tables.
@@ -1132,7 +1126,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       ];
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden font-sans bg-white text-slate-800">
+    <div className="flex h-full w-full overflow-hidden font-sans bg-white text-slate-800">
       
       {/* Mobile Drawer Backdrop Overlay */}
       {isMobileSidebarOpen && (
@@ -1154,7 +1148,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       />
 
       {/* ========================================================= */}
-      {/* 1. LEFT SIDEBAR (Matching Chatbot UI.png) */}
+      {/* 1. LEFT SIDEBAR (Dedicated Consultation History & Sessions) */}
       {/* ========================================================= */}
       <aside className={`
         fixed md:relative inset-y-0 left-0 z-50 md:z-0
@@ -1163,19 +1157,25 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         ${isMobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}
       `}>
         
-        {/* Brand Logo Header */}
-        <div className="p-4 sm:p-5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 cursor-pointer select-none" onClick={onNavigateHome}>
-            <img 
-              src="/Logo.png" 
-              alt="HealthGrid - நலம் AI" 
-              className="h-9 sm:h-10 w-auto object-contain hover:opacity-95 transition-opacity" 
-            />
+        {/* Sidebar Header: Title + Close Button on Mobile */}
+        <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100">
+          <div className="flex items-center gap-2.5 text-slate-900 font-extrabold text-sm sm:text-base">
+            <div className="w-8 h-8 rounded-xl bg-teal-50 text-[#0A604D] flex items-center justify-center">
+              <MessageSquare className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight">
+                {lang === 'en' ? 'Consultations' : 'உரையாடல்கள்'}
+              </div>
+              <div className="text-[10px] text-slate-400 font-medium">
+                {lang === 'en' ? 'Chat History & Vault' : 'முந்தைய குறிப்புகள்'}
+              </div>
+            </div>
           </div>
           <button
             type="button"
             onClick={() => setIsMobileSidebarOpen(false)}
-            className="md:hidden p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+            className="md:hidden p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
             aria-label="Close sidebar"
           >
             <X className="w-5 h-5" />
@@ -1183,102 +1183,16 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         </div>
 
         {/* + New Chat Pill Button */}
-        <div className="px-4 pb-2">
+        <div className="p-3 pb-1">
           <button
             onClick={() => {
               ensureAuth(handleNewChat, lang === 'en' ? 'Sign in to start a new chat' : 'புதிய உரையாடலைத் தொடங்க உள்நுழையவும்');
             }}
-            className="w-full flex items-center gap-2 py-2.5 px-4 rounded-xl bg-[#E8F7F2] hover:bg-[#DDF2EB] text-[#0A604D] font-bold text-xs transition-colors border border-[#C6ECE0] shadow-2xs"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#E8F7F2] hover:bg-[#DDF2EB] text-[#0A604D] font-bold text-xs sm:text-sm transition-colors border border-[#C6ECE0] shadow-2xs cursor-pointer active:scale-98"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>{lang === 'en' ? 'New Chat' : 'புதிய உரையாடல்'}</span>
+            <span>{lang === 'en' ? 'New Consultation' : 'புதிய உரையாடல்'}</span>
           </button>
-        </div>
-
-        {/* Primary Navigation Items */}
-        <div className="px-3 py-1 space-y-0.5 text-xs font-medium">
-          <button
-            onClick={onNavigateHome}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
-          >
-            <Home className="w-4 h-4 text-slate-500" />
-            <span>{lang === 'en' ? 'Home' : 'முகப்பு'}</span>
-          </button>
-
-          <button
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-[#E8F7F2] text-[#0A604D] font-bold border border-[#C6ECE0]/60 transition-colors"
-          >
-            <MessageSquare className="w-4 h-4 text-[#0A604D]" />
-            <span>{lang === 'en' ? 'Chat with AI' : 'AI மருத்துவருடன் பேசு'}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              ensureAuth(
-                () => handleSendMessage(lang === 'en' ? 'Connect me with doctor telemedicine tele-triage.' : 'மருத்துவரை தொலைபேசியில் அழைக்கவும்.'),
-                lang === 'en' ? 'Sign in to request doctor tele-triage' : 'மருத்துவரை அழைக்க உள்நுழையவும்'
-              );
-            }}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
-          >
-            <Phone className="w-4 h-4 text-slate-500" />
-            <span>{lang === 'en' ? 'Speak to Doctor' : 'மருத்துவரிடம் பேசு'}</span>
-          </button>
-
-          {onOpenAmbulance && (
-            <button
-              onClick={() => {
-                ensureAuth(onOpenAmbulance, lang === 'en' ? 'Sign in to dispatch ambulance' : 'ஆம்புலன்ஸ் அழைக்க உள்நுழையவும்');
-              }}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
-            >
-              <Siren className="w-4 h-4 text-rose-500" />
-              <span>{lang === 'en' ? 'Call Ambulance' : 'ஆம்புலன்ஸ் 108'}</span>
-            </button>
-          )}
-
-          {(onNavigateMedicines || onOpenPrescription) && (
-            <button
-              onClick={() => {
-                if (onNavigateMedicines) {
-                  onNavigateMedicines();
-                } else {
-                  window.history.pushState({}, '', '/medicines');
-                  window.dispatchEvent(new PopStateEvent('popstate'));
-                }
-              }}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
-            >
-              <Pill className="w-4 h-4 text-slate-500" />
-              <span>{lang === 'en' ? 'Medicines' : 'மருந்துகள் (Jan Aushadhi)'}</span>
-            </button>
-          )}
-
-          {onOpenDiseaseMap && (
-            <button
-              onClick={() => {
-                ensureAuth(onOpenDiseaseMap, lang === 'en' ? 'Sign in to access disease outbreak map' : 'நோய் வரைபடத்திற்கு உள்நுழையவும்');
-              }}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
-            >
-              <Shield className="w-4 h-4 text-slate-500" />
-              <span>{lang === 'en' ? 'Disease Map' : 'நோய் பரவல் வரைபடம்'}</span>
-            </button>
-          )}
-
-          {onOpenBabyShots && (
-            <button
-              onClick={() => {
-                ensureAuth(onOpenBabyShots, lang === 'en' ? 'Sign in to access vaccination records' : 'தடுப்பூசி அட்டவணைக்கு உள்நுழையவும்');
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors hover:bg-slate-100 text-slate-600"
-            >
-              <div className="flex items-center gap-3">
-                <ChevronDown className="w-4 h-4 text-slate-400" />
-                <span>{lang === 'en' ? 'More (Vaccination)' : 'கூடுதல் (தடுப்பூசி)'}</span>
-              </div>
-            </button>
-          )}
         </div>
 
         {/* Recent Chats Section */}
@@ -1420,16 +1334,17 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         
         {/* Top Header Bar (Matching Chatbot UI.png) */}
-        <header className="px-3 sm:px-6 py-2.5 sm:py-3.5 border-b flex items-center justify-between flex-shrink-0 z-20 bg-white border-slate-200/90 gap-2">
-          {/* Left: Mobile Drawer Trigger + DocBot AI + Verified Badge */}
+        <header className="px-3 sm:px-6 py-2 sm:py-2.5 border-b flex items-center justify-between flex-shrink-0 z-20 bg-white border-slate-200/90 gap-2">
+          {/* Left: Mobile History Drawer Trigger + DocBot AI + Verified Badge */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="md:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center shrink-0 cursor-pointer"
-              aria-label="Open navigation sidebar"
+              className="md:hidden inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs transition-colors shrink-0 cursor-pointer"
+              aria-label="Open consultation history"
             >
-              <Menu className="w-5 h-5" />
+              <MessageSquare className="w-3.5 h-3.5 text-[#0A604D]" />
+              <span>{lang === 'en' ? 'History' : 'வரலாறு'}</span>
             </button>
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-teal-50 border border-teal-200/60 p-1 flex items-center justify-center shadow-2xs shrink-0">
               <img
@@ -1449,6 +1364,19 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
           {/* Right: Actions Header Pills (Clean, Minimal, Single Line, Zero Wrap) */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* New Chat Pill */}
+            <button
+              type="button"
+              onClick={() => {
+                ensureAuth(handleNewChat, lang === 'en' ? 'Sign in to start a new chat' : 'புதிய உரையாடலைத் தொடங்க உள்நுழையவும்');
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full border border-teal-200 bg-[#E8F7F2] hover:bg-[#DDF2EB] text-[#0A604D] text-[11px] sm:text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+              title={lang === 'en' ? 'Start fresh consultation' : 'புதிய உரையாடல்'}
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span className="hidden sm:inline">{lang === 'en' ? 'New' : 'புதியது'}</span>
+            </button>
+
             {/* Beneficiary Switcher Pill (ABDM Multi-Profile Standard) */}
             <button
               type="button"
@@ -1528,39 +1456,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               <span className="font-bold hidden md:inline">
                 {lang === 'en' ? ' Hub' : ''}
               </span>
-            </button>
-
-            {/* Language Dropdown Pill */}
-            <div className="relative">
-              <button
-                onClick={() => setLang(lang === 'en' ? 'ta' : 'en')}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full border text-[11px] sm:text-xs font-semibold whitespace-nowrap transition-all bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs cursor-pointer"
-                title="Toggle Language (English / Tamil)"
-              >
-                <Globe className="w-3.5 h-3.5 text-teal-700 shrink-0" />
-                <span className="font-bold">{lang === 'en' ? 'EN' : 'தமிழ்'}</span>
-              </button>
-            </div>
-
-            {/* Top Right Profile Round Pill */}
-            <button
-              onClick={() => {
-                if (currentUser) {
-                  onNavigateProfile();
-                } else {
-                  setIsLoginOpen(true);
-                }
-              }}
-              className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full border transition-all text-[11px] sm:text-xs font-semibold whitespace-nowrap cursor-pointer group bg-white border-slate-200 text-slate-800 hover:border-teal-400 shadow-2xs"
-              title={currentUser ? (lang === 'en' ? `My Health Profile (${currentUser.name})` : 'என் சுயவிவரம்') : (lang === 'en' ? 'Sign In / Profile' : 'உள்நுழை / சுயவிவரம்')}
-            >
-              <div className="w-5 h-5 rounded-full bg-[#D0F0EC] text-[#00695C] flex items-center justify-center font-bold text-[10px] group-hover:scale-105 transition-transform shrink-0">
-                {currentUser ? currentUser.name.charAt(0).toUpperCase() : <User className="w-3 h-3" />}
-              </div>
-              <span className="truncate max-w-[60px] sm:max-w-[80px] font-semibold">
-                {currentUser ? currentUser.name : (lang === 'en' ? 'Sign In' : 'உள்நுழை')}
-              </span>
-              {currentUser && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>}
             </button>
           </div>
         </header>

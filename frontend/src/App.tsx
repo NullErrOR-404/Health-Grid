@@ -278,22 +278,69 @@ export default function App() {
     navigateToView('chat');
   };
 
-  // Render Full-Screen Chatbot Page matching Chatbot UI.png
+  // Render Full-Screen Chatbot Page matching Chatbot UI.png with Persistent Top Header
   if (currentView === 'chat') {
     return (
-      <Suspense fallback={<ViewLoadingFallback />}>
-        <ChatbotPage
-          lang={lang}
-          setLang={setLang}
-          initialQuery={chatInitialQuery}
-          onNavigateHome={() => navigateToView('landing')}
-          onNavigateProfile={() => navigateToView('profile')}
-          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
-          onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
-          onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
-          onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
-          onNavigateMedicines={() => navigateToView('medicines')}
-        />
+      <div className="h-[100dvh] flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500 selection:text-white overflow-hidden">
+        {/* Sticky Coordinated Header */}
+        <header className="sticky top-0 z-40 w-full flex-shrink-0">
+          {/* Top Government Health Bulletin Bar */}
+          <GovAlertMarquee
+            lang={lang}
+            onOpenMaps={() => navigateToView('maps')}
+            onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+          />
+          <Navbar
+            lang={lang}
+            setLang={setLang}
+            activeView="chat"
+            onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+            onOpenVoiceChat={() => navigateToView('chat')}
+            onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+            onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+            onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
+            onOpenLogin={() => setIsLoginOpen(true)}
+            onNavigateProfile={() => requireAuth(() => navigateToView('profile'), lang === 'en' ? 'Patient Profile' : 'சுயவிவரப் பக்கம்')}
+            onNavigateHome={() => navigateToView('landing')}
+            onNavigateMedicines={() => navigateToView('medicines')}
+            onNavigateHealthRecords={() => {
+              requireAuth(() => {
+                navigateToView('profile');
+                setTimeout(() => {
+                  const el = document.getElementById('health-information');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }, 250);
+              }, lang === 'en' ? 'Health Records' : 'மருத்துவ ஏடுகள்');
+            }}
+            onNavigateSettings={() => {
+              requireAuth(() => {
+                navigateToView('profile');
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent('open-profile-edit'));
+                }, 250);
+              }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
+            }}
+            onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
+          />
+        </header>
+
+        {/* Chatbot Content Area filling exact remaining viewport height */}
+        <main className="flex-1 w-full overflow-hidden flex flex-col min-h-0">
+          <Suspense fallback={<ViewLoadingFallback />}>
+            <ChatbotPage
+              lang={lang}
+              setLang={setLang}
+              initialQuery={chatInitialQuery}
+              onNavigateHome={() => navigateToView('landing')}
+              onNavigateProfile={() => navigateToView('profile')}
+              onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+              onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+              onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+              onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
+              onNavigateMedicines={() => navigateToView('medicines')}
+            />
+          </Suspense>
+        </main>
 
         {/* Global Modals Accessible within Chat */}
         {isAmbulanceOpen && (
@@ -344,7 +391,30 @@ export default function App() {
             />
           </Suspense>
         )}
-      </Suspense>
+        {isLoginOpen && (
+          <Suspense fallback={null}>
+            <LoginModal
+              isOpen={isLoginOpen}
+              onClose={() => {
+                setIsLoginOpen(false);
+                setLoginNotice(null);
+                pendingAuthActionRef.current = null;
+              }}
+              lang={lang}
+              contextNotice={loginNotice}
+              onSuccess={() => {
+                setIsLoginOpen(false);
+                setLoginNotice(null);
+                if (pendingAuthActionRef.current) {
+                  const action = pendingAuthActionRef.current;
+                  pendingAuthActionRef.current = null;
+                  action();
+                }
+              }}
+            />
+          </Suspense>
+        )}
+      </div>
     );
   }
 
