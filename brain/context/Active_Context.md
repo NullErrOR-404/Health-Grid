@@ -15,9 +15,10 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Current System State
-- **Git Branch**: `main`- **Latest Commit**: `f5e277b` (`docs(brain): record ADR-019 Clinical Pharmacology Engine in Second Brain`)
+- **Git Branch**: `main`
+- **Latest Commit**: `2a44ffd` (`feat(prescription): redesign post-scan clinical viewer UI matching reference with 2-column layout and mobile responsiveness (ADR-020)`)
 - **Vercel Production Deployment**: Verified Live (200 OK across all 4 production aliases)
-- **Deployment URL**: `https://healthgrid-p34lhsxox-sameen14nmofficial-8826s-projects.vercel.app`
+- **Deployment URL**: `https://frontend-kposoikj2-sameen14nmofficial-8826s-projects.vercel.app`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
