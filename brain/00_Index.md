@@ -113,6 +113,9 @@ graph TD
 - [[ADR-012-Beneficiary-to-Independent-Account-Porting]]: ABDM beneficiary-to-independent account porting protocol, preserving historical health ID aliases (`linkedHistoricalAliases`), clinical caregiver provenance tags, and establishing delegated co-caregiver permissions with full patient data sovereignty under DPDP Act 2023.
 - [[ADR-013-Beneficiary-OTP-Verification-and-Emergency-Sync]]: Beneficiary mobile identity assurance via 6-digit SMS OTP verification (with proxy caregiver OTP for young children/elderly), strict 7-dependent quota governor (`MAX_BENEFICIARIES = 7`), and two-way dynamic synchronization with 108 Emergency Contacts list.
 - [[ADR-014-Conversational-Chameleon-and-Speech-Pipeline]]: Conversational Chameleon intent separation in DocBot AI (warm human chit-chat without unprompted medical probing), single-pipeline microphone capture preventing mobile hardware lock collisions, and instant zero-lag browser speech synthesis at 1.1x cadence.
+- [[ADR-015-Vernacular-Speech-and-Conversational-Continuity]]: Vernacular speech generation and bidirectional conversational continuity.
+- [[ADR-016-Autonomous-Hybrid-Vector-RAG-and-Ambient-Clinical-Automations]]: Autonomous hybrid vector RAG and ambient clinical note generation.
+- [[ADR-017-Clinical-Synergy-and-Prescription-Demographic-OCR]]: Clinical-grade prescription OCR engine capturing patient demographics, physician credentials (Lic/PTR), dispensed quantities, chemical formulas, and automated pharmacological synergy insights (e.g., FeSO4 + Vitamin C).
 
 ---
 

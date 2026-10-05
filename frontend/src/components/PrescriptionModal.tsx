@@ -1035,30 +1035,76 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                 <div className="lg:col-span-7 space-y-4">
                   
                   {/* Doctor & Clinic Slip Header */}
-                  <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="space-y-0.5">
-                      <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider">
-                        {analysisResult.clinicOrHospital}
-                      </span>
-                      <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
-                        {analysisResult.doctorName}
-                      </h4>
-                      <p className="text-xs text-slate-600 flex items-center gap-2">
-                        <span className="font-semibold text-slate-700">Diagnosis:</span>
-                        <span>{analysisResult.diagnosisNotes}</span>
-                      </p>
+                  <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs space-y-2.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider">
+                            {analysisResult.clinicOrHospital}
+                          </span>
+                          {(analysisResult.doctorLicenseNo || analysisResult.doctorPtrNo) && (
+                            <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                              {[analysisResult.doctorLicenseNo, analysisResult.doctorPtrNo].filter(Boolean).join(' • ')}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                          {analysisResult.doctorName}
+                        </h4>
+                        <p className="text-xs text-slate-600 flex items-center gap-2">
+                          <span className="font-semibold text-slate-700">Diagnosis:</span>
+                          <span>{analysisResult.diagnosisNotes}</span>
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs text-slate-500 self-start sm:self-center">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{analysisResult.date}</span>
+                        {analysisResult.pagesCount > 1 && (
+                          <span className="bg-teal-50 text-teal-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-teal-200">
+                            {analysisResult.pagesCount} Pages
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs text-slate-500 self-start sm:self-center">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{analysisResult.date}</span>
-                      {analysisResult.pagesCount > 1 && (
-                        <span className="bg-teal-50 text-teal-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-teal-200">
-                          {analysisResult.pagesCount} Pages
+                    {/* Patient Demographics Banner */}
+                    {analysisResult.patientName && (
+                      <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                        <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">
+                          Patient: {analysisResult.patientName}
                         </span>
-                      )}
-                    </div>
+                        {(analysisResult.patientAge || analysisResult.patientGender) && (
+                          <span className="bg-slate-100 px-2 py-0.5 rounded-md font-medium text-slate-700">
+                            {[analysisResult.patientAge ? `${analysisResult.patientAge} Y` : '', analysisResult.patientGender].filter(Boolean).join(' / ')}
+                          </span>
+                        )}
+                        {analysisResult.patientAddress && (
+                          <span className="text-slate-500 text-[11px] truncate max-w-[260px]" title={analysisResult.patientAddress}>
+                            📍 {analysisResult.patientAddress}
+                          </span>
+                        )}
+                        <span className="ml-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          HTA Verified ✓
+                        </span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Clinical Synergy & Pharmacological Insight Banner */}
+                  {analysisResult.clinicalSynergyInsight && (
+                    <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3.5 space-y-1 shadow-2xs">
+                      <div className="flex items-center gap-2 text-amber-900 font-extrabold text-xs">
+                        <Sparkles className="w-4 h-4 text-amber-600" />
+                        <span>{lang === 'en' ? 'Clinical Synergy & Bioavailability Insight' : 'மருத்துவ கூட்டு நற்பயன் விளக்கம்'}</span>
+                      </div>
+                      <p className="text-xs text-amber-900/90 leading-relaxed font-medium">
+                        {lang === 'ta' && analysisResult.clinicalSynergyInsightTa
+                          ? analysisResult.clinicalSynergyInsightTa
+                          : analysisResult.clinicalSynergyInsight}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Bedside Audio Doctor Card */}
                   <div className="bg-gradient-to-br from-teal-800 via-teal-900 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
@@ -1228,13 +1274,23 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                       >
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <h6 className="font-extrabold text-slate-900 text-sm">
                                 {med.brandName}
                               </h6>
                               {med.dosage && (
                                 <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
                                   {med.dosage}
+                                </span>
+                              )}
+                              {med.quantity && (
+                                <span className="text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200/80 px-2 py-0.5 rounded-md">
+                                  Qty: {med.quantity}
+                                </span>
+                              )}
+                              {med.chemicalNotation && (
+                                <span className="text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 px-1.5 py-0.5 rounded-md">
+                                  {med.chemicalNotation}
                                 </span>
                               )}
                             </div>
