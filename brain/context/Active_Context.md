@@ -16,7 +16,7 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `6b3ff52` (`feat(vision-cascade): implement 4-tier multimodal prescription OCR and HTR cascade (ADR-018)`)
+- **Latest Commit**: `947583e` (`feat(ai-credentials): configure verified 4-tier multimodal vision cascade (Gemini, Groq, NVIDIA NIM, HF TrOCR)`)
 - **Vercel Production Deployment**: Verified Live (200 OK)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
