@@ -16,7 +16,7 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `c8247b9` (`fix(prescription-vision): enhance gemini 2.0 and groq fallback cascades for clinical parsing`)
+- **Latest Commit**: `6b3ff52` (`feat(vision-cascade): implement 4-tier multimodal prescription OCR and HTR cascade (ADR-018)`)
 - **Vercel Production Deployment**: Verified Live (200 OK)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
