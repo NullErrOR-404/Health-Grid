@@ -16,9 +16,10 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `7047552` (`feat(navigation): maintain persistent header and navbar across Chat tab with streamlined sessions sidebar (ADR-021)`)
+- **Latest Commit**: `a92363e` (`fix(clinical-grounding): eliminate hallucinated values, ground personal space data, and harmonize PMBJP savings (ADR-023)`)
 - **Vercel Production Deployment**: Verified Live (200 OK across all 4 production aliases)
-- **Deployment URL**: `https://frontend-meikgatls-sameen14nmofficial-8826s-projects.vercel.app`
+- **Deployment URL**: `https://frontend-6i2hmg4aw-sameen14nmofficial-8826s-projects.vercel.app`
+- **Deployment ID**: `dpl_B6uRnY2SRgPJa2hX6AtajFeRGtdz`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
