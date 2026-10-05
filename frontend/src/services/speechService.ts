@@ -117,6 +117,27 @@ const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
 };
 
 /**
+ * Automatically infers the clinical bedside voice persona behind the scenes:
+ * - 'arvind' (calm, decisive clinical specialist) when urgent triage or red-flag emergency symptoms are detected.
+ * - 'meera' (warm, empathetic family physician) for routine care, child wellness, preventive advice, and everyday reassurance.
+ */
+export function inferClinicalPersona(text: string, isCriticalOrUrgent?: boolean): DoctorPersona {
+  if (isCriticalOrUrgent) return 'arvind';
+  if (!text) return 'meera';
+  const lower = text.toLowerCase();
+  const emergencyKeywords = [
+    'chest pain', 'heart attack', 'stroke', 'unconscious', 'fainted', 'seizure',
+    'severe bleeding', 'heavy bleeding', 'severe breathlessness', 'cannot breathe',
+    'choking', 'poison', 'emergency', '108', 'casualty', 'trauma', 'spo2',
+    'oxygen dropped', 'paralysis', 'nenju vali', 'moochu thinaral', 'valippu', 'iratha pokku'
+  ];
+  if (emergencyKeywords.some((kw) => lower.includes(kw))) {
+    return 'arvind';
+  }
+  return 'meera';
+}
+
+/**
  * Strips markdown symbols, asterisks, URLs, headers, and bullet markers
  * so text-to-speech sounds like a warm, natural human doctor.
  */
@@ -549,6 +570,9 @@ export class SpeechEngine {
     this.onSpeakingStart = onStart;
     this.onSpeakingEnd = onEnd;
 
+    // Automatically infer persona behind the scenes based on clinical urgency
+    this.voiceSettings.persona = inferClinicalPersona(text);
+
     // Zero-lag fast path: default to instant native browser speech synthesis unless Sarvam API key is active
     if (this.voiceSettings.engine === 'browser-tts' || !this.voiceSettings.sarvamApiKey) {
       this.speakWithBrowserFallback(text, lang, this.currentSpeedRate, onStart, onEnd);
@@ -870,10 +894,11 @@ export class SpeechEngine {
       return;
     }
 
+    const persona = this.voiceSettings.persona || inferClinicalPersona(text);
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
     utterance.rate = speedRate || 1.1;
-    utterance.pitch = 1.0;
+    utterance.pitch = persona === 'arvind' ? 0.95 : 1.05;
 
     const voices = window.speechSynthesis.getVoices();
     const targetLangCode = lang === 'ta' ? 'ta' : 'en';

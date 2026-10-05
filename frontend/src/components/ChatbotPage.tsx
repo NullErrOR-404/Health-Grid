@@ -44,7 +44,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import type { Language } from '../types';
-import { speechEngine, TanglishNormalizer, type DoctorPersona } from '../services/speechService';
+import { speechEngine, TanglishNormalizer } from '../services/speechService';
 import {
   agiService,
   AVAILABLE_MODELS,
@@ -135,7 +135,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [inputText, setInputText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
-  const [voicePersona, setVoicePersona] = useState<DoctorPersona>(() => speechEngine.getVoiceSettings().persona || 'meera');
   const [isRecording, setIsRecording] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -230,13 +229,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   useEffect(() => {
     return familyMemberService.subscribe((_members, active) => {
       setActiveBeneficiary(active);
-    });
-  }, []);
-
-  // Keep voice persona synchronized with global speech settings
-  useEffect(() => {
-    return speechEngine.subscribeSettings((settings) => {
-      setVoicePersona(settings.persona);
     });
   }, []);
 
@@ -1642,52 +1634,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 </p>
               </div>
 
-              {/* Doctor Voice Persona Selector in Welcome Screen (Concise Pill Format) */}
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                <span className="text-[11px] font-semibold text-slate-500 mr-1">
-                  {lang === 'en' ? 'Doctor Voice:' : 'மருத்துவர் குரல்:'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setVoicePersona('meera');
-                    speechEngine.updateVoiceSettings({ persona: 'meera' });
-                    setToastMessage(lang === 'en' ? 'Voice set to Dr. Meera (Warm Female Bedside)' : 'குரல்: டாக்டர் மீரா (பெண் மருத்துவர்)');
-                  }}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border ${
-                    voicePersona === 'meera'
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-400 ring-2 ring-emerald-100 shadow-xs'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-2xs'
-                  }`}
-                >
-                  <Volume2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Dr. Meera</span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 font-bold text-emerald-800">
-                    {lang === 'en' ? 'Female' : 'பெண்'}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setVoicePersona('arvind');
-                    speechEngine.updateVoiceSettings({ persona: 'arvind' });
-                    setToastMessage(lang === 'en' ? 'Voice set to Dr. Arvind (Calm Male Bedside)' : 'குரல்: டாக்டர் அரவிந்த் (ஆண் மருத்துவர்)');
-                  }}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border ${
-                    voicePersona === 'arvind'
-                      ? 'bg-teal-50 text-teal-800 border-teal-400 ring-2 ring-teal-100 shadow-xs'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-2xs'
-                  }`}
-                >
-                  <Volume2 className="w-3.5 h-3.5 text-teal-600" />
-                  <span>Dr. Arvind</span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-teal-100 font-bold text-teal-800">
-                    {lang === 'en' ? 'Male' : 'ஆண்'}
-                  </span>
-                </button>
-              </div>
-
               {/* Action Suggestion Pills (Concise, Small & Pill-Styled) */}
               <div className="flex flex-wrap items-center justify-center gap-2 pt-2 max-w-xl mx-auto">
                 {suggestionCards.map((card, idx) => (
@@ -2012,24 +1958,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                             <ThumbsDown className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            type="button"
-                            onClick={() => {
-                              const next = voicePersona === 'meera' ? 'arvind' : 'meera';
-                              setVoicePersona(next);
-                              speechEngine.updateVoiceSettings({ persona: next });
-                              setToastMessage(
-                                next === 'meera'
-                                  ? (lang === 'en' ? 'Voice: Dr. Meera (Warm Female Bedside)' : 'குரல்: டாக்டர் மீரா (பெண்)')
-                                  : (lang === 'en' ? 'Voice: Dr. Arvind (Calm Male Bedside)' : 'குரல்: டாக்டர் அரவிந்த் (ஆண்)')
-                              );
-                            }}
-                            className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 transition-colors flex items-center gap-1 font-semibold cursor-pointer"
-                            title={lang === 'en' ? 'Click to switch Doctor Voice persona' : 'மருத்துவர் குரல் மாற்ற கிளிக்'}
-                          >
-                            <Volume2 className="w-2.5 h-2.5 text-emerald-600" />
-                            <span>{voicePersona === 'meera' ? 'Dr. Meera (F)' : 'Dr. Arvind (M)'}</span>
-                          </button>
-                          <button
                             onClick={() => handleSpeakMessage(msg.text)}
                             className="p-1 hover:text-teal-700 rounded transition-colors cursor-pointer"
                             title={isVoiceSpeaking ? (lang === 'en' ? 'Stop Speaking' : 'நிறுத்து') : (lang === 'en' ? 'Read Aloud with Doctor Voice' : 'படிக்கவும்')}
@@ -2156,57 +2084,6 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                       </div>
                     </>
                   )}
-                </div>
-
-                {/* Doctor Voice Persona Dual Switcher Segment (Concise Pill) */}
-                <div className="flex items-center p-0.5 bg-slate-100 rounded-full border border-slate-200/90 shadow-2xs">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-2.5 pr-1 hidden sm:inline">
-                    {lang === 'en' ? 'Voice:' : 'குரல்:'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setVoicePersona('meera');
-                      speechEngine.updateVoiceSettings({ persona: 'meera' });
-                      setToastMessage(lang === 'en' ? 'Doctor Voice: Dr. Meera (Warm Female Bedside)' : 'குரல்: டாக்டர் மீரா (பெண் மருத்துவர்)');
-                    }}
-                    className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                      voicePersona === 'meera'
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                    }`}
-                    title={lang === 'en' ? 'Switch to Dr. Meera (Warm Female Bedside)' : 'டாக்டர் மீரா (பெண் மருத்துவர்)'}
-                  >
-                    <Volume2 className="w-3 h-3" />
-                    <span>Dr. Meera</span>
-                    <span className={`text-[9px] px-1 py-0.2 rounded-full font-semibold ${
-                      voicePersona === 'meera' ? 'bg-emerald-700 text-emerald-100' : 'bg-slate-200 text-slate-500'
-                    }`}>
-                      {lang === 'en' ? 'F' : 'பெண்'}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setVoicePersona('arvind');
-                      speechEngine.updateVoiceSettings({ persona: 'arvind' });
-                      setToastMessage(lang === 'en' ? 'Doctor Voice: Dr. Arvind (Calm Male Bedside)' : 'குரல்: டாக்டர் அரவிந்த் (ஆண் மருத்துவர்)');
-                    }}
-                    className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                      voicePersona === 'arvind'
-                        ? 'bg-teal-700 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                    }`}
-                    title={lang === 'en' ? 'Switch to Dr. Arvind (Calm Male Bedside)' : 'டாக்டர் அரவிந்த் (ஆண் மருத்துவர்)'}
-                  >
-                    <Volume2 className="w-3 h-3" />
-                    <span>Dr. Arvind</span>
-                    <span className={`text-[9px] px-1 py-0.2 rounded-full font-semibold ${
-                      voicePersona === 'arvind' ? 'bg-teal-800 text-teal-100' : 'bg-slate-200 text-slate-500'
-                    }`}>
-                      {lang === 'en' ? 'M' : 'ஆண்'}
-                    </span>
-                  </button>
                 </div>
               </div>
 

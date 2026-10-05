@@ -24,7 +24,6 @@ import {
   Zap,
   RotateCcw,
   Check,
-  User,
   Settings,
   Headphones
 } from 'lucide-react';
@@ -1045,20 +1044,6 @@ Active Prescriptions: ${patientProfile.records
                 <span>{voiceSettings.engine === 'gemini-live' ? '✨ Gemini Live Voice' : '🇮🇳 Sarvam AI Bulbul'}</span>
               </button>
 
-              {/* Doctor Persona Pill (Dr. Meera / Dr. Arvind) */}
-              <button
-                type="button"
-                onClick={() => {
-                  const nextPersona = voiceSettings.persona === 'meera' ? 'arvind' : 'meera';
-                  speechEngine.updateVoiceSettings({ persona: nextPersona });
-                }}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 font-semibold transition-all cursor-pointer select-none text-[11px] shadow-2xs"
-                title="Toggle between Dr. Meera (Female Doctor) and Dr. Arvind (Male Physician)"
-              >
-                <User className="w-3 h-3 text-teal-600" />
-                <span>{voiceSettings.persona === 'meera' ? '👩‍⚕️ Dr. Meera (Warm)' : '👨‍⚕️ Dr. Arvind (Calm)'}</span>
-              </button>
-
               {/* Speech Pace Pill */}
               <button
                 type="button"
@@ -1141,40 +1126,6 @@ Active Prescriptions: ${patientProfile.records
                               <span>Sarvam Bulbul</span>
                             </div>
                             <span className="block text-[10px] text-orange-700 font-normal mt-0.5">Tamil Phonetics</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Doctor Persona Selection */}
-                      <div>
-                        <span className="font-semibold text-slate-700 block mb-1.5">
-                          {lang === 'en' ? 'Doctor Persona:' : 'மருத்துவர் குரல் பாணி:'}
-                        </span>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => speechEngine.updateVoiceSettings({ persona: 'meera' })}
-                            className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
-                              voiceSettings.persona === 'meera'
-                                ? 'border-teal-500 bg-teal-50 text-teal-900 font-bold shadow-2xs'
-                                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                            }`}
-                          >
-                            👩‍⚕️ Dr. Meera
-                            <span className="block text-[10px] text-teal-700 font-normal">Warm Female Doctor</span>
-                          </button>
-                          
-                          <button
-                            type="button"
-                            onClick={() => speechEngine.updateVoiceSettings({ persona: 'arvind' })}
-                            className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
-                              voiceSettings.persona === 'arvind'
-                                ? 'border-teal-500 bg-teal-50 text-teal-900 font-bold shadow-2xs'
-                                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                            }`}
-                          >
-                            👨‍⚕️ Dr. Arvind
-                            <span className="block text-[10px] text-teal-700 font-normal">Calm Male Physician</span>
                           </button>
                         </div>
                       </div>
