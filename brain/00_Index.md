@@ -126,6 +126,7 @@ graph TD
 - [[ADR-020-Prescription-Post-Scan-UI-Redesign-and-Interactive-Viewer]]: Post-scan prescription UI redesign matching visual reference (`After prescription scanned ref.png`) with side-by-side interactive document canvas (zoom/rotate/fullscreen lightbox), 4-column medicine metadata badges, inline & batch "Edit All" modal, and 3-card primary action tray with secondary clinical tools (WhatsApp, Calendar, 30d Refill).
 - [[ADR-021-Persistent-Header-Navbar-Throughout-Chat-Tab]]: Persistent unified header (`GovAlertMarquee` + `Navbar activeView="chat"`) throughout active AI Doctor consultations, eliminating navigation loss, dedicating the left sidebar strictly to consultation history, and introducing an explicit `[ 💬 History ]` mobile pill to eliminate dual-hamburger confusion.
 - [[ADR-022-Prescription-Modal-Mobile-Scroll-Lock-and-Lenis-Prevention]]: Mobile prescription post-scan scroll trap resolution via `data-lenis-prevent="true"`, dynamic viewport height (`h-[100dvh] max-h-[100dvh]`), overscroll containment, preview card touch passthrough (`touch-pan-y`), and safe-area clearance for bottom action trays.
+- [[ADR-023-Platform-Data-Grounding-and-Formulary-Truth-Engine]]: Platform-wide elimination of hallucinated fallback credentials (K. Sundaram, 98401 23456), real-time PMBJP database lookup for profile medication savings, authentic session vitals for casualty handover, and statutory harmonization of generic savings (50% to 90%).
 
 ---
 

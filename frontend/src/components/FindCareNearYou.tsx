@@ -98,14 +98,14 @@ const PLACES_DATA: PlaceItem[] = [
     addressTa: 'கடை எண் 4, பார்க் டவுன் ரயில் நிலையம் அருகில், சென்னை',
     image: 'https://images.unsplash.com/photo-1576602976047-174e57a47881?auto=format&fit=crop&w=600&q=80',
     featuresEn: [
-      { icon: 'generic', label: 'Up to 80% Discounts' },
+      { icon: 'generic', label: '50% to 90% Savings (PMBJP)' },
       { icon: 'clock', label: 'Open 8:00 AM - 10:00 PM' }
     ],
     featuresTa: [
-      { icon: 'generic', label: '80% வரை கட்டணக் குறைப்பு' },
+      { icon: 'generic', label: '50% முதல் 90% வரை சேமிப்பு' },
       { icon: 'clock', label: 'காலை 8:00 - இரவு 10:00' }
     ],
-    genericDiscount: '50-80%'
+    genericDiscount: '50%–90%'
   },
   {
     id: 'place-3',

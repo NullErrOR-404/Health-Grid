@@ -43,7 +43,7 @@ import { prescriptionAiService, type PrescriptionAnalysisResult, type ScannedMed
 import { speechEngine } from '../services/speechService';
 import { supabase } from '../services/supabaseClient';
 import { medicineStoreService } from '../services/medicineStoreService';
-import { authService } from '../services/authService';
+import { authService, generateImmutableHealthId } from '../services/authService';
 
 interface PrescriptionModalProps {
   isOpen: boolean;
@@ -182,11 +182,12 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     if (!analysisResult || !analysisResult.medicines || analysisResult.medicines.length === 0) return;
 
     const currentUser = authService.getCurrentUser();
+    const resolvedHealthId = currentUser?.healthId || (currentUser?.id ? generateImmutableHealthId(currentUser.id) : '');
     const schedule = medicineStoreService.createRefillSchedule({
-      userId: currentUser?.id || 'patient-user',
-      medicalId: currentUser?.healthId || 'HG-600040-7821',
-      patientName: currentUser?.name || 'Verified Patient',
-      patientPhone: currentUser?.phone || '+91 98401 23456',
+      userId: currentUser?.id || '',
+      medicalId: resolvedHealthId,
+      patientName: currentUser?.name || analysisResult.patientName || 'Patient',
+      patientPhone: currentUser?.phone || '',
       prescriptionId: 'RX-SCANNED',
       prescriptionDate: analysisResult.date,
       doctorName: analysisResult.doctorName,

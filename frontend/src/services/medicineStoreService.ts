@@ -731,6 +731,17 @@ class MedicineStoreService {
     return this.catalog;
   }
 
+  public findGenericMatches(query: string): MedicineItem[] {
+    const q = query.toLowerCase().trim();
+    if (!q) return [];
+    return this.catalog.filter(m => 
+      m.brandName.toLowerCase().includes(q) || 
+      m.genericName.toLowerCase().includes(q) ||
+      q.includes(m.brandName.toLowerCase().split('/')[0].trim()) ||
+      q.includes(m.genericName.toLowerCase().split(' ')[0].trim())
+    );
+  }
+
   public isDbConnected(): boolean {
     return this.isLoadedFromDb;
   }

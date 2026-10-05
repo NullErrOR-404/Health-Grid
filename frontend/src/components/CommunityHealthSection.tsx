@@ -78,12 +78,12 @@ export const CommunityHealthSection: React.FC<CommunityHealthSectionProps> = ({
       image: '/insights/diabetes_tips.png',
       pointsEn: [
         'Check fasting blood sugar once monthly; maintain target levels below 110 mg/dL.',
-        'Generic Metformin costs ₹8 at Jan Aushadhi pharmacies vs ₹65 for commercial brand tablets.',
+        'Generic Metformin costs ₹7.50 at Jan Aushadhi pharmacies vs ₹45.00 for commercial brand tablets.',
         'Daily 30-minute brisk walk improves insulin sensitivity and reduces cardiovascular risks.',
       ],
       pointsTa: [
         'மாதமொருமுறை வெறும் வயிற்று இரத்த சர்க்கரை அளவை பரிசோதிக்கவும் (110 mg/dL கீழ் இருக்க வேண்டும்).',
-        'அரசு மக்கள் மருந்தகத்தில் மெட்ஃபோர்மின் மாத்திரை வெறும் ₹8 மட்டுமே, கடைகளில் ₹65.',
+        'அரசு மக்கள் மருந்தகத்தில் மெட்ஃபோர்மின் மாத்திரை வெறும் ₹7.50 மட்டுமே, கடைகளில் ₹45.',
         'தினமும் 30 நிமிடங்கள் வேகமாக நடப்பது இன்சுலின் சுரப்பை சீராக்கி இதயத்தை பாதுகாக்கும்.',
       ],
       actionEn: 'Consult DocBot on Diet',

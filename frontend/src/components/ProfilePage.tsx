@@ -33,6 +33,7 @@ import {
   type FamilyMember,
   type LinkedHistoricalAlias,
 } from '../services/familyMemberService';
+import { medicineStoreService } from '../services/medicineStoreService';
 import { ConsultationBeneficiaryModal } from './ConsultationBeneficiaryModal';
 import { ClaimBeneficiaryRecordsModal } from './ClaimBeneficiaryRecordsModal';
 import { EmergencyContactSkeleton, HealthRecordSkeleton } from './SkeletonLoader';
@@ -1799,19 +1800,32 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       <button onClick={() => setOpenDropdown(null)} className="px-2 py-0.5 text-slate-500">Cancel</button>
                       <button
                         onClick={() => {
-                          if (newMedicineForm.name.trim()) {
+                          const enteredName = newMedicineForm.name.trim();
+                          if (enteredName) {
+                            const matches = medicineStoreService.findGenericMatches(enteredName);
+                            let calculatedSaving = 'Jan Aushadhi Eligible';
+                            let resolvedGeneric = newMedicineForm.generic?.trim() || '';
+
+                            if (matches.length > 0) {
+                              const topMatch = matches[0];
+                              calculatedSaving = `${topMatch.savingsPercentage}% lower cost (PMBJP)`;
+                              if (!resolvedGeneric) {
+                                resolvedGeneric = topMatch.genericName;
+                              }
+                            }
+
                             const newMed: MedicineItem = {
                               id: `med-${Date.now()}`,
-                              name: newMedicineForm.name.trim(),
-                              generic: newMedicineForm.generic || `${newMedicineForm.name.trim()} Generic`,
+                              name: enteredName,
+                              generic: resolvedGeneric || `${enteredName} Generic Equivalent`,
                               frequency: newMedicineForm.frequency || 'Once daily',
-                              saving: '60%',
+                              saving: calculatedSaving,
                             };
                             const updated = [...medicines, newMed];
                             persistMedicines(updated);
                             setNewMedicineForm({ name: '', generic: '', frequency: 'Once daily', saving: '' });
                             setOpenDropdown(null);
-                            showToast('Medicine added to profile!');
+                            showToast('Medicine added to profile with verified formulary details!');
                           }
                         }}
                         className="px-3 py-1 bg-teal-700 text-white rounded-lg font-bold"

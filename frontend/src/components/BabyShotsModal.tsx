@@ -13,7 +13,7 @@ export const BabyShotsModal: React.FC<BabyShotsModalProps> = ({
   onClose,
   lang,
 }) => {
-  const [dob, setDob] = useState('2026-06-15');
+  const [dob, setDob] = useState(() => new Date().toISOString().split('T')[0]);
   const [reminderSaved, setReminderSaved] = useState(false);
 
   if (!isOpen) return null;

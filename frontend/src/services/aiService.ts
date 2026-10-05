@@ -208,7 +208,7 @@ export function analyzeEmotionalState(query: string): EmotionalAssessment {
   ) {
     return {
       state: 'financial_stress',
-      deEscalationDirective: 'FINANCIAL RELIEF PROTOCOL: Patient is concerned about healthcare or medication costs. Immediately reassure them about government generic Jan Aushadhi alternatives and free Tamil Nadu government hospital care. Quote exact Jan Aushadhi generic pricing (70-90% savings) to eliminate their cost anxiety.',
+      deEscalationDirective: 'FINANCIAL RELIEF PROTOCOL: Patient is concerned about healthcare or medication costs. Immediately reassure them about government generic Jan Aushadhi alternatives and free Tamil Nadu government hospital care. Quote exact Jan Aushadhi generic pricing (50-90% savings per official PMBJP formulary) to eliminate their cost anxiety.',
     };
   }
 

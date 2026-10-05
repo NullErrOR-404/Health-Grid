@@ -74,7 +74,7 @@ HEALTHGRID (நலம் AI) - TAMIL NADU PUBLIC HEALTH PROTOCOLS (2026)
 2. PMBJP JAN AUSHADHI MEDICINE SAVINGS:
    - Genuine WHO-GMP certified generic pharmaceuticals available across
      state-wide Primary Health Centres and Jan Aushadhi Kendras.
-   - Price savings: up to 88% compared to branded commercial formulations.
+   - Price savings: 50% to 90% lower cost compared to branded commercial formulations per official PMBJP price schedule.
 
 3. ESSENTIAL IMMUNIZATION TIMELINE:
    - At Birth: BCG, OPV-0, Hepatitis B (Birth Dose)
@@ -643,7 +643,7 @@ Official HealthGrid Portal: https://healthgrid-app.vercel.app
                 </p>
               </div>
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <h4 className="font-bold text-slate-900">3. How can I buy genuine medicines at up to 88% discount?</h4>
+                <h4 className="font-bold text-slate-900">3. How can I buy genuine medicines at 50% to 90% lower cost?</h4>
                 <p className="text-slate-600 mt-1 leading-relaxed">
                   Under the Pradhan Mantri Bharatiya Janaushadhi Pariyojana (PMBJP), high-standard generic equivalents of expensive branded medications are dispensed with identical therapeutic bioavailability.
                 </p>

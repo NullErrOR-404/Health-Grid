@@ -64,11 +64,11 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
   const [activeStep, setActiveStep] = useState<'INTAKE' | 'QUEUE_WAITING'>('INTAKE');
 
   // Form Fields
-  const [patientName, setPatientName] = useState('');
-  const [age, setAge] = useState<number>(34);
+  const [patientName, setPatientName] = useState(() => authService.getCurrentUser()?.name || '');
+  const [age, setAge] = useState<number | ''>(() => authService.getCurrentUser()?.age || '');
   const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Male');
-  const [bloodGroup, setBloodGroup] = useState('B Positive');
-  const [phone, setPhone] = useState('+91 98401 23456');
+  const [bloodGroup, setBloodGroup] = useState(() => authService.getCurrentUser()?.bloodGroup || 'B Positive');
+  const [phone, setPhone] = useState(() => authService.getCurrentUser()?.phone || '');
 
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [chiefComplaint, setChiefComplaint] = useState('');
@@ -94,12 +94,10 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
       if (member.bloodGroup) setBloodGroup(member.bloodGroup);
     } else {
       const currentUser = authService.getCurrentUser();
-      if (currentUser) {
-        setPatientName(currentUser.name || '');
-        if (currentUser.age) setAge(currentUser.age);
-        if (currentUser.bloodGroup) setBloodGroup(currentUser.bloodGroup);
-        if (currentUser.phone) setPhone(currentUser.phone);
-      }
+      setPatientName(currentUser?.name || '');
+      setAge(currentUser?.age || '');
+      if (currentUser?.bloodGroup) setBloodGroup(currentUser.bloodGroup);
+      setPhone(currentUser?.phone || '');
     }
   };
 
@@ -119,12 +117,10 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
       } else {
         setSelectedBeneficiary(null);
         const currentUser = authService.getCurrentUser();
-        if (currentUser) {
-          setPatientName(currentUser.name || '');
-          if (currentUser.age) setAge(currentUser.age);
-          if (currentUser.bloodGroup) setBloodGroup(currentUser.bloodGroup);
-          if (currentUser.phone) setPhone(currentUser.phone);
-        }
+        setPatientName(currentUser?.name || '');
+        setAge(currentUser?.age || '');
+        if (currentUser?.bloodGroup) setBloodGroup(currentUser.bloodGroup);
+        setPhone(currentUser?.phone || '');
       }
 
       // Check if user already has an active waiting token
@@ -188,10 +184,12 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
       ? selectedBeneficiary.healthId
       : (currentUser?.healthId || `HG-PAT-${Math.floor(1000 + Math.random() * 9000)}`);
 
+    const resolvedAgeNum = typeof age === 'number' ? age : (parseInt(String(age), 10) || 0);
+
     const cv: HealthGridCvData = {
       patientId: patientHealthId,
       fullName: patientName,
-      age,
+      age: resolvedAgeNum,
       gender,
       bloodGroup,
       contactPhone: phone,
@@ -216,7 +214,7 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
 
     const intake: PatientIntakeInput = {
       patientName,
-      age,
+      age: resolvedAgeNum,
       gender,
       bloodGroup,
       phone,
@@ -362,7 +360,7 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                  <div className="sm:col-span-5">
+                  <div className="sm:col-span-4">
                     <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                       {lang === 'en' ? 'Full Name' : 'முழு பெயர்'} *
                     </label>
@@ -376,6 +374,20 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
                     />
                   </div>
 
+                  <div className="sm:col-span-3">
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      {lang === 'en' ? 'Mobile Phone' : 'கைபேசி எண்'} *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="e.g. 9840123456"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                    />
+                  </div>
+
                   <div className="sm:col-span-2">
                     <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                       {lang === 'en' ? 'Age' : 'வயது'}
@@ -385,12 +397,13 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
                       min={1}
                       max={110}
                       value={age}
-                      onChange={(e) => setAge(parseInt(e.target.value) || 0)}
+                      onChange={(e) => setAge(parseInt(e.target.value) || '')}
+                      placeholder="e.g. 35"
                       className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
                     />
                   </div>
 
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-3">
                     <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                       {lang === 'en' ? 'Gender' : 'பாலினம்'}
                     </label>
@@ -404,26 +417,26 @@ export const PatientIntakeModal: React.FC<PatientIntakeModalProps> = ({
                       <option value="Other">{lang === 'en' ? 'Other' : 'மற்றவை'}</option>
                     </select>
                   </div>
+                </div>
 
-                  <div className="sm:col-span-3">
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                      {lang === 'en' ? 'Blood Group' : 'இரத்த வகை'}
-                    </label>
-                    <select
-                      value={bloodGroup}
-                      onChange={(e) => setBloodGroup(e.target.value)}
-                      className="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
-                    >
-                      <option value="B Positive">B Positive (B+)</option>
-                      <option value="O Positive">O Positive (O+)</option>
-                      <option value="A Positive">A Positive (A+)</option>
-                      <option value="AB Positive">AB Positive (AB+)</option>
-                      <option value="O Negative">O Negative (O-)</option>
-                      <option value="A Negative">A Negative (A-)</option>
-                      <option value="B Negative">B Negative (B-)</option>
-                      <option value="AB Negative">AB Negative (AB-)</option>
-                    </select>
-                  </div>
+                <div className="mt-2.5 max-w-xs">
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    {lang === 'en' ? 'Blood Group' : 'இரத்த வகை'}
+                  </label>
+                  <select
+                    value={bloodGroup}
+                    onChange={(e) => setBloodGroup(e.target.value)}
+                    className="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                  >
+                    <option value="B Positive">B Positive (B+)</option>
+                    <option value="O Positive">O Positive (O+)</option>
+                    <option value="A Positive">A Positive (A+)</option>
+                    <option value="AB Positive">AB Positive (AB+)</option>
+                    <option value="O Negative">O Negative (O-)</option>
+                    <option value="A Negative">A Negative (A-)</option>
+                    <option value="B Negative">B Negative (B-)</option>
+                    <option value="AB Negative">AB Negative (AB-)</option>
+                  </select>
                 </div>
               </div>
 

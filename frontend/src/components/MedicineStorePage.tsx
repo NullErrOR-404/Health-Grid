@@ -82,10 +82,10 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
   // Checkout form state
   const [deliveryType, setDeliveryType] = useState<DeliveryType>('home_delivery');
   const [selectedKendraId, setSelectedKendraId] = useState<string>(kendras[0]?.id || '');
-  const [patientName, setPatientName] = useState(currentUser?.name || 'K. Sundaram');
-  const [patientPhone, setPatientPhone] = useState(currentUser?.phone || '98401 23456');
-  const [shippingAddress, setShippingAddress] = useState('No. 14, 2nd Main Road, Royapuram, Chennai');
-  const [pincode, setPincode] = useState('600013');
+  const [patientName, setPatientName] = useState(currentUser?.name || '');
+  const [patientPhone, setPatientPhone] = useState(currentUser?.phone || '');
+  const [shippingAddress, setShippingAddress] = useState('');
+  const [pincode, setPincode] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
 
   // Categories matching the reference design pills
@@ -849,6 +849,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
                   <input
                     type="text"
                     required
+                    placeholder="e.g. Sundaram K"
                     value={patientName}
                     onChange={(e) => setPatientName(e.target.value)}
                     className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none"
@@ -859,6 +860,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
                   <input
                     type="tel"
                     required
+                    placeholder="e.g. 9840123456"
                     value={patientPhone}
                     onChange={(e) => setPatientPhone(e.target.value)}
                     className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none"
@@ -874,6 +876,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
                     <input
                       type="text"
                       required
+                      placeholder="e.g. Door No. 14, 2nd Main Road, Royapuram"
                       value={shippingAddress}
                       onChange={(e) => setShippingAddress(e.target.value)}
                       className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none"
@@ -884,6 +887,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
                     <input
                       type="text"
                       required
+                      placeholder="e.g. 600013"
                       value={pincode}
                       onChange={(e) => setPincode(e.target.value)}
                       className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none font-mono"

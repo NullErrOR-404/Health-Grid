@@ -14,9 +14,7 @@ export const AmbulanceModal: React.FC<AmbulanceModalProps> = ({ isOpen, onClose,
   const [distance, setDistance] = useState(2.1);
   const [selectedChips, setSelectedChips] = useState<string[]>(['Bring Stretcher (2nd Floor, No Lift)', 'Narrow Street (Park on Main Road)']);
   const [customNote, setCustomNote] = useState('');
-  const [notesList, setNotesList] = useState<string[]>([
-    'Green gate behind the Pillayar temple.',
-  ]);
+  const [notesList, setNotesList] = useState<string[]>([]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -71,7 +69,7 @@ export const AmbulanceModal: React.FC<AmbulanceModalProps> = ({ isOpen, onClose,
                 </span>
               </div>
               <div className="text-xs text-red-100">
-                {lang === 'en' ? 'Vehicle ID: TN-09-G-1084 • Sector: Central' : 'வாகனம்: TN-09-G-1084 • பிரிவு: மையம்'}
+                {lang === 'en' ? 'Tamil Nadu 108 Emergency (GVK EMRI) • ALS Sector Central' : 'தமிழ்நாடு 108 அவசர ஊர்தி சேவை (GVK EMRI) • மையம்'}
               </div>
             </div>
           </div>
@@ -151,7 +149,7 @@ export const AmbulanceModal: React.FC<AmbulanceModalProps> = ({ isOpen, onClose,
                 <Siren className="w-5 h-5 text-white" />
               </div>
               <span className="text-[10px] font-bold bg-red-600 text-white px-2 py-0.5 rounded shadow mt-1">
-                TN-09-G-1084
+                108 ALS Unit
               </span>
             </div>
 
@@ -169,7 +167,7 @@ export const AmbulanceModal: React.FC<AmbulanceModalProps> = ({ isOpen, onClose,
                 {lang === 'en' ? 'Assigned Medical Crew' : 'மருத்துவக் குழு'}
               </div>
               <div className="text-sm font-bold text-slate-900">
-                Dr. K. Ramesh (Paramedic Lead) • Driver: M. Selvam
+                {lang === 'en' ? '108 Advanced Life Support (ALS) Emergency Medical Team' : '108 அவசர சிகிச்சை மருத்துவ மீட்புக் குழு'}
               </div>
               <div className="text-xs text-slate-500">
                 {lang === 'en' ? 'Equipped with Advanced Life Support (ALS) & Defibrillator' : 'அனைத்து முதலுதவி வசதிகளும் கொண்ட ஊர்தி'}
@@ -181,7 +179,7 @@ export const AmbulanceModal: React.FC<AmbulanceModalProps> = ({ isOpen, onClose,
               className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-colors whitespace-nowrap"
             >
               <PhoneCall className="w-3.5 h-3.5" />
-              <span>{lang === 'en' ? 'Call Ambulance Driver' : 'ஓட்டுநரை அழைக்க'}</span>
+              <span>{lang === 'en' ? 'Call 108 Control Room' : '108 அவசர உதவி'}</span>
             </a>
           </div>
 

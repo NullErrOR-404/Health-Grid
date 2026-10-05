@@ -759,7 +759,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         }
 
         if (genericMatches.length > 0) {
-          docExplanation += `\n\nI have matched your prescribed medications with authentic PMBJP Jan Aushadhi generic equivalents below. You can save up to 88% at any government Jan Aushadhi Kendra across Tamil Nadu.`;
+          docExplanation += `\n\nI have matched your prescribed medications with authentic PMBJP Jan Aushadhi generic equivalents below. You can save 50% to 90% at any government Jan Aushadhi Kendra across Tamil Nadu.`;
         }
       } else {
         docExplanation = `உங்கள் மருத்துவ ஆவணத்தை ("${file.name}") வெற்றிகரமாகப் பகுப்பாய்வு செய்துள்ளேன்.\n\n`;
@@ -1743,7 +1743,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                             <span>{lang === 'en' ? 'PMBJP Jan Aushadhi Generic Alternatives' : 'ஜன் ஔஷதி மலிவு விலை மாற்று மருந்துகள்'}</span>
                           </span>
                           <span className="text-[10px] text-emerald-700 font-mono font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                            {lang === 'en' ? 'Up to 88% Cheaper' : '88% வரை சேமிப்பு'}
+                            {lang === 'en' ? '50% to 90% Lower Cost (PMBJP)' : '50% முதல் 90% வரை சேமிப்பு'}
                           </span>
                         </div>
 
