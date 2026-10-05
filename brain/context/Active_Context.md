@@ -6,7 +6,7 @@ tags:
   - tasks
   - active
 created: 2026-10-02
-last_updated: 2026-10-02
+last_updated: 2026-10-05
 parent: "[[00_Index]]"
 ---
 
@@ -16,7 +16,7 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `d14bfb1` (`fix(vision-prescription): strengthen vision model cascade and error sanitization`)
+- **Latest Commit**: `c8247b9` (`fix(prescription-vision): enhance gemini 2.0 and groq fallback cascades for clinical parsing`)
 - **Vercel Production Deployment**: Verified Live (200 OK)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
