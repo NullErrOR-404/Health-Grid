@@ -16,7 +16,7 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `a92363e` (`fix(clinical-grounding): eliminate hallucinated values, ground personal space data, and harmonize PMBJP savings (ADR-023)`)
+- **Latest Commit**: `f5d1fd1` (`feat(chat): interactive vector RAG, fuzzy grounding, zero-asterisk hygiene, and voice-assisted choosing options (ADR-024)`)
 - **Vercel Production Deployment**: Verified Live (200 OK across all 4 production aliases)
 - **Deployment URL**: `https://frontend-6i2hmg4aw-sameen14nmofficial-8826s-projects.vercel.app`
 - **Deployment ID**: `dpl_B6uRnY2SRgPJa2hX6AtajFeRGtdz`
@@ -56,11 +56,12 @@ Back to [[00_Index]]
 - [x] Solved Mobile Prescription Pre-Scan & Post-Scan Scroll Trapping & Universal Touch Lockout (ADR-022): Completely diagnosed and resolved the mobile touch freeze where users could not scroll down after uploading a prescription thumbnail. Bypassed Lenis touch event interception (`virtualScroll` returns false on touch, preventing `event.preventDefault()`); overrode default `lenis.css` root `overflow: clip` and lifted mobile `body { overflow: hidden }` in `index.css`; added `e.stopPropagation()` touch shielding on `modalBodyRef` in `PrescriptionModal.tsx`; and added auto-scrolling to the `Analyze Prescription` button upon upload, verified seamlessly in Chrome DevTools mobile emulation with 0 build errors.
 - [x] Grounded Platform-Wide Data and Formulary Truth Engine (ADR-023): Fully eliminated hallucinated fallback credentials (`K. Sundaram`, `98401 23456`, `HG-600040-7821`) across Medicine Store Checkout, Prescription Chronic Refills, and OPD Patient Intake; integrated real-time PMBJP database lookup for personal vault medications (replacing hardcoded `'60%'`); grounded Doctor Casualty Handover to real session vitals and allergies (displaying clean blanks/unrecorded states when not logged); and unified generic savings claims across Hero, Chatbot, Find Care, and Footer to the official statutory PMBJP standard (`50% to 90% lower cost`) with 0 build errors.
 - [x] Honed Chat Module with Interactive RAG, Fuzzy Clinical Grounding, Zero-Asterisk Hygiene & Plain-Language Engine (ADR-024): Created `fuzzyClinicalMatcher.ts` with Levenshtein & phonetic Soundex matching for colloquialisms and phonetic misspellings (`paracitamol`, `doloo`, `shuger`, `nenjerichal`); upgraded hybrid vector RAG with expanded ICMR clinical protocols, PMBJP pricing, and Tamil Nadu casualty centers; enforced strict zero-asterisk sanitization and 6th-grade non-jargon vocabulary translation in `aiService.ts`; and implemented dynamic interactive choosing options in `ChatbotPage.tsx` supporting single-tap follow-up pills and multi-select checklist cards with zero build errors.
+- [x] Overhauled GitHub Repository README.md: Restructured entire project documentation with professional jargon-free explanations, real-world pain point solutions, Mermaid system flowcharts, 4-tier prescription vision sequence diagrams, and comprehensive ADR-001 through ADR-024 index.
 - [x] Deployed production build to Vercel and verified on all 4 live production aliases (`healthgrid-app.vercel.app`, `healthgrid-nu.vercel.app`, `healthgrid-live.vercel.app`, `healthgrid-network.vercel.app`) with HTTP 200 OK.
 
 ## In-Flight / Next Focus
-- [ ] Deploy ADR-024 changes to Vercel and verify live production endpoints.
-- [ ] User review and verification of interactive chat options and zero-jargon responses.
+- [ ] Push overhauled README and Second Brain updates to GitHub `origin main`.
+- [ ] Monitor Google Search Console indexing and crawler telemetry.
 - [ ] Submit Google Cloud Console OAuth consent screen for production branding verification.
 - [ ] Monitor Google Search Console indexing and crawler telemetry.
 - [ ] Real-time updates to this Second Brain whenever new clinical features or architectural modifications ship.

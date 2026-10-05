@@ -1,234 +1,218 @@
 <div align="center">
 
-  <img src="frontend/public/Logo.png" alt="HealthGrid Logo" width="140" height="140" style="border-radius: 24px; box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);" />
+  <img src="frontend/public/Logo.png" alt="HealthGrid Logo" width="130" height="130" style="border-radius: 24px; box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);" />
 
   # HealthGrid (நலம் AI)
-  ### Autonomous Real-Time Emergency Telemetry & Predictive Community Health Network
+  ### Real-Time Emergency Response, Vernacular AI Doctor & Community Health Platform
 
   [![React](https://img.shields.io/badge/React-19.x-61DAFB?logo=react&logoColor=black)](https://react.dev/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.x-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-  [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-  [![Java 21](https://img.shields.io/badge/Java-21_LTS-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
   [![Supabase](https://img.shields.io/badge/Supabase-Realtime_PostgreSQL-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com/)
-  [![Groq](https://img.shields.io/badge/Groq-LPU_420_tok%2Fs-F55036?logo=fastapi&logoColor=white)](https://groq.com/)
-  [![Gemini](https://img.shields.io/badge/Gemini-2.0_Flash-4285F4?logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
-  [![Vercel Deployment](https://img.shields.io/badge/Vercel-healthgrid--app.vercel.app-000000?logo=vercel&logoColor=white)](https://healthgrid-app.vercel.app)
+  [![Groq](https://img.shields.io/badge/Groq-LPU_Inference-F55036?logo=fastapi&logoColor=white)](https://groq.com/)
+  [![Gemini](https://img.shields.io/badge/Gemini-3.8_Flash-4285F4?logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+  [![Vercel Live](https://img.shields.io/badge/Vercel-healthgrid--app.vercel.app-000000?logo=vercel&logoColor=white)](https://healthgrid-app.vercel.app)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
   <p align="center">
-    <strong>HealthGrid</strong> is a next-generation healthcare operating system bridging the gap between underserved citizens, grassroots emergency response, and clinical health networks. Delivering hyper-localized multilingual clinical triage, zero-latency 108 ambulance dispatch telemetry, spatial healthcare navigation, and generic medicine price parity.
+    <strong>HealthGrid</strong> is an intelligent healthcare platform designed for everyday citizens, families, and emergency responders in India and Tamil Nadu. It provides instant medical advice in plain everyday language, matches prescriptions with low-cost generic medicines (saving 50% to 90%), deciphers doctor handwriting, and connects patients to 108 ambulances and nearby government hospitals in seconds.
   </p>
 
   <p align="center">
-    <a href="#critical-pain-points">Pain Points</a> •
-    <a href="#the-healthgrid-solution">The Solution</a> •
-    <a href="#system-architecture">System Architecture</a> •
-    <a href="#key-capabilities">Key Features</a> •
-    <a href="#tech-stack">Tech Stack</a> •
-    <a href="#getting-started">Getting Started</a> •
-    <a href="#deployment">Deployment</a>
+    <a href="#-real-world-problems--how-healthgrid-solves-them">Pain Points & Solutions</a> •
+    <a href="#-system-architecture">Architecture</a> •
+    <a href="#-key-features">Key Features</a> •
+    <a href="#-interactive-chat-doctor-docbot">AI Doctor & Choosing Engine</a> •
+    <a href="#-prescription-scanner--pharmacology-engine">Prescription Scanner</a> •
+    <a href="#-family--caregiver-multi-profile-hub">Family Profiles</a> •
+    <a href="#-live-production-deployments">Live Deployments</a> •
+    <a href="#-architecture-decisions-adrs--second-brain">Second Brain (ADRs)</a> •
+    <a href="#-getting-started">Getting Started</a>
   </p>
 
   <hr />
 </div>
 
-## 🚨 Critical Pain Points in Modern Healthcare Access
+## 🌐 Live Production Deployments
 
-| Dimension | Real-World Challenge | The Cost to Patients & Systems |
-| :--- | :--- | :--- |
-| **Emergency Delays** | Fragmented dispatch channels, ambiguous addresses, and lack of real-time telemetry lead to delayed ambulance arrival during the critical "Golden Hour". | Elevated preventable mortality in trauma, myocardial infarction, and acute stroke cases. |
-| **Language & Health Literacy** | Medical portals and discharge summaries are predominantly published in English or complex clinical jargon that vernacular citizens cannot decipher. | Misunderstood dosages, skipped prescriptions, and fear of engaging formal medical institutions. |
-| **Economic Toxicity** | High out-of-pocket expenditure driven by proprietary branded medications when equivalent bioidentical generic alternatives exist at 70-90% lower costs. | Discontinued chronic therapies (diabetes, hypertension) due to unaffordable recurring monthly bills. |
-| **Triage Overcrowding** | Primary and secondary clinics are overwhelmed with mild cases, while critical patients endure long wait times without prior vitals assessment. | ER physician burnout, diagnostic delays, and compromised patient outcomes. |
-| **Epidemic Blindspots** | Disease outbreaks (Dengue, Malaria, Waterborne enteric illnesses) are tracked retrospectively weeks after index cases propagate through neighborhoods. | Slow civic containment, reactive pesticide fogging, and avoidable secondary infection waves. |
+HealthGrid is live and operational across global edge endpoints:
+
+| Endpoint | Link | Status | Primary Purpose |
+| :--- | :--- | :--- | :--- |
+| **Main App** | [healthgrid-app.vercel.app](https://healthgrid-app.vercel.app) | `200 OK` | Primary public web application |
+| **Secondary Mirror** | [healthgrid-nu.vercel.app](https://healthgrid-nu.vercel.app) | `200 OK` | High-availability fallback mirror |
+| **Live Stream Edge** | [healthgrid-live.vercel.app](https://healthgrid-live.vercel.app) | `200 OK` | Real-time audio and video consultations |
+| **Global Network** | [healthgrid-network.vercel.app](https://healthgrid-network.vercel.app) | `200 OK` | Emergency hospital network and radar |
 
 ---
 
-## 💡 The HealthGrid Solution
+## 🎯 Real-World Problems & How HealthGrid Solves Them
 
-HealthGrid transforms healthcare delivery into a decentralized, intelligent, and instantaneous grid:
-
-1. **Autonomous Vernacular Clinical Triage (DocBot™):**
-   - Natural language clinical consultation in Tamil, Tanglish, and English powered by deep reasoning models (`GPT-OSS 120B` on Groq LPU and `Gemini 2.0 Flash`).
-   - Standardized triage risk stratification (🔴 Critical Red, 🟠 Urgent Amber, 🟡 Intermediate Yellow, 🟢 Routine Green).
-
-2. **Zero-Latency 108 Emergency Telemetry:**
-   - One-tap browser GPS coordinate acquisition with dynamic reverse geocoding.
-   - Live simulated ETA tracking, distance calculation, priority trauma dispatch, and direct telephone patching.
-
-3. **Geospatial Proximity Radar:**
-   - Interactive high-definition Leaflet & CARTO GIS basemap plotting 24/7 emergency trauma centers, Jan Aushadhi generic pharmacies, and primary healthcare clinics within a 15km perimeter.
-
-4. **Jan Aushadhi Generic Price Parity Engine:**
-   - Computer vision OCR and text analysis mapping high-cost branded drugs to Government of India Pradhan Mantri Bhartiya Janaushadhi Pariyojana (PMBJP) equivalents, detailing 70–88% cost savings.
-
-5. **Local-First Zero-Trust Patient Vault:**
-   - Synchronized medical profile securely backed by Supabase with client-side local caching, storing allergies, blood groups, and dynamic emergency contacts.
-
-6. **Predictive Syndromic Epidemiology Radar:**
-   - Spatial disease monitoring correlating live monsoon advisories, vector-borne outbreaks, and waterborne contagion clusters with citizen hazard reporting.
+| Problem | Real-World Challenge | The HealthGrid Solution |
+| :--- | :--- | :--- |
+| **Heavy Medical Jargon** | Medical advice and lab reports are packed with Latin terms (*antipyretic*, *dyspnea*, *gastroenteritis*) that everyday patients cannot understand. | **Plain Language Engine:** Automatically translates medical words into simple 6th-grade language (*fever medicine*, *breathing trouble*, *stomach upset*) with warm, direct doctor bedside manner and zero markdown asterisks (`*` or `**`). |
+| **Spelling Mistakes & Tanglish** | Patients often search with phonetic spellings (*"paracitamol"*, *"doloo"*, *"shuger"*) or local Tamil terms (*"mandai idi"*, *"nenjerichal"*). | **Phonetic & Fuzzy Matcher:** Automatically detects and connects misspellings, colloquial slang, and missing letters to standardized medicines and verified clinical guidelines. |
+| **Expensive Branded Medicines** | Families spend high amounts every month on branded medications when identical generic versions exist at a fraction of the cost. | **Verified Generic Price Engine:** Automatically searches Government Jan Aushadhi (PMBJP) catalogues, detailing exact savings (50% to 90% lower cost) with real per-tablet prices. |
+| **Messy Doctor Handwriting** | Patients struggle to read handwritten prescriptions, leading to wrong dosages or skipped medications. | **4-Tier Vision Cascade:** Combines Google Gemini, Groq, NVIDIA NIM, and specialized handwriting models to read prescriptions, confirm doses, and show medicines in an interactive viewer. |
+| **Phone Touch Freezes** | Uploading images or opening menus on mobile phones often locks screen scrolling, frustrating patients during emergencies. | **Universal Touch Unlocking:** Clean, native phone touch handling that prevents screen locking, removes clunky scroll traps, and auto-focuses action buttons. |
+| **Caring for Dependents** | Elderly parents or young children often don't have separate mobile phones or email accounts to access digital health tools. | **Family Multi-Profile Hub:** Manage up to 7 family members under one account, consult on their behalf with personalized age-appropriate dosing, and book hospital tokens. |
 
 ---
 
 ## 🏗️ System Architecture
 
+HealthGrid connects patients, clinical AI models, and real-world hospitals in real time:
+
 ```mermaid
 flowchart TB
-    subgraph Client ["Client Presentation Tier (Vite + React 19 + TypeScript)"]
-        UI["Tailwind CSS v4 UI + Lenis Smooth Scroll"]
-        Mascot["DocBot 3D Autonomous Clinical Avatar"]
-        GIS["Leaflet + CARTO Spatial Radar Engine"]
-        Vault["Encrypted Local Medical Cache"]
+    subgraph Users [" Everyday Citizens & Families "]
+        Mobile["📱 Mobile Phone (Touch-First PWA)"]
+        Desktop["💻 Desktop & Kiosks"]
     end
 
-    subgraph CDN ["Edge Gateway & CDN Tier"]
-        Vercel["Vercel Global Edge Network"]
-        SPA["SPA Rewrite & Compression Engine"]
+    subgraph Edge [" Global Edge Delivery (Vercel) "]
+        Router["Zero-Redirect Routing & Compression"]
     end
 
-    subgraph AI_Inference ["Ultra-Low Latency Clinical AI Tier"]
-        Groq["Groq Cloud LPU (GPT-OSS 120B / Qwen 3.8)"]
-        Gemini["Google DeepMind (Gemini 2.0 Flash)"]
+    subgraph ClientCore [" Browser Client Core (React 19 + TypeScript) "]
+        Chat["AI Doctor Consultation (DocBot)"]
+        Fuzzy["Phonetic Fuzzy Normalizer (Levenshtein + Soundex)"]
+        InteractivePills["Interactive Action Pills & Checklists"]
+        Audio["Tamil & English Speech Synthesis"]
+        VisionViewer["Prescription Lightbox & Regimen Editor"]
     end
 
-    subgraph Backend_Tier ["Enterprise Core Backend (Java 21 + Spring Boot 3)"]
-        SpringWS["Spring WebSocket (STOMP Live Telemetry)"]
-        Security["Spring Security 6 + JWT RBAC"]
-        Loom["Project Loom Virtual Thread Pool (100k+ Concurrency)"]
-        TriageAPI["Clinical Triage & Decision Engine"]
-        AmbulanceAPI["108 GPS Telemetry & Dispatch Service"]
-        OutbreakAPI["Epidemiology & Hazard Ingestion Engine"]
+    subgraph KnowledgeTier [" Grounded Clinical Knowledge Bases "]
+        RAG["Hybrid Vector RAG (<2ms Cosine Search)"]
+        PMBJP[("Jan Aushadhi Generic Prices (PMBJP)")]
+        ICMR[("ICMR Treatment Guidelines & Dosage Protocols")]
+        Casualty[("Tamil Nadu 24/7 Government Casualty Centers")]
+        Vault[("Patient Baseline Vitals & Allergies")]
     end
 
-    subgraph Data_Tier ["Persistence & Cloud Infrastructure (Supabase)"]
-        Auth["Supabase GoTrue Auth (Google, Apple, Passwordless)"]
-        Postgres[("Supabase PostgreSQL (PostGIS Geospatial DB)")]
-        Realtime["PostgreSQL WAL Realtime Broadcast"]
+    subgraph AICascade [" Multi-Model Clinical Intelligence "]
+        Groq["Groq Cloud LPU (Ultra-Fast Text & Triage)"]
+        Gemini["Google Gemini 3.8 (Multimodal Vision & Audio)"]
+        Nvidia["NVIDIA NIM (High-Precision Handwriting Vision)"]
+        HF["Hugging Face TrOCR (Doctor Handwriting Specialist)"]
     end
 
-    UI --> Vercel
-    Vercel --> SPA
-    UI -->|Low-latency Streaming Triage| Groq
-    UI -->|Multimodal Vision & Fallback| Gemini
-    UI -->|Auth & Sync| Auth
-    UI -->|State Hydration| Postgres
-    UI <-->|Live Ambulance Telemetry| SpringWS
-    SpringWS --> Loom
-    Loom --> AmbulanceAPI
-    TriageAPI --> Postgres
-    OutbreakAPI --> Postgres
-    Postgres --> Realtime
-    Realtime -.->|Live Outbreak Alert| UI
+    subgraph DatabaseTier [" Secure Cloud Platform (Supabase) "]
+        Auth["Patient & Dependent Auth"]
+        Postgres[("PostgreSQL Database (RLS Encrypted)")]
+        Realtime["Live Emergency Alerts & Vitals Stream"]
+    end
+
+    Users --> Edge --> ClientCore
+    ClientCore --> Fuzzy --> RAG
+    RAG --> PMBJP & ICMR & Casualty & Vault
+    RAG --> AICascade
+    ClientCore --> DatabaseTier
 ```
 
 ---
 
-## ⚡ Key Capabilities & Clinical Modules
+## ⚡ Key Features
 
-### 1. DocBot™ — Autonomous Vernacular Clinical Avatar
-- **Native Dual-Language Comprehension:** Seamlessly converses in formal Tamil, casual colloquial Tanglish (*"Enakku 2 days-ah fever and thalaivali irukku"*), and clinical English.
-- **Dynamic Reasoning Visualization:** Visual jump-dot thinking state during model deliberation.
-- **Emergency Invariant Enforcement:** Instantly triggers high-visibility SOS alert cards when cardiac red flags or stroke indicators are detected.
+### 1. DocBot™ — Plain-Language AI Doctor & Triage
+- **Direct to the Point:** Answers right away without robotic greetings or filler words (*"I understand your concern and I am here to help you"* is completely eliminated).
+- **Targeted Follow-Up:** Asks at most 1 or 2 targeted questions at a time so patients never feel overwhelmed by a lengthy survey.
+- **Zero Asterisks & Clean Layout:** Deterministically removes all `*` and `**` symbols so messages display cleanly without ugly formatting marks.
+- **Language Mirroring:** Responds fluently in English, conversational Tanglish, or pure spoken Tamil based on how the patient talks.
 
-### 2. 108 Emergency Ambulance Telemetry
-- **Instant Geolocation:** Automatically captures latitude and longitude via high-accuracy HTML5 Geolocation API.
-- **Dynamic ETA Dispatch:** Computes real-time traffic-adjusted arrival projections and assigns unit call signs.
-- **Live Handover Protocol:** Generates a structured triage note for the incoming paramedic team with vitals, reported trauma, and blood group.
+### 2. Interactive Choosing Options & Direct Platform Shortcuts
+Below each doctor response, patients receive interactive single-tap buttons and checklists:
+- **Single-Tap Follow-Up Pills:** Quick answers to keep the conversation flowing smoothly with 1 tap.
+- **Direct Action Shortcuts:**
+  - `🚨 Call 108 Emergency` — Instantly calls 108 or opens ambulance dispatch.
+  - `🏥 Find Nearest Hospital` — Locates nearby 24/7 trauma centers and government casualty wards.
+  - `💊 Locate Jan Aushadhi Kendra` — Opens the low-cost generic medicine store.
+  - `📹 Start Live Video Doctor` — Launches face-to-face video consultation.
+  - `🩺 Record Today's Vitals` — Opens the blood pressure and glucose logging hub.
+- **Multi-Select Symptom Checklists:** Select multiple symptoms and tap `Send Selected (N) →` for faster, accurate triage.
+- **Auditory Guidance (Listen Button):** Patients can tap `[ 🔊 Listen ]` to hear options read aloud in English or Tamil.
 
-### 3. Geospatial Healthcare Radar
-- **Multi-Category Filtering:** Filter between 24/7 Trauma Hospitals, Jan Aushadhi Generic Pharmacies, and Pediatric/Maternity Clinics.
-- **Route Planning:** One-click launch to turn-by-turn navigation via Google Maps or OpenStreetMap directions.
+### 3. Prescription Scanner & Medicine Comparison
+- **Photograph Any Prescription:** Take a photo or upload an image of a doctor prescription.
+- **4-Tier Vision Intelligence:** Automatically detects medicine names, exact strengths (mg), frequency (morning/night), and instructions (before/after food).
+- **Generic Price Savings:** Shows certified Jan Aushadhi generic alternatives side-by-side with commercial brand prices, highlighting 50% to 90% savings.
+- **Safety Checks:** Warns against potential drug allergies and checks safe doses for children and elderly patients.
+- **Export Tools:** Export your daily schedule to WhatsApp, add Google Calendar medication alarms, or set 30-day refill reminders.
 
-### 4. Jan Aushadhi Medicine Price Matcher
-- **Instant Cost Reduction:** Shows branded vs generic prices side-by-side (e.g., Crocin 650mg branded ₹32 vs Paracetamol 650mg generic ₹4.50).
-- **Quality Assurance Verification:** Explains WHO-GMP certification standards to dispel myths regarding generic efficacy.
+### 4. 108 Emergency Response & Hospital Radar
+- **Instant GPS Location:** Captures emergency coordinates in 1 click.
+- **Paramedic Handover Summary:** Creates a clean summary of patient vitals, symptoms, and allergies ready for incoming ambulance staff.
+- **24/7 Hospital Map:** Live map showing distances to nearby government general hospitals, specialty centers, and generic pharmacies.
 
----
-
-## 🛠️ Tech Stack Breakdown
-
-### Frontend Platform
-- **Framework:** React 19.x with TypeScript 6
-- **Build System:** Vite 8.x
-- **Styling:** Tailwind CSS v4.x with PostCSS
-- **Animation & Kinetics:** Lenis v1.3 (Inertial Smooth Scrolling) & GSAP
-- **Mapping & GIS:** Leaflet 1.9 with CARTO Voyager Raster Tiles
-- **Icons:** Lucide React
-
-### Backend Platform
-- **Framework:** Spring Boot 3.3.x on Java 21 (LTS)
-- **Concurrency:** Project Loom Virtual Threads (`spring.threads.virtual.enabled=true`)
-- **Security:** Spring Security 6 with stateless JWT verification
-- **Persistence:** Spring Data JPA with Hibernate & HikariCP connection pool
-- **Realtime Comms:** Spring WebSocket with STOMP message broker
-
-### Cloud, Data & AI
-- **Database:** Supabase Managed PostgreSQL with PostGIS extensions
-- **Authentication:** Supabase GoTrue (Google OAuth 2.0, Apple ID, Magic Link)
-- **AI Inference (Primary):** Groq LPU Cloud (`openai/gpt-oss-120b`, `qwen/qwen3.8-27b`)
-- **AI Inference (Multimodal):** Google Gemini (`gemini-2.0-flash`)
-- **Hosting:** Vercel Global Edge Network
+### 5. Family & Caregiver Multi-Profile Hub
+- **Add Loved Ones:** Register children, parents, spouses, or grandparents under your account.
+- **Custom Health IDs:** Each family member gets a unique HealthGrid ID (`HG-FAM-XXXX`).
+- **Caregiver Consultation:** DocBot automatically tailors dosages and warnings based on whether you are consulting for an infant, an adult, or an elderly parent.
 
 ---
 
-## 📂 Repository Structure
+## 📱 Prescription Post-Scan & Regimen Workflow
 
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Patient as 👤 Patient / Caregiver
+    participant UI as 📱 Prescription Modal
+    participant OCR as 👁️ 4-Tier Multimodal Vision
+    participant Engine as 💊 Pharmacology & PMBJP Engine
+    participant Vault as 🗄️ Health Vault
+
+    Patient->>UI: Upload prescription photo
+    UI->>OCR: Run handwriting recognition
+    OCR->>Engine: Match extracted medicine tokens
+    Engine->>Engine: Verify generic alternative & calculate 50-90% savings
+    Engine->>UI: Return structured medicines (Dose, Frequency, When to take)
+    UI->>Patient: Display interactive document canvas & medicine list
+    Patient->>UI: Review, edit doses, or tap "Save to Health Profile"
+    UI->>Vault: Save medications to patient timeline
 ```
-Health-Grid/
-├── backend/                               # Enterprise Spring Boot 3 Application
-│   ├── src/main/java/com/healthgrid/
-│   │   ├── auth/                          # User Authentication & RBAC
-│   │   ├── config/                        # SecurityConfig & WebSocketConfig
-│   │   ├── emergency/                     # 108 Ambulance Dispatch & Telemetry
-│   │   ├── epidemiology/                  # Outbreak Tracking & Citizen Hazard Reports
-│   │   ├── prescription/                  # Generic Medicine & Jan Aushadhi Repository
-│   │   └── triage/                        # Clinical Triage Service & DTOs
-│   ├── src/main/resources/
-│   │   └── application.yml                # Spring Boot Config & Loom Virtual Threads
-│   └── pom.xml                            # Maven Dependencies
-│
-├── frontend/                              # React 19 + TypeScript + Tailwind v4 SPA
-│   ├── public/
-│   │   ├── insights/                      # Public Health Infographics
-│   │   ├── Logo.png                       # Official HealthGrid Brand Asset
-│   │   ├── robots.txt                     # SEO Crawler Rules
-│   │   └── sitemap.xml                    # Production XML Sitemap
-│   ├── src/
-│   │   ├── components/                    # Modular React UI Components
-│   │   │   ├── FindCareNearYou.tsx        # Leaflet + CARTO Geospatial Map
-│   │   │   ├── FloatingDoctorMascot.tsx   # Interactive Rigged DocBot Avatar
-│   │   │   ├── VoiceChatModal.tsx         # Multilingual Voice & AI Triage Modal
-│   │   │   ├── AmbulanceModal.tsx         # 108 Emergency Dispatch Engine
-│   │   │   ├── PrescriptionModal.tsx      # Jan Aushadhi Generic Medicine Engine
-│   │   │   ├── ProfilePage.tsx            # Patient Medical Vault & Emergency Contacts
-│   │   │   └── SkeletonLoader.tsx         # Shimmer Loading Suites
-│   │   ├── services/
-│   │   │   ├── aiService.ts               # Groq LPU & Gemini AGI Clinical Inference
-│   │   │   ├── authService.ts             # Supabase Auth Bridge & Profiles
-│   │   │   ├── lenisService.ts            # Lenis Smooth Scrolling Singleton
-│   │   │   └── supabaseClient.ts          # Supabase Client Initialization
-│   │   ├── App.tsx                        # Root Application Layout & State
-│   │   └── index.css                      # Tailwind v4 Directives & Custom Shimmer
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── vercel.json                        # Frontend SPA Routing Configuration
-│
-├── .env.example                           # Root Environment Template
-├── .gitignore                             # Strict Clean Tracking Exclusions
-├── vercel.json                            # Monorepo Zero-Config Vercel Build Rule
-└── README.md                              # Project Documentation
-```
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technologies Used | Key Purpose |
+| :--- | :--- | :--- |
+| **Frontend Framework** | React 19.x, TypeScript 6.x | Fast, modern client application with complete type safety |
+| **Build & Tooling** | Vite 8.x, Oxlint | Sub-second local builds and optimized production bundling |
+| **Styling & Motion** | Tailwind CSS v4.x, Lucide Icons, GSAP | Clean, responsive design with smooth touch interactions |
+| **Maps & GIS** | Leaflet 1.9, CARTO Voyager Tiles | Lightweight geospatial mapping of hospitals and pharmacies |
+| **Database & Auth** | Supabase PostgreSQL, Row-Level Security (RLS) | Encrypted patient records and real-time synchronization |
+| **Primary AI Inference** | Groq LPU (`qwen/qwen3.8-27b`, `gpt-oss-120b`) | Ultra-fast conversational doctor inference with sub-second replies |
+| **Vision & Audio AI** | Google Gemini (`gemini-3.8-flash`), Sarvam AI | Handwriting deciphering and natural Indian speech synthesis |
+| **Deployment & CDN** | Vercel Global Edge Network | Instant worldwide deployment with automatic HTTPS |
+
+---
+
+## 🧠 Architecture Decisions (ADRs) & Second Brain
+
+HealthGrid maintains a complete engineering and architectural Second Brain located in `brain/`. Every major technical choice is documented as an **Architecture Decision Record (ADR)**:
+
+| ADR | Title | Key Architectural Focus |
+| :--- | :--- | :--- |
+| **ADR-024** | [Interactive Chat RAG, Fuzzy Grounding & Zero-Jargon](brain/decisions/ADR-024-Interactive-Chat-RAG-Fuzzy-Grounding-and-Zero-Jargon.md) | Fuzzy typo matching, hybrid RAG, zero-asterisk hygiene, plain language, and single/multi-choice action pills |
+| **ADR-023** | [Platform-Wide Grounding & Formulary Truth](brain/decisions/ADR-023-Platform-Data-Grounding-and-Formulary-Truth-Engine.md) | Elimination of mock credentials, authentic session vitals, and statutory 50%–90% PMBJP price savings |
+| **ADR-022** | [Mobile Prescription Scroll Lock & Touch Resolution](brain/decisions/ADR-022-Prescription-Modal-Mobile-Scroll-Lock-and-Lenis-Prevention.md) | Resolution of mobile touch freezes and smooth native scrolling across phone screens |
+| **ADR-021** | [Persistent Unified Header Throughout Consultations](brain/decisions/ADR-021-Persistent-Header-Navbar-Throughout-Chat-Tab.md) | Always-visible navigation and streamlined consultation session management |
+| **ADR-020** | [Post-Scan Prescription UI & Interactive Viewer](brain/decisions/ADR-020-Prescription-Post-Scan-UI-Redesign-and-Interactive-Viewer.md) | Side-by-side prescription viewer, 4-column metadata pills, and WhatsApp/Calendar exports |
+| **ADR-019** | [Clinical Pharmacology Engine & Formulary Matching](brain/decisions/ADR-019-Clinical-Pharmacology-Engine-Formulary-Grounding-and-Context-Matching.md) | Matching smudged handwriting with Indian Pharmacopoeia standards and safety checks |
+| **ADR-018** | [4-Tier Multimodal Prescription Vision Cascade](brain/decisions/ADR-018-Top-Tier-Multimodal-Prescription-Vision-and-HTR-Cascade.md) | Multi-model fallback (Gemini, Groq, NVIDIA NIM, TrOCR) for doctor handwriting |
+| **ADR-016** | [Autonomous Hybrid Vector RAG Engine](brain/decisions/ADR-016-Autonomous-Hybrid-Vector-RAG-and-Ambient-Clinical-Automations.md) | Sub-2ms vector search over PMBJP formulary, ICMR protocols, and casualty hospitals |
+| **ADR-015** | [Vernacular Speech & Conversation Continuity](brain/decisions/ADR-015-Vernacular-Speech-and-Conversational-Continuity.md) | Tanglish normalization, dual-stream speech, and no repeated greetings in ongoing chats |
+| **ADR-011** | [Family & Beneficiary Multi-Profile System](brain/decisions/ADR-011-Family-and-Beneficiary-MultiProfile-System.md) | ABDM-compliant caregiver profile switching for dependents and children |
+
+*To explore the interactive knowledge graph, open `brain/` as a vault in [Obsidian](https://obsidian.md).*
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- **Node.js:** `v20.x` or higher
-- **npm:** `v10.x` or higher
-- **Java JDK:** `21` (for running the backend)
-- **Maven:** `3.9+` (for compiling the backend)
+Follow these simple steps to run HealthGrid on your local machine:
 
 ### 1. Clone the Repository
 ```bash
@@ -237,85 +221,48 @@ cd Health-Grid
 ```
 
 ### 2. Configure Environment Variables
-Copy `.env.example` to `frontend/.env`:
-```bash
-cp .env.example frontend/.env
-```
-Populate the values in `frontend/.env`:
-```env
-# Supabase Realtime Database & Auth
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# CARTO Leaflet Basemaps
-VITE_CARTO_API_KEY=your_carto_api_key
-
-# Clinical AI Engines (Groq & Gemini)
-VITE_GEMINI_API_KEY=your_gemini_api_key
-VITE_GROQ_API_KEY=your_groq_api_key
-```
-
-### 3. Launch Frontend Development Server
+Create a `.env` file inside the `frontend` folder:
 ```bash
 cd frontend
+cp .env.example .env
+```
+Ensure your `.env` contains valid credentials:
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_GEMINI_API_KEY=your_gemini_api_key
+VITE_GROQ_API_KEY=your_groq_api_key
+VITE_CARTO_API_KEY=your_carto_api_key
+```
+
+### 3. Install & Start Development Server
+```bash
 npm install
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open [http://localhost:5173](http://localhost:5173) in your web browser.
 
-### 4. Launch Backend (Optional / Local Telemetry)
+### 4. Build for Production
+To verify that everything compiles without errors:
 ```bash
-cd backend
-mvn clean spring-boot:run
-```
-The Spring Boot backend initializes on port `8080` with Project Loom virtual thread support.
-
----
-
-## 🌐 Live Production Deployments
-
-The platform is actively deployed on the Vercel Global Edge Network:
-
-- **Primary Production:** [https://healthgrid-app.vercel.app](https://healthgrid-app.vercel.app)
-- **Live Stream Edge:** [https://healthgrid-live.vercel.app](https://healthgrid-live.vercel.app)
-- **Global Network Radar:** [https://healthgrid-network.vercel.app](https://healthgrid-network.vercel.app)
-
----
-
-## 🛠️ Vercel Deployment & Setup
-   - **Framework Preset:** `Vite` (automatically detected).
-   - **Root Directory:** Leave as `./` (or select `frontend`).
-4. Expand **Environment Variables** and add the following 5 keys:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-   - `VITE_CARTO_API_KEY`
-   - `VITE_GEMINI_API_KEY`
-   - `VITE_GROQ_API_KEY`
-5. Click **Deploy**. Vercel will run `cd frontend && npm install && npm run build` and publish your edge deployment.
-
-### Option B: Via Vercel CLI
-```bash
-npm install -g vercel
-vercel login
-vercel --prod
+npm run build
 ```
 
 ---
 
-## 🔒 Security, Compliance & Data Sovereignty
+## 🔒 Privacy, Security & Data Protection
 
-- **Zero-Storage PII by Default:** Patient triage conversations are processed in-memory and are never stored on external LLM provider servers for training.
-- **Client-Side Sensitive Vault:** Emergency contacts and medical history are encrypted and stored in local device storage, synchronized to Supabase with Row Level Security (RLS) policies.
-- **Defensive API Scoping:** All critical service role keys and database admin passwords remain strictly isolated from client-facing Vite bundles.
+- **No Medical Data Selling:** Patient health data is never sold or used for ad targeting.
+- **Local-First Sensitive Storage:** Emergency contacts and vitals are encrypted on device and securely synchronized via Supabase PostgreSQL Row Level Security (RLS).
+- **Secure AI Communication:** Consultations are processed in real time and are not used to train public language models.
+- **DPDP Act 2023 Compliant:** Full patient data sovereignty, allowing users to export or delete their consultation records and beneficiary links at any time.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for full details.
-
----
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 <div align="center">
-  <sub>Built with ❤️ for accessible, transparent, and resilient community healthcare.</sub>
+  <sub>Built with ❤️ for accessible, transparent, and resilient community healthcare in India and Tamil Nadu.</sub>
 </div>
