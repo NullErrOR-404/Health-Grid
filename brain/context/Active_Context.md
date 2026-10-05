@@ -16,9 +16,9 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `2a44ffd` (`feat(prescription): redesign post-scan clinical viewer UI matching reference with 2-column layout and mobile responsiveness (ADR-020)`)
+- **Latest Commit**: `7047552` (`feat(navigation): maintain persistent header and navbar across Chat tab with streamlined sessions sidebar (ADR-021)`)
 - **Vercel Production Deployment**: Verified Live (200 OK across all 4 production aliases)
-- **Deployment URL**: `https://frontend-kposoikj2-sameen14nmofficial-8826s-projects.vercel.app`
+- **Deployment URL**: `https://frontend-meikgatls-sameen14nmofficial-8826s-projects.vercel.app`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
