@@ -23,17 +23,26 @@ html.lenis-stopped, html.lenis-stopped body {
 }
 
 /* Ensure data-lenis-prevent containers contain their own overscroll and maintain fluid touch scrolling */
-[data-lenis-prevent] {
+[data-lenis-prevent],
+[data-lenis-prevent="true"] {
   overscroll-behavior: contain !important;
   -webkit-overflow-scrolling: touch !important;
 }
 
 html.lenis-stopped [data-lenis-prevent],
+html.lenis-stopped [data-lenis-prevent="true"],
 body [data-lenis-prevent],
+body [data-lenis-prevent="true"],
+[data-lenis-prevent],
 [data-lenis-prevent="true"] {
   touch-action: pan-y !important;
   overscroll-behavior: contain !important;
   -webkit-overflow-scrolling: touch !important;
+}
+
+html.lenis-stopped [data-lenis-prevent].overflow-y-auto,
+html.lenis-stopped [data-lenis-prevent="true"].overflow-y-auto {
+  overflow-y: auto !important;
 }
 
 /* Smooth kinetic scrolling optimization */

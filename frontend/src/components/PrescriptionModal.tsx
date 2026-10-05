@@ -551,8 +551,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className={`relative w-full h-full sm:h-auto sm:max-h-[94vh] ${analysisResult && !isAnalyzing ? 'sm:max-w-6xl lg:max-w-7xl' : 'sm:max-w-5xl'} bg-[#F8FAFC] rounded-none sm:rounded-[28px] shadow-2xl border-none sm:border border-slate-200/90 flex flex-col overflow-hidden transition-all duration-300`}>
+    <div data-lenis-prevent="true" className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div data-lenis-prevent="true" className={`relative w-full h-[100dvh] sm:h-auto sm:max-h-[94vh] max-h-[100dvh] ${analysisResult && !isAnalyzing ? 'sm:max-w-6xl lg:max-w-7xl' : 'sm:max-w-5xl'} bg-[#F8FAFC] rounded-none sm:rounded-[28px] shadow-2xl border-none sm:border border-slate-200/90 flex flex-col overflow-hidden transition-all duration-300`}>
         
         {/* Hidden Canvas for High-Resolution Capture */}
         <canvas ref={canvasRef} className="hidden" />
@@ -640,7 +640,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         )}
 
         {/* MODAL BODY */}
-        <div className="p-5 sm:p-7 overflow-y-auto flex-1 space-y-6">
+        <div data-lenis-prevent="true" className="p-4 sm:p-7 overflow-y-auto flex-1 space-y-6 overscroll-contain touch-pan-y pb-28 sm:pb-8 safe-area-pb">
 
           {/* ERROR ALERT BANNER */}
           {errorMsg && (
@@ -889,7 +889,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 touch-pan-x overscroll-contain">
                       {capturedPages.map((pageData, idx) => (
                         <div
                           key={idx}
@@ -1211,7 +1211,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                   </div>
 
                   {/* Prescription Preview Viewport */}
-                  <div className="relative w-full aspect-[4/3] sm:aspect-[1/1] max-h-[480px] bg-slate-100/70 border border-slate-200/80 rounded-2xl overflow-hidden flex items-center justify-center p-3 select-none group">
+                  <div className="relative w-full aspect-[4/3] sm:aspect-[1/1] max-h-[480px] bg-slate-100/70 border border-slate-200/80 rounded-2xl overflow-hidden flex items-center justify-center p-3 select-none group touch-pan-y">
                     {capturedPages.length > 0 ? (
                       <img
                         src={capturedPages[activePageIndex]}
@@ -1825,8 +1825,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
           {/* EDIT ALL MEDICINES MODAL SHEET */}
           {isEditAllOpen && analysisResult && (
-            <div className="fixed inset-0 z-60 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-              <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+            <div data-lenis-prevent="true" className="fixed inset-0 z-60 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+              <div data-lenis-prevent="true" className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Edit3 className="w-4 h-4 text-[#0F766E]" />
@@ -1843,7 +1843,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                   </button>
                 </div>
 
-                <div className="p-5 overflow-y-auto space-y-4 flex-1">
+                <div data-lenis-prevent="true" className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 overscroll-contain touch-pan-y">
                   {tempMedicines.map((m, idx) => (
                     <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
                       <div className="font-extrabold text-[#0F766E]">
@@ -1929,7 +1929,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
           {/* LIGHTBOX FULLSCREEN PREVIEW MODAL */}
           {isLightboxOpen && (
-            <div className="fixed inset-0 z-60 bg-slate-950/90 backdrop-blur-md flex flex-col p-4 sm:p-6 animate-in fade-in duration-200">
+            <div data-lenis-prevent="true" className="fixed inset-0 z-60 bg-slate-950/90 backdrop-blur-md flex flex-col p-4 sm:p-6 animate-in fade-in duration-200">
               <div className="flex items-center justify-between text-white pb-3 border-b border-white/10">
                 <div className="font-extrabold text-sm sm:text-base">
                   Prescription Inspection Lightbox
@@ -1966,7 +1966,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                 </div>
               </div>
 
-              <div className="flex-1 flex items-center justify-center overflow-auto p-4 select-none">
+              <div data-lenis-prevent="true" className="flex-1 flex items-center justify-center overflow-auto p-4 select-none touch-pan-y">
                 {capturedPages.length > 0 ? (
                   <img
                     src={capturedPages[activePageIndex]}
