@@ -16,7 +16,7 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `947583e` (`feat(ai-credentials): configure verified 4-tier multimodal vision cascade (Gemini, Groq, NVIDIA NIM, HF TrOCR)`)
+- **Latest Commit**: `ebf3417` (`feat(prescription): purge mock data, enable catalog matching and dynamic confidence scoring`)
 - **Vercel Production Deployment**: Verified Live (200 OK)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
