@@ -15,9 +15,9 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Current System State
-- **Git Branch**: `main`
-- **Latest Commit**: `ebf3417` (`feat(prescription): purge mock data, enable catalog matching and dynamic confidence scoring`)
-- **Vercel Production Deployment**: Verified Live (200 OK)
+- **Git Branch**: `main`- **Latest Commit**: `f5e277b` (`docs(brain): record ADR-019 Clinical Pharmacology Engine in Second Brain`)
+- **Vercel Production Deployment**: Verified Live (200 OK across all 4 production aliases)
+- **Deployment URL**: `https://healthgrid-p34lhsxox-sameen14nmofficial-8826s-projects.vercel.app`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
 - **Live Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK)
@@ -49,9 +49,9 @@ Back to [[00_Index]]
 - [x] Architected Vernacular Speech Engine, Tanglish Normalization, and Multi-Turn Conversation Continuity (ADR-015): Engineered dual-stream speech recognition combining 0ms Web Speech interim visual feedback with Groq Whisper Large-v3-Turbo clinical Indic prompting; created `TanglishNormalizer` dictionary translating regional colloquialisms (*"mandai idi"*, *"udambu soodu"*, *"nenjerichal"*, *"asathi"*) to clinical entities and emergency triage flags; and enforced the Conversation Continuity Protocol banning repeated greetings (*"Hello"*, *"Vanakkam"*) in mid-consultation turns with an expanded 8-turn clinical context window (see [[ADR-015-Vernacular-Speech-and-Conversational-Continuity]]).
 - [x] Architected Autonomous Hybrid Vector RAG and Ambient Clinical Automations (ADR-016): Built `vectorRagService.ts` executing <2ms continuous semantic embedding vector calculations and cosine similarity matching across 4 clinical knowledge domains (Jan Aushadhi PMBJP generic formulary with price savings, ICMR/NVBDCP clinical protocols, Tamil Nadu 24/7 casualty centers, and Patient Longitudinal Vault); integrated ambient behind-the-scenes automations in `aiService.ts` (1-click SBAR Doctor Handover brief generator, Jan Aushadhi pharmacy substitute savings slip calculator, and proactive 24h care-loop recovery tracker) with ZERO UI CLUTTER or extra buttons as mandated (see [[ADR-016-Autonomous-Hybrid-Vector-RAG-and-Ambient-Clinical-Automations]]).
 - [x] Architected Clinical Pharmacology Engine, Formulary Grounding, and Patient Context Matching (ADR-019): Built `ClinicalPharmacologyEngine` in `prescriptionAiService.ts` matching prescription tokens against authentic Indian Pharmacopeia formulations and Jan Aushadhi (PMBJP) catalogues; grounds smudged dosages into registered market strengths; checks patient age (pediatric vs adult), recorded allergies, and drug-food interactions; surfaces mild passive safety advisories without blocking user checkout; and consolidates multi-page medications into a deduplicated daily regimen (see [[ADR-019-Clinical-Pharmacology-Engine-Formulary-Grounding-and-Context-Matching]]).
+- [x] Deployed production build to Vercel and verified on all 4 live production aliases (`healthgrid-app.vercel.app`, `healthgrid-nu.vercel.app`, `healthgrid-live.vercel.app`, `healthgrid-network.vercel.app`) with HTTP 200 OK.
 
 ## In-Flight / Next Focus
-- [ ] Deploy production build to Vercel and verify on all 4 live production aliases (`healthgrid-app.vercel.app`, etc.).
 - [ ] Submit Google Cloud Console OAuth consent screen for production branding verification.
 - [ ] Monitor Google Search Console indexing and crawler telemetry.
 - [ ] Real-time updates to this Second Brain whenever new clinical features or architectural modifications ship.
