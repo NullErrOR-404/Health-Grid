@@ -230,8 +230,12 @@ class PrescriptionAiService {
           return;
         }
 
+        // Fill canvas with white background to prevent transparent PNG/PDF artifacts from turning black
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+
         // Apply adaptive contrast filter to boost cursive doctor handwriting strokes
-        ctx.filter = 'contrast(1.15) brightness(1.03)';
+        ctx.filter = 'contrast(1.18) brightness(1.02)';
         ctx.drawImage(img, 0, 0, width, height);
 
         const processedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
@@ -399,88 +403,99 @@ Return ONLY valid JSON matching this exact structure:
   "allergyWarnings": []
 }`;
 
-    const imageParts = imagesData.map((img) => ({
-      inline_data: {
-        mime_type: img.mimeType,
-        data: img.base64,
-      },
-    }));
-
-    const requestBody = {
-      contents: [
-        {
-          parts: [{ text: prompt }, ...imageParts],
+    // 1. Tier 1: Multimodal Vision with Google Gemini (Fixed inlineData & responseMimeType)
+    if (this.geminiKey && imagesData.length > 0) {
+      const imageParts = imagesData.map((img) => ({
+        inlineData: {
+          mimeType: img.mimeType,
+          data: img.base64,
         },
-      ],
-      generationConfig: {
-        temperature: 0.1,
-        response_mime_type: 'application/json',
-      },
-    };
+      }));
 
-    const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-exp'];
-    for (const model of geminiModels) {
-      if (!this.geminiKey) break;
-      try {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.geminiKey}`;
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody),
-        });
+      const requestBody = {
+        contents: [
+          {
+            parts: [{ text: prompt }, ...imageParts],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: 'application/json',
+        },
+      };
 
-        if (response.ok) {
-          const data = await response.json();
-          const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (candidateText) {
-            return this.parseAndEnrichResult(candidateText, imagesData.length);
+      const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+      for (const model of geminiModels) {
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.geminiKey}`;
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (candidateText) {
+              return this.parseAndEnrichResult(candidateText, imagesData.length);
+            }
+          } else {
+            const errText = await response.text();
+            console.warn(`Gemini Vision model ${model} HTTP ${response.status}:`, errText);
           }
+        } catch (err) {
+          console.warn(`Gemini Vision model ${model} fetch attempt caught:`, err);
         }
-      } catch (err) {
-        console.warn(`Gemini Vision model ${model} fetch attempt caught:`, err);
       }
     }
 
-    // 2. Cascade to Groq Multimodal Vision (LLaMA 3.2 Vision)
+    // 2. Tier 2: Groq Multimodal Vision (LLaMA 3.2 Vision Cascade)
     if (this.groqKey && imagesData.length > 0) {
-      try {
-        const groqImage = imagesData[0];
-        const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.groqKey}`,
-          },
-          body: JSON.stringify({
-            model: 'llama-3.2-11b-vision-preview',
-            messages: [
-              {
-                role: 'user',
-                content: [
-                  { type: 'text', text: prompt },
-                  {
-                    type: 'image_url',
-                    image_url: {
-                      url: `data:${groqImage.mimeType};base64,${groqImage.base64}`,
+      const groqModels = ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview'];
+      for (const groqModel of groqModels) {
+        try {
+          const groqImage = imagesData[0];
+          const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${this.groqKey}`,
+            },
+            body: JSON.stringify({
+              model: groqModel,
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: prompt },
+                    {
+                      type: 'image_url',
+                      image_url: {
+                        url: `data:${groqImage.mimeType};base64,${groqImage.base64}`,
+                      },
                     },
-                  },
-                ],
-              },
-            ],
-            temperature: 0.1,
-            response_format: { type: 'json_object' },
-          }),
-        });
+                  ],
+                },
+              ],
+              temperature: 0.1,
+              response_format: { type: 'json_object' },
+            }),
+          });
 
-        if (groqResponse.ok) {
-          const groqData = await groqResponse.json();
-          const groqText = groqData.choices?.[0]?.message?.content;
-          if (groqText) {
-            return this.parseAndEnrichResult(groqText, imagesData.length);
+          if (groqResponse.ok) {
+            const groqData = await groqResponse.json();
+            const groqText = groqData.choices?.[0]?.message?.content;
+            if (groqText) {
+              return this.parseAndEnrichResult(groqText, imagesData.length);
+            }
+          } else {
+            const groqErrText = await groqResponse.text();
+            console.warn(`Groq Vision model ${groqModel} HTTP ${groqResponse.status}:`, groqErrText);
           }
+        } catch (groqErr) {
+          console.warn(`Groq Vision model ${groqModel} attempt caught:`, groqErr);
         }
-      } catch (groqErr) {
-        console.warn('Groq Vision model attempt caught:', groqErr);
       }
     }
 
@@ -509,7 +524,7 @@ Extract medications, Jan Aushadhi generic equivalents, authentic price differenc
 Return ONLY valid JSON matching the exact schema with keys:
 patientName, patientAge, patientGender, patientAddress, doctorName, doctorLicenseNo, doctorPtrNo, clinicOrHospital, date, diagnosisNotes, clinicalSynergyInsight, clinicalSynergyInsightTa, medications, dosageSchedule, safetyRadar, refillCountdown, humanDoctorExplanationEn, humanDoctorExplanationTa, allergyWarnings.`;
 
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
     for (const model of modelsToTry) {
       if (!this.geminiKey) break;
       try {
@@ -519,7 +534,7 @@ patientName, patientAge, patientGender, patientAddress, doctorName, doctorLicens
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.1, response_mime_type: 'application/json' },
+            generationConfig: { temperature: 0.1, responseMimeType: 'application/json' },
           }),
         });
 
@@ -532,6 +547,33 @@ patientName, patientAge, patientGender, patientAddress, doctorName, doctorLicens
         }
       } catch (e) {
         console.warn(`structureClinicalData fetch error (${model}):`, e);
+      }
+    }
+
+    if (this.groqKey) {
+      try {
+        const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.groqKey}`,
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.1,
+            response_format: { type: 'json_object' },
+          }),
+        });
+        if (groqResponse.ok) {
+          const groqData = await groqResponse.json();
+          const groqText = groqData.choices?.[0]?.message?.content;
+          if (groqText) {
+            return this.parseAndEnrichResult(groqText, pagesCount);
+          }
+        }
+      } catch (groqErr) {
+        console.warn('structureClinicalData Groq fallback caught:', groqErr);
       }
     }
 
