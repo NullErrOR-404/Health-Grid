@@ -48,6 +48,7 @@ import {
 import { PatientManagementView } from './PatientManagementView';
 import { OpdManagementView } from './OpdManagementView';
 import { IpdBedManagementView } from './IpdBedManagementView';
+import { AppointmentsView } from './AppointmentsView';
 
 interface HospitalErpDashboardProps {
   initialHospital?: HospitalEntity;
@@ -456,6 +457,14 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
             triggerToast={triggerToast}
             onNavigateToPatientProfile={(healthId) => {
               triggerToast(`Navigating to patient Health Vault: ${healthId}`);
+            }}
+          />
+        ) : activeMenu === 'Appointments' ? (
+          <AppointmentsView
+            triggerToast={triggerToast}
+            onNavigateToOpdWithPatient={(patId) => {
+              setSelectedOpdPatientId(patId);
+              setActiveMenu('OPD Management');
             }}
           />
         ) : (

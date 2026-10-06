@@ -70,6 +70,9 @@ graph TD
     DEC --> ADR27[[ADR-027-Intelligent-Triage-Gating-and-Open-Weight-Fine-Tuning-Pipeline]]
     DEC --> ADR28[[ADR-028-Hospital-ERP-Patient-and-OPD-Management-End-to-End-Architecture]]
     DEC --> ADR29[[ADR-029-IPD-and-Bed-Management-End-to-End-Architecture]]
+    DEC --> ADR30[[ADR-030-Hospital-ERP-Appointments-Management-End-to-End-Architecture]]
+
+    MOD --> APPT[[Appointments_System_Architecture]]
 
     CTX --> ACT[[Active_Context]]
     CTX --> CRED[[Key_Credentials_and_Environments]]
@@ -137,6 +140,7 @@ graph TD
 - [[ADR-027-Intelligent-Triage-Gating-and-Open-Weight-Fine-Tuning-Pipeline]]: Elimination of false triage card auto-triggers, disconnection of AI response text from condition evaluation, strict 2-3 sentence conciseness for routine and general queries, zero-filler bedside manner, and open-weight Hugging Face/Unsloth QLoRA fine-tuning training pipeline for Meta Llama-3.3-70B and Llama-3.1-8B.
 - [[ADR-028-Hospital-ERP-Patient-and-OPD-Management-End-to-End-Architecture]]: End-to-end implementation of Patient Management and OPD Management matching clinical reference designs (`Patient management ERP Ref.png` and `OPD management ERP ref.png`), unified ABDM federated patient store with automatic HealthID generation, interactive modals for vitals, prescriptions, billing, and consultations, and bidirectional real-time synchronization across modules and personal citizen vaults.
 - [[ADR-029-IPD-and-Bed-Management-End-to-End-Architecture]]: End-to-end implementation of Inpatient Department (IPD) and Bed Management matching clinical reference design (`IPD & Bed management ref.png`), authentic PostgreSQL Supabase schema with RLS policies, 8 clinical workflows (Admit, Bed Allocation, Transfer, Discharge, Bed Status, Clinical Notes, Doctor Orders, Printable Case Sheet), real-time pub/sub synchronization, and sovereign HealthID live inpatient stay telemetry on citizen mobile profiles.
+- [[ADR-030-Hospital-ERP-Appointments-Management-End-to-End-Architecture]]: End-to-end implementation of Appointments module matching clinical reference design (`Appointments ERP ref.png`), persistent Supabase PostgreSQL `appointments` table with real-time subscriptions, bidirectional active OPD queue bridge, 8 interactive clinical modals, dynamic gauge metrics, and dedicated Citizen Mobile App booking pass and queue tracker.
 
 ---
 
