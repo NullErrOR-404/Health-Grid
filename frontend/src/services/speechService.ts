@@ -98,11 +98,11 @@ export class TanglishNormalizer {
 
 export type SpeechState = 'idle' | 'listening' | 'processing' | 'speaking' | 'error';
 export type VoiceEngineType = 'gemini-live' | 'sarvam-ai' | 'browser-tts';
-export type DoctorPersona = 'meera' | 'arvind'; // meera = warm female doctor, arvind = calm male physician
+export type ClinicalVoicePersona = 'routine' | 'urgent';
 
 export interface VoiceSettings {
   engine: VoiceEngineType;
-  persona: DoctorPersona;
+  persona: ClinicalVoicePersona;
   sarvamApiKey: string;
   speedRate: number; // 1.1 brisk natural conversational pace
   streamingQueue: boolean;
@@ -110,7 +110,7 @@ export interface VoiceSettings {
 
 const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
   engine: 'browser-tts',
-  persona: 'meera',
+  persona: 'routine',
   sarvamApiKey: '',
   speedRate: 1.1,
   streamingQueue: false,
@@ -118,12 +118,12 @@ const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
 
 /**
  * Automatically infers the clinical bedside voice persona behind the scenes:
- * - 'arvind' (calm, decisive clinical specialist) when urgent triage or red-flag emergency symptoms are detected.
- * - 'meera' (warm, empathetic family physician) for routine care, child wellness, preventive advice, and everyday reassurance.
+ * - 'urgent' (calm, decisive clinical specialist) when urgent triage or red-flag emergency symptoms are detected.
+ * - 'routine' (warm, empathetic family physician) for routine care, child wellness, preventive advice, and everyday reassurance.
  */
-export function inferClinicalPersona(text: string, isCriticalOrUrgent?: boolean): DoctorPersona {
-  if (isCriticalOrUrgent) return 'arvind';
-  if (!text) return 'meera';
+export function inferClinicalPersona(text: string, isCriticalOrUrgent?: boolean): ClinicalVoicePersona {
+  if (isCriticalOrUrgent) return 'urgent';
+  if (!text) return 'routine';
   const lower = text.toLowerCase();
   const emergencyKeywords = [
     'chest pain', 'heart attack', 'stroke', 'unconscious', 'fainted', 'seizure',
@@ -132,9 +132,9 @@ export function inferClinicalPersona(text: string, isCriticalOrUrgent?: boolean)
     'oxygen dropped', 'paralysis', 'nenju vali', 'moochu thinaral', 'valippu', 'iratha pokku'
   ];
   if (emergencyKeywords.some((kw) => lower.includes(kw))) {
-    return 'arvind';
+    return 'urgent';
   }
-  return 'meera';
+  return 'routine';
 }
 
 /**
@@ -681,7 +681,7 @@ export class SpeechEngine {
   private async fetchGeminiAudio(
     text: string,
     lang: 'ta' | 'en',
-    persona: DoctorPersona,
+    persona: ClinicalVoicePersona,
     signal: AbortSignal
   ): Promise<Blob> {
     const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || '';
@@ -700,8 +700,8 @@ export class SpeechEngine {
       return this.audioCache.get(cacheKey)!;
     }
 
-    // Voice mapping: Aoede for warm female physician (Dr. Meera), Charon for calm male physician (Dr. Arvind)
-    const voiceName = persona === 'meera' ? 'Aoede' : 'Charon';
+    // Voice mapping: Aoede for warm supportive cadence, Charon for calm clinical triage cadence
+    const voiceName = persona === 'routine' ? 'Aoede' : 'Charon';
 
     const ttsCandidateModels = [
       'gemini-3.8-flash-tts',
@@ -787,7 +787,7 @@ export class SpeechEngine {
   private async fetchSarvamAudio(
     text: string,
     lang: 'ta' | 'en',
-    persona: DoctorPersona,
+    persona: ClinicalVoicePersona,
     speedRate: number,
     apiKey: string,
     signal: AbortSignal
@@ -796,7 +796,7 @@ export class SpeechEngine {
       throw new Error('Sarvam AI API key is not configured');
     }
 
-    const speaker = persona === 'meera' ? 'meera' : 'arvind';
+    const speaker = persona === 'routine' ? 'meera' : 'arvind';
     const targetLanguage = lang === 'ta' ? 'ta-IN' : 'en-IN';
 
     const response = await fetch('https://api.sarvam.ai/text-to-speech', {
@@ -898,7 +898,7 @@ export class SpeechEngine {
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
     utterance.rate = speedRate || 1.1;
-    utterance.pitch = persona === 'arvind' ? 0.95 : 1.05;
+    utterance.pitch = persona === 'urgent' ? 0.95 : 1.05;
 
     const voices = window.speechSynthesis.getVoices();
     const targetLangCode = lang === 'ta' ? 'ta' : 'en';
