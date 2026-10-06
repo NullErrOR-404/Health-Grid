@@ -16,13 +16,13 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `ab0a006` (`docs(readme): add national public health challenge requirements vs HealthGrid production innovations`)
+- **Latest Commit**: `b0f95a5` (`refactor(speech): standardize clinical voice persona to routine and urgent abstraction`)
 - **Vercel Production Deployment**: Verified Live (200 OK across all 4 production aliases)
-- **Deployment URL**: `https://frontend-6i2hmg4aw-sameen14nmofficial-8826s-projects.vercel.app`
-- **Deployment ID**: `dpl_B6uRnY2SRgPJa2hX6AtajFeRGtdz`
-- **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1 Active)
+- **Deployment URL**: `https://frontend-izimhndgh-sameen14nmofficial-8826s-projects.vercel.app`
+- **Deployment ID**: `dpl_XbNmuXmd2b9jwBzmbP7pyGccHu5M`
+- **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Live Aliases**:
-  - `https://healthgrid-app.vercel.app` (200 OK)
+  - `https://healthgrid-app.vercel.app` (200 OK - Serving bundle index-D5KHB4EB.js)
   - `https://healthgrid-nu.vercel.app` (200 OK)
   - `https://healthgrid-live.vercel.app` (200 OK)
   - `https://healthgrid-network.vercel.app` (200 OK)
