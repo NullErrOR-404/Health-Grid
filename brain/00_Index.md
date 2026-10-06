@@ -68,6 +68,7 @@ graph TD
     DEC --> ADR23[[ADR-023-Platform-Data-Grounding-and-Formulary-Truth-Engine]]
     DEC --> ADR24[[ADR-024-Interactive-Chat-RAG-Fuzzy-Grounding-and-Zero-Jargon]]
     DEC --> ADR27[[ADR-027-Intelligent-Triage-Gating-and-Open-Weight-Fine-Tuning-Pipeline]]
+    DEC --> ADR28[[ADR-028-Hospital-ERP-Patient-and-OPD-Management-End-to-End-Architecture]]
 
     CTX --> ACT[[Active_Context]]
     CTX --> CRED[[Key_Credentials_and_Environments]]
@@ -133,6 +134,7 @@ graph TD
 - [[ADR-023-Platform-Data-Grounding-and-Formulary-Truth-Engine]]: Platform-wide elimination of hallucinated fallback credentials (K. Sundaram, 98401 23456), real-time PMBJP database lookup for profile medication savings, authentic session vitals for casualty handover, and statutory harmonization of generic savings (50% to 90%).
 - [[ADR-024-Interactive-Chat-RAG-Fuzzy-Grounding-and-Zero-Jargon]]: Phonetic and fuzzy clinical grounding (`fuzzyClinicalMatcher.ts`), hybrid vector RAG protocol expansion (ICMR, PMBJP, Tamil Nadu casualties), strict zero-asterisk and plain-language sanitization in `aiService.ts`, and interactive choosing options (single-tap pills and multi-select checklist cards) in `ChatbotPage.tsx`.
 - [[ADR-027-Intelligent-Triage-Gating-and-Open-Weight-Fine-Tuning-Pipeline]]: Elimination of false triage card auto-triggers, disconnection of AI response text from condition evaluation, strict 2-3 sentence conciseness for routine and general queries, zero-filler bedside manner, and open-weight Hugging Face/Unsloth QLoRA fine-tuning training pipeline for Meta Llama-3.3-70B and Llama-3.1-8B.
+- [[ADR-028-Hospital-ERP-Patient-and-OPD-Management-End-to-End-Architecture]]: End-to-end implementation of Patient Management and OPD Management matching clinical reference designs (`Patient management ERP Ref.png` and `OPD management ERP ref.png`), unified ABDM federated patient store with automatic HealthID generation, interactive modals for vitals, prescriptions, billing, and consultations, and bidirectional real-time synchronization across modules and personal citizen vaults.
 
 ---
 
