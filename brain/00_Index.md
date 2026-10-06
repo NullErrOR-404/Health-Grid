@@ -92,6 +92,7 @@ graph TD
 - [[Deployment_and_Domains]]: 4 Vercel production aliases, automated deployment pipeline, zero SSO bypass configuration.
 - [[Multi_Tenant_State_Engine]]: LocalStorage-driven isolated hospital workspace state engine (`healthgrid_erp_userspace_${hospitalCode}`).
 - [[Data_Sovereignty_and_Security]]: DPDP Act 2023 compliance, client-side zero-disk clinical triage, HIPAA/DISHA standards.
+- [[Emergency_System_Architecture]]: Emergency Department casualty workflow, 3-tier ESI triage, real-time pub/sub, and IPD bed transfer flow.
 
 ---
 
@@ -141,6 +142,7 @@ graph TD
 - [[ADR-028-Hospital-ERP-Patient-and-OPD-Management-End-to-End-Architecture]]: End-to-end implementation of Patient Management and OPD Management matching clinical reference designs (`Patient management ERP Ref.png` and `OPD management ERP ref.png`), unified ABDM federated patient store with automatic HealthID generation, interactive modals for vitals, prescriptions, billing, and consultations, and bidirectional real-time synchronization across modules and personal citizen vaults.
 - [[ADR-029-IPD-and-Bed-Management-End-to-End-Architecture]]: End-to-end implementation of Inpatient Department (IPD) and Bed Management matching clinical reference design (`IPD & Bed management ref.png`), authentic PostgreSQL Supabase schema with RLS policies, 8 clinical workflows (Admit, Bed Allocation, Transfer, Discharge, Bed Status, Clinical Notes, Doctor Orders, Printable Case Sheet), real-time pub/sub synchronization, and sovereign HealthID live inpatient stay telemetry on citizen mobile profiles.
 - [[ADR-030-Hospital-ERP-Appointments-Management-End-to-End-Architecture]]: End-to-end implementation of Appointments module matching clinical reference design (`Appointments ERP ref.png`), persistent Supabase PostgreSQL `appointments` table with real-time subscriptions, bidirectional active OPD queue bridge, 8 interactive clinical modals, dynamic gauge metrics, and dedicated Citizen Mobile App booking pass and queue tracker.
+- [[ADR-031-Hospital-ERP-Emergency-Department-End-to-End-Architecture]]: End-to-end implementation of Emergency Department matching clinical reference design (`Emergency ERP ref.png`), authentic PostgreSQL Supabase schema with RLS policies, 3-tier ESI triage, 4 dynamic metric cards, 8 interactive clinical modals (Register, Status, Vitals, STAT Tests, Admit to IPD, Specialist Consult, Discharge, Call Family), and real-time pub/sub synchronization.
 
 ---
 

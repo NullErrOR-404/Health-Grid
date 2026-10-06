@@ -16,18 +16,24 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `e05f797` (`feat(erp): implement Hospital ERP appointments management module with Supabase realtime and citizen mobile pass`)
-- **Vercel Production Deployment**: Verified Live (200 OK, State: Success)
-- **Deployment URL**: `https://healthgrid-cwwx1wi6z-sameen14nmofficial-8826s-projects.vercel.app`
-- **Vercel Dashboard Run**: `https://vercel.com/sameen14nmofficial-8826s-projects/healthgrid/79Vzu2LqQ1NZn5LfCFtktNcDxEH8`
+- **Latest Feature**: Emergency Department (Casualty) ERP Module with Live Telemetry & Supabase Cloud Sync
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Live Aliases**:
-  - `https://healthgrid-nu.vercel.app` (200 OK - Serving bundle index-Be1lA8gO.js with Appointments ERP)
-  - `https://healthgrid-app.vercel.app` (200 OK)
-  - `https://healthgrid-live.vercel.app` (200 OK)
-  - `https://healthgrid-network.vercel.app` (200 OK)
+  - `https://healthgrid-nu.vercel.app`
+  - `https://healthgrid-app.vercel.app`
+  - `https://healthgrid-live.vercel.app`
+  - `https://healthgrid-network.vercel.app`
 
 ## Recent Completed Tasks
+- [x] Implemented Complete Emergency Department (Casualty) ERP module matching `Emergency ERP ref.png`:
+  - 4 live KPI metric cards (Total ER Patients 32, Critical Red 6, In Treatment 18, Waiting 5).
+  - 5 active tabs (All Patients 32, Waiting 5, In Treatment 18, Observation 4, Discharged 12).
+  - Multi-filters (Triage Level, Status, Time Range, Doctors, Search).
+  - Patient Table with selection, ESI badges, locations, doctors, wait times, status badges, and actions menu.
+  - Persistent Right-Hand Patient Inspector Panel with Demographics, Latest Telemetry Vitals, and 6 Quick Clinical Action buttons.
+  - 11 Functional Modals: Register Emergency Patient, Triage Settings, Shift Report (SBAR), Print Wristband (Thermal Barcode/QR), Update Status, Add Vitals, Request STAT Tests, Admit to IPD (bridged to ipdBedService), Refer to Specialist, Discharge, Call Family.
+  - Supabase PostgreSQL `public.emergency_cases` cloud persistence and real-time synchronization.
+  - Documented [[Emergency_System_Architecture]] and [[ADR-031-Hospital-ERP-Emergency-Department-End-to-End-Architecture]].
 - [x] Comprehensive Mobile-First UI/UX & Responsive Redesign completed across all 11 views and 10 clinical modals.
 - [x] Removed autonomous floating mascot (`RoamingDocBot`) to eliminate mobile screen clutter and touch hijacking.
 - [x] Transitioned clinical modals into responsive Fullscreen Mobile Sheets (`p-0 sm:p-4`, `rounded-none sm:rounded-3xl`, `safe-area-pb`).
@@ -66,11 +72,15 @@ Back to [[00_Index]]
 - [x] Architected Precision Triage Gating, Strict 2-3 Sentence Conciseness & Open-Weight Fine-Tuning Pipeline (ADR-027): Fixed unexpected triage wizard popups by decoupling AI output from trigger condition evaluations and removing the generic auto-fallback. Gated symptom wizards exclusively on active personal suffering or explicit triage requests, offering an on-demand `[ 🩺 Start Guided Checkup ]` pill instead. Enforced strict 2-3 sentence conciseness for routine queries, eliminated throat-clearing pleasantries, added multi-domain general intelligence examples, and generated Hugging Face JSONL dataset exports alongside a ready-to-run Unsloth & Hugging Face TRL QLoRA training script for Meta Llama 3.3.
 - [x] Architected Hospital ERP Patient & OPD Management End-to-End Workflow (ADR-028): Fully implemented dedicated, pixel-accurate Patient Management (`PatientManagementView.tsx`) and OPD Management (`OpdManagementView.tsx`) matching reference designs (`Patient management ERP Ref.png` and `OPD management ERP ref.png`). Engineered ABDM-compliant unified federated patient store (`unifiedPatientStore.ts`) with automatic HealthID generation, cross-module data reactivity, interactive modals for vitals logging, e-prescriptions, bill generation, and clinical consultations, and verified with zero build and lint errors.
 - [x] Architected and Implemented Hospital ERP Appointments Management End-to-End Workflow (ADR-030): Fully implemented dedicated, pixel-accurate Appointments module (`AppointmentsView.tsx`) matching reference design (`Appointments ERP ref.png`), backed by Supabase PostgreSQL `appointments` table with real-time subscriptions, bidirectional active OPD queue bridge, 8 interactive clinical modals, calibrated dynamic circular gauge metrics (Total 148, Checked In 102 (69%), Waiting 28 (19%), Cancelled / No Show 18 (12%)), real clinical placeholder patients seeded in Supabase cloud, and dedicated Citizen Mobile App booking pass and queue tracker on `ProfilePage.tsx` and `Navbar.tsx`.
+- [/] Architecting Hospital ERP Emergency Department End-to-End Workflow (ADR-031): Implementing dedicated, pixel-accurate Emergency Department module (`EmergencyView.tsx`) matching reference design (`Emergency ERP ref.png`), backed by Supabase PostgreSQL `emergency_cases` table with real-time pub/sub subscriptions, 3-tier ESI triage, 4 dynamic metric cards, 11 interactive clinical modals (Register, Status, Vitals, STAT Tests, Admit to IPD, Specialist Consult, Discharge, Call Family, Triage Settings, Shift Report, Print Wristband), and live IPD bed transfer bridge.
 
 ## In-Flight / Next Focus
-- [ ] Push all new Appointments ERP modules, Supabase scripts, and Second Brain ADRs to GitHub `origin main`.
-- [ ] Monitor Google Search Console indexing and crawler telemetry.
-- [ ] Submit Google Cloud Console OAuth consent screen for production branding verification.
+- [ ] Create `scripts/setup_emergency_supabase.js` and seed 32 realistic emergency cases in Supabase cloud.
+- [ ] Implement `emergencyService.ts` with real-time pub/sub synchronization and IPD admission bridge.
+- [ ] Implement `EmergencyView.tsx` and all 11 clinical modals matching `Emergency ERP ref.png`.
+- [ ] Wire `EmergencyView.tsx` into `HospitalErpDashboard.tsx`.
+- [ ] Verify clean production build (`tsc -b && vite build`) and browser interactions.
+- [ ] Commit and push to GitHub `origin main` to deploy to Vercel production.
 - [ ] Real-time updates to this Second Brain whenever new clinical features or architectural modifications ship.
 
 ## Related Notes
