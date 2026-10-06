@@ -61,12 +61,12 @@ export interface ModelOption {
 export const AVAILABLE_MODELS: ModelOption[] = [
   {
     id: 'openai/gpt-oss-120b',
-    name: 'GPT-OSS 120B AGI',
+    name: 'OpenWeight 120B Reasoning AGI',
     provider: 'groq',
-    providerLabel: 'Groq Cloud',
-    badge: 'AGI Clinical Mind',
+    providerLabel: 'Open Weight Reasoning',
+    badge: 'Deliberative Intelligence',
     speed: '~420 tok/s',
-    description: '120-Billion parameter native reasoning model. Deliberates like a veteran chief medical officer before replying.',
+    description: '120-Billion parameter top-tier open-weight model with chain-of-thought clinical deliberation and concise bedside summaries.',
     contextWindow: '128k',
     isReasoning: true,
   },
@@ -74,32 +74,32 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     id: 'qwen/qwen3.8-27b',
     name: 'Qwen 3.8 27B Vernacular',
     provider: 'groq',
-    providerLabel: 'Groq Cloud',
-    badge: 'Vernacular & Dialects',
+    providerLabel: 'Open Weights Indic',
+    badge: 'Tamil & Multilingual',
     speed: '~450 tok/s',
-    description: 'Exceptional Tamil, Tanglish, and Indic vernacular fluency with deep conversational comprehension.',
+    description: 'Exceptional open-weight model for fluent Tamil, Tanglish, and Indic vernacular conversation.',
     contextWindow: '128k',
     isReasoning: false,
   },
   {
     id: 'openai/gpt-oss-20b',
-    name: 'GPT-OSS 20B Turbo',
+    name: 'OpenWeight 20B Turbo',
     provider: 'groq',
-    providerLabel: 'Groq Cloud',
+    providerLabel: 'Open Weight Fast',
     badge: 'Ultra Fast',
     speed: '~550 tok/s',
-    description: 'Ultra-low latency clinical intelligence engine for immediate bedside triage and guidance.',
+    description: 'Low-latency open-weight model for rapid conversational answers and immediate check-ins.',
     contextWindow: '128k',
     isReasoning: true,
   },
   {
     id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
+    name: 'Gemini 2.5 Flash Vision',
     provider: 'google',
     providerLabel: 'Google DeepMind',
-    badge: 'Frontier Multimodal',
+    badge: 'Multimodal Vision',
     speed: '~320 tok/s',
-    description: 'Google DeepMind multimodal flagship with native clinical reasoning and Indic fluency.',
+    description: 'Multimodal flagship with native camera vision, dermatological photo inspection, and clinical reasoning.',
     contextWindow: '1M',
     isReasoning: true,
   },
@@ -373,7 +373,24 @@ class AgiIntelligenceService {
   private buildSystemPrompt(patientContext?: string, emotionalDirective?: string, toolData?: string, isCasualGreeting?: boolean, turnCount: number = 0): string {
     const isOngoingConversation = turnCount > 0;
 
-    return `You are DocBot, an experienced, warm, and deeply empathetic family doctor in Tamil Nadu with 20+ years of bedside clinical experience, not a robotic LLM.
+    return `You are DocBot, an exceptionally intelligent, versatile AI healthcare and family assistant powered by open-weight clinical and general intelligence.
+
+CORE BEHAVIORAL DIRECTIVES (STRICT MANDATORY INVARIANTS):
+1. STRICT CONCISENESS (2 TO 3 SENTENCES MAXIMUM):
+- Provide direct, clear, and crisp answers in 2 to 3 sentences maximum for all routine, everyday, or informational questions.
+- Never output long essay blocks, repetitive bullet points, or boilerplate fillers.
+- Eliminate throat-clearing pleasantries like "I understand your concern and I am here to help you today".
+- Only expand into detailed steps or tables if the user explicitly asks for a full explanation or during an acute life-threatening emergency.
+
+2. GENERAL INTELLIGENCE & ACCURATE CONTEXT UNDERSTANDING:
+- You possess broad, high-caliber general intelligence across science, technology, mathematics, everyday tasks, studies, and life topics.
+- When the user asks a general non-medical question, answer it smartly, accurately, and naturally like a top-tier modern AI.
+- NEVER force medical disclaimers, hospital referrals, or disease warnings into non-medical conversations.
+- Answer ONLY what was asked. Avoid irrelevant side topics.
+
+3. CLINICAL SYMPTOM GUIDANCE:
+- When a patient describes a health concern or symptom, state what it likely indicates, give one practical immediate step (or Jan Aushadhi generic option), and note when to see a local clinic.
+- Ask at most ONE brief, natural follow-up question if essential for clinical clarity. Never subject the patient to an unsolicited medical questionnaire.
 
 ${isOngoingConversation ? `
 CONVERSATION CONTINUITY PROTOCOL (STRICT MANDATORY INVARIANT):
@@ -415,10 +432,9 @@ ZERO ASTERISKS & ZERO FORMATTING CLUTTER (STRICT MANDATE):
 - Do NOT produce multiple empty lines or large whitespace gaps. Keep your answer direct to the point and easily readable on a mobile screen.
 
 DIRECT TO THE POINT & ZERO FILLER (CONCISE CLINICAL BEDSIDE MANNER):
-- Start IMMEDIATELY with the answer, relief step, or clinical reassurance.
+- Start IMMEDIATELY with the answer, relief step, or clinical reassurance in 2 to 3 sentences maximum.
 - NEVER start with empty boilerplate like "I understand your concern and I am here to help you today".
 - State what the symptom likely means, what to do right now, and when to seek immediate in-person medical attention.
-- Keep responses short, clear, and scannable (2 to 4 crisp paragraphs).
 - Safety guidance must be concise (a single warm sentence like "If this does not ease by evening, please visit your local clinic for a quick checkup."). Do NOT output lengthy legalistic disclaimers.
 
 SITUATION-BASED ADAPTIVE TONE & TARGETED FOLLOW-UP QUESTIONS:
@@ -1158,10 +1174,15 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
           type: 'single_tap',
           items: ['How to prepare WHO-ORS at home?', 'Safe diet for stomach recovery', 'Locate nearest 24/7 government PHC'],
         };
+      } else if (isCasualGreetingOrSocial(userQuery)) {
+        suggestedOptions = {
+          type: 'single_tap',
+          items: ['How does HealthGrid work?', 'Check generic medicine savings', 'Ask about a symptom'],
+        };
       } else {
         suggestedOptions = {
           type: 'single_tap',
-          items: ['Check generic medicine prices', 'Find nearest 24/7 Tamil Nadu PHC', 'How should I improve my daily health?'],
+          items: ['Tell me more', 'Check generic medicine savings', '🩺 Start Guided Checkup'],
         };
       }
     }
@@ -1251,26 +1272,38 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
    */
   private generateDynamicTriageWizard(
     userQuery: string,
-    cleaned: string,
+    _cleaned: string,
     emotionalState?: EmotionalAssessment['state']
   ): TriageWizard | undefined {
     if (isCasualGreetingOrSocial(userQuery)) {
       return undefined;
     }
 
-    const qLower = userQuery.toLowerCase();
-    const cLower = cleaned.toLowerCase();
-    const combined = `${qLower} ${cLower}`;
+    const qLower = userQuery.toLowerCase().trim();
+
+    // Do NOT trigger wizard for purely general informational or educational queries
+    const isGeneralInfoQuery = /^(what is|what are|explain|tell me about|how does|why does|difference between|cost of|price of|can you|who are)\b/i.test(qLower);
+    
+    // Explicit opt-in / triage request
+    const isExplicitTriageRequested = 
+      qLower.includes('triage') || 
+      qLower.includes('guided checkup') || 
+      qLower.includes('check my symptoms') || 
+      qLower.includes('start assessment') ||
+      qLower.includes('பரிசோதனை');
+
+    // Detect actual first-person acute physical suffering or symptoms reported by user
+    const hasPersonalSuffering = /i have|i am having|my baby|my child|hurts|pain|suffering|experiencing|severe|bleeding|vali|eriyudhu|kaichal|வலி|காய்ச்சல்|வயிற்று/i.test(qLower);
+
+    // If user is just asking informational questions or has no active symptom complaints, do not show any triage wizard
+    if (!isExplicitTriageRequested && (!hasPersonalSuffering || isGeneralInfoQuery)) {
+      return undefined;
+    }
 
     // 1. Chest, Respiratory & Cardiac
     if (
-      combined.includes('chest') ||
-      combined.includes('nenju') ||
-      combined.includes('heart') ||
-      combined.includes('breath') ||
-      combined.includes('wheez') ||
-      combined.includes('மூச்சு') ||
-      combined.includes('நெஞ்சு')
+      (qLower.includes('chest') || qLower.includes('nenju') || qLower.includes('heart') || qLower.includes('breath') || qLower.includes('wheez') || qLower.includes('மூச்சு') || qLower.includes('நெஞ்சு')) &&
+      (hasPersonalSuffering || isExplicitTriageRequested)
     ) {
       return {
         id: `wiz-chest-${Date.now()}`,
@@ -1372,16 +1405,17 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
     // 2. Pediatric & Child Care
     if (
-      combined.includes('child') ||
-      combined.includes('baby') ||
-      combined.includes('infant') ||
-      combined.includes('kid') ||
-      combined.includes('toddler') ||
-      combined.includes('months old') ||
-      combined.includes('year old') ||
-      combined.includes('குழந்தை') ||
-      combined.includes('பாப்பா') ||
-      emotionalState === 'parental_worry'
+      (qLower.includes('child') ||
+        qLower.includes('baby') ||
+        qLower.includes('infant') ||
+        qLower.includes('kid') ||
+        qLower.includes('toddler') ||
+        qLower.includes('months old') ||
+        qLower.includes('year old') ||
+        qLower.includes('குழந்தை') ||
+        qLower.includes('பாப்பா') ||
+        emotionalState === 'parental_worry') &&
+      (hasPersonalSuffering || isExplicitTriageRequested)
     ) {
       return {
         id: `wiz-peds-${Date.now()}`,
@@ -1487,11 +1521,12 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
     // 3. Headache & Migraine
     if (
-      combined.includes('headache') ||
-      combined.includes('migraine') ||
-      combined.includes('head ache') ||
-      combined.includes('thala') ||
-      combined.includes('தலைவலி')
+      (qLower.includes('headache') ||
+        qLower.includes('migraine') ||
+        qLower.includes('head ache') ||
+        qLower.includes('thala') ||
+        qLower.includes('தலைவலி')) &&
+      (hasPersonalSuffering || isExplicitTriageRequested)
     ) {
       return {
         id: `wiz-headache-${Date.now()}`,
@@ -1589,19 +1624,20 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
     // 4. Stomach, Digestive & Abdominal
     if (
-      combined.includes('stomach') ||
-      combined.includes('abdomen') ||
-      combined.includes('belly') ||
-      combined.includes('loose motion') ||
-      combined.includes('diarrhea') ||
-      combined.includes('vomit') ||
-      combined.includes('nausea') ||
-      combined.includes('acidity') ||
-      combined.includes('gastric') ||
-      combined.includes('vayiru') ||
-      combined.includes('வயிறு') ||
-      combined.includes('வாந்தி') ||
-      combined.includes('வயிற்றுப்போக்கு')
+      (qLower.includes('stomach') ||
+        qLower.includes('abdomen') ||
+        qLower.includes('belly') ||
+        qLower.includes('loose motion') ||
+        qLower.includes('diarrhea') ||
+        qLower.includes('vomit') ||
+        qLower.includes('nausea') ||
+        qLower.includes('acidity') ||
+        qLower.includes('gastric') ||
+        qLower.includes('vayiru') ||
+        qLower.includes('வயிறு') ||
+        qLower.includes('வாந்தி') ||
+        qLower.includes('வயிற்றுப்போக்கு')) &&
+      (hasPersonalSuffering || isExplicitTriageRequested)
     ) {
       return {
         id: `wiz-stomach-${Date.now()}`,
@@ -1704,16 +1740,17 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
     // 5. Fever, Infection, Cough & Cold
     if (
-      combined.includes('fever') ||
-      combined.includes('kaichal') ||
-      combined.includes('cold') ||
-      combined.includes('cough') ||
-      combined.includes('chills') ||
-      combined.includes('shivering') ||
-      combined.includes('infection') ||
-      combined.includes('காய்ச்சல்') ||
-      combined.includes('சளி') ||
-      combined.includes('இருமல்')
+      (qLower.includes('fever') ||
+        qLower.includes('kaichal') ||
+        qLower.includes('cold') ||
+        qLower.includes('cough') ||
+        qLower.includes('chills') ||
+        qLower.includes('shivering') ||
+        qLower.includes('infection') ||
+        qLower.includes('காய்ச்சல்') ||
+        qLower.includes('சளி') ||
+        qLower.includes('இருமல்')) &&
+      (hasPersonalSuffering || isExplicitTriageRequested)
     ) {
       return {
         id: `wiz-fever-${Date.now()}`,
@@ -1816,75 +1853,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       };
     }
 
-    // 6. General Clinical Symptoms (Default for any clinical complaint)
-    return {
-      id: `wiz-general-${Date.now()}`,
-      topicEn: 'Clinical Triage Assessment',
-      topicTa: 'மருத்துவ நிலை மதிப்பீடு',
-      totalSteps: 2,
-      steps: [
-        {
-          id: 'gen-duration',
-          titleEn: 'Symptom Duration',
-          titleTa: 'அறிகுறியின் காலம்',
-          questionEn: 'How long have you been experiencing this condition?',
-          questionTa: 'இந்த பிரச்சனை தொடங்கி எவ்வளவு காலமானது?',
-          options: [
-            {
-              labelEn: 'Started today (Within last few hours)',
-              labelTa: 'இன்று தொடங்கியது (சில மணிநேரங்களுக்குள்)',
-              value: 'today_recent',
-            },
-            {
-              labelEn: 'Past 2 to 3 days',
-              labelTa: 'கடந்த 2 முதல் 3 நாட்கள்',
-              value: '2_to_3_days',
-            },
-            {
-              labelEn: '1 to 2 weeks',
-              labelTa: '1 முதல் 2 வாரங்கள்',
-              value: '1_to_2_weeks',
-            },
-            {
-              labelEn: 'Chronic / On and off for several months',
-              labelTa: 'பல மாதங்களாக விட்டு விட்டு தொடர்கிறது',
-              value: 'chronic_months',
-            },
-          ],
-        },
-        {
-          id: 'gen-impact',
-          titleEn: 'Daily Impact & Severity',
-          titleTa: 'தினசரி பாதிப்பு & தீவிரம்',
-          questionEn: 'How significantly does this affect your day-to-day routine?',
-          questionTa: 'இது உங்கள் அன்றாட வேலைகளை எவ்வாறு பாதிக்கிறது?',
-          options: [
-            {
-              labelEn: 'Mild - Noticeable but able to carry on normal duties',
-              labelTa: 'லேசானது - வழக்கமான வேலைகளை செய்ய முடிகிறது',
-              value: 'mild_routine',
-            },
-            {
-              labelEn: 'Moderate - Needs bed rest, difficult to focus',
-              labelTa: 'நடுத்தரம் - ஓய்வு தேவைப்படுகிறது, சிரமமாக உள்ளது',
-              value: 'moderate_rest_needed',
-            },
-            {
-              labelEn: 'Severe - Unable to stand or perform basic tasks',
-              labelTa: 'தீவிரம் - படுக்கையை விட்டு எழ முடியவில்லை',
-              value: 'severe_incapacitated',
-              isRedFlag: true,
-            },
-            {
-              labelEn: 'Sudden alarming worsening within the last hour',
-              labelTa: 'கடந்த ஒரு மணிநேரத்தில் திடீரென நிலைமை மோசமானது',
-              value: 'sudden_acute_worsening',
-              isRedFlag: true,
-            },
-          ],
-        },
-      ],
-    };
+    // No acute condition matched -> do not show any intrusive card
+    return undefined;
   }
 }
 
