@@ -78,20 +78,22 @@ Back to [[00_Index]]
 - [x] Architected Precision Triage Gating, Strict 2-3 Sentence Conciseness & Open-Weight Fine-Tuning Pipeline (ADR-027): Fixed unexpected triage wizard popups by decoupling AI output from trigger condition evaluations and removing the generic auto-fallback. Gated symptom wizards exclusively on active personal suffering or explicit triage requests, offering an on-demand `[ 🩺 Start Guided Checkup ]` pill instead. Enforced strict 2-3 sentence conciseness for routine queries, eliminated throat-clearing pleasantries, added multi-domain general intelligence examples, and generated Hugging Face JSONL dataset exports alongside a ready-to-run Unsloth & Hugging Face TRL QLoRA training script for Meta Llama 3.3.
 - [x] Architected Hospital ERP Patient & OPD Management End-to-End Workflow (ADR-028): Fully implemented dedicated, pixel-accurate Patient Management (`PatientManagementView.tsx`) and OPD Management (`OpdManagementView.tsx`) matching reference designs (`Patient management ERP Ref.png` and `OPD management ERP ref.png`). Engineered ABDM-compliant unified federated patient store (`unifiedPatientStore.ts`) with automatic HealthID generation, cross-module data reactivity, interactive modals for vitals logging, e-prescriptions, bill generation, and clinical consultations, and verified with zero build and lint errors.
 - [x] Architected and Implemented Hospital ERP Appointments Management End-to-End Workflow (ADR-030): Fully implemented dedicated, pixel-accurate Appointments module (`AppointmentsView.tsx`) matching reference design (`Appointments ERP ref.png`), backed by Supabase PostgreSQL `appointments` table with real-time subscriptions, bidirectional active OPD queue bridge, 8 interactive clinical modals, calibrated dynamic circular gauge metrics (Total 148, Checked In 102 (69%), Waiting 28 (19%), Cancelled / No Show 18 (12%)), real clinical placeholder patients seeded in Supabase cloud, and dedicated Citizen Mobile App booking pass and queue tracker on `ProfilePage.tsx` and `Navbar.tsx`.
-- [/] Architecting Hospital ERP Emergency Department End-to-End Workflow (ADR-031): Implementing dedicated, pixel-accurate Emergency Department module (`EmergencyView.tsx`) matching reference design (`Emergency ERP ref.png`), backed by Supabase PostgreSQL `emergency_cases` table with real-time pub/sub subscriptions, 3-tier ESI triage, 4 dynamic metric cards, 11 interactive clinical modals (Register, Status, Vitals, STAT Tests, Admit to IPD, Specialist Consult, Discharge, Call Family, Triage Settings, Shift Report, Print Wristband), and live IPD bed transfer bridge.
+- [x] Architected and Implemented Hospital ERP IPD & Bed Management End-to-End Workflow (ADR-029): Fully implemented dedicated, pixel-accurate Inpatient Bed Management (IpdBedManagementView.tsx) matching reference design, backed by Supabase public.hospital_beds table and ipdBedService.ts, with live ward filters (ICU, General, Emergency, Pediatric), bed visual grid, real patient admissions, and drawer details.
+- [x] Architected and Implemented Hospital ERP Emergency Department End-to-End Workflow (ADR-031): Fully implemented dedicated, pixel-accurate Emergency Casualty module (EmergencyView.tsx) matching reference design (Emergency ERP ref.png), backed by Supabase PostgreSQL public.emergency_cases table with real-time pub/sub subscriptions, 3-tier ESI triage, 4 dynamic metric cards, 11 interactive clinical modals (Register, Status, Vitals, STAT Tests, Admit to IPD, Specialist Consult, Discharge, Call Family, Triage Settings, Shift Report, Print Wristband), and live IPD bed transfer bridge.
+- [x] Synchronized Multi-Project Vercel Production Domain Aliases (ADR-033): Solved stale deployment issue across healthgrid-app.vercel.app, healthgrid-live.vercel.app, and healthgrid-network.vercel.app by reassigning them from legacy frontend project to authoritative production deployment (healthgrid-cmaojgkz1-sameen14nmofficial-8826s-projects.vercel.app). All 4 production aliases verified serving bundle index-BsgxhCpB.js and index-V3cCV6X7.css with 100% interactive visibility of IPD, Emergency, and Appointments.
 
 ## In-Flight / Next Focus
-- [ ] Create `scripts/setup_emergency_supabase.js` and seed 32 realistic emergency cases in Supabase cloud.
-- [ ] Implement `emergencyService.ts` with real-time pub/sub synchronization and IPD admission bridge.
-- [ ] Implement `EmergencyView.tsx` and all 11 clinical modals matching `Emergency ERP ref.png`.
-- [ ] Wire `EmergencyView.tsx` into `HospitalErpDashboard.tsx`.
-- [ ] Verify clean production build (`tsc -b && vite build`) and browser interactions.
-- [ ] Commit and push to GitHub `origin main` to deploy to Vercel production.
+- [x] All 4 Vercel aliases synchronized to latest deployment hash.
+- [x] Confirmed live visibility of IPD & Bed Management, Appointments, and Emergency Department on all aliases.
+- [ ] Ongoing monitoring of Supabase real-time channels and edge cache invalidation.
 - [ ] Real-time updates to this Second Brain whenever new clinical features or architectural modifications ship.
 
 ## Related Notes
 - [[00_Index]]
 - [[Hospital_ERP_Dashboard]]
+- [[Appointments_System_Architecture]]
+- [[Emergency_System_Architecture]]
+- [[Deployment_and_Domains]]
 - [[ADR-006-Decommission-Legacy-HIS-Doctor-Portal]]
 - [[ADR-007-Decommission-Roaming-Mascot]]
 - [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]
@@ -105,5 +107,10 @@ Back to [[00_Index]]
 - [[ADR-019-Clinical-Pharmacology-Engine-Formulary-Grounding-and-Context-Matching]]
 - [[ADR-027-Intelligent-Triage-Gating-and-Open-Weight-Fine-Tuning-Pipeline]]
 - [[ADR-028-Hospital-ERP-Patient-and-OPD-Management-End-to-End-Architecture]]
+- [[ADR-029-IPD-and-Bed-Management-End-to-End-Architecture]]
+- [[ADR-030-Hospital-ERP-Appointments-Management-End-to-End-Architecture]]
+- [[ADR-031-Hospital-ERP-Emergency-Department-End-to-End-Architecture]]
+- [[ADR-032-Zero-Latency-Keep-Alive-and-Kinetic-Performance-Architecture]]
+- [[ADR-033-Vercel-Multi-Project-Domain-Alias-Synchronization]]
 - [[Key_Credentials_and_Environments]]
-- [[Deployment_and_Domains]]
+

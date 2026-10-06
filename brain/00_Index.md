@@ -71,6 +71,9 @@ graph TD
     DEC --> ADR28[[ADR-028-Hospital-ERP-Patient-and-OPD-Management-End-to-End-Architecture]]
     DEC --> ADR29[[ADR-029-IPD-and-Bed-Management-End-to-End-Architecture]]
     DEC --> ADR30[[ADR-030-Hospital-ERP-Appointments-Management-End-to-End-Architecture]]
+    DEC --> ADR31[[ADR-031-Hospital-ERP-Emergency-Department-End-to-End-Architecture]]
+    DEC --> ADR32[[ADR-032-Zero-Latency-Keep-Alive-and-Kinetic-Performance-Architecture]]
+    DEC --> ADR33[[ADR-033-Vercel-Multi-Project-Domain-Alias-Synchronization]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
 
@@ -143,6 +146,8 @@ graph TD
 - [[ADR-029-IPD-and-Bed-Management-End-to-End-Architecture]]: End-to-end implementation of Inpatient Department (IPD) and Bed Management matching clinical reference design (`IPD & Bed management ref.png`), authentic PostgreSQL Supabase schema with RLS policies, 8 clinical workflows (Admit, Bed Allocation, Transfer, Discharge, Bed Status, Clinical Notes, Doctor Orders, Printable Case Sheet), real-time pub/sub synchronization, and sovereign HealthID live inpatient stay telemetry on citizen mobile profiles.
 - [[ADR-030-Hospital-ERP-Appointments-Management-End-to-End-Architecture]]: End-to-end implementation of Appointments module matching clinical reference design (`Appointments ERP ref.png`), persistent Supabase PostgreSQL `appointments` table with real-time subscriptions, bidirectional active OPD queue bridge, 8 interactive clinical modals, dynamic gauge metrics, and dedicated Citizen Mobile App booking pass and queue tracker.
 - [[ADR-031-Hospital-ERP-Emergency-Department-End-to-End-Architecture]]: End-to-end implementation of Emergency Department matching clinical reference design (`Emergency ERP ref.png`), authentic PostgreSQL Supabase schema with RLS policies, 3-tier ESI triage, 4 dynamic metric cards, 8 interactive clinical modals (Register, Status, Vitals, STAT Tests, Admit to IPD, Specialist Consult, Discharge, Call Family), and real-time pub/sub synchronization.
+- [[ADR-032-Zero-Latency-Keep-Alive-and-Kinetic-Performance-Architecture]]: Three-tier platform performance architecture featuring sub-millisecond (0.6ms - 1.4ms) in-memory keep-alive DOM switching, kinetic smooth scrolling in Lenis, background idle route prefetching, and dedicated motion vendor chunk.
+- [[ADR-033-Vercel-Multi-Project-Domain-Alias-Synchronization]]: Resolution of split-project production deployment caching across Vercel aliases, harmonizing healthgrid-app.vercel.app, healthgrid-nu.vercel.app, healthgrid-live.vercel.app, and healthgrid-network.vercel.app onto authoritative production build deployments with zero stale asset leakage.
 
 ---
 
