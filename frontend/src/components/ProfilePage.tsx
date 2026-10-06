@@ -27,12 +27,16 @@ import {
   Upload,
   ArrowUpDown,
   FileUp,
-  Calendar
+  Calendar,
+  BedDouble,
+  Stethoscope,
 } from 'lucide-react';
 import type { Language } from '../types';
 import { extractAndNormalizeDate, medicalRecordService } from '../services/medicalRecordService';
 import { supabase } from '../services/supabaseClient';
 import { authService, generateImmutableHealthId } from '../services/authService';
+import { ipdBedService, type IpdAdmission } from '../services/ipdBedService';
+import { PrintSummaryModal } from './erp/ipd/PrintSummaryModal';
 import {
   familyMemberService,
   type FamilyMember,
@@ -211,6 +215,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const toggleDropdown = (key: string) => {
     setOpenDropdown(prev => (prev === key ? null : key));
   };
+
+  // Active Inpatient Stay state for Citizen Mobile Health Vault (linked to Sovereign HealthID)
+  const [activeInpatientStay, setActiveInpatientStay] = useState<IpdAdmission | null>(null);
+  const [isInpatientSummaryModalOpen, setIsInpatientSummaryModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!profileData.healthId) return;
+    ipdBedService.getAdmissionForHealthId(profileData.healthId).then((adm) => {
+      setActiveInpatientStay(adm);
+    });
+    return ipdBedService.subscribe(() => {
+      ipdBedService.getAdmissionForHealthId(profileData.healthId).then((adm) => {
+        setActiveInpatientStay(adm);
+      });
+    });
+  }, [profileData.healthId]);
 
   // Support direct deep-linking from navbar dropdown items
   useEffect(() => {
@@ -969,6 +989,84 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Active Inpatient Hospital Stay Banner (ABDM Linked) */}
+        {activeInpatientStay && (
+          <div className="bg-gradient-to-r from-teal-900 via-slate-900 to-teal-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-teal-500/30 relative overflow-hidden animate-in fade-in">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="relative z-10 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300">
+                    <BedDouble className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                        Active Hospital Inpatient Stay
+                      </span>
+                      <span className="text-[10px] text-teal-300 font-mono">
+                        {activeInpatientStay.admission_number}
+                      </span>
+                    </div>
+                    <h3 className="text-base sm:text-lg font-black text-white mt-0.5">
+                      {activeInpatientStay.ward_name} • Bed {activeInpatientStay.bed_number}
+                    </h3>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsInpatientSummaryModalOpen(true)}
+                  className="self-start sm:self-auto px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-black transition-all flex items-center gap-1.5 shadow-md shadow-teal-500/20 cursor-pointer"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>View Inpatient Case Sheet</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10 text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Attending Consultant</span>
+                  <span className="font-bold text-white flex items-center gap-1 mt-0.5">
+                    <Stethoscope className="w-3.5 h-3.5 text-teal-400" />
+                    <span>{activeInpatientStay.doctor_name}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 block">{activeInpatientStay.department}</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Admitted On</span>
+                  <span className="font-semibold text-slate-200 block mt-0.5">
+                    {new Date(activeInpatientStay.admission_date).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </span>
+                  <span className="text-[10px] text-teal-400 block font-mono">
+                    {new Date(activeInpatientStay.admission_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Current Diagnosis</span>
+                  <span className="font-bold text-teal-200 block mt-0.5 truncate">
+                    {activeInpatientStay.diagnosis}
+                  </span>
+                  <span className="text-[10px] text-slate-400 block">Under Clinical Monitoring</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Expected Discharge</span>
+                  <span className="font-semibold text-white block mt-0.5">
+                    {activeInpatientStay.expected_discharge
+                      ? new Date(activeInpatientStay.expected_discharge).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })
+                      : 'Under Observation'}
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-bold block">Status: {activeInpatientStay.status}</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -2452,6 +2550,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               : `${alias.historicalHealthId} பதிவுகள் இணைக்கப்பட்டன`
           );
         }}
+      />
+
+      {/* Inpatient Digital Case Sheet Modal (ADR-029) */}
+      <PrintSummaryModal
+        isOpen={isInpatientSummaryModalOpen}
+        onClose={() => setIsInpatientSummaryModalOpen(false)}
+        admission={activeInpatientStay}
       />
 
     </div>
