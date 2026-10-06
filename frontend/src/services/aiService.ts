@@ -546,7 +546,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     userQuery: string,
     history: Array<{ sender: 'user' | 'ai'; text: string }>,
     patientContext?: string,
-    overrideModelId?: string
+    overrideModelId?: string,
+    imageDataUrl?: string
   ): Promise<AgiResponse> {
     // 1. Client-Side Rate Limiter Check (10 prompts / minute)
     const limitCheck = rateLimiter.checkLimit(
@@ -777,9 +778,33 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       }
     }
 
-    const model = overrideModelId
+    // Multimodal Clinical Photo Vision Ingestion
+    if (imageDataUrl) {
+      executedTools.push({
+        id: `tool-${Date.now()}-vision`,
+        name: 'multimodalVisionDiagnostics',
+        label: 'Clinical Vision Diagnostic Radar',
+        status: 'success',
+        resultSummary: 'Physical symptom image ingested via Gemini Multimodal Vision',
+        data: { hasImage: true },
+      });
+      toolContextPrompt += `\n[CLINICAL PHOTO INGESTION ACTIVE - MULTIMODAL VISION]:\n` +
+        `The patient has attached a medical photograph (e.g. skin rash, lesion, eye redness, throat inflammation, wound, or medical report).\n` +
+        `1. Carefully inspect the visual features (erythema, lesion borders, distribution, swelling, purulence, or printed text).\n` +
+        `2. Ask 1-2 focused triage clarifying questions (e.g., duration, itching, heat/fever, spreading, tenderness).\n` +
+        `3. Provide objective, reassuring clinical observations without definitive self-diagnosis.\n` +
+        `4. If you observe signs of spreading cellulitis, severe infection, or deep tissue injury, recommend immediate evaluation at the nearest clinic or casualty.\n` +
+        `Keep the tone conversational, bedside-warm, bilingual if helpful, and strictly eliminate asterisks (*).\n`;
+    }
+
+    const baseModel = overrideModelId
       ? AVAILABLE_MODELS.find(m => m.id === overrideModelId) || this.getCurrentModel()
       : this.getCurrentModel();
+
+    // If an image is attached, auto-route to Google Gemini for frontier multimodal vision
+    const model = imageDataUrl
+      ? (AVAILABLE_MODELS.find(m => m.provider === 'google') || baseModel)
+      : baseModel;
 
     const startTime = performance.now();
 
@@ -787,7 +812,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       if (model.provider === 'groq') {
         return await this.callGroq(model, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting);
       } else {
-        return await this.callGemini(model, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting);
+        return await this.callGemini(model, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting, imageDataUrl);
       }
     } catch (err: any) {
       if (err.message && err.message.includes('Rate limit exceeded')) {
@@ -797,7 +822,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       // Automatic failover between Groq and Gemini
       if (model.provider === 'groq') {
         const fallbackModel = AVAILABLE_MODELS.find(m => m.provider === 'google') || AVAILABLE_MODELS[1];
-        return await this.callGemini(fallbackModel, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting);
+        return await this.callGemini(fallbackModel, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting, imageDataUrl);
       } else {
         const fallbackModel = AVAILABLE_MODELS.find(m => m.provider === 'groq') || AVAILABLE_MODELS[0];
         return await this.callGroq(fallbackModel, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting);
@@ -919,11 +944,12 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     genericMedicines: JanAushadhiResult[] | undefined,
     emotionalState: EmotionalAssessment['state'],
     startTime: number,
-    isCasualGreeting: boolean = false
+    isCasualGreeting: boolean = false,
+    imageDataUrl?: string
   ): Promise<AgiResponse> {
     const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting, history.length);
 
-    const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+    const contents: Array<{ role: string; parts: any[] }> = [];
 
     for (const h of history.slice(-8)) {
       contents.push({
@@ -931,9 +957,23 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
         parts: [{ text: h.text }],
       });
     }
+
+    const userParts: any[] = [{ text: userQuery }];
+    if (imageDataUrl && imageDataUrl.startsWith('data:')) {
+      const match = imageDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        userParts.push({
+          inlineData: {
+            mimeType: match[1],
+            data: match[2],
+          },
+        });
+      }
+    }
+
     contents.push({
       role: 'user',
-      parts: [{ text: userQuery }],
+      parts: userParts,
     });
 
     const geminiModelsToTry = [

@@ -374,16 +374,29 @@ class VectorRagService {
     const currentUser = authService.getCurrentUser();
     const userChunks = (currentUser?.id && this.patientVaultChunks.get(currentUser.id)) || [];
 
-    // 2. Index live medicalRecordService profile records
-    const profile = medicalRecordService.getProfile();
-    const liveProfileChunks: VectorChunk[] = profile.records.map(r => ({
+    // 2. Index live medicalRecordService profile records in strict chronological order
+    const sortedRecords = medicalRecordService.getChronologicalRecords(false);
+    const liveProfileChunks: VectorChunk[] = sortedRecords.map((r, idx) => ({
       id: `live-${r.id}`,
       source: 'PATIENT_VAULT',
-      title: r.title,
-      content: `Patient History: ${r.title}. Diagnoses: ${r.diagnoses.join(', ')}. Medications: ${r.activeMedications.map(m => m.name).join(', ')}. Allergies: ${r.knownAllergies.join(', ')}.`,
+      title: `${r.title} (${r.date})`,
+      content: `Patient Medical Record #${idx + 1} (Date: ${r.date}, Type: ${r.documentType}): ${r.title}. Facility/Doctor: ${r.hospitalName || r.doctorName || 'Attending Physician'}. Diagnoses: ${r.diagnoses.join(', ') || 'Routine'}. Lab Findings: ${r.labFindings ? r.labFindings.map(l => `${l.testName}: ${l.value} (${l.status})`).join('; ') : 'None'}. Active Medications: ${r.activeMedications.map(m => `${m.name} ${m.dosage}`).join(', ') || 'None'}. Confirmed Allergies: ${r.knownAllergies.join(', ') || 'None'}. Summary: ${r.summaryNotes || 'Verified record'}.`,
       metadata: r,
-      embedding: this.generateEmbedding(`${r.title} ${r.diagnoses.join(' ')} ${r.knownAllergies.join(' ')}`),
+      embedding: this.generateEmbedding(`${r.title} ${r.date} ${r.diagnoses.join(' ')} ${r.labFindings ? r.labFindings.map(l => l.testName).join(' ') : ''} ${r.knownAllergies.join(' ')}`),
     }));
+
+    // 2.5 Master Chronological Health Timeline Synthesis
+    const timelineSummary = medicalRecordService.getChronologicalTimelineSummary();
+    if (sortedRecords.length > 0) {
+      liveProfileChunks.push({
+        id: 'patient-master-chronological-timeline',
+        source: 'PATIENT_VAULT',
+        title: 'Patient Longitudinal Health History & Chronological Timeline',
+        content: `Complete Patient Medical Timeline (Ordered Oldest to Latest):\n${timelineSummary}\nKnown Chronic Conditions: ${medicalRecordService.getProfile().chronicConditions.join(', ') || 'None recorded'}.\nConfirmed Allergies: ${medicalRecordService.getProfile().allergies.join(', ') || 'None recorded'}.`,
+        metadata: { recordCount: sortedRecords.length },
+        embedding: this.generateEmbedding(`medical history timeline past reports records ${timelineSummary}`),
+      });
+    }
 
     // 3. Index live vitals telemetry from healthMemoryService
     const vitalsSynthesis = healthMemoryService.getClinicalTrendSynthesis();

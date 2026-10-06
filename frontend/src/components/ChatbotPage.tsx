@@ -42,7 +42,11 @@ import {
   Square,
   CheckSquare,
   ArrowRight,
-  ChevronLeft
+  ChevronLeft,
+  Camera,
+  Heart,
+  Thermometer,
+  Droplets
 } from 'lucide-react';
 import type { Language } from '../types';
 import { speechEngine, TanglishNormalizer } from '../services/speechService';
@@ -61,6 +65,7 @@ import { type PrescriptionAnalysisResult } from '../services/prescriptionAiServi
 import { careLoopService, type CareLoopFollowUp } from '../services/careLoopService';
 import { type LiveConsultationSummary } from '../services/liveVisionDoctorService';
 import { medicalRecordService } from '../services/medicalRecordService';
+import { healthMemoryService } from '../services/healthMemoryService';
 import { supabase } from '../services/supabaseClient';
 import { authService, type AuthUser } from '../services/authService';
 import { LoginModal } from './LoginModal';
@@ -85,6 +90,7 @@ export interface ChatMessage {
   executedTools?: AgentToolCall[];
   genericMedicines?: JanAushadhiResult[];
   attachmentName?: string;
+  imageDataUrl?: string;
   prescriptionAnalysis?: PrescriptionAnalysisResult;
   suggestedOptions?: InteractiveOptions;
   triageWizard?: TriageWizard;
@@ -156,6 +162,25 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     answers: Record<string, TriageWizardOption>;
     isCompleted: boolean;
   }>>({});
+  const [attachedPhoto, setAttachedPhoto] = useState<{
+    dataUrl: string;
+    fileName: string;
+    fileSize: string;
+  } | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [previewLightboxUrl, setPreviewLightboxUrl] = useState<string | null>(null);
+
+  const [isQuickVitalsDrawerOpen, setIsQuickVitalsDrawerOpen] = useState(false);
+  const [quickVitals, setQuickVitals] = useState({
+    systolic: '',
+    diastolic: '',
+    heartRate: '',
+    spo2: '',
+    temperature: '',
+    bloodSugar: '',
+    sugarType: 'random' as 'random' | 'fasting' | 'post_prandial',
+  });
+  const [vitalsSavedNotice, setVitalsSavedNotice] = useState(false);
   const pendingActionRef = useRef<(() => void) | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const isSendingRef = useRef(false);
@@ -256,6 +281,120 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const speakWizardQuestion = (question: string) => {
     speechEngine.speak(question, lang === 'ta' ? 'ta' : 'en');
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setToastMessage(lang === 'en' ? 'Image exceeds 10MB limit' : 'படம் 10MB அளவை தாண்டியுள்ளது');
+      e.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        const sizeKb = Math.round(file.size / 1024);
+        setAttachedPhoto({
+          dataUrl: reader.result,
+          fileName: file.name,
+          fileSize: sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`,
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleSaveQuickVitalsToMemory = () => {
+    let loggedCount = 0;
+    if (quickVitals.systolic && quickVitals.diastolic) {
+      const sys = Number(quickVitals.systolic);
+      const dia = Number(quickVitals.diastolic);
+      if (!isNaN(sys) && !isNaN(dia) && sys > 0 && dia > 0) {
+        healthMemoryService.addEntry('blood_pressure', { systolic: sys, diastolic: dia }, 'mmHg', 'manual_entry');
+        loggedCount++;
+      }
+    }
+    if (quickVitals.heartRate) {
+      const hr = Number(quickVitals.heartRate);
+      if (!isNaN(hr) && hr > 0) {
+        healthMemoryService.addEntry('heart_rate', hr, 'bpm', 'manual_entry');
+        loggedCount++;
+      }
+    }
+    if (quickVitals.spo2) {
+      const spo2Val = Number(quickVitals.spo2);
+      if (!isNaN(spo2Val) && spo2Val > 0) {
+        healthMemoryService.addEntry('spo2', spo2Val, '%', 'manual_entry');
+        loggedCount++;
+      }
+    }
+    if (quickVitals.temperature) {
+      const tempVal = Number(quickVitals.temperature);
+      if (!isNaN(tempVal) && tempVal > 0) {
+        healthMemoryService.addEntry('temperature', tempVal, '°F', 'manual_entry');
+        loggedCount++;
+      }
+    }
+    if (quickVitals.bloodSugar) {
+      const sugarVal = Number(quickVitals.bloodSugar);
+      if (!isNaN(sugarVal) && sugarVal > 0) {
+        const timingMap: Record<string, 'fasting' | 'postprandial' | 'random'> = {
+          fasting: 'fasting',
+          post_prandial: 'postprandial',
+          random: 'random',
+        };
+        healthMemoryService.addEntry(
+          'blood_sugar',
+          { glucose: sugarVal, timing: timingMap[quickVitals.sugarType] || 'random' },
+          'mg/dL',
+          'manual_entry'
+        );
+        loggedCount++;
+      }
+    }
+
+    if (loggedCount > 0) {
+      setVitalsSavedNotice(true);
+      setTimeout(() => setVitalsSavedNotice(false), 2500);
+    }
+    return loggedCount;
+  };
+
+  const handleConsultWithQuickVitals = () => {
+    handleSaveQuickVitalsToMemory();
+    const summaryParts: string[] = [];
+    if (quickVitals.systolic && quickVitals.diastolic) {
+      summaryParts.push(`BP: ${quickVitals.systolic}/${quickVitals.diastolic} mmHg`);
+    }
+    if (quickVitals.heartRate) {
+      summaryParts.push(`Pulse: ${quickVitals.heartRate} bpm`);
+    }
+    if (quickVitals.spo2) {
+      summaryParts.push(`SpO2: ${quickVitals.spo2}%`);
+    }
+    if (quickVitals.temperature) {
+      summaryParts.push(`Temp: ${quickVitals.temperature}°F`);
+    }
+    if (quickVitals.bloodSugar) {
+      const label = quickVitals.sugarType === 'fasting' ? 'Fasting' : quickVitals.sugarType === 'post_prandial' ? 'Post-meal' : 'Random';
+      summaryParts.push(`Blood Sugar: ${quickVitals.bloodSugar} mg/dL (${label})`);
+    }
+
+    if (summaryParts.length === 0) {
+      setToastMessage(lang === 'en' ? 'Please enter at least one vital reading' : 'குறைந்தது ஒரு அளவீட்டையாவது உள்ளிடவும்');
+      return;
+    }
+
+    setIsQuickVitalsDrawerOpen(false);
+    const consultPrompt = lang === 'ta'
+      ? `எனது தற்போதைய உடலியல் அளவீடுகள்: ${summaryParts.join(', ')}. இவற்றை மருத்துவ நெறிமுறைகளின்படி மதிப்பீடு செய்து எனக்கு வழிகாட்டவும்.`
+      : `My vitals logged right now: ${summaryParts.join(', ')}. Please evaluate these against standard clinical reference ranges and advise if anything needs attention.`;
+
+    handleSendMessage(consultPrompt);
   };
 
   const handleOptionSelect = (opt: string) => {
@@ -645,11 +784,19 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
     if (isSendingRef.current || isThinking) return;
 
-    const query = (textToSend || inputText).trim();
-    if (!query) return;
+    const rawQuery = (textToSend || inputText).trim();
+    const photoToAttach = attachedPhoto;
+    if (!rawQuery && !photoToAttach) return;
+
+    const query = rawQuery || (
+      lang === 'ta'
+        ? 'தயவுசெய்து இந்த புகைப்படத்தை ஆய்வு செய்து (தடிப்பு, தொண்டை, கண் சிவத்தல் அல்லது அறிகுறிகள்), வழிகாட்டவும்.'
+        : 'Please analyze this clinical symptom photo (skin rash, throat, eye redness, or physical signs) and advise me.'
+    );
 
     isSendingRef.current = true;
     setInputText('');
+    setAttachedPhoto(null);
     setIsThinking(true);
 
     const userMessage: ChatMessage = {
@@ -657,6 +804,8 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       sender: 'user',
       text: query,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      imageDataUrl: photoToAttach?.dataUrl,
+      attachmentName: photoToAttach?.fileName,
     };
 
     // Update session title if it was default
@@ -736,6 +885,13 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
             patientContext = parts.join('. ') + '.';
           }
         }
+        // Attach Chronological Medical Records Timeline so past records are referenced by exact date
+        const timelineSummary = medicalRecordService.getChronologicalTimelineSummary();
+        if (timelineSummary) {
+          patientContext = patientContext
+            ? `${patientContext} Patient Past Medical Records (Chronological Order): ${timelineSummary}`
+            : `Patient Past Medical Records (Chronological Order): ${timelineSummary}`;
+        }
       }
 
       const history = (activeSession?.messages || []).map((m) => ({
@@ -747,7 +903,8 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         query,
         history,
         patientContext,
-        currentModel.id
+        currentModel.id,
+        photoToAttach?.dataUrl
       );
 
       const aiMessage: ChatMessage = {
@@ -1771,10 +1928,38 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                     }`}
                   >
                     {/* User Attachment Indicator */}
-                    {isUser && msg.attachmentName && (
+                    {isUser && msg.attachmentName && !msg.imageDataUrl && (
                       <div className="mb-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-teal-100/70 border border-teal-200 text-[11px] font-bold text-teal-900">
                         <FileUp className="w-3.5 h-3.5 text-teal-700" />
                         <span>{msg.attachmentName}</span>
+                      </div>
+                    )}
+
+                    {/* Multimodal Symptom Photo Preview with Zoom Lightbox */}
+                    {isUser && msg.imageDataUrl && (
+                      <div className="mb-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewLightboxUrl(msg.imageDataUrl || null)}
+                          className="group relative block overflow-hidden rounded-xl border border-teal-300 shadow-xs max-w-xs transition-transform hover:scale-[1.01] cursor-pointer"
+                          title="Click to view full photo"
+                        >
+                          <img
+                            src={msg.imageDataUrl}
+                            alt={msg.attachmentName || 'Clinical Photo'}
+                            className="w-full max-h-56 object-cover rounded-xl"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1.5 backdrop-blur-[1px]">
+                            <Search className="w-4 h-4" />
+                            <span>Zoom Photo</span>
+                          </div>
+                        </button>
+                        {msg.attachmentName && (
+                          <div className="mt-1 text-[10px] text-teal-800 font-medium flex items-center gap-1">
+                            <Camera className="w-3 h-3 text-teal-600" />
+                            <span>{msg.attachmentName}</span>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1795,6 +1980,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                             {tool.name === 'longitudinalHealthMemory' && <Activity className="w-3 h-3 text-teal-600" />}
                             {tool.name === 'liveVisionDoctor' && <Video className="w-3 h-3 text-[#0B7A75]" />}
                             {tool.name === 'careLoopRecoveryMonitor' && <Clock className="w-3 h-3 text-teal-600" />}
+                            {tool.name === 'multimodalVisionDiagnostics' && <Camera className="w-3 h-3 text-teal-600" />}
                             <span>{tool.label}</span>
                             <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 ml-0.5" />
                           </span>
@@ -2323,6 +2509,22 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                     </>
                   )}
                 </div>
+
+                {/* Ambient Quick-Vitals Drawer Trigger */}
+                <button
+                  type="button"
+                  onClick={() => setIsQuickVitalsDrawerOpen(!isQuickVitalsDrawerOpen)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shadow-2xs ${
+                    isQuickVitalsDrawerOpen
+                      ? 'bg-[#0A604D] text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:border-teal-500 hover:bg-teal-50/60'
+                  }`}
+                  title="Toggle Ambient Quick Vitals Telemetry Drawer"
+                >
+                  <Activity className="w-3.5 h-3.5 text-teal-600" />
+                  <span>{lang === 'en' ? 'Quick Vitals' : 'உடலியல் பதிவு'}</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform ${isQuickVitalsDrawerOpen ? 'rotate-180' : ''}`} />
+                </button>
               </div>
 
               {/* Dynamic Color-Changing Realtime Quota Bar */}
@@ -2394,6 +2596,203 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               </div>
             )}
 
+            {/* Ambient Quick-Vitals Telemetry Drawer (Docked directly above chat input) */}
+            {isQuickVitalsDrawerOpen && (
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-teal-200/90 shadow-md animate-in fade-in slide-in-from-bottom-2 duration-200 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+                      <Activity className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                        {lang === 'en' ? 'Quick Vitals Telemetry' : 'உடனடி உடலியல் அளவீடுகள்'}
+                      </h4>
+                      <p className="text-[10px] text-slate-500">
+                        {lang === 'en' ? 'Log bedside readings directly into clinical memory' : 'மருத்துவ நினைவகத்தில் உடனடியாக பதிவு செய்யவும்'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsQuickVitalsDrawerOpen(false)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* 5 Vitals Inputs */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                  {/* Blood Pressure */}
+                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700 mb-1">
+                      <Heart className="w-3 h-3 text-rose-500" />
+                      <span>BP (Sys/Dia)</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        placeholder="120"
+                        value={quickVitals.systolic}
+                        onChange={(e) => setQuickVitals({ ...quickVitals, systolic: e.target.value })}
+                        className="w-1/2 p-1 text-xs text-center bg-white rounded border border-slate-200 outline-none focus:border-teal-500 font-medium"
+                      />
+                      <span className="text-slate-400 text-xs">/</span>
+                      <input
+                        type="number"
+                        placeholder="80"
+                        value={quickVitals.diastolic}
+                        onChange={(e) => setQuickVitals({ ...quickVitals, diastolic: e.target.value })}
+                        className="w-1/2 p-1 text-xs text-center bg-white rounded border border-slate-200 outline-none focus:border-teal-500 font-medium"
+                      />
+                    </div>
+                    <div className="text-[9px] text-slate-400 text-center mt-1">mmHg</div>
+                  </div>
+
+                  {/* Pulse */}
+                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700 mb-1">
+                      <Activity className="w-3 h-3 text-teal-600" />
+                      <span>Pulse</span>
+                    </div>
+                    <input
+                      type="number"
+                      placeholder="72"
+                      value={quickVitals.heartRate}
+                      onChange={(e) => setQuickVitals({ ...quickVitals, heartRate: e.target.value })}
+                      className="w-full p-1 text-xs text-center bg-white rounded border border-slate-200 outline-none focus:border-teal-500 font-medium"
+                    />
+                    <div className="text-[9px] text-slate-400 text-center mt-1">bpm</div>
+                  </div>
+
+                  {/* SpO2 */}
+                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700 mb-1">
+                      <Sparkles className="w-3 h-3 text-sky-500" />
+                      <span>SpO2 Oxygen</span>
+                    </div>
+                    <input
+                      type="number"
+                      placeholder="98"
+                      value={quickVitals.spo2}
+                      onChange={(e) => setQuickVitals({ ...quickVitals, spo2: e.target.value })}
+                      className="w-full p-1 text-xs text-center bg-white rounded border border-slate-200 outline-none focus:border-teal-500 font-medium"
+                    />
+                    <div className="text-[9px] text-slate-400 text-center mt-1">%</div>
+                  </div>
+
+                  {/* Temperature */}
+                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700 mb-1">
+                      <Thermometer className="w-3 h-3 text-amber-500" />
+                      <span>Temperature</span>
+                    </div>
+                    <input
+                      type="number"
+                      step="0.1"
+                      placeholder="98.6"
+                      value={quickVitals.temperature}
+                      onChange={(e) => setQuickVitals({ ...quickVitals, temperature: e.target.value })}
+                      className="w-full p-1 text-xs text-center bg-white rounded border border-slate-200 outline-none focus:border-teal-500 font-medium"
+                    />
+                    <div className="text-[9px] text-slate-400 text-center mt-1">°F</div>
+                  </div>
+
+                  {/* Blood Sugar */}
+                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80 col-span-2 sm:col-span-1">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 mb-1">
+                      <span className="flex items-center gap-1">
+                        <Droplets className="w-3 h-3 text-indigo-500" />
+                        <span>Sugar</span>
+                      </span>
+                      <select
+                        value={quickVitals.sugarType}
+                        onChange={(e) => setQuickVitals({ ...quickVitals, sugarType: e.target.value as any })}
+                        className="text-[9px] bg-white border border-slate-200 rounded px-1 outline-none text-slate-600 font-normal"
+                      >
+                        <option value="random">RBS</option>
+                        <option value="fasting">FBS</option>
+                        <option value="post_prandial">PPBS</option>
+                      </select>
+                    </div>
+                    <input
+                      type="number"
+                      placeholder="110"
+                      value={quickVitals.bloodSugar}
+                      onChange={(e) => setQuickVitals({ ...quickVitals, bloodSugar: e.target.value })}
+                      className="w-full p-1 text-xs text-center bg-white rounded border border-slate-200 outline-none focus:border-teal-500 font-medium"
+                    />
+                    <div className="text-[9px] text-slate-400 text-center mt-1">mg/dL</div>
+                  </div>
+                </div>
+
+                {/* Quick Vitals Buttons */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  {vitalsSavedNotice ? (
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 animate-in fade-in">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>{lang === 'en' ? 'Saved to Patient Health Memory' : 'மருத்துவ நினைவகத்தில் சேமிக்கப்பட்டது'}</span>
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-slate-400">
+                      {lang === 'en' ? 'Normal: BP ~120/80, SpO2 ≥ 95%, Pulse 60-100' : 'சாதாரண அளவீடு: BP 120/80, SpO2 ≥ 95%'}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 ml-auto">
+                    <button
+                      type="button"
+                      onClick={handleSaveQuickVitalsToMemory}
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      {lang === 'en' ? 'Save Only' : 'சேமிக்க'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConsultWithQuickVitals}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#0A604D] hover:bg-[#084F3F] text-white text-xs font-bold shadow-xs transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Send className="w-3 h-3" />
+                      <span>{lang === 'en' ? 'Log & Consult' : 'பதிவு & ஆலோசனை'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Attached Physical Symptom Photo Chip */}
+            {attachedPhoto && (
+              <div className="flex items-center justify-between px-3.5 py-2 rounded-2xl bg-teal-50/90 border border-teal-200/90 text-teal-950 shadow-2xs animate-in fade-in slide-in-from-bottom-2 duration-150">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-teal-300 flex-shrink-0 bg-white">
+                    <img
+                      src={attachedPhoto.dataUrl}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold truncate text-teal-900 flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5 text-teal-600 flex-shrink-0" />
+                      <span className="truncate">{attachedPhoto.fileName}</span>
+                    </div>
+                    <div className="text-[10px] text-teal-700 font-medium">
+                      {attachedPhoto.fileSize} • {lang === 'en' ? 'Ready for clinical vision diagnosis' : 'மருத்துவ பார்வை ஆய்வுக்கு தயார்'}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAttachedPhoto(null)}
+                  className="p-1.5 rounded-full hover:bg-teal-100 text-teal-700 hover:text-teal-900 transition-colors cursor-pointer"
+                  title="Remove photo"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
             {/* Input Capsule (Matching Chatbot UI.png) */}
             <form
               onSubmit={(e) => {
@@ -2403,7 +2802,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               }}
               className="rounded-full border flex items-center gap-2 p-1.5 sm:p-2 shadow-xs transition-all bg-white border-slate-300 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100"
             >
-              {/* Paperclip Attachment Button */}
+              {/* Paperclip Attachment Button (Prescription / Lab PDF) */}
               <button
                 type="button"
                 onClick={() => {
@@ -2413,6 +2812,22 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 title="Attach Prescription or Lab Slip"
               >
                 <Paperclip className="w-4 h-4 rotate-45" />
+              </button>
+
+              {/* Multimodal Camera / Symptom Photo Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  photoInputRef.current?.click();
+                }}
+                className={`p-2.5 rounded-full transition-colors cursor-pointer ${
+                  attachedPhoto
+                    ? 'text-teal-700 bg-teal-100 ring-2 ring-teal-300'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                }`}
+                title="Attach or snap photo of physical symptom (skin rash, eye redness, throat, wound)"
+              >
+                <Camera className="w-4 h-4" />
               </button>
 
               {/* Text Input Field */}
@@ -2461,6 +2876,15 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               accept="image/*,.pdf"
               className="hidden"
               onChange={handleFileUpload}
+            />
+
+            {/* Hidden Photo Input for Multimodal Clinical Vision */}
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoSelect}
             />
 
             {/* Bottom Medical Disclaimer (Matching Chatbot UI.png) */}
@@ -2584,6 +3008,38 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           }
         }}
       />
+
+      {/* Lightbox for Full-Resolution Clinical Photo Inspection */}
+      {previewLightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setPreviewLightboxUrl(null)}
+        >
+          <div
+            className="relative max-w-3xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl p-3 border border-slate-700 flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-full flex items-center justify-between pb-2 px-2 text-white text-xs font-bold border-b border-slate-800">
+              <span className="flex items-center gap-1.5 text-teal-400">
+                <Camera className="w-4 h-4" />
+                <span>Multimodal Clinical Vision Inspection</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewLightboxUrl(null)}
+                className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <img
+              src={previewLightboxUrl}
+              alt="Enlarged Clinical Photo"
+              className="max-h-[75vh] w-auto object-contain rounded-lg mt-2 shadow-inner"
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );

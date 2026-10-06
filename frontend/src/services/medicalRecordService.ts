@@ -12,11 +12,14 @@ import { authService } from './authService';
 
 export interface MedicalRecord {
   id: string;
-  documentType: 'PRESCRIPTION' | 'LAB_REPORT' | 'DISCHARGE_SUMMARY';
+  documentType: 'PRESCRIPTION' | 'LAB_REPORT' | 'DISCHARGE_SUMMARY' | 'RADIOLOGY' | 'VACCINATION';
   title: string;
   doctorName?: string;
   hospitalName?: string;
-  date: string;
+  date: string; // ISO date format YYYY-MM-DD
+  rawDateMentioned?: string;
+  fileName?: string;
+  fileSize?: string;
   diagnoses: string[];
   activeMedications: Array<{
     name: string;
@@ -34,7 +37,63 @@ export interface MedicalRecord {
     normalRange: string;
     status: 'NORMAL' | 'ELEVATED' | 'LOW';
   }>;
+  summaryNotes?: string;
   verifiedProtocolSource: string;
+}
+
+/**
+ * Normalizes any free-text or structured date string into strict ISO YYYY-MM-DD format.
+ */
+export function extractAndNormalizeDate(input?: string): string {
+  if (!input || !input.trim()) return new Date().toISOString().split('T')[0];
+
+  const trimmed = input.trim();
+
+  // Direct ISO match YYYY-MM-DD
+  const isoMatch = trimmed.match(/\b(20\d{2})[-/](0[1-9]|1[0-2])[-/](0[1-9]|[12]\d|3[01])\b/);
+  if (isoMatch) {
+    return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  }
+
+  // DD/MM/YYYY or DD-MM-YYYY
+  const dmyMatch = trimmed.match(/\b(0[1-9]|[12]\d|3[01])[-/.](0[1-9]|1[0-2])[-/.](20\d{2})\b/);
+  if (dmyMatch) {
+    return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`;
+  }
+
+  // Textual Month: "15 Oct 2024" or "October 15, 2024"
+  const monthMap: Record<string, string> = {
+    jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+    jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
+    january: '01', february: '02', march: '03', april: '04', june: '06',
+    july: '07', august: '08', september: '09', october: '10', november: '11', december: '12'
+  };
+
+  const textMonthRegex1 = /\b(0?[1-9]|[12]\d|3[01])(?:st|nd|rd|th)?\s+(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)[,\s]+(20\d{2})\b/i;
+  const m1 = trimmed.match(textMonthRegex1);
+  if (m1) {
+    const day = m1[1].padStart(2, '0');
+    const month = monthMap[m1[2].toLowerCase()] || '01';
+    const year = m1[3];
+    return `${year}-${month}-${day}`;
+  }
+
+  const textMonthRegex2 = /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(0?[1-9]|[12]\d|3[01])(?:st|nd|rd|th)?[,\s]+(20\d{2})\b/i;
+  const m2 = trimmed.match(textMonthRegex2);
+  if (m2) {
+    const month = monthMap[m2[1].toLowerCase()] || '01';
+    const day = m2[2].padStart(2, '0');
+    const year = m2[3];
+    return `${year}-${month}-${day}`;
+  }
+
+  // Fallback to Date parser
+  const parsed = new Date(trimmed);
+  if (!isNaN(parsed.getTime()) && parsed.getFullYear() >= 2000 && parsed.getFullYear() <= 2030) {
+    return parsed.toISOString().split('T')[0];
+  }
+
+  return new Date().toISOString().split('T')[0];
 }
 
 export interface ClinicalCrossCheckResult {
@@ -91,17 +150,77 @@ class MedicalRecordService {
   }
 
   getRecords(): MedicalRecord[] {
-    return this.profile.records;
+    return this.getChronologicalRecords(false);
+  }
+
+  /**
+   * Returns all medical records in strict chronological order.
+   * @param ascending If true, returns oldest to newest; if false, newest to oldest (default).
+   */
+  getChronologicalRecords(ascending = false): MedicalRecord[] {
+    return [...this.profile.records].sort((a, b) => {
+      const timeA = new Date(a.date).getTime() || 0;
+      const timeB = new Date(b.date).getTime() || 0;
+      return ascending ? timeA - timeB : timeB - timeA;
+    });
   }
 
   addRecord(record: MedicalRecord): void {
-    this.profile.records = [record, ...this.profile.records];
-    if (record.diagnoses) {
-      this.profile.chronicConditions = Array.from(new Set([...this.profile.chronicConditions, ...record.diagnoses]));
+    const cleanDate = extractAndNormalizeDate(record.date || record.rawDateMentioned);
+    const normalizedRecord: MedicalRecord = {
+      ...record,
+      date: cleanDate,
+    };
+    const updated = [normalizedRecord, ...this.profile.records.filter(r => r.id !== record.id)];
+    this.profile.records = this.sortRecords(updated, false);
+
+    if (normalizedRecord.diagnoses) {
+      this.profile.chronicConditions = Array.from(new Set([...this.profile.chronicConditions, ...normalizedRecord.diagnoses]));
     }
-    if (record.knownAllergies) {
-      this.profile.allergies = Array.from(new Set([...this.profile.allergies, ...record.knownAllergies]));
+    if (normalizedRecord.knownAllergies) {
+      this.profile.allergies = Array.from(new Set([...this.profile.allergies, ...normalizedRecord.knownAllergies]));
     }
+  }
+
+  deleteRecord(id: string): void {
+    this.profile.records = this.profile.records.filter(r => r.id !== id);
+  }
+
+  sortRecords(records: MedicalRecord[], ascending = false): MedicalRecord[] {
+    return [...records].sort((a, b) => {
+      const timeA = new Date(a.date).getTime() || 0;
+      const timeB = new Date(b.date).getTime() || 0;
+      return ascending ? timeA - timeB : timeB - timeA;
+    });
+  }
+
+  /**
+   * Synthesizes a chronologically sequenced longitudinal health timeline
+   * so the AI Doctor knows the exact clinical trajectory over time.
+   */
+  getChronologicalTimelineSummary(): string {
+    const sorted = this.getChronologicalRecords(true); // ascending for narrative timeline
+    if (sorted.length === 0) {
+      return 'No historical lab or clinical records uploaded yet.';
+    }
+
+    const items = sorted.map((r, idx) => {
+      const parts = [
+        `[#${idx + 1} | ${r.date}] ${r.title} (${r.documentType})`,
+      ];
+      if (r.diagnoses && r.diagnoses.length > 0) {
+        parts.push(`Diagnoses: ${r.diagnoses.join(', ')}`);
+      }
+      if (r.labFindings && r.labFindings.length > 0) {
+        parts.push(`Findings: ${r.labFindings.map(l => `${l.testName} = ${l.value} (${l.status})`).join('; ')}`);
+      }
+      if (r.activeMedications && r.activeMedications.length > 0) {
+        parts.push(`Medications: ${r.activeMedications.map(m => `${m.name} ${m.dosage}`).join(', ')}`);
+      }
+      return parts.join(' | ');
+    });
+
+    return items.join('\n');
   }
 
   /**
@@ -227,13 +346,15 @@ class MedicalRecordService {
     const isLabReport = typeof fileOrSample === 'string' && fileOrSample.includes('lab');
 
     if (isLabReport) {
+      const reportDate = new Date().toISOString().split('T')[0];
       const newLabRecord: MedicalRecord = {
         id: `REC-${Date.now()}`,
         documentType: 'LAB_REPORT',
         title: 'Complete Blood Count (CBC) & Dengue NS1 Antigen Test',
         doctorName: 'Dr. C. Saravanan, MD (Microbiology)',
         hospitalName: 'Government General Hospital / Royapuram Diagnostic Lab',
-        date: 'Today',
+        date: reportDate,
+        rawDateMentioned: 'Today',
         diagnoses: ['Dengue NS1 Antigen: NEGATIVE', 'Platelet Count: 2.15 Lakhs/mcL (Safe)'],
         activeMedications: [],
         knownAllergies: [],
@@ -250,13 +371,15 @@ class MedicalRecordService {
     }
 
     // Default: Doctor Prescription Slip OCR
+    const prescriptionDate = new Date().toISOString().split('T')[0];
     const newPrescriptionRecord: MedicalRecord = {
       id: `REC-${Date.now()}`,
       documentType: 'PRESCRIPTION',
       title: 'Acute Outpatient Prescription Slip',
       doctorName: 'Dr. S. K. Narayanan, MBBS, DNB (Internal Medicine)',
       hospitalName: 'Apollo Speciality Clinic / Stanley Urban Outpatient Clinic',
-      date: 'Today',
+      date: prescriptionDate,
+      rawDateMentioned: 'Today',
       diagnoses: ['Acute Upper Respiratory Tract Infection', 'Mild Bronchial Wheeze'],
       activeMedications: [
         {
