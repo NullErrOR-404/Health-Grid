@@ -89,6 +89,29 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* GPU Hardware Acceleration & Layer Promotion for buttery 120fps scrolling */
+.gpu-layer,
+header.sticky,
+.sticky.top-0 {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Table and heavy card container compositor optimization */
+.table-scroll-container,
+[data-kinetic-scroll] {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  contain: paint layout;
+}
+
+/* Off-screen rendering optimization for deep landing page sections */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+
 /* Safe area insets for notched mobile devices (iPhone, modern Android) */
 .safe-area-pb {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));

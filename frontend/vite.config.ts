@@ -26,6 +26,9 @@ export default defineConfig({
           if (id.includes('node_modules/@supabase')) {
             return 'vendor-supabase';
           }
+          if (id.includes('node_modules/lenis') || id.includes('node_modules/gsap')) {
+            return 'vendor-motion';
+          }
         },
       },
     },

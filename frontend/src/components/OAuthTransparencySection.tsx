@@ -25,7 +25,7 @@ export const OAuthTransparencySection: React.FC<OAuthTransparencySectionProps> =
     <section 
       id="transparency-and-trust" 
       aria-label="HealthGrid User Data Transparency and Trust"
-      className="w-full relative overflow-hidden bg-[#EDF5FF] border-t border-blue-100/70"
+      className="w-full relative overflow-hidden bg-[#EDF5FF] border-t border-blue-100/70 content-auto"
       style={{
         backgroundImage: `url('/user_data_trust_bg.png')`,
         backgroundPosition: 'right center',

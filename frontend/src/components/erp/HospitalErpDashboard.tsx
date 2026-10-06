@@ -50,6 +50,7 @@ import { OpdManagementView } from './OpdManagementView';
 import { IpdBedManagementView } from './IpdBedManagementView';
 import { AppointmentsView } from './AppointmentsView';
 import { EmergencyView } from './EmergencyView';
+import { lenisService } from '../../services/lenisService';
 
 interface HospitalErpDashboardProps {
   initialHospital?: HospitalEntity;
@@ -99,7 +100,19 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
   }, [currentHospital.code, currentHospital.name, currentHospital.totalBeds, currentHospital.availableBeds]);
 
   const [activeMenu, setActiveMenu] = useState('Patient Management');
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set(['Patient Management', 'Dashboard']));
   const [selectedOpdPatientId, setSelectedOpdPatientId] = useState<string | undefined>(undefined);
+
+  // Keep-alive synchronization and Lenis layout recalculation on tab switch
+  useEffect(() => {
+    setVisitedTabs((prev) => {
+      if (prev.has(activeMenu)) return prev;
+      const next = new Set(prev);
+      next.add(activeMenu);
+      return next;
+    });
+    lenisService.resize();
+  }, [activeMenu]);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isHospitalSwitcherOpen, setIsHospitalSwitcherOpen] = useState(false);
   const [quickActionModal, setQuickActionModal] = useState<string | null>(null);
@@ -439,44 +452,70 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
           </div>
         </aside>
 
-        {/* CONDITIONAL WORKSPACE BODY */}
-        {activeMenu === 'Patient Management' ? (
-          <PatientManagementView
-            onNavigateToOpdWithPatient={(patId) => {
-              setSelectedOpdPatientId(patId);
-              setActiveMenu('OPD Management');
-            }}
-            triggerToast={triggerToast}
-          />
-        ) : activeMenu === 'OPD Management' || activeMenu === 'OPD / Consultations' ? (
-          <OpdManagementView
-            initialPatientId={selectedOpdPatientId}
-            triggerToast={triggerToast}
-          />
-        ) : activeMenu === 'IPD & Bed Management' ? (
-          <IpdBedManagementView
-            triggerToast={triggerToast}
-            onNavigateToPatientProfile={(healthId) => {
-              triggerToast(`Navigating to patient Health Vault: ${healthId}`);
-            }}
-          />
-        ) : activeMenu === 'Appointments' ? (
-          <AppointmentsView
-            triggerToast={triggerToast}
-            onNavigateToOpdWithPatient={(patId) => {
-              setSelectedOpdPatientId(patId);
-              setActiveMenu('OPD Management');
-            }}
-          />
-        ) : activeMenu === 'Emergency' || activeMenu === 'Emergency / Casualty' ? (
-          <EmergencyView
-            triggerToast={triggerToast}
-            onNavigateToIpdBed={(_bedNumber) => {
-              setActiveMenu('IPD & Bed Management');
-            }}
-          />
-        ) : (
-          <main className="flex-1 overflow-y-auto p-4 lg:p-7 space-y-6">
+        {/* KEEP-ALIVE WORKSPACE BODY TABS (0ms Instant Switching & State Preservation) */}
+        {visitedTabs.has('Patient Management') && (
+          <div className={activeMenu === 'Patient Management' ? "flex-1 flex flex-col min-w-0" : "hidden"}>
+            <PatientManagementView
+              onNavigateToOpdWithPatient={(patId) => {
+                setSelectedOpdPatientId(patId);
+                setActiveMenu('OPD Management');
+              }}
+              triggerToast={triggerToast}
+            />
+          </div>
+        )}
+
+        {(visitedTabs.has('OPD Management') || visitedTabs.has('OPD / Consultations')) && (
+          <div className={(activeMenu === 'OPD Management' || activeMenu === 'OPD / Consultations') ? "flex-1 flex flex-col min-w-0" : "hidden"}>
+            <OpdManagementView
+              initialPatientId={selectedOpdPatientId}
+              triggerToast={triggerToast}
+            />
+          </div>
+        )}
+
+        {visitedTabs.has('IPD & Bed Management') && (
+          <div className={activeMenu === 'IPD & Bed Management' ? "flex-1 flex flex-col min-w-0" : "hidden"}>
+            <IpdBedManagementView
+              triggerToast={triggerToast}
+              onNavigateToPatientProfile={(healthId) => {
+                triggerToast(`Navigating to patient Health Vault: ${healthId}`);
+              }}
+            />
+          </div>
+        )}
+
+        {visitedTabs.has('Appointments') && (
+          <div className={activeMenu === 'Appointments' ? "flex-1 flex flex-col min-w-0" : "hidden"}>
+            <AppointmentsView
+              triggerToast={triggerToast}
+              onNavigateToOpdWithPatient={(patId) => {
+                setSelectedOpdPatientId(patId);
+                setActiveMenu('OPD Management');
+              }}
+            />
+          </div>
+        )}
+
+        {(visitedTabs.has('Emergency') || visitedTabs.has('Emergency / Casualty')) && (
+          <div className={(activeMenu === 'Emergency' || activeMenu === 'Emergency / Casualty') ? "flex-1 flex flex-col min-w-0" : "hidden"}>
+            <EmergencyView
+              triggerToast={triggerToast}
+              onNavigateToIpdBed={(_bedNumber) => {
+                setActiveMenu('IPD & Bed Management');
+              }}
+            />
+          </div>
+        )}
+
+        {/* Executive Overview Dashboard (Shown for 'Dashboard' or unassigned modules) */}
+        <main
+          className={`flex-1 overflow-y-auto p-4 lg:p-7 space-y-6 ${
+            !['Patient Management', 'OPD Management', 'OPD / Consultations', 'IPD & Bed Management', 'Appointments', 'Emergency', 'Emergency / Casualty'].includes(activeMenu)
+              ? 'block'
+              : 'hidden'
+          }`}
+        >
           {/* Header Row: Greeting & Action Buttons */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -1016,7 +1055,6 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
             </div>
           </div>
           </main>
-        )}
       </div>
 
       {/* QUICK ACTION MODAL SIMULATOR */}

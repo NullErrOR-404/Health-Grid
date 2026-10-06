@@ -22,12 +22,12 @@ class LenisService {
     }
 
     this.lenisInstance = new Lenis({
-      duration: 1.15, // Silky, responsive inertia feel
+      duration: 0.85, // Ultra-responsive, snappy inertia feel
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential deceleration
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 0.95,
+      wheelMultiplier: 1.15, // Immediate tactile reaction to wheel & trackpad gestures
       touchMultiplier: 1.0,
       syncTouch: false, // CRITICAL: Never hijack native touch momentum scrolling on mobile devices!
       infinite: false,

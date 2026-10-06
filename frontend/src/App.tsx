@@ -37,6 +37,35 @@ const PatientIntakeModal = lazy(() => import('./components/PatientIntakeModal').
 const HealthGuideModal = lazy(() => import('./components/HealthGuideModal').then(m => ({ default: m.HealthGuideModal })));
 const LoginModal = lazy(() => import('./components/LoginModal').then(m => ({ default: m.LoginModal })));
 
+// Background Prefetch Handlers for 0ms Route Switching
+export const prefetchRouteChunks = {
+  chat: () => import('./components/ChatbotPage'),
+  profile: () => import('./components/ProfilePage'),
+  maps: () => import('./components/FindCareNearYou'),
+  medicines: () => import('./components/MedicineStorePage'),
+  'hospital-erp': () => import('./components/erp/HospitalErpDashboard'),
+  privacy: () => import('./components/PrivacyPolicyPage'),
+  ambulance: () => import('./components/AmbulanceModal'),
+  prescription: () => import('./components/PrescriptionModal'),
+  login: () => import('./components/LoginModal'),
+};
+
+const prefetchSecondaryRoutesOnIdle = () => {
+  if (typeof window === 'undefined') return;
+  const schedule = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1200));
+  schedule(() => {
+    prefetchRouteChunks.chat();
+    prefetchRouteChunks['hospital-erp']();
+    prefetchRouteChunks.medicines();
+
+    setTimeout(() => {
+      prefetchRouteChunks.maps();
+      prefetchRouteChunks.profile();
+      prefetchRouteChunks.ambulance();
+    }, 1500);
+  });
+};
+
 const ViewLoadingFallback = () => (
   <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 space-y-4">
     <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
@@ -80,9 +109,10 @@ export default function App() {
     selectedGuide
   );
 
-  // Initialize Lenis Smooth Scroll on application mount
+  // Initialize Lenis Smooth Scroll & idle route prefetching on application mount
   useEffect(() => {
     lenisService.init();
+    prefetchSecondaryRoutesOnIdle();
     return () => {
       lenisService.destroy();
     };
