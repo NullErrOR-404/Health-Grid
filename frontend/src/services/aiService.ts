@@ -22,6 +22,30 @@ export interface InteractiveOptions {
   items: string[];
 }
 
+export interface TriageWizardOption {
+  labelEn: string;
+  labelTa: string;
+  value: string;
+  isRedFlag?: boolean;
+}
+
+export interface TriageWizardStep {
+  id: string;
+  titleEn: string;
+  titleTa: string;
+  questionEn: string;
+  questionTa: string;
+  options: TriageWizardOption[];
+}
+
+export interface TriageWizard {
+  id: string;
+  topicEn: string;
+  topicTa: string;
+  totalSteps: number;
+  steps: TriageWizardStep[];
+}
+
 export interface ModelOption {
   id: string;
   name: string;
@@ -106,6 +130,7 @@ export interface AgiResponse {
   executedTools?: AgentToolCall[];
   genericMedicines?: JanAushadhiResult[];
   suggestedOptions?: InteractiveOptions;
+  triageWizard?: TriageWizard;
   usage: {
     promptTokens: number;
     completionTokens: number;
@@ -878,7 +903,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       emotionalState,
       executedTools,
       genericMedicines,
-      sanitized.suggestedOptions
+      sanitized.suggestedOptions,
+      sanitized.triageWizard
     );
   }
 
@@ -981,7 +1007,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       emotionalState,
       executedTools,
       genericMedicines,
-      sanitized.suggestedOptions
+      sanitized.suggestedOptions,
+      sanitized.triageWizard
     );
   }
 
@@ -999,7 +1026,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     text: string,
     userQuery: string,
     emotionalState?: EmotionalAssessment['state']
-  ): { cleanedContent: string; suggestedOptions: InteractiveOptions } {
+  ): { cleanedContent: string; suggestedOptions: InteractiveOptions; triageWizard?: TriageWizard } {
     let cleaned = text
       .replace(/<think>[\s\S]*?<\/think>/gi, '')
       .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')
@@ -1099,9 +1126,13 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       }
     }
 
+    // 8. Dynamic Clinical Triage Wizard Generation
+    const triageWizard = this.generateDynamicTriageWizard(userQuery, cleaned, emotionalState);
+
     return {
       cleanedContent: cleaned,
       suggestedOptions,
+      triageWizard,
     };
   }
 
@@ -1125,7 +1156,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     emotionalState?: EmotionalAssessment['state'],
     executedTools?: AgentToolCall[],
     genericMedicines?: JanAushadhiResult[],
-    suggestedOptions?: InteractiveOptions
+    suggestedOptions?: InteractiveOptions,
+    triageWizard?: TriageWizard
   ): AgiResponse {
     const lower = content.toLowerCase();
 
@@ -1162,6 +1194,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       executedTools,
       genericMedicines,
       suggestedOptions,
+      triageWizard,
       usage: {
         promptTokens,
         completionTokens,
@@ -1169,6 +1202,648 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
         totalTokens,
         latencyMs,
       },
+    };
+  }
+
+  /**
+   * Generates a context-calibrated, ICMR-standard interactive triage wizard
+   * with condition-specific steps and red flag markers.
+   */
+  private generateDynamicTriageWizard(
+    userQuery: string,
+    cleaned: string,
+    emotionalState?: EmotionalAssessment['state']
+  ): TriageWizard | undefined {
+    if (isCasualGreetingOrSocial(userQuery)) {
+      return undefined;
+    }
+
+    const qLower = userQuery.toLowerCase();
+    const cLower = cleaned.toLowerCase();
+    const combined = `${qLower} ${cLower}`;
+
+    // 1. Chest, Respiratory & Cardiac
+    if (
+      combined.includes('chest') ||
+      combined.includes('nenju') ||
+      combined.includes('heart') ||
+      combined.includes('breath') ||
+      combined.includes('wheez') ||
+      combined.includes('மூச்சு') ||
+      combined.includes('நெஞ்சு')
+    ) {
+      return {
+        id: `wiz-chest-${Date.now()}`,
+        topicEn: 'Chest & Respiratory Triage',
+        topicTa: 'நெஞ்சு மற்றும் சுவாச மதிப்பீடு',
+        totalSteps: 3,
+        steps: [
+          {
+            id: 'chest-sensation',
+            titleEn: 'Chest Sensation',
+            titleTa: 'நெஞ்சு அசௌகரியம்',
+            questionEn: 'What type of sensation or pain do you feel in your chest?',
+            questionTa: 'உங்கள் நெஞ்சில் உணரும் வலி அல்லது அசௌகரியம் எத்தகையது?',
+            options: [
+              {
+                labelEn: 'Heavy squeezing, tightness, or crushing pressure',
+                labelTa: 'கனமான அழுத்தம், பிசைவது அல்லது இறுக்கம்',
+                value: 'heavy_crushing_pressure',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'Sharp, catching pain when breathing deeply',
+                labelTa: 'ஆழமாக மூச்சு விடும்போது கூர்மையான குத்தும் வலி',
+                value: 'sharp_pleuritic_pain',
+              },
+              {
+                labelEn: 'Burning sensation rising into throat / Acidity',
+                labelTa: 'தொண்டை வரை எரியும் நெஞ்செரிச்சல் / அமிலத்தன்மை',
+                value: 'burning_reflux',
+              },
+              {
+                labelEn: 'Mild muscle ache when moving shoulders/arms',
+                labelTa: 'தோள்களை அசைக்கும்போது லேசான தசை வலி',
+                value: 'musculoskeletal_ache',
+              },
+            ],
+          },
+          {
+            id: 'chest-radiation',
+            titleEn: 'Radiation & Sweating',
+            titleTa: 'வலி பரவுதல் & வியர்வை',
+            questionEn: 'Does the discomfort spread or come with cold sweating?',
+            questionTa: 'வலி வேறு இடங்களுக்கு பரவுகிறதா அல்லது குளிர் வியர்வை உள்ளதா?',
+            options: [
+              {
+                labelEn: 'Radiates to left arm, neck, shoulder, or jaw',
+                labelTa: 'இடது கை, கழுத்து, தோள்பட்டை அல்லது தாடைக்கு பரவுகிறது',
+                value: 'radiates_to_arm_jaw',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'Accompanied by cold sweating and dizziness',
+                labelTa: 'குளிர் வியர்வை மற்றும் தலைச்சுற்றல் உள்ளது',
+                value: 'cold_sweat_dizzy',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'Shortness of breath on walking even a few steps',
+                labelTa: 'சிறிது தூரம் நடந்தாலே மூச்சுத்திணறல் ஏற்படுகிறது',
+                value: 'dyspnea_on_exertion',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'Stays in one localized spot without spreading',
+                labelTa: 'ஒரே இடத்தில் உள்ளது, எங்கும் பரவவில்லை',
+                value: 'strictly_localized',
+              },
+            ],
+          },
+          {
+            id: 'chest-speech',
+            titleEn: 'Breathing Effort',
+            titleTa: 'சுவாச நிலை',
+            questionEn: 'Can you speak comfortably in complete sentences right now?',
+            questionTa: 'தற்போது மூச்சு வாங்காமல் தொடர்ந்து சரளமாக பேச முடிகிறதா?',
+            options: [
+              {
+                labelEn: 'Yes, speaking completely normally without gasping',
+                labelTa: 'ஆம், எந்த சிரமமும் இன்றி பேச முடிகிறது',
+                value: 'speaking_normally',
+              },
+              {
+                labelEn: 'Struggling to catch breath between words',
+                labelTa: 'வார்த்தைகளுக்கு இடையில் மூச்சு வாங்குகிறது',
+                value: 'speaking_with_difficulty',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'Continuous wheezing or feeling faint right now',
+                labelTa: 'தொடர் இரைப்பு சத்தம் அல்லது மயக்க உணர்வு',
+                value: 'wheezing_or_presyncope',
+                isRedFlag: true,
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    // 2. Pediatric & Child Care
+    if (
+      combined.includes('child') ||
+      combined.includes('baby') ||
+      combined.includes('infant') ||
+      combined.includes('kid') ||
+      combined.includes('toddler') ||
+      combined.includes('months old') ||
+      combined.includes('year old') ||
+      combined.includes('குழந்தை') ||
+      combined.includes('பாப்பா') ||
+      emotionalState === 'parental_worry'
+    ) {
+      return {
+        id: `wiz-peds-${Date.now()}`,
+        topicEn: 'Pediatric Clinical Triage',
+        topicTa: 'குழந்தை நலப் பரிசோதனை',
+        totalSteps: 3,
+        steps: [
+          {
+            id: 'peds-age',
+            titleEn: "Child's Age",
+            titleTa: 'குழந்தையின் வயது',
+            questionEn: "What is your child's age group?",
+            questionTa: 'குழந்தையின் வயது வரம்பு என்ன?',
+            options: [
+              {
+                labelEn: 'Young infant under 3 months old',
+                labelTa: '3 மாதத்திற்கு உட்பட்ட பச்சிளம் குழந்தை',
+                value: 'infant_under_3m',
+                isRedFlag: true,
+              },
+              {
+                labelEn: '3 to 12 months old',
+                labelTa: '3 முதல் 12 மாத குழந்தை',
+                value: 'baby_3_to_12m',
+              },
+              {
+                labelEn: 'Toddler (1 to 5 years)',
+                labelTa: 'சிறு குழந்தை (1 முதல் 5 வயது)',
+                value: 'toddler_1_to_5y',
+              },
+              {
+                labelEn: 'School age child (6+ years)',
+                labelTa: 'பள்ளிச் சிறுவர் (6+ வயது)',
+                value: 'child_6plus',
+              },
+            ],
+          },
+          {
+            id: 'peds-alertness',
+            titleEn: 'Alertness & Activity',
+            titleTa: 'சுறுசுறுப்பு & விழிப்புணர்வு',
+            questionEn: 'How responsive, active, and playful is the child?',
+            questionTa: 'குழந்தையின் விழிப்புணர்வும் சுறுசுறுப்பும் எவ்வாறு உள்ளது?',
+            options: [
+              {
+                labelEn: 'Alert, smiling and active as usual',
+                labelTa: 'சுறுசுறுப்பாக விளையாடுகிறது, சிரிக்கிறது',
+                value: 'alert_and_playful',
+              },
+              {
+                labelEn: 'Fussy and cranky, but calms when comforted',
+                labelTa: 'அழுகிறது, ஆனால் தூக்கினால் அமைதியாகிறது',
+                value: 'fussy_consolable',
+              },
+              {
+                labelEn: 'Very sleepy, limp or difficult to wake up',
+                labelTa: 'மிகவும் சோர்ந்துள்ளது, எழுப்பக் கடினமாக உள்ளது',
+                value: 'drowsy_limp',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'High-pitched inconsolable non-stop crying',
+                labelTa: 'அடங்காமல் தொடர்ந்து தீவிரமாக அழுகிறது',
+                value: 'inconsolable_crying',
+                isRedFlag: true,
+              },
+            ],
+          },
+          {
+            id: 'peds-fluids',
+            titleEn: 'Fluids & Wet Diapers',
+            titleTa: 'திரவ உட்கொள்ளல் & சிறுநீர்',
+            questionEn: 'Is the child accepting liquids and passing normal urine?',
+            questionTa: 'குழந்தை பால்/நீர் குடிக்கிறதா? வழக்கம்போல சிறுநீர் கழிக்கிறதா?',
+            options: [
+              {
+                labelEn: 'Drinking fluids well with normal wet diapers',
+                labelTa: 'நன்றாக குடிக்கிறது, வழக்கமான சிறுநீர் வெளியேற்றம்',
+                value: 'normal_hydration',
+              },
+              {
+                labelEn: 'Drinking slightly less, but still passing urine',
+                labelTa: 'குறைவாக குடிக்கிறது, ஆனால் சிறுநீர் போகிறது',
+                value: 'slightly_reduced_intake',
+              },
+              {
+                labelEn: 'Refusing all milk/water or vomiting everything',
+                labelTa: 'எதையும் குடிக்க மறுக்கிறது அல்லது வாந்தி எடுக்கிறது',
+                value: 'refusing_all_fluids',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'No wet diaper or urine passed for 6+ hours',
+                labelTa: '6+ மணி நேரமாக சிறுநீர் கழிக்கவில்லை / கண்கள் குழிவிழுந்துள்ளது',
+                value: 'no_urine_6h',
+                isRedFlag: true,
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    // 3. Headache & Migraine
+    if (
+      combined.includes('headache') ||
+      combined.includes('migraine') ||
+      combined.includes('head ache') ||
+      combined.includes('thala') ||
+      combined.includes('தலைவலி')
+    ) {
+      return {
+        id: `wiz-headache-${Date.now()}`,
+        topicEn: 'Headache & Neurological Triage',
+        topicTa: 'தலைவலி மற்றும் நரம்பியல் பரிசோதனை',
+        totalSteps: 3,
+        steps: [
+          {
+            id: 'headache-location',
+            titleEn: 'Headache Location',
+            titleTa: 'தலைவலி பகுதி',
+            questionEn: 'Where is the pain predominantly located?',
+            questionTa: 'தலைவலி எந்தப் பகுதியில் அதிகமாக உணரப்படுகிறது?',
+            options: [
+              {
+                labelEn: 'One side of the head with throbbing / pulsing sensation',
+                labelTa: 'தலையின் ஒரு பக்கத்தில் மட்டும் துடிக்கும் வலி',
+                value: 'unilateral_throbbing',
+              },
+              {
+                labelEn: 'Forehead, bridge of nose and behind eyes (Sinus)',
+                labelTa: 'நெற்றி, மூக்கு மற்றும் கண்களுக்குப் பின்னால்',
+                value: 'frontal_sinus',
+              },
+              {
+                labelEn: 'Tight squeezing band around head and back of neck',
+                labelTa: 'தலையைச் சுற்றி இறுக்கியது போன்ற தசை வலி',
+                value: 'tension_band',
+              },
+              {
+                labelEn: 'Entire head feels heavy and congested',
+                labelTa: 'முழு தலையும் கனமாக பாரமாக உள்ளது',
+                value: 'generalized_heavy',
+              },
+            ],
+          },
+          {
+            id: 'headache-severity',
+            titleEn: 'Pain Severity Level',
+            titleTa: 'வலியின் தீவிரம்',
+            questionEn: 'How intense is the pain right now?',
+            questionTa: 'வலியின் தீவிரம் தற்போது எந்த அளவில் உள்ளது?',
+            options: [
+              {
+                labelEn: 'Mild (1-3/10) - Able to continue daily routines',
+                labelTa: 'லேசானது - வழக்கமான வேலைகளை செய்ய முடிகிறது',
+                value: 'mild_routine',
+              },
+              {
+                labelEn: 'Moderate (4-6/10) - Needs rest in a quiet dark room',
+                labelTa: 'நடுத்தரமானது - அமைதியான இருட்டு அறையில் ஓய்வு தேவை',
+                value: 'moderate_needs_rest',
+              },
+              {
+                labelEn: 'Severe thunderclap (9-10/10) - Sudden worst pain ever',
+                labelTa: 'தாங்க முடியாத அதிதீவிரம் - மின்னல் போல திடீரென வந்த வலி',
+                value: 'severe_thunderclap',
+                isRedFlag: true,
+              },
+            ],
+          },
+          {
+            id: 'headache-associated',
+            titleEn: 'Associated Symptoms',
+            titleTa: 'கூடுதல் அறிகுறிகள்',
+            questionEn: 'Do you experience vision issues, nausea, or fever with it?',
+            questionTa: 'பார்வை குறைபாடு, குமட்டல் அல்லது காய்ச்சல் ஏதேனும் உள்ளதா?',
+            options: [
+              {
+                labelEn: 'Sensitivity to bright lights and loud sounds',
+                labelTa: 'வெளிச்சம் மற்றும் சத்தம் பார்த்தால் வலி கூடுகிறது',
+                value: 'photophobia',
+              },
+              {
+                labelEn: 'Nausea or feeling like vomiting',
+                labelTa: 'குமட்டல் அல்லது வாந்தி உணர்வு',
+                value: 'nausea',
+              },
+              {
+                labelEn: 'Blurred vision, facial droop, or arm weakness',
+                labelTa: 'பார்வை மங்கல், முகம் கோணுதல் அல்லது ஒரு கை பலவீனம்',
+                value: 'focal_neuro_deficit',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'None of the above',
+                labelTa: 'மேற்கண்டவை எதுவும் இல்லை',
+                value: 'none_of_above',
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    // 4. Stomach, Digestive & Abdominal
+    if (
+      combined.includes('stomach') ||
+      combined.includes('abdomen') ||
+      combined.includes('belly') ||
+      combined.includes('loose motion') ||
+      combined.includes('diarrhea') ||
+      combined.includes('vomit') ||
+      combined.includes('nausea') ||
+      combined.includes('acidity') ||
+      combined.includes('gastric') ||
+      combined.includes('vayiru') ||
+      combined.includes('வயிறு') ||
+      combined.includes('வாந்தி') ||
+      combined.includes('வயிற்றுப்போக்கு')
+    ) {
+      return {
+        id: `wiz-stomach-${Date.now()}`,
+        topicEn: 'Digestive & Abdominal Triage',
+        topicTa: 'செரிமானம் மற்றும் வயிற்றுப் பரிசோதனை',
+        totalSteps: 3,
+        steps: [
+          {
+            id: 'stomach-discomfort',
+            titleEn: 'Discomfort Type',
+            titleTa: 'அசௌகரியத்தின் வகை',
+            questionEn: 'What best describes your stomach discomfort?',
+            questionTa: 'உங்கள் வயிற்றுப் பிரச்சனை எத்தகைய தன்மையுடையது?',
+            options: [
+              {
+                labelEn: 'Burning acid sensation in upper abdomen / chest',
+                labelTa: 'மேல் வயிற்றில் அல்லது நெஞ்சில் அமிலத்தன்மை மற்றும் எரிச்சல்',
+                value: 'burning_acid_reflux',
+              },
+              {
+                labelEn: 'Cramping, spasms or sharp colicky pain in belly',
+                labelTa: 'வயிற்றைப் பிசையும் சுளுக்கு வலி அல்லது தசைப்பிடிப்பு',
+                value: 'cramping_colic',
+              },
+              {
+                labelEn: 'Frequent watery loose motions or diarrhea',
+                labelTa: 'தொடர் நீர்த்த வயிற்றுப்போக்கு',
+                value: 'watery_diarrhea',
+              },
+              {
+                labelEn: 'Excessive bloating, trapped gas and nausea',
+                labelTa: 'அதிக வாயு, வயிறு உப்பசம் மற்றும் குமட்டல்',
+                value: 'bloating_and_gas',
+              },
+            ],
+          },
+          {
+            id: 'stomach-timing',
+            titleEn: 'Timing & Meals',
+            titleTa: 'நேரமும் உணவும்',
+            questionEn: 'When does this discomfort feel most noticeable?',
+            questionTa: 'இந்த வலி அல்லது உபாதை எப்போது அதிகமாகிறது?',
+            options: [
+              {
+                labelEn: '30-60 minutes after eating spicy, oily or heavy meals',
+                labelTa: 'காரமான அல்லது எண்ணெய்ப் பலகாரம் சாப்பிட்ட பின்',
+                value: 'post_heavy_meal',
+              },
+              {
+                labelEn: 'On empty stomach or during early morning hours',
+                labelTa: 'வெறும் வயிற்றில் அல்லது அதிகாலை நேரத்தில்',
+                value: 'empty_stomach_morning',
+              },
+              {
+                labelEn: 'Constant continuous discomfort throughout the day',
+                labelTa: 'நாள் முழுவதும் தொடர்ச்சியாக உள்ள வலி',
+                value: 'constant_all_day',
+              },
+              {
+                labelEn: 'Started suddenly after eating street / outside food',
+                labelTa: 'வெளி உணவு சாப்பிட்ட பிறகு திடீரென தொடங்கியது',
+                value: 'outside_food_acute',
+              },
+            ],
+          },
+          {
+            id: 'stomach-warning',
+            titleEn: 'Hydration & Danger Signs',
+            titleTa: 'நீர்ச்சத்தும் எச்சரிக்கை அறிகுறிகளும்',
+            questionEn: 'Can you drink water comfortably, and are any warning signs present?',
+            questionTa: 'தண்ணீர் குடிக்க முடிகிறதா? எச்சரிக்கை அறிகுறிகள் உள்ளதா?',
+            options: [
+              {
+                labelEn: 'Drinking water and fluids comfortably without nausea',
+                labelTa: 'தண்ணீர் நன்றாக குடிக்க முடிகிறது, வாந்தி இல்லை',
+                value: 'hydrating_normally',
+              },
+              {
+                labelEn: 'Thirsty, dry mouth and feeling lightheaded',
+                labelTa: 'அதிக தாகம், வாய் உலர்வது மற்றும் சோர்வு',
+                value: 'mild_dehydration',
+              },
+              {
+                labelEn: 'Cannot keep any liquids down / Repeated vomiting',
+                labelTa: 'தண்ணீர் குடித்தாலும் நிற்காமல் தொடர்ந்து வாந்தி ஆகிறது',
+                value: 'intolerant_to_fluids',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'Black or bloody stools / High fever with severe sharp pain',
+                labelTa: 'கருப்பு அல்லது இரத்த மலம் / கடுமையான காய்ச்சல்',
+                value: 'blood_in_stool_or_fever',
+                isRedFlag: true,
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    // 5. Fever, Infection, Cough & Cold
+    if (
+      combined.includes('fever') ||
+      combined.includes('kaichal') ||
+      combined.includes('cold') ||
+      combined.includes('cough') ||
+      combined.includes('chills') ||
+      combined.includes('shivering') ||
+      combined.includes('infection') ||
+      combined.includes('காய்ச்சல்') ||
+      combined.includes('சளி') ||
+      combined.includes('இருமல்')
+    ) {
+      return {
+        id: `wiz-fever-${Date.now()}`,
+        topicEn: 'Fever & Infection Assessment',
+        topicTa: 'காய்ச்சல் மற்றும் தொற்று மதிப்பீடு',
+        totalSteps: 3,
+        steps: [
+          {
+            id: 'fever-duration',
+            titleEn: 'Fever Duration',
+            titleTa: 'காய்ச்சலின் காலம்',
+            questionEn: 'How long have you had this fever?',
+            questionTa: 'காய்ச்சல் தொடங்கி எத்தனை நாட்கள் ஆகிறது?',
+            options: [
+              {
+                labelEn: 'Just started today (Less than 24 hours)',
+                labelTa: 'இன்று தொடங்கியது (24 மணி நேரத்திற்குள்)',
+                value: 'under_24_hours',
+              },
+              {
+                labelEn: '1 to 3 days',
+                labelTa: '1 முதல் 3 நாட்கள்',
+                value: '1_to_3_days',
+              },
+              {
+                labelEn: '4 to 7 days (Persistent)',
+                labelTa: '4 முதல் 7 நாட்கள் (தொடர்கிறது)',
+                value: '4_to_7_days',
+              },
+              {
+                labelEn: 'More than a week',
+                labelTa: 'ஒரு வாரத்திற்கும் மேலாக உள்ளது',
+                value: 'more_than_week',
+                isRedFlag: true,
+              },
+            ],
+          },
+          {
+            id: 'fever-temperature',
+            titleEn: 'Body Temperature & Chills',
+            titleTa: 'உடல் சூடும் நடுக்கமும்',
+            questionEn: 'What is your recorded or estimated fever level?',
+            questionTa: 'உடலின் சூடு அளவு அல்லது நடுக்கம் எவ்வாறு உள்ளது?',
+            options: [
+              {
+                labelEn: 'Mild warmth (Under 100°F / 37.8°C)',
+                labelTa: 'மிதமான சூடு (100°F / 37.8°C-க்கு கீழ்)',
+                value: 'mild_under_100',
+              },
+              {
+                labelEn: 'Moderate fever (100°F - 102°F)',
+                labelTa: 'நடுத்தர காய்ச்சல் (100°F - 102°F)',
+                value: 'moderate_100_102',
+              },
+              {
+                labelEn: 'High fever (> 102°F / 38.9°C) with intense chills / shivering',
+                labelTa: 'அதி தீவிர காய்ச்சல் (> 102°F) மற்றும் உடல் நடுக்கம்',
+                value: 'high_chills',
+              },
+              {
+                labelEn: 'Forehead feels very hot, but not measured with thermometer',
+                labelTa: 'நெற்றி கொதிக்கிறது, ஆனால் தெர்மாமீட்டரில் அளவிடவில்லை',
+                value: 'unmeasured_burning',
+              },
+            ],
+          },
+          {
+            id: 'fever-danger-signs',
+            titleEn: 'Red Flag Danger Signs',
+            titleTa: 'எச்சரிக்கை அறிகுறிகள்',
+            questionEn: 'Are any of these urgent danger signs present?',
+            questionTa: 'கீழ்க்கண்ட தீவிர எச்சரிக்கை அறிகுறிகள் ஏதேனும் உள்ளதா?',
+            options: [
+              {
+                labelEn: 'None of these, just normal body weakness and fatigue',
+                labelTa: 'இவை எதுவும் இல்லை, லேசான உடல் சோர்வு மட்டுமே',
+                value: 'none_just_fatigue',
+              },
+              {
+                labelEn: 'Stiff neck, severe blinding headache or confusion',
+                labelTa: 'கழுத்து விரைப்பு, தீவிர தலைவலி அல்லது குழப்பம்',
+                value: 'stiff_neck_confusion',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'Difficulty breathing or sudden dark red skin rash',
+                labelTa: 'மூச்சுத்திணறல் அல்லது தோலில் சிவப்பு தடிப்புகள்',
+                value: 'breathing_trouble_rash',
+                isRedFlag: true,
+              },
+              {
+                labelEn: 'Persistent vomiting and unable to drink fluids',
+                labelTa: 'தொடர் வாந்தி மற்றும் நீர் கூட குடிக்க இயலாமை',
+                value: 'persistent_vomiting',
+                isRedFlag: true,
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    // 6. General Clinical Symptoms (Default for any clinical complaint)
+    return {
+      id: `wiz-general-${Date.now()}`,
+      topicEn: 'Clinical Triage Assessment',
+      topicTa: 'மருத்துவ நிலை மதிப்பீடு',
+      totalSteps: 2,
+      steps: [
+        {
+          id: 'gen-duration',
+          titleEn: 'Symptom Duration',
+          titleTa: 'அறிகுறியின் காலம்',
+          questionEn: 'How long have you been experiencing this condition?',
+          questionTa: 'இந்த பிரச்சனை தொடங்கி எவ்வளவு காலமானது?',
+          options: [
+            {
+              labelEn: 'Started today (Within last few hours)',
+              labelTa: 'இன்று தொடங்கியது (சில மணிநேரங்களுக்குள்)',
+              value: 'today_recent',
+            },
+            {
+              labelEn: 'Past 2 to 3 days',
+              labelTa: 'கடந்த 2 முதல் 3 நாட்கள்',
+              value: '2_to_3_days',
+            },
+            {
+              labelEn: '1 to 2 weeks',
+              labelTa: '1 முதல் 2 வாரங்கள்',
+              value: '1_to_2_weeks',
+            },
+            {
+              labelEn: 'Chronic / On and off for several months',
+              labelTa: 'பல மாதங்களாக விட்டு விட்டு தொடர்கிறது',
+              value: 'chronic_months',
+            },
+          ],
+        },
+        {
+          id: 'gen-impact',
+          titleEn: 'Daily Impact & Severity',
+          titleTa: 'தினசரி பாதிப்பு & தீவிரம்',
+          questionEn: 'How significantly does this affect your day-to-day routine?',
+          questionTa: 'இது உங்கள் அன்றாட வேலைகளை எவ்வாறு பாதிக்கிறது?',
+          options: [
+            {
+              labelEn: 'Mild - Noticeable but able to carry on normal duties',
+              labelTa: 'லேசானது - வழக்கமான வேலைகளை செய்ய முடிகிறது',
+              value: 'mild_routine',
+            },
+            {
+              labelEn: 'Moderate - Needs bed rest, difficult to focus',
+              labelTa: 'நடுத்தரம் - ஓய்வு தேவைப்படுகிறது, சிரமமாக உள்ளது',
+              value: 'moderate_rest_needed',
+            },
+            {
+              labelEn: 'Severe - Unable to stand or perform basic tasks',
+              labelTa: 'தீவிரம் - படுக்கையை விட்டு எழ முடியவில்லை',
+              value: 'severe_incapacitated',
+              isRedFlag: true,
+            },
+            {
+              labelEn: 'Sudden alarming worsening within the last hour',
+              labelTa: 'கடந்த ஒரு மணிநேரத்தில் திடீரென நிலைமை மோசமானது',
+              value: 'sudden_acute_worsening',
+              isRedFlag: true,
+            },
+          ],
+        },
+      ],
     };
   }
 }

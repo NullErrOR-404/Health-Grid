@@ -41,7 +41,8 @@ import {
   CalendarCheck,
   Square,
   CheckSquare,
-  ArrowRight
+  ArrowRight,
+  ChevronLeft
 } from 'lucide-react';
 import type { Language } from '../types';
 import { speechEngine, TanglishNormalizer } from '../services/speechService';
@@ -50,7 +51,10 @@ import {
   AVAILABLE_MODELS,
   type ModelOption,
   type UsageStats,
-  type InteractiveOptions
+  type InteractiveOptions,
+  type TriageWizard,
+  type TriageWizardStep,
+  type TriageWizardOption
 } from '../services/aiService';
 import { agenticTools, type AgentToolCall, type JanAushadhiResult } from '../services/agenticToolsService';
 import { type PrescriptionAnalysisResult } from '../services/prescriptionAiService';
@@ -83,6 +87,7 @@ export interface ChatMessage {
   attachmentName?: string;
   prescriptionAnalysis?: PrescriptionAnalysisResult;
   suggestedOptions?: InteractiveOptions;
+  triageWizard?: TriageWizard;
 }
 
 export interface ChatSession {
@@ -146,6 +151,11 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const [activeBeneficiary, setActiveBeneficiary] = useState<FamilyMember | null>(() => familyMemberService.getActiveBeneficiary());
   const [activeCareLoops, setActiveCareLoops] = useState<CareLoopFollowUp[]>([]);
   const [selectedMultiOptions, setSelectedMultiOptions] = useState<Record<string, string[]>>({});
+  const [wizardStates, setWizardStates] = useState<Record<string, {
+    currentStepIndex: number;
+    answers: Record<string, TriageWizardOption>;
+    isCompleted: boolean;
+  }>>({});
   const pendingActionRef = useRef<(() => void) | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const isSendingRef = useRef(false);
@@ -177,6 +187,75 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     if (selected.length === 0 || isThinking) return;
     const prompt = selected.join(', ');
     handleSendMessage(prompt);
+  };
+
+  const handleWizardOptionSelect = (
+    messageId: string,
+    wizard: TriageWizard,
+    step: TriageWizardStep,
+    option: TriageWizardOption
+  ) => {
+    // Auditory feedback
+    const label = lang === 'ta' ? option.labelTa : option.labelEn;
+    if (label) {
+      speechEngine.speak(label, lang === 'ta' ? 'ta' : 'en');
+    }
+
+    const current = wizardStates[messageId] || {
+      currentStepIndex: 0,
+      answers: {},
+      isCompleted: false,
+    };
+
+    if (current.isCompleted) return;
+
+    const newAnswers = {
+      ...current.answers,
+      [step.id]: option,
+    };
+
+    const nextIndex = current.currentStepIndex + 1;
+    const isFinished = nextIndex >= wizard.steps.length;
+
+    setWizardStates((prev) => ({
+      ...prev,
+      [messageId]: {
+        currentStepIndex: isFinished ? current.currentStepIndex : nextIndex,
+        answers: newAnswers,
+        isCompleted: isFinished,
+      },
+    }));
+
+    if (isFinished) {
+      // Auto-submit structured clinical assessment back into the conversation
+      const summaryItems = wizard.steps.map((s) => {
+        const chosen = newAnswers[s.id];
+        const stepName = lang === 'ta' ? s.titleTa : s.titleEn;
+        const optText = chosen ? (lang === 'ta' ? chosen.labelTa : chosen.labelEn) : 'None';
+        return `${stepName}: ${optText}`;
+      });
+      const topicName = lang === 'ta' ? wizard.topicTa : wizard.topicEn;
+      const clinicalPayload = `Clinical Assessment (${topicName}): [${summaryItems.join(' | ')}]`;
+      handleSendMessage(clinicalPayload);
+    }
+  };
+
+  const handleWizardStepBack = (messageId: string) => {
+    setWizardStates((prev) => {
+      const cur = prev[messageId];
+      if (!cur || cur.currentStepIndex <= 0 || cur.isCompleted) return prev;
+      return {
+        ...prev,
+        [messageId]: {
+          ...cur,
+          currentStepIndex: cur.currentStepIndex - 1,
+        },
+      };
+    });
+  };
+
+  const speakWizardQuestion = (question: string) => {
+    speechEngine.speak(question, lang === 'ta' ? 'ta' : 'en');
   };
 
   const handleOptionSelect = (opt: string) => {
@@ -680,6 +759,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         executedTools: response.executedTools,
         genericMedicines: response.genericMedicines,
         suggestedOptions: response.suggestedOptions,
+        triageWizard: response.triageWizard,
         usageMeta: {
           latencyMs: response.usage.latencyMs,
           totalTokens: response.usage.totalTokens,
@@ -1800,8 +1880,166 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                       </div>
                     )}
 
+                    {/* Inline Interactive Clinical Triage Wizard */}
+                    {!isUser && msg.triageWizard && (
+                      <div className="mt-3.5 pt-3 border-t border-slate-100/90 animate-in fade-in duration-200">
+                        {(() => {
+                          const wizard = msg.triageWizard;
+                          const state = wizardStates[msg.id] || {
+                            currentStepIndex: 0,
+                            answers: {},
+                            isCompleted: false,
+                          };
+                          const curIdx = Math.min(state.currentStepIndex, wizard.steps.length - 1);
+                          const curStep = wizard.steps[curIdx];
+                          const totalSteps = wizard.totalSteps;
+                          const progressPercent = state.isCompleted
+                            ? 100
+                            : Math.round(((curIdx) / totalSteps) * 100);
+
+                          return (
+                            <div className="rounded-2xl border border-teal-200/90 bg-gradient-to-b from-teal-50/60 via-white to-slate-50/80 p-3.5 sm:p-4 shadow-2xs space-y-3 transition-all duration-300">
+                              {/* Header & Step Counter */}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-lg bg-[#0B7A75]/10 flex items-center justify-center text-[#0B7A75]">
+                                    <Activity className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-bold text-slate-800 leading-tight">
+                                      {lang === 'ta' ? wizard.topicTa : wizard.topicEn}
+                                    </div>
+                                    <div className="text-[10px] text-teal-700/80 font-medium">
+                                      {lang === 'ta' ? 'ICMR மருத்துவ நிலை அளவீடு' : 'ICMR Clinical Triage Flow'}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  {!state.isCompleted && curIdx > 0 && (
+                                    <button
+                                      type="button"
+                                      disabled={isThinking}
+                                      onClick={() => handleWizardStepBack(msg.id)}
+                                      className="text-[11px] font-medium text-slate-500 hover:text-slate-800 flex items-center gap-0.5 px-2 py-0.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                                      title={lang === 'ta' ? 'முந்தைய கேள்வி' : 'Previous Step'}
+                                    >
+                                      <ChevronLeft className="w-3 h-3" />
+                                      <span>{lang === 'ta' ? 'முந்தைய' : 'Back'}</span>
+                                    </button>
+                                  )}
+                                  <div className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-teal-100/80 text-teal-900 border border-teal-200/60">
+                                    {state.isCompleted
+                                      ? (lang === 'ta' ? 'முடிந்தது' : 'Complete')
+                                      : `${lang === 'ta' ? 'படி' : 'Step'} ${curIdx + 1}/${totalSteps}`}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Animated Progress Bar */}
+                              <div className="w-full bg-slate-200/80 h-1.5 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-teal-500 to-[#0B7A75] transition-all duration-300 rounded-full"
+                                  style={{ width: `${state.isCompleted ? 100 : Math.max(progressPercent, 15)}%` }}
+                                />
+                              </div>
+
+                              {/* Active Step Question or Completed Summary */}
+                              {!state.isCompleted ? (
+                                <div className="space-y-2.5 pt-1">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <p className="text-xs font-semibold text-slate-800">
+                                      {lang === 'ta' ? curStep.questionTa : curStep.questionEn}
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={() => speakWizardQuestion(lang === 'ta' ? curStep.questionTa : curStep.questionEn)}
+                                      className="text-[10px] text-teal-700 hover:text-teal-900 font-medium flex items-center gap-1 cursor-pointer bg-teal-50 hover:bg-teal-100 px-2 py-0.5 rounded-full border border-teal-200/80 transition-colors shrink-0"
+                                      title={lang === 'ta' ? 'கேள்வியைக் கேளுங்கள்' : 'Listen to question'}
+                                    >
+                                      <Volume2 className="w-2.5 h-2.5 text-teal-600" />
+                                      <span>{lang === 'ta' ? 'கேளுங்கள்' : 'Listen'}</span>
+                                    </button>
+                                  </div>
+
+                                  {/* Selectable Option Chips */}
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+                                    {curStep.options.map((opt, optIdx) => {
+                                      const labelText = lang === 'ta' ? opt.labelTa : opt.labelEn;
+                                      return (
+                                        <button
+                                          key={optIdx}
+                                          type="button"
+                                          disabled={isThinking}
+                                          onClick={() => handleWizardOptionSelect(msg.id, wizard, curStep, opt)}
+                                          className={`group px-3 py-2.5 rounded-xl text-xs font-medium text-left border transition-all duration-150 flex items-start justify-between gap-2 shadow-2xs hover:shadow-xs active:scale-98 cursor-pointer disabled:opacity-50 disabled:pointer-events-none ${
+                                            opt.isRedFlag
+                                              ? 'bg-rose-50/80 hover:bg-rose-100/90 border-rose-300/80 text-rose-900 hover:border-rose-400'
+                                              : 'bg-white hover:bg-teal-50/70 border-slate-200 hover:border-teal-400 text-slate-800 hover:text-teal-950'
+                                          }`}
+                                        >
+                                          <div className="space-y-0.5">
+                                            <div className="flex items-center gap-1.5 font-medium leading-snug">
+                                              {opt.isRedFlag && (
+                                                <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                              )}
+                                              <span>{labelText}</span>
+                                            </div>
+                                            {lang !== 'ta' && (
+                                              <div className="text-[10px] text-slate-500 font-normal group-hover:text-teal-700/80">
+                                                {opt.labelTa}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <ArrowRight className="w-3.5 h-3.5 mt-0.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0 text-[#0B7A75]" />
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ) : (
+                                /* Completed Status Pill & Answer Summary */
+                                <div className="space-y-2 pt-1 animate-in fade-in duration-300">
+                                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/90 px-3 py-1.5 rounded-xl">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                    <span>
+                                      {lang === 'ta'
+                                        ? 'மதிப்பீடு நிறைவடைந்தது • மருத்துவர் ஆய்வு செய்கிறார்'
+                                        : 'Assessment Complete • Transmitted to Clinical Doctor'}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                    {wizard.steps.map((st, sIdx) => {
+                                      const ans = state.answers[st.id];
+                                      if (!ans) return null;
+                                      const ansText = lang === 'ta' ? ans.labelTa : ans.labelEn;
+                                      return (
+                                        <div
+                                          key={sIdx}
+                                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium flex items-center gap-1.5 ${
+                                            ans.isRedFlag
+                                              ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                              : 'bg-slate-100/90 text-slate-700 border-slate-200/90'
+                                          }`}
+                                        >
+                                          <span className="font-semibold text-slate-500">
+                                            {lang === 'ta' ? st.titleTa : st.titleEn}:
+                                          </span>
+                                          <span className="truncate max-w-[200px]">{ansText}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+
                     {/* Interactive Adaptive Choosing Options (Single-Tap Pills or Multi-Select Checkboxes) */}
-                    {!isUser && msg.suggestedOptions && msg.suggestedOptions.items && msg.suggestedOptions.items.length > 0 && (
+                    {!isUser && (!msg.triageWizard || wizardStates[msg.id]?.isCompleted) && msg.suggestedOptions && msg.suggestedOptions.items && msg.suggestedOptions.items.length > 0 && (
                       <div className="mt-3.5 pt-3 border-t border-slate-100/90 animate-in fade-in duration-200">
                         {msg.suggestedOptions.type === 'single_tap' ? (
                           <div className="space-y-1.5">
