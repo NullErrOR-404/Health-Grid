@@ -184,6 +184,10 @@
   },
   "active": "287d32495fe46cef",
   "lastOpenFiles": [
+    "decisions/ADR-034-Hospital-ERP-Doctors-and-OPD-Management.md",
+    "context/Active_Context.md",
+    "decisions/ADR-038-In-Chat-Appointment-Automation-and-Medicine-Intelligence.md",
+    "decisions/ADR-037-DocBot-Staged-Attachments-MarkItDown-Token-Optimization-and-Clinical-Differentiators.md",
     "decisions/ADR-016-Autonomous-Hybrid-Vector-RAG-and-Ambient-Clinical-Automations.md",
     "decisions/ADR-015-Vernacular-Speech-and-Conversational-Continuity.md",
     "decisions/ADR-013-Vernacular-Speech-and-Conversational-Continuity.md",

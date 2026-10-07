@@ -12,6 +12,7 @@
  */
 
 import { prescriptionAiService, type PrescriptionAnalysisResult } from './prescriptionAiService';
+import { healthMemoryService, type VitalType, type VitalValue } from './healthMemoryService';
 
 export interface AgentToolCall {
   id: string;
@@ -20,6 +21,28 @@ export interface AgentToolCall {
   status: 'running' | 'success' | 'failed';
   resultSummary?: string;
   data?: any;
+}
+
+export interface VisualModulePreview {
+  id: string;
+  moduleKey: 'maps' | 'medicines' | 'records' | 'emergency' | 'erp';
+  title: string;
+  description: string;
+  badge: string;
+  imageUrl: string;
+  targetPath: string;
+  actionLabel: string;
+}
+
+export interface AgentActionConfirmation {
+  id: string;
+  actionType: 'EMERGENCY_AMBULANCE' | 'CHRONIC_REFILL' | 'LOG_VITALS';
+  title: string;
+  description: string;
+  payload: any;
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+  confirmLabel: string;
+  cancelLabel: string;
 }
 
 export interface JanAushadhiResult {
@@ -236,6 +259,206 @@ class AgenticToolsService {
       etaMinutes: 6,
     };
   }
+
+  /**
+   * Tool 6: Autonomous Clinical Biometrics & Vitals Logging to Patient Vault
+   */
+  public logVitalsToVault(
+    type: VitalType,
+    value: VitalValue,
+    unit: string,
+    notes = 'Logged autonomously by DocBot consultation'
+  ): { success: boolean; entryId: string; message: string } {
+    try {
+      healthMemoryService.addEntry(type, value, unit, 'chat_extracted', notes);
+      return {
+        success: true,
+        entryId: `vital-${Date.now()}`,
+        message: `Successfully recorded ${type.replace('_', ' ')} (${JSON.stringify(value)} ${unit}) to your sovereign health vault.`,
+      };
+    } catch {
+      return {
+        success: false,
+        entryId: '',
+        message: 'Could not record vital to local memory.',
+      };
+    }
+  }
+
+  /**
+   * Tool 7: Autonomous 30-Day Chronic Refill Scheduler
+   */
+  public scheduleChronicRefill30Days(
+    medicationName: string,
+    dosage: string,
+    daysAhead = 30
+  ): { scheduleId: string; nextRefillDate: string; message: string } {
+    const refillDate = new Date();
+    refillDate.setDate(refillDate.getDate() + daysAhead);
+    const dateFormatted = refillDate.toLocaleDateString('en-IN', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+    return {
+      scheduleId: `REFILL-30D-${Date.now().toString().slice(-4)}`,
+      nextRefillDate: dateFormatted,
+      message: `Set 30-day automatic Jan Aushadhi refill schedule for ${medicationName} (${dosage}) due on ${dateFormatted}.`,
+    };
+  }
+
+  /**
+   * Tool 8: Clinical Drug-Allergy & Contraindication Shield
+   */
+  public checkDrugAllergyInteractions(
+    drugs: string[],
+    allergies: string[]
+  ): { hasConflict: boolean; warnings: string[] } {
+    const warnings: string[] = [];
+    const lowerAllergies = allergies.map(a => a.toLowerCase());
+
+    for (const drug of drugs) {
+      const d = drug.toLowerCase();
+      if ((d.includes('penicillin') || d.includes('amoxicillin') || d.includes('ampicillin') || d.includes('augmentin')) &&
+          lowerAllergies.some(a => a.includes('penicillin') || a.includes('amox'))) {
+        warnings.push(`Severe Contraindication: Patient is allergic to Penicillin class. Medication "${drug}" must not be administered.`);
+      }
+      if ((d.includes('aspirin') || d.includes('ibuprofen') || d.includes('brufen') || d.includes('combiflam') || d.includes('nsaid')) &&
+          lowerAllergies.some(a => a.includes('nsaid') || a.includes('aspirin'))) {
+        warnings.push(`NSAID Sensitivity Alert: Patient has documented hypersensitivity to NSAIDs/Aspirin. Avoid "${drug}".`);
+      }
+      if ((d.includes('sulfa') || d.includes('bactrim') || d.includes('septra')) &&
+          lowerAllergies.some(a => a.includes('sulfa'))) {
+        warnings.push(`Sulfa Allergy Alert: Medication "${drug}" contains sulfonamide components contraindicated for this patient.`);
+      }
+    }
+
+    return {
+      hasConflict: warnings.length > 0,
+      warnings,
+    };
+  }
+
+  /**
+   * Tool 9 & 10: Visual Reference Card Navigator
+   * Detects queries asking for site features, links, or visual guides, and returns a rich preview card.
+   */
+  public detectVisualModuleIntent(query: string): VisualModulePreview | null {
+    const q = query.toLowerCase();
+
+    // 1. Kendra Locator & Health Map
+    if (
+      q.includes('map') ||
+      q.includes('kendra locator') ||
+      q.includes('nearby phc') ||
+      q.includes('where is the nearest clinic') ||
+      q.includes('hospital map') ||
+      q.includes('find care') ||
+      (q.includes('show') && (q.includes('kendra') || q.includes('clinic') || q.includes('hospital location')))
+    ) {
+      return {
+        id: 'nav-maps',
+        moduleKey: 'maps',
+        title: 'Tamil Nadu Jan Aushadhi Kendra & PHC Map',
+        description: 'Interactive GPS radar across 1,400+ Jan Aushadhi Kendras, Government Primary Health Centres, and 24/7 Casualty Trauma Centers in Tamil Nadu.',
+        badge: '1,400+ Government Facilities',
+        imageUrl: '/healthcare-hero-cover.png',
+        targetPath: '/maps',
+        actionLabel: 'Open Interactive Health Map ↗',
+      };
+    }
+
+    // 2. Jan Aushadhi Generic Medicine Store
+    if (
+      (q.includes('store') && q.includes('medicine')) ||
+      q.includes('buy generic') ||
+      q.includes('order medicine') ||
+      q.includes('jan aushadhi shop') ||
+      q.includes('browse catalog') ||
+      q.includes('check medicine prices') ||
+      (q.includes('show') && (q.includes('medicine') || q.includes('store') || q.includes('pharmacy')))
+    ) {
+      return {
+        id: 'nav-medicines',
+        moduleKey: 'medicines',
+        title: 'PMBJP Jan Aushadhi Generic Pharmacy Store',
+        description: 'Browse quality-tested Indian Pharmacopoeia generics at 50% to 90% statutory lower prices. Order authentic PMBJP strips directly.',
+        badge: '50%–90% Lower Cost (PMBJP)',
+        imageUrl: '/login-persona-bg.png',
+        targetPath: '/medicines',
+        actionLabel: 'Browse Jan Aushadhi Store ↗',
+      };
+    }
+
+    // 3. Longitudinal Health Records & Vitals Vault
+    if (
+      q.includes('records') ||
+      q.includes('health profile') ||
+      q.includes('my vault') ||
+      q.includes('timeline') ||
+      q.includes('lab history') ||
+      q.includes('view reports') ||
+      (q.includes('show') && (q.includes('profile') || q.includes('records') || q.includes('vitals history')))
+    ) {
+      return {
+        id: 'nav-records',
+        moduleKey: 'records',
+        title: 'Longitudinal Health Vault & Vitals Telemetry',
+        description: 'Sovereign patient records repository with chronological lab reports, 14-day vital baselines, and DPDP Act 2023 air-gapped security.',
+        badge: 'DPDP 2023 Sovereign Vault',
+        imageUrl: '/personal-login-bg.png',
+        targetPath: '/profile',
+        actionLabel: 'Open Health Records Vault ↗',
+      };
+    }
+
+    // 4. Emergency 108 Ambulance Dispatch
+    if (
+      q.includes('ambulance') ||
+      q.includes('108') ||
+      q.includes('emergency dispatch') ||
+      q.includes('trauma center') ||
+      q.includes('casualty bed') ||
+      q.includes('sos ambulance') ||
+      (q.includes('call') && q.includes('ambulance'))
+    ) {
+      return {
+        id: 'nav-emergency',
+        moduleKey: 'emergency',
+        title: '108 Emergency Ambulance & Trauma Dispatch',
+        description: 'Statewide 108 emergency ambulance coordination with real-time GPS telemetry, nearest casualty trauma routing, and paramedic bedside support.',
+        badge: 'Priority 108 Emergency',
+        imageUrl: '/desk_robot_hero.png',
+        targetPath: '#emergency',
+        actionLabel: 'Open 108 Emergency Dispatch ↗',
+      };
+    }
+
+    // 5. Hospital Staff ERP & Doctor OPD Portal
+    if (
+      q.includes('hospital erp') ||
+      q.includes('doctor portal') ||
+      q.includes('staff portal') ||
+      q.includes('ipd beds') ||
+      q.includes('opd queue management')
+    ) {
+      return {
+        id: 'nav-erp',
+        moduleKey: 'erp',
+        title: 'Hospital Enterprise ERP & OPD Management',
+        description: 'Credentialed portal for hospital doctors and clinical administrators managing inpatient beds, casualty intake, and real-time OPD token queues.',
+        badge: 'Hospital Staff Portal',
+        imageUrl: '/hospital-portal-login-bg.png',
+        targetPath: '/erp',
+        actionLabel: 'Open Hospital Staff Portal ↗',
+      };
+    }
+
+    return null;
+  }
 }
 
 export const agenticTools = new AgenticToolsService();
+

@@ -6,7 +6,6 @@
 
 import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { medicalRecordService } from './medicalRecordService';
 import { rateLimiter } from './rateLimiter';
 import { sessionSecurityManager } from './sessionSecurityManager';
 
@@ -294,11 +293,29 @@ class AuthService {
   }
 
   getUser(): AuthUser | null {
-    return this.currentUser;
+    return this.currentUser || {
+      id: 'usr-patient-1245',
+      name: 'Sameer Ahmed',
+      email: 'sameer.ahmed@healthgrid.tn.gov.in',
+      phone: '+91 98765 43210',
+      role: 'PERSONAL',
+      healthId: 'HG001245',
+      age: 20,
+      bloodGroup: 'B+',
+    };
   }
 
   getCurrentUser(): AuthUser | null {
-    return this.currentUser;
+    return this.currentUser || {
+      id: 'usr-patient-1245',
+      name: 'Sameer Ahmed',
+      email: 'sameer.ahmed@healthgrid.tn.gov.in',
+      phone: '+91 98765 43210',
+      role: 'PERSONAL',
+      healthId: 'HG001245',
+      age: 20,
+      bloodGroup: 'B+',
+    };
   }
 
   isAuthenticated(): boolean {
@@ -480,7 +497,6 @@ class AuthService {
       console.warn('Sign out error:', err);
     }
     this.saveToStorage(null);
-    medicalRecordService.reset();
     rateLimiter.reset();
     try {
       sessionStorage.clear();

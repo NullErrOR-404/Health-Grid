@@ -3,58 +3,64 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-  <!-- HealthGrid 2026 Production Sitemap -->
+  <!-- HealthGrid 2026 Production & GEO-Optimized Canonical Sitemap -->
   <url>
-    <loc>https://healthgrid.app/</loc>
-    <lastmod>2026-10-01</lastmod>
+    <loc>https://healthgrid-app.vercel.app/</loc>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://healthgrid.app/#emergency</loc>
-    <lastmod>2026-10-01</lastmod>
+    <loc>https://healthgrid-app.vercel.app/chat</loc>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://healthgrid.app/#services</loc>
-    <lastmod>2026-10-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
+    <loc>https://healthgrid-app.vercel.app/medicines</loc>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://healthgrid.app/maps</loc>
-    <lastmod>2026-10-01</lastmod>
+    <loc>https://healthgrid-app.vercel.app/maps</loc>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://healthgrid.app/chat</loc>
-    <lastmod>2026-10-01</lastmod>
+    <loc>https://healthgrid-app.vercel.app/#emergency</loc>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/#services</loc>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://healthgrid.app/bulletins</loc>
-    <lastmod>2026-10-01</lastmod>
+    <loc>https://healthgrid-app.vercel.app/bulletins</loc>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.80</priority>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://healthgrid-app.vercel.app/privacy</loc>
-    <lastmod>2026-10-02</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
     <loc>https://healthgrid-app.vercel.app/terms</loc>
-    <lastmod>2026-10-02</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
     <loc>https://healthgrid-app.vercel.app/thank-you</loc>
-    <lastmod>2026-10-02</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>

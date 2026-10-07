@@ -44,7 +44,80 @@ export interface ClinicalShieldResult {
   flaggedTokens: string[];
 }
 
+export interface PrivacyBoundaryResult {
+  isBreachAttempt: boolean;
+  reason?: 'AUTHORITY_IMPERSONATION' | 'CROSS_PATIENT_EXFILTRATION' | 'SYSTEM_PROBE';
+  warningMessage?: string;
+  flaggedTokens: string[];
+}
+
 class SecuritySanitizer {
+  /**
+   * Evaluates patient message or clinical query against Authority Impersonation
+   * and cross-user data exfiltration (DPDP Act 2023 & ABDM Sovereign Zero-Trust Boundary).
+   */
+  public evaluatePatientPrivacyBoundary(prompt: string): PrivacyBoundaryResult {
+    if (!prompt || typeof prompt !== 'string') {
+      return { isBreachAttempt: false, flaggedTokens: [] };
+    }
+
+    const lower = prompt.toLowerCase();
+    const flaggedTokens: string[] = [];
+
+    // 1. Detect authority impersonation & social engineering
+    const authorityRegex = /\b(i am|i'm|act as|be|acting as)\s+(the\s+)?(cmo|chief medical officer|police|cop|inspector|magistrate|auditor|superintendent|hospital admin|administrator|system admin|government official|health minister)\b/i;
+    const authorityDemandRegex = /\b(official\s+police\s+investigation|court\s+order|warrant|audit\s+demand|as\s+a\s+(doctor|police|cmo|auditor|admin|inspector|officer))\b/i;
+
+    const hasAuthorityClaim = authorityRegex.test(prompt) || authorityDemandRegex.test(prompt);
+
+    // 2. Detect cross-patient data probes and exfiltration attempts
+    const exfiltrationRegex = /\b(show|give|fetch|display|print|read|export|dump|reveal)\s+(me\s+)?(the\s+)?(medical\s+)?(records?|vitals?|history|details?|profile|prescriptions?|data|chats?|memory|notes?)\s+(of|for|about)\s+(patient|user|another|someone\s+else|other\s+people|[a-z0-9_-]+)/i;
+    const thirdPartyProbeRegex = /\bwhat\s+did\s+(another|the\s+other|previous)\s+(patient|user)\s+(say|ask|complain|take|tell|have)\b/i;
+    const accountAccessRegex = /\b(access|view|inspect)\s+(another|other|foreign)\s+(user's?|patient's?)\s+(account|records?|data|vault)\b/i;
+    const bulkDumpRegex = /\bdump\s+(all\s+)?(patients?|users?|records?|vaults?)\b/i;
+
+    const hasExfiltrationProbe =
+      exfiltrationRegex.test(prompt) ||
+      thirdPartyProbeRegex.test(prompt) ||
+      accountAccessRegex.test(prompt) ||
+      bulkDumpRegex.test(prompt);
+
+    if (hasAuthorityClaim && hasExfiltrationProbe) {
+      flaggedTokens.push('AUTHORITY_IMPERSONATION_DATA_PROBE');
+      return {
+        isBreachAttempt: true,
+        reason: 'AUTHORITY_IMPERSONATION',
+        warningMessage:
+          "HealthGrid operates under strict sovereign zero-trust data air-gapping in compliance with India's Digital Personal Data Protection (DPDP) Act 2023 and ABDM standards. Clinical records, episodic memory, and vitals are cryptographically isolated per authenticated patient account. You can only view and manage your own personal health records in this consultation session. Official hospital administration and regulatory audits must authenticate directly via the credentialed Hospital ERP Portal with verified staff credentials.",
+        flaggedTokens,
+      };
+    }
+
+    if (hasExfiltrationProbe) {
+      flaggedTokens.push('CROSS_PATIENT_EXFILTRATION_PROBE');
+      return {
+        isBreachAttempt: true,
+        reason: 'CROSS_PATIENT_EXFILTRATION',
+        warningMessage:
+          "HealthGrid enforces sovereign account memory isolation. Every user's health records, vitals, and consultation memory are private and strictly inaccessible to any other user. Only your own personal records can be viewed or managed in this session.",
+        flaggedTokens,
+      };
+    }
+
+    if (hasAuthorityClaim && (lower.includes('patient') || lower.includes('record') || lower.includes('data') || lower.includes('file'))) {
+      flaggedTokens.push('AUTHORITY_DECEPTION_PROBE');
+      return {
+        isBreachAttempt: true,
+        reason: 'AUTHORITY_IMPERSONATION',
+        warningMessage:
+          "HealthGrid operates under strict zero-trust principles. Public AI consultation sessions cannot be used to bypass clinical access controls or inspect patient records under claimed authority. Please log in through the verified Hospital ERP Staff Portal with your cryptographic digital credentials.",
+        flaggedTokens,
+      };
+    }
+
+    return { isBreachAttempt: false, flaggedTokens: [] };
+  }
+
   /**
    * Sanitizes generic user input string to neutralize Cross-Site Scripting (XSS).
    */

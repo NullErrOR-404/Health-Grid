@@ -1,19 +1,60 @@
-# HealthGrid Robots.txt (2026)
+# HealthGrid Robots.txt (2026 Production & GEO Hardening)
+# Comprehensive SEO & Generative Engine Optimization (GEO) Protocol
+
+# Standard Search Engines (Google, Bing, DuckDuckGo)
 User-agent: *
 Allow: /
 Allow: /#services
 Allow: /#emergency
 Allow: /maps
 Allow: /chat
+Allow: /medicines
 Allow: /bulletins
 Allow: /privacy
 Allow: /terms
 Allow: /thank-you
 
-# Disallow private patient vaults and auth endpoints from public crawling
+# Generative Engine Crawlers (GEO for Perplexity, ChatGPT, Claude, Gemini, Copilot)
+User-agent: GPTBot
+Allow: /
+Allow: /medicines
+Allow: /maps
+Allow: /bulletins
+Allow: /chat
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /medicines
+Allow: /maps
+Allow: /bulletins
+Allow: /chat
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /medicines
+Allow: /maps
+Allow: /bulletins
+Allow: /chat
+
+User-agent: Google-Extended
+Allow: /
+Allow: /medicines
+Allow: /maps
+Allow: /bulletins
+
+User-agent: Applebot-Extended
+Allow: /
+Allow: /medicines
+Allow: /maps
+
+User-agent: Amazonbot
+Allow: /
+
+# Disallow private patient EHR vaults and internal auth endpoints
 Disallow: /profile
 Disallow: /auth/
 Disallow: /api/
+Disallow: /erp/
 
-# Canonical Sitemap Declaration
+# Authoritative Production Sitemap
 Sitemap: https://healthgrid-app.vercel.app/sitemap.xml

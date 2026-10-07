@@ -62,10 +62,165 @@ export interface ConsultationRoomInfo {
   timeSlot?: string;
 }
 
+export const INITIAL_DOCTORS: DoctorRecord[] = [
+  {
+    id: 'doc-001',
+    doctor_code: 'DOC001',
+    name: 'Dr. Mohamed',
+    department: 'General Medicine',
+    specialization: 'Internal Medicine & Chronic Care',
+    designation: 'Senior Consultant Physician',
+    qualification: 'MBBS, MD (General Medicine)',
+    opd_days: 'Mon - Fri',
+    opd_room: 'Room 101',
+    total_slots: 30,
+    booked_slots: 18,
+    status: 'In OPD',
+    reg_no: 'TMC-64120',
+    experience_years: 12,
+    avatar_url: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200',
+    schedule: [],
+    is_available: true,
+  },
+  {
+    id: 'doc-002',
+    doctor_code: 'DOC002',
+    name: 'Dr. Revathi',
+    department: 'General Medicine',
+    specialization: 'Preventive Cardiology & Internal Medicine',
+    designation: 'Consultant Physician',
+    qualification: 'MBBS, MD',
+    opd_days: 'Mon - Sat',
+    opd_room: 'Room 201',
+    total_slots: 25,
+    booked_slots: 14,
+    status: 'In OPD',
+    reg_no: 'TMC-78912',
+    experience_years: 8,
+    avatar_url: 'https://images.unsplash.com/photo-1594824813583-7740e53a3eb2?auto=format&fit=crop&q=80&w=200',
+    schedule: [],
+    is_available: true,
+  },
+  {
+    id: 'doc-003',
+    doctor_code: 'DOC003',
+    name: 'Dr. Arjun',
+    department: 'General Medicine',
+    specialization: 'Adult Primary Care & Geriatric Health',
+    designation: 'Consultant Physician',
+    qualification: 'MBBS, DNB',
+    opd_days: 'Mon - Fri',
+    opd_room: 'Room 105',
+    total_slots: 25,
+    booked_slots: 10,
+    status: 'Available',
+    reg_no: 'TMC-81234',
+    experience_years: 10,
+    avatar_url: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200',
+    schedule: [],
+    is_available: true,
+  },
+  {
+    id: 'doc-004',
+    doctor_code: 'DOC004',
+    name: 'Dr. Karthik',
+    department: 'Orthopaedics',
+    specialization: 'Joint Replacement & Sports Medicine',
+    designation: 'Senior Orthopaedic Surgeon',
+    qualification: 'MBBS, MS (Ortho)',
+    opd_days: 'Tue, Thu, Sat',
+    opd_room: 'Room 204',
+    total_slots: 20,
+    booked_slots: 12,
+    status: 'In OPD',
+    reg_no: 'TMC-55421',
+    experience_years: 11,
+    avatar_url: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=200',
+    schedule: [],
+    is_available: true,
+  },
+  {
+    id: 'doc-005',
+    doctor_code: 'DOC005',
+    name: 'Dr. Nivetha',
+    department: 'Dermatology',
+    specialization: 'Clinical Dermatology & Cosmetology',
+    designation: 'Consultant Dermatologist',
+    qualification: 'MBBS, MD (DVL)',
+    opd_days: 'Mon, Wed, Fri',
+    opd_room: 'Room 108',
+    total_slots: 20,
+    booked_slots: 9,
+    status: 'Available',
+    reg_no: 'TMC-92341',
+    experience_years: 7,
+    avatar_url: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200',
+    schedule: [],
+    is_available: true,
+  },
+  {
+    id: 'doc-006',
+    doctor_code: 'DOC006',
+    name: 'Dr. Meenakshi',
+    department: 'Paediatrics',
+    specialization: 'Neonatal & Child Health',
+    designation: 'Chief Pediatrician',
+    qualification: 'MBBS, MD (Paed), DCH',
+    opd_days: 'Mon - Sat',
+    opd_room: 'Room 112',
+    total_slots: 35,
+    booked_slots: 22,
+    status: 'In OPD',
+    reg_no: 'TMC-43219',
+    experience_years: 14,
+    avatar_url: 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&q=80&w=200',
+    schedule: [],
+    is_available: true,
+  },
+  {
+    id: 'doc-007',
+    doctor_code: 'DOC007',
+    name: 'Dr. Priya',
+    department: 'Gynaecology',
+    specialization: 'Obstetrics & Women Health',
+    designation: 'Consultant Obstetrician',
+    qualification: 'MBBS, MS (OBG)',
+    opd_days: 'Mon - Fri',
+    opd_room: 'Room 302',
+    total_slots: 25,
+    booked_slots: 15,
+    status: 'Available',
+    reg_no: 'TMC-88123',
+    experience_years: 9,
+    avatar_url: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=200',
+    schedule: [],
+    is_available: true,
+  },
+  {
+    id: 'doc-008',
+    doctor_code: 'DOC008',
+    name: 'Dr. Suresh',
+    department: 'General Surgery',
+    specialization: 'Laparoscopic & Minimally Invasive Surgery',
+    designation: 'Senior Surgeon',
+    qualification: 'MBBS, MS (Gen Surg), FIAGES',
+    opd_days: 'Mon, Wed, Fri',
+    opd_room: 'Room 118',
+    total_slots: 20,
+    booked_slots: 11,
+    status: 'In OPD',
+    reg_no: 'TMC-31245',
+    experience_years: 15,
+    avatar_url: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200',
+    schedule: [],
+    is_available: true,
+  }
+];
+
 const LOCAL_STORAGE_KEY = 'healthgrid_doctors_cache_v1';
 
 class DoctorOpdService {
-  private doctors: DoctorRecord[] = [];
+  private doctors: DoctorRecord[] = [...INITIAL_DOCTORS];
   private listeners: Array<() => void> = [];
   public realtimeChannel: any = null;
   public isInitialized = false;
@@ -80,7 +235,10 @@ class DoctorOpdService {
     try {
       const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (cached) {
-        this.doctors = JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.doctors = parsed;
+        }
       }
     } catch (e) {
       console.warn('Error reading doctors cache:', e);

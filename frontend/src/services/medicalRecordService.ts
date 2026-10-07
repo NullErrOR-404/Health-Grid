@@ -131,6 +131,55 @@ export const initialPatientProfile: PatientProfile = {
 
 class MedicalRecordService {
   private profile: PatientProfile = { ...initialPatientProfile };
+  private storageKeyPrefix = 'healthgrid_records_';
+
+  constructor() {
+    this.loadFromStorage();
+    if (typeof window !== 'undefined') {
+      authService.subscribe((user) => {
+        if (user) {
+          this.loadFromStorage();
+        } else {
+          this.profile = { ...initialPatientProfile };
+        }
+      });
+    }
+  }
+
+  private getStorageKey(): string {
+    try {
+      const user = authService?.getCurrentUser ? authService.getCurrentUser() : null;
+      return `${this.storageKeyPrefix}${user ? user.id : 'guest'}`;
+    } catch {
+      return `${this.storageKeyPrefix}guest`;
+    }
+  }
+
+  private loadFromStorage(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const data = localStorage.getItem(this.getStorageKey());
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          this.profile.records = this.sortRecords(parsed, false);
+        }
+      } else {
+        this.profile.records = [];
+      }
+    } catch {
+      this.profile.records = [];
+    }
+  }
+
+  private saveToStorage(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(this.getStorageKey(), JSON.stringify(this.profile.records));
+    } catch {
+      // Storage quota or browser restriction
+    }
+  }
 
   getProfile(): PatientProfile {
     const authUser = authService.getCurrentUser();
@@ -180,10 +229,12 @@ class MedicalRecordService {
     if (normalizedRecord.knownAllergies) {
       this.profile.allergies = Array.from(new Set([...this.profile.allergies, ...normalizedRecord.knownAllergies]));
     }
+    this.saveToStorage();
   }
 
   deleteRecord(id: string): void {
     this.profile.records = this.profile.records.filter(r => r.id !== id);
+    this.saveToStorage();
   }
 
   sortRecords(records: MedicalRecord[], ascending = false): MedicalRecord[] {

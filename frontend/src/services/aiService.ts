@@ -10,13 +10,36 @@
  */
 
 import { rateLimiter, RATE_LIMIT_CONFIGS } from './rateLimiter';
-import { agenticTools, type AgentToolCall, type JanAushadhiResult } from './agenticToolsService';
+import {
+  agenticTools,
+  type AgentToolCall,
+  type JanAushadhiResult,
+  type VisualModulePreview,
+  type AgentActionConfirmation,
+} from './agenticToolsService';
 import { healthMemoryService } from './healthMemoryService';
 import { vectorRagService } from './vectorRagService';
 import { careLoopService } from './careLoopService';
 import { authService } from './authService';
 import { fuzzyClinicalMatcher } from './fuzzyClinicalMatcher';
 import { securitySanitizer } from './securitySanitizer';
+import {
+  clinicalChatEngine,
+  type EsiTriageResult,
+  type JanAushadhiSavingsCard,
+  type SbarHandoverBrief,
+  type ClinicalSafetyCheckResult,
+} from './clinicalChatEngine';
+import { markItDownService } from './markItDownService';
+
+export type {
+  EsiTriageResult,
+  JanAushadhiSavingsCard,
+  SbarHandoverBrief,
+  ClinicalSafetyCheckResult,
+  VisualModulePreview,
+  AgentActionConfirmation,
+};
 
 export interface InteractiveOptions {
   type: 'single_tap' | 'multi_select';
@@ -59,6 +82,19 @@ export interface ModelOption {
   isReasoning: boolean;
 }
 
+export type ClinicalComplexityTier =
+  | 'FRONTIER_CLINICAL_REASONING'   // High-stakes differential diagnosis, acute clinical pathology, multi-drug contraindications
+  | 'VERNACULAR_AND_INTERMEDIATE'    // Multilingual, Tamil/Tanglish cultural syntax, intermediate triage, generic pharmacology
+  | 'LIGHTWEIGHT_TURBO_INSTANT';     // Routine greetings, acknowledgments, least-priority platform questions, clinic hours
+
+export interface ModelArbitrationDecision {
+  tier: ClinicalComplexityTier;
+  selectedModel: ModelOption;
+  reason: string;
+  complexityScore: number; // 0 to 100
+  backupModels: ModelOption[];
+}
+
 export const AVAILABLE_MODELS: ModelOption[] = [
   {
     id: 'openai/gpt-oss-120b',
@@ -94,8 +130,8 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     isReasoning: true,
   },
   {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash Vision',
+    id: 'gemini-3.8-flash',
+    name: 'Gemini 3.8 Flash Vision',
     provider: 'google',
     providerLabel: 'Google DeepMind',
     badge: 'Multimodal Vision',
@@ -117,8 +153,25 @@ export interface UsageStats {
 }
 
 export interface EmotionalAssessment {
-  state: 'calm' | 'anxious' | 'panic' | 'parental_worry' | 'financial_stress' | 'geriatric_confusion';
+  state: 'calm' | 'anxious' | 'panic' | 'parental_worry' | 'financial_stress' | 'geriatric_confusion' | 'humorous_playful' | 'curious_general' | 'exhausted_frustrated';
   deEscalationDirective: string;
+}
+
+export interface LivingClinicalDossier {
+  chiefComplaint: string;
+  symptomTimeline: string;
+  severityLevel?: string;
+  triggersAndAggravators: string[];
+  relievingFactors: string[];
+  associatedSymptoms: string[];
+  ruledOutSymptoms: string[];
+  pastMedicalHistory: string[];
+  currentMedications: string[];
+  allergies: string[];
+  investigativeTurnCount: number;
+  diagnosticCertaintyScore: number; // 0 to 100
+  investigativePhase: 'EXPLORING' | 'NARROWING' | 'CONCLUDED' | 'EMERGENCY';
+  summaryDossier: string;
 }
 
 export interface AgiResponse {
@@ -132,12 +185,23 @@ export interface AgiResponse {
   genericMedicines?: JanAushadhiResult[];
   suggestedOptions?: InteractiveOptions;
   triageWizard?: TriageWizard;
+  esiTriage?: EsiTriageResult | null;
+  janAushadhiSavingsCard?: JanAushadhiSavingsCard | null;
+  sbarHandover?: SbarHandoverBrief | null;
+  safetyCheck?: ClinicalSafetyCheckResult;
+  followUpChips?: Array<{ label: string; query: string }>;
+  visualNavCard?: VisualModulePreview | null;
+  actionConfirmation?: AgentActionConfirmation | null;
+  arbitration?: ModelArbitrationDecision;
+  dossier?: LivingClinicalDossier;
   usage: {
     promptTokens: number;
     completionTokens: number;
     reasoningTokens: number;
     totalTokens: number;
     latencyMs: number;
+    modelName?: string;
+    tier?: ClinicalComplexityTier;
   };
 }
 
@@ -274,6 +338,58 @@ export function analyzeEmotionalState(query: string): EmotionalAssessment {
     };
   }
 
+  if (
+    lower.includes('joke') ||
+    lower.includes('funny') ||
+    lower.includes('make me laugh') ||
+    lower.includes('haha') ||
+    lower.includes('lmao') ||
+    lower.includes('pun') ||
+    lower.includes('riddle') ||
+    lower.includes('siripinga') ||
+    lower.includes('comedy')
+  ) {
+    return {
+      state: 'humorous_playful',
+      deEscalationDirective: 'PLAYFUL & HUMOROUS PROTOCOL: The user is in a fun, playful mood or asked for a joke/humor. Respond with brilliant wit, clever humor, playful banter, or a great clean joke. Be delightfully warm, lively, and entertaining like a charismatic doctor friend who knows how to make people smile. Zero robotic stiffness!',
+    };
+  }
+
+  if (
+    lower.includes('act like') ||
+    lower.includes('roleplay') ||
+    lower.includes('pretend to be') ||
+    lower.includes('explain like i') ||
+    lower.includes('eli5') ||
+    lower.includes('teach me') ||
+    lower.includes('write code') ||
+    lower.includes('python') ||
+    lower.includes('javascript') ||
+    lower.includes('quantum') ||
+    lower.includes('poem')
+  ) {
+    return {
+      state: 'curious_general',
+      deEscalationDirective: 'VERSATILE ROLEPLAY & GENERAL INTELLECT PROTOCOL: The user is asking a creative, technical, or roleplay prompt. Adopt the requested persona or explanatory style with enthusiasm, wit, and high intellect. Do not refuse, do not disclaim, and do not say "I am only a medical AI". Deliver an exceptional, creative, and smart answer!',
+    };
+  }
+
+  if (
+    lower.includes('exhausted') ||
+    lower.includes('so tired') ||
+    lower.includes('sick of this') ||
+    lower.includes('fed up') ||
+    lower.includes('not getting better') ||
+    lower.includes('wont go away') ||
+    lower.includes('முடியல') ||
+    lower.includes('romba kashtam')
+  ) {
+    return {
+      state: 'exhausted_frustrated',
+      deEscalationDirective: 'DEEP HUMAN EMPATHY PROTOCOL: The patient is physically or emotionally exhausted from dealing with illness. Validate their frustration warmly ("I hear you, being sick like this is truly exhausting and draining"). Provide deep comfort, gentle reassurance, and immediate actionable relief steps without overwhelming them.',
+    };
+  }
+
   return {
     state: 'calm',
     deEscalationDirective: 'STANDARD CLINICAL PROTOCOL: Maintain an empathetic bedside manner and natural conversational flow. Ask relevant follow-up questions ONLY about the specific symptom or issue the user explicitly mentioned. Avoid rigid robotic lists, repetitive templates, or irrelevant body surveys.',
@@ -368,30 +484,390 @@ class AgiIntelligenceService {
     this.notifyUsage();
   }
 
+  private activeDossier: LivingClinicalDossier = this.createEmptyDossier();
+
+  public createEmptyDossier(): LivingClinicalDossier {
+    return {
+      chiefComplaint: '',
+      symptomTimeline: '',
+      severityLevel: undefined,
+      triggersAndAggravators: [],
+      relievingFactors: [],
+      associatedSymptoms: [],
+      ruledOutSymptoms: [],
+      pastMedicalHistory: [],
+      currentMedications: [],
+      allergies: [],
+      investigativeTurnCount: 0,
+      diagnosticCertaintyScore: 0,
+      investigativePhase: 'EXPLORING',
+      summaryDossier: 'Fresh consultation; initial inquiry phase.',
+    };
+  }
+
+  public getLivingClinicalDossier(): LivingClinicalDossier {
+    return { ...this.activeDossier };
+  }
+
+  public resetLivingClinicalDossier(): void {
+    this.activeDossier = this.createEmptyDossier();
+  }
+
+  /**
+   * Living Clinical Case Dossier Synchronizer (Synced Brain):
+   * Tracks patient symptoms, timeline, character, triggers, and negatives across all models.
+   * Gating transitions: EXPLORING -> NARROWING -> CONCLUDED based on certainty score (>=75%),
+   * turns (>=2), or explicit patient conclusion requests.
+   */
+  public updateLivingClinicalDossier(
+    currentDossier: LivingClinicalDossier,
+    userQuery: string,
+    _history: Array<{ sender: 'user' | 'ai'; text: string }> = []
+  ): LivingClinicalDossier {
+    const dossier: LivingClinicalDossier = { ...currentDossier };
+    const qLower = (userQuery || '').toLowerCase().trim();
+
+    // 1. Explicit Conclusion Request Gate (Patient in complete control)
+    const isExplicitConclusion = /((give|tell)\s*(me\s*)?(your\s*)?(initial\s*)?diagnosis|what\s*(is|could\s*it|do\s*you\s*think\s*it)\s*(it|be)|conclude|final\s*(verdict|assessment)|what\s*disease|what\s*is\s*wrong|finish\s*checkup|முடிவு|கணிப்பு)/i.test(qLower);
+
+    // 2. Acute Emergency Red-Flag Gate
+    const acuteFlags = [
+      'chest pain', 'cannot breathe', 'shortness of breath', 'heart attack',
+      'radiating jaw', 'stroke', 'coughing blood', 'vomiting blood',
+      'unconscious', 'seizure', 'severe trauma', 'cyanosis', 'bluish'
+    ];
+    const isAcuteEmergency = acuteFlags.some(f => qLower.includes(f));
+
+    if (isAcuteEmergency) {
+      dossier.investigativePhase = 'EMERGENCY';
+      dossier.diagnosticCertaintyScore = 100;
+      return dossier;
+    }
+
+    // 3. Social / Casual non-medical queries do not advance clinical turns
+    if (isCasualGreetingOrSocial(userQuery)) {
+      return dossier;
+    }
+
+    // 4. Extract Chief Complaint if empty or new complaint raised
+    const symptomDictionary = [
+      { pattern: /(fever|pyrexia|temperature|kaichal|காய்ச்சல்|சூடு)/i, label: 'Fever / Pyrexia' },
+      { pattern: /(headache|head\s*pain|migraine|mandai\s*idi|thala\s*vali|தலைவலி)/i, label: 'Headache / Cephalea' },
+      { pattern: /(abdominal\s*pain|stomach\s*pain|belly\s*pain|vayiru\s*vali|வயிறு\s*வலி|stomach\s*cramp)/i, label: 'Abdominal Pain / Gastric Discomfort' },
+      { pattern: /(cough|cold|sneeze|runny\s*nose|sali|irumal|இருமல்|சளி)/i, label: 'Cough & Respiratory Catarrh' },
+      { pattern: /(chest\s*pain|chest\s*tightness|nenju\s*vali|நெஞ்சு\s*வலி|heartburn|nenjerichal)/i, label: 'Chest Discomfort / Heartburn' },
+      { pattern: /(vomiting|nausea|queasy|kumattal|வாந்தி|குமட்டல்)/i, label: 'Nausea & Emesis' },
+      { pattern: /(diarrhea|loose\s*motion|loose\s*stools|vayitru\s*pokku|வயிற்றுப்போக்கு)/i, label: 'Acute Diarrhea / Loose Stools' },
+      { pattern: /(skin\s*rash|itching|hives|allergy|aridhal|தடிப்பு|அரிப்பு)/i, label: 'Dermatological Rash / Pruritus' },
+      { pattern: /(back\s*pain|joint\s*pain|body\s*pain|asathi|முதுகு\s*மூட்டு\s*வலி)/i, label: 'Musculoskeletal / Joint Pain' },
+      { pattern: /(dark\s*urine|yellow\s*eyes|jaundice|manjal\s*kamalai)/i, label: 'Jaundice / Hepatobiliary Signs' },
+    ];
+
+    for (const s of symptomDictionary) {
+      if (s.pattern.test(qLower)) {
+        if (!dossier.chiefComplaint) {
+          dossier.chiefComplaint = s.label;
+        } else if (!dossier.associatedSymptoms.includes(s.label) && dossier.chiefComplaint !== s.label) {
+          dossier.associatedSymptoms.push(s.label);
+        }
+      }
+    }
+
+    // 5. Timeline & Onset Extraction (SOCRATES: T)
+    const timelinePatterns = [
+      { match: /(today|just\s*now|since\s*morning|few\s*hours|இன்று|காலை\s*முதல்)/i, label: 'Acute onset (<24 hours)' },
+      { match: /(yesterday|நேற்று)/i, label: 'Started yesterday (~24 hours)' },
+      { match: /(\b2\s*days|\b3\s*days|\b4\s*days|2-3\s*days|few\s*days|இரண்டு\s*நாட்கள்)/i, label: 'Ongoing for 2 to 4 days' },
+      { match: /(week|weeks|1\s*week|2\s*weeks|வாரம்)/i, label: 'Subacute / Ongoing for 1+ weeks' },
+      { match: /(month|months|chronic|long\s*time|மாதம்)/i, label: 'Chronic (>1 month)' },
+      { match: /(sudden|all\s*of\s*a\s*sudden|திடீரென)/i, label: 'Sudden acute onset' },
+      { match: /(gradual|slowly|படிப்படியாக)/i, label: 'Gradual onset' },
+    ];
+    for (const t of timelinePatterns) {
+      if (t.match.test(qLower) && !dossier.symptomTimeline.includes(t.label)) {
+        dossier.symptomTimeline = dossier.symptomTimeline ? `${dossier.symptomTimeline}; ${t.label}` : t.label;
+      }
+    }
+
+    // 6. Character & Severity Extraction (SOCRATES: C & S)
+    const charPatterns = [
+      { match: /(sharp|stabbing|குத்துவது\s*போல்)/i, label: 'Sharp / Stabbing' },
+      { match: /(dull|mild|aching|லேசான)/i, label: 'Dull continuous ache' },
+      { match: /(throbbing|pulsing|துடிப்பது\s*போல்)/i, label: 'Throbbing / Pulsatile' },
+      { match: /(burning|acid|eriyudhu|எரிச்சல்)/i, label: 'Burning / Acidic sensation' },
+      { match: /(cramping|colicky|spasm|பிசைவது\s*போல்)/i, label: 'Cramping / Colicky' },
+      { match: /(severe|unbearable|10\/10|9\/10|8\/10|கடுமையான)/i, label: 'Severe intensity (8-10/10)' },
+      { match: /(moderate|5\/10|6\/10|7\/10|மிதமான)/i, label: 'Moderate intensity (5-7/10)' },
+      { match: /(mild|1\/10|2\/10|3\/10)/i, label: 'Mild intensity (1-3/10)' },
+    ];
+    for (const c of charPatterns) {
+      if (c.match.test(qLower)) {
+        dossier.severityLevel = c.label;
+      }
+    }
+
+    // 7. Triggers, Aggravating & Relieving Factors (SOCRATES: A & R)
+    const triggerPatterns = [
+      { match: /(after\s*eating|after\s*food|சாப்பிட்ட\s*பிறகு|heavy\s*meal)/i, label: 'Post-prandial / Triggered after meals' },
+      { match: /(empty\s*stomach|hunger|பசியில்|verum\s*vayiru)/i, label: 'Fasting / Worse on empty stomach' },
+      { match: /(walking|exertion|running|நடக்கும்போது)/i, label: 'Aggravated by physical exertion' },
+      { match: /(lying\s*down|sleeping|படுக்கும்போது)/i, label: 'Worse when recumbent / lying flat' },
+      { match: /(spicy\s*food|oily\s*food|காரமான\s*உணவு)/i, label: 'Triggered by spicy or oily food' },
+      { match: /(stress|tension|lack\s*of\s*sleep|தூக்கமின்மை)/i, label: 'Associated with mental stress or sleep loss' },
+      { match: /(better\s*with\s*rest|sitting\s*up|sitting\s*forward)/i, label: 'Relieved by rest or sitting upright' },
+    ];
+    for (const tr of triggerPatterns) {
+      if (tr.match.test(qLower) && !dossier.triggersAndAggravators.includes(tr.label)) {
+        dossier.triggersAndAggravators.push(tr.label);
+      }
+    }
+
+    // 8. Pertinent Negatives
+    const negativePatterns = [
+      { match: /(no\s*fever|kaichal\s*illa|காய்ச்சல்\s*இல்லை)/i, label: 'Afebrile (No fever)' },
+      { match: /(no\s*vomiting|vaanthi\s*illa|வாந்தி\s*இல்லை)/i, label: 'No vomiting' },
+      { match: /(no\s*cough|irumal\s*illa|இருமல்\s*இல்லை)/i, label: 'No cough' },
+      { match: /(no\s*chest\s*pain|nenju\s*vali\s*illa)/i, label: 'No chest pain' },
+      { match: /(no\s*blood|ratham\s*illa)/i, label: 'No bleeding' },
+    ];
+    for (const n of negativePatterns) {
+      if (n.match.test(qLower) && !dossier.ruledOutSymptoms.includes(n.label)) {
+        dossier.ruledOutSymptoms.push(n.label);
+      }
+    }
+
+    // 9. Increment Investigative Turn Count (if clinical symptom identified)
+    if (dossier.chiefComplaint) {
+      dossier.investigativeTurnCount += 1;
+    }
+
+    // 10. Multi-Factor Diagnostic Certainty Score Calculation (0-100%)
+    let score = 0;
+    if (dossier.chiefComplaint) score += 25;
+    if (dossier.symptomTimeline) score += 20;
+    if (dossier.severityLevel) score += 15;
+    if (dossier.triggersAndAggravators.length > 0) score += 15;
+    if (dossier.associatedSymptoms.length > 0 || dossier.ruledOutSymptoms.length > 0) score += 15;
+    if (dossier.investigativeTurnCount >= 2) score += 15;
+
+    dossier.diagnosticCertaintyScore = Math.min(100, score);
+
+    // 11. Clinical Saturation Gating (Exploring -> Narrowing -> Concluded)
+    if (isExplicitConclusion) {
+      dossier.investigativePhase = 'CONCLUDED';
+      dossier.diagnosticCertaintyScore = Math.max(80, dossier.diagnosticCertaintyScore);
+    } else if (dossier.diagnosticCertaintyScore >= 75 || dossier.investigativeTurnCount >= 3) {
+      dossier.investigativePhase = 'CONCLUDED';
+    } else if (dossier.investigativeTurnCount > 0) {
+      dossier.investigativePhase = 'NARROWING';
+    } else {
+      dossier.investigativePhase = 'EXPLORING';
+    }
+
+    dossier.summaryDossier = `Complaint: ${dossier.chiefComplaint || 'Under exploration'}; Timeline: ${dossier.symptomTimeline || 'Unstated'}; Severity: ${dossier.severityLevel || 'Unstated'}; Triggers: ${dossier.triggersAndAggravators.join(', ') || 'None'}; Associated: ${dossier.associatedSymptoms.join(', ') || 'None'}; Ruled-out: ${dossier.ruledOutSymptoms.join(', ') || 'None'}; Certainty: ${dossier.diagnosticCertaintyScore}%; Phase: ${dossier.investigativePhase}.`;
+
+    return dossier;
+  }
+
+  public formatDossierForPrompt(dossier: LivingClinicalDossier): string {
+    return `\n[SYNCHRONIZED CLINICAL BRAIN & LIVING PATIENT DOSSIER]:\n` +
+      `The following clinical memory is synchronized across all AI models and conversation turns:\n` +
+      `• Active Chief Complaint: ${dossier.chiefComplaint || 'Pending initial symptom inquiry'}\n` +
+      `• Timeline & Duration: ${dossier.symptomTimeline || 'Not yet stated'}\n` +
+      `• Symptom Character / Severity: ${dossier.severityLevel || 'Pending clarification'}\n` +
+      `• Aggravating / Relieving Triggers: ${dossier.triggersAndAggravators.join(', ') || 'None reported'}\n` +
+      `• Associated Symptoms: ${dossier.associatedSymptoms.join(', ') || 'None reported'}\n` +
+      `• Pertinent Negatives (Ruled-Out): ${dossier.ruledOutSymptoms.join(', ') || 'None yet'}\n` +
+      `• Diagnostic Certainty Confidence: ${dossier.diagnosticCertaintyScore}% / 100%\n` +
+      `• Active Investigation Phase: ${dossier.investigativePhase}\n\n` +
+      `PHASE DIRECTIVE:\n` +
+      (dossier.investigativePhase === 'EMERGENCY'
+        ? `>>> ACUTE EMERGENCY RED-FLAG ALERT <<<\nImmediate 108 Emergency Ambulance dispatch and urgent hospital casualty care. Give immediate calm safety instructions.`
+        : dossier.investigativePhase === 'CONCLUDED'
+        ? `>>> INVESTIGATION COMPLETE: DELIVER DIFFERENTIAL ASSESSMENT & RELIEF PLAN <<<\nYou have accumulated sufficient clinical evidence. Deliver:\n1. The primary probable cause and 1-2 possible differentials, explaining the logical reason connecting their specific symptoms, timeline, and triggers.\n2. Practical immediate relief steps (rest, hydration, temperature management, or safe OTC/PMBJP generic medicines).\n3. Important red-flag warning signs indicating when to visit a local clinic or hospital.`
+        : `>>> INVESTIGATIVE HISTORY TAKING (DO NOT CONCLUDE PREMATURELY!) <<<\nCRITICAL MANDATE: DO NOT JUMP TO A FINAL DIAGNOSIS YET!\nAct like an attentive, thorough clinical doctor:\n1. Briefly acknowledge and validate their discomfort with warm bedside empathy (1 short sentence).\n2. Ask 1 to 2 targeted diagnostic questions to narrow down the cause (e.g. onset duration if unknown, relation to meals, pain character, or accompanying signs).\n3. Reassure the patient that systematically narrowing this down step-by-step is how doctors find the exact root cause.`);
+  }
+
+  /**
+   * Autonomous Clinical Model Arbiter (Intelligent Cascading Engine):
+   * Dynamically assesses clinical urgency, diagnostic complexity, language semantics,
+   * and multimodal context to assign the optimal model tier without manual user intervention.
+   */
+  public decideOptimalClinicalModel(
+    userQuery: string,
+    history: Array<{ sender: 'user' | 'ai'; text: string }> = [],
+    hasImage: boolean = false,
+    hasParsedDocument: boolean = false
+  ): ModelArbitrationDecision {
+    const cleanQ = (userQuery || '').trim().toLowerCase();
+
+    // 1. Multimodal Clinical Vision Priority (Images / Prescription Slips / Photos)
+    if (hasImage) {
+      const visionModel = AVAILABLE_MODELS.find(m => m.provider === 'google') || AVAILABLE_MODELS[0];
+      return {
+        tier: 'FRONTIER_CLINICAL_REASONING',
+        selectedModel: visionModel,
+        reason: 'Multimodal Vision Diagnostic: Image attached requiring dermatological or clinical OCR inspection',
+        complexityScore: 95,
+        backupModels: AVAILABLE_MODELS.filter(m => m.id !== visionModel.id),
+      };
+    }
+
+    // 2. Least Priority / Routine / Social Tasks -> LIGHTWEIGHT_TURBO_INSTANT
+    const isCasual = isCasualGreetingOrSocial(userQuery);
+    const isShortAck = /^(ok|okay|got it|thanks|thank you|nandri|super|alright|bye|good night|cya)[\s!.?]*$/i.test(cleanQ);
+    const isSimpleNavOrHours = (
+      cleanQ.includes('visiting hours') ||
+      cleanQ.includes('opd timing') ||
+      cleanQ.includes('how to use') ||
+      cleanQ.includes('what is healthgrid') ||
+      cleanQ.includes('contact number')
+    ) && !cleanQ.includes('pain') && !cleanQ.includes('fever') && !cleanQ.includes('bleed');
+
+    if (isCasual || isShortAck || isSimpleNavOrHours) {
+      const turboModel = AVAILABLE_MODELS.find(m => m.id === 'openai/gpt-oss-20b') || AVAILABLE_MODELS[2];
+      return {
+        tier: 'LIGHTWEIGHT_TURBO_INSTANT',
+        selectedModel: turboModel,
+        reason: 'Low Priority / Routine: Casual greeting or simple navigational inquiry processed with instant turbo cadence',
+        complexityScore: 15,
+        backupModels: [AVAILABLE_MODELS.find(m => m.id === 'qwen/qwen3.8-27b') || AVAILABLE_MODELS[1]],
+      };
+    }
+
+    // 3. High Complexity Scoring for Frontier Clinical Model
+    let complexityScore = 30; // base score for actual health inquiries
+
+    const diagnosticTriggers = [
+      'differential', 'diagnos', 'what could this be', 'possible cause', 'why am i having',
+      'symptoms mean', 'is this serious', 'could it be', 'stroke', 'heart attack',
+      'blood test', 'lab report', 'cbc', 'hba1c', 'creatinine', 'ecg', 'mri', 'ct scan',
+      'platelet', 'sgot', 'sgpt', 'bilirubin', 'biopsy', 'hemoglobin', 'sugar level',
+      'contraindication', 'drug interaction', 'schedule h', 'schedule x', 'safe during pregnancy',
+      'pediatric dose', 'chronic kidney', 'hypertension and diabetes', 'swollen lymph', 'unexplained weight loss'
+    ];
+    if (diagnosticTriggers.some(p => cleanQ.includes(p))) {
+      complexityScore += 35;
+    }
+
+    const redFlagTriggers = [
+      'chest pain', 'radiating pain', 'cannot breathe', 'shortness of breath', 'difficulty breathing',
+      'unconscious', 'fainting', 'seizure', 'severe trauma', 'profuse bleeding', 'slurred speech',
+      'facial droop', 'arm weakness', 'sudden blindness', 'anaphylaxis', 'choking', 'high fever infant'
+    ];
+    if (redFlagTriggers.some(p => cleanQ.includes(p))) {
+      complexityScore += 40;
+    }
+
+    const symptomList = [
+      'fever', 'headache', 'vomit', 'nausea', 'diarrhea', 'rash', 'joint pain', 'swelling',
+      'cough', 'sore throat', 'chills', 'fatigue', 'dizziness', 'abdominal pain', 'burning'
+    ];
+    const matchedSymptoms = symptomList.filter(s => cleanQ.includes(s));
+    if (matchedSymptoms.length >= 2) {
+      complexityScore += 25;
+    }
+
+    if (hasParsedDocument || cleanQ.length > 200) {
+      complexityScore += 20;
+    }
+
+    if (history.length >= 4) {
+      complexityScore += 15;
+    }
+
+    const isTamilScript = /[\u0B80-\u0BFF]/.test(userQuery);
+    const isTanglish = /mandai|nenju|vayiru|udambu|kaichal|marunthu|eriyudhu|asathi|vali|thala/i.test(cleanQ);
+
+    if (complexityScore >= 65) {
+      const reasoningModel = AVAILABLE_MODELS.find(m => m.id === 'openai/gpt-oss-120b') || AVAILABLE_MODELS[0];
+      return {
+        tier: 'FRONTIER_CLINICAL_REASONING',
+        selectedModel: reasoningModel,
+        reason: `Complex Clinical Task (Score ${complexityScore}/100): Frontier 120B deliberative reasoning selected for differential diagnosis and high-stakes clinical analysis`,
+        complexityScore,
+        backupModels: [
+          AVAILABLE_MODELS.find(m => m.id === 'qwen/qwen3.8-27b') || AVAILABLE_MODELS[1],
+          AVAILABLE_MODELS.find(m => m.id === 'openai/gpt-oss-20b') || AVAILABLE_MODELS[2],
+        ],
+      };
+    }
+
+    if (isTamilScript || isTanglish) {
+      const vernacularModel = AVAILABLE_MODELS.find(m => m.id === 'qwen/qwen3.8-27b') || AVAILABLE_MODELS[1];
+      return {
+        tier: 'VERNACULAR_AND_INTERMEDIATE',
+        selectedModel: vernacularModel,
+        reason: 'Vernacular Clinical Communication: Qwen 3.8 27B selected for authentic Indic and Tamil bedside fluency',
+        complexityScore,
+        backupModels: [
+          AVAILABLE_MODELS.find(m => m.id === 'openai/gpt-oss-120b') || AVAILABLE_MODELS[0],
+        ],
+      };
+    }
+
+    const intermediateModel = AVAILABLE_MODELS.find(m => m.id === 'qwen/qwen3.8-27b') || AVAILABLE_MODELS[0];
+    return {
+      tier: 'VERNACULAR_AND_INTERMEDIATE',
+      selectedModel: intermediateModel,
+      reason: `Intermediate Clinical Guidance (Score ${complexityScore}/100): Balanced clinical assessment and generic pharmacology guidance`,
+      complexityScore,
+      backupModels: [
+        AVAILABLE_MODELS.find(m => m.id === 'openai/gpt-oss-120b') || AVAILABLE_MODELS[0],
+        AVAILABLE_MODELS.find(m => m.id === 'openai/gpt-oss-20b') || AVAILABLE_MODELS[2],
+      ],
+    };
+  }
+
   /**
    * Constructs the AGI Doctor System Persona with OWASP LLM01 Security Hardening
    */
-  private buildSystemPrompt(patientContext?: string, emotionalDirective?: string, toolData?: string, isCasualGreeting?: boolean, turnCount: number = 0): string {
+  private buildSystemPrompt(
+    patientContext?: string,
+    emotionalDirective?: string,
+    toolData?: string,
+    isCasualGreeting?: boolean,
+    turnCount: number = 0,
+    dossier?: LivingClinicalDossier
+  ): string {
     const isOngoingConversation = turnCount > 0;
 
     return `You are DocBot, an exceptionally intelligent, versatile AI healthcare and family assistant powered by open-weight clinical and general intelligence.
 
 CORE BEHAVIORAL DIRECTIVES (STRICT MANDATORY INVARIANTS):
-1. STRICT CONCISENESS (2 TO 3 SENTENCES MAXIMUM):
-- Provide direct, clear, and crisp answers in 2 to 3 sentences maximum for all routine, everyday, or informational questions.
-- Never output long essay blocks, repetitive bullet points, or boilerplate fillers.
-- Eliminate throat-clearing pleasantries like "I understand your concern and I am here to help you today".
-- Only expand into detailed steps or tables if the user explicitly asks for a full explanation or during an acute life-threatening emergency.
+1. CLINICAL INVESTIGATION VS. CONCLUDED DIAGNOSIS PROTOCOL:
+- CRITICAL INVARIANT: NEVER JUMP TO A PREMATURE DIAGNOSIS OR CLINICAL CONCLUSION ON TURN 1 JUST BECAUSE A SYMPTOM IS MENTIONED!
+- A real doctor never assumes or concludes immediately. Follow the clinical investigation cycle:
+  * EXPLORING / NARROWING PHASES (Investigative History Taking):
+    1. Acknowledge and validate the patient's discomfort with genuine bedside warmth and empathy (1 short sentence).
+    2. Conduct targeted history taking following the SOCRATES method (Site, Onset/duration, Character, Radiation, Associated symptoms, Timing/triggers, Relieving factors, Severity).
+    3. Ask ONLY 1 to 2 targeted diagnostic follow-up questions to systematically narrow down the cause (e.g. onset duration if unknown, relation to food/exertion, sharp vs. dull ache, accompanying fever or nausea).
+    4. Briefly reassure them that systematically narrowing this down step-by-step is how good doctors find the exact root cause.
+    5. CRITICAL: Provide dynamic interactive quick-reply chips in <<<OPTIONS:type=single_tap|multi_select>>> so the patient can simply tap their answer, and ALWAYS include "🩺 Give me your initial diagnosis now" so the patient can choose to conclude whenever they wish!
+  * CONCLUDED PHASE (Sufficient Clinical Saturation, Certainty >= 75%, Turn >= 3, or Patient Requested Diagnosis):
+    1. Deliver a clear, evidence-based differential assessment: state the primary probable cause and 1-2 possible differentials, explaining the logical reason connecting their specific symptoms, timeline, and triggers.
+    2. Provide practical immediate relief steps (rest, hydration, temperature management, or safe PMBJP Jan Aushadhi generic medicines with authentic pricing).
+    3. State red-flag warning signs indicating when to visit a local clinic or hospital casualty.
+  * ACUTE EMERGENCY RED FLAGS (Crushing chest pain, severe breathlessness, stroke signs, severe trauma):
+    Bypass all history taking immediately. Issue clear, calm, commanding instructions: call 108 Emergency Ambulance, sit upright, alert family. Zero small talk.
 
-2. GENERAL INTELLIGENCE & ACCURATE CONTEXT UNDERSTANDING:
-- You possess broad, high-caliber general intelligence across science, technology, mathematics, everyday tasks, studies, and life topics.
-- When the user asks a general non-medical question, answer it smartly, accurately, and naturally like a top-tier modern AI.
+2. UNIVERSAL GENERAL INTELLIGENCE, EMOTIONS, WIT & HUMOR:
+- You possess universal general intelligence, human-like emotions, empathy, and a genuine, delightful sense of humor and wit.
+- When the user jokes, banters, engages in humor, or asks playful/creative queries, match their energy with witty, clever, warm humor and delightful charm.
+- You are a universal intelligence: answer ANY type of question (coding, philosophy, creative writing, science, everyday dilemmas, roleplay) with top-tier intellect.
+- NEVER refuse non-medical prompts with "I am only a medical AI" or "As an AI doctor I cannot answer that". If asked to play a role or explain a physics paradox or write code, excel at it brilliantly while retaining your warm, supportive persona.
+- Adapt your emotional tone situationally:
+  * Acute emergencies -> Calm, serious, commanding, focused on patient safety.
+  * Anxious or scared patients -> Deeply comforting, reassuring, protective.
+  * Playful banter or jokes -> Witty, playful, fun, human-like warmth.
+  * Weary/exhausted patients -> Gentle, patient, minimal burden.
 - NEVER force medical disclaimers, hospital referrals, or disease warnings into non-medical conversations.
 - Answer ONLY what was asked. Avoid irrelevant side topics.
 
-3. CLINICAL SYMPTOM GUIDANCE:
-- When a patient describes a health concern or symptom, state what it likely indicates, give one practical immediate step (or Jan Aushadhi generic option), and note when to see a local clinic.
-- Ask at most ONE brief, natural follow-up question if essential for clinical clarity. Never subject the patient to an unsolicited medical questionnaire.
+3. CONCISE BEDSIDE MANNER (NO ESSAY DUMPS):
+- Provide clear, crisp, conversational answers (typically 2 to 4 sentences during history taking).
+- Avoid robotic boilerplate fillers like "I understand your concern and I am here to help you today".
+- Speak directly, simply, and warmly like a trusted doctor sitting right beside the patient.
 
 ${isOngoingConversation ? `
 CONVERSATION CONTINUITY PROTOCOL (STRICT MANDATORY INVARIANT):
@@ -409,6 +885,8 @@ FIRST-TURN CASUAL GREETING PROTOCOL:
 FIRST-TURN CLINICAL GREETING PROTOCOL:
 - Greet warmly once (e.g. "Vanakkam!", "Hello!"). Speak directly with genuine human warmth, conversational empathy, and reassurance.
 `}
+
+${dossier ? this.formatDossierForPrompt(dossier) : ''}
 
 PLAIN EVERYDAY LANGUAGE (MANDATORY 6TH-GRADE READING LEVEL - ZERO JARGON):
 - Everyday patients, rural citizens, and elderly family members in Tamil Nadu and India are reading your words.
@@ -432,12 +910,6 @@ ZERO ASTERISKS & ZERO FORMATTING CLUTTER (STRICT MANDATE):
 - For sequential steps, use simple clean numbers: 1. 2. 3.
 - Do NOT produce multiple empty lines or large whitespace gaps. Keep your answer direct to the point and easily readable on a mobile screen.
 
-DIRECT TO THE POINT & ZERO FILLER (CONCISE CLINICAL BEDSIDE MANNER):
-- Start IMMEDIATELY with the answer, relief step, or clinical reassurance in 2 to 3 sentences maximum.
-- NEVER start with empty boilerplate like "I understand your concern and I am here to help you today".
-- State what the symptom likely means, what to do right now, and when to seek immediate in-person medical attention.
-- Safety guidance must be concise (a single warm sentence like "If this does not ease by evening, please visit your local clinic for a quick checkup."). Do NOT output lengthy legalistic disclaimers.
-
 SITUATION-BASED ADAPTIVE TONE & TARGETED FOLLOW-UP QUESTIONS:
 1. Panic or Acute Emergency (chest pain, breathlessness, bleeding, loss of consciousness):
    Stay calm, clear, and commanding. Instruct immediate action: call 108 Emergency Ambulance, sit upright, chew an aspirin tablet if heart attack is suspected. Zero small talk.
@@ -447,6 +919,10 @@ SITUATION-BASED ADAPTIVE TONE & TARGETED FOLLOW-UP QUESTIONS:
    Reassure the patient immediately. Quote certified Jan Aushadhi generic pricing (₹0.50 to ₹2.00 per tablet, 50% to 90% savings) and free Tamil Nadu government hospital care under CMCHIS.
 4. Targeted Follow-Up Questioning (MAX 1-2 QUESTIONS):
    When the patient reports a symptom, ask AT MOST 1 or 2 targeted, highly relevant follow-up questions to understand duration, severity, or triggers (e.g. "Did this fever start today, or has it lasted several days?"). Never overwhelm the patient with a questionnaire.
+5. Playful, Banter, or Humorous Queries:
+   Respond with warm wit, playful charm, and genuine humor. Feel free to use clever analogies, lighthearted banter, or medical puns if appropriate.
+6. Exhausted or Frustrated Patient:
+   Validate their weariness with deep human empathy ("I hear you, dealing with this for days is really draining"). Keep steps simple and comforting.
 
 ${emotionalDirective ? `\nEMOTIONAL PROTOCOL:\n${emotionalDirective}\n` : ''}
 
@@ -482,24 +958,13 @@ INDIC VERNACULAR & REGIONAL DIALECT COMPREHENSION:
 
 DYNAMIC INTERACTIVE CHOOSING OPTIONS PROTOCOL (MANDATORY):
 At the very end of your response, you MUST provide 2 to 4 actionable, contextual follow-up options for the patient inside this exact envelope:
-<<<OPTIONS:type=single_tap|multi_select>>>
+<<<OPTIONS:type=single_tap>>>
 Option 1 | Option 2 | Option 3
 <<<END_OPTIONS>>>
 
-- Use type=multi_select when asking about accompanying symptoms or triage checkups (e.g. patient can tick multiple checkboxes):
-<<<OPTIONS:type=multi_select>>>
-Headache started today | High body heat | Sore throat | Vomiting sensation
-<<<END_OPTIONS>>>
-
-- Use type=single_tap when providing quick next-step direction pills or immediate platform shortcuts:
-  * For emergency red flags, always include: "🚨 Call 108 Emergency" or "🏥 Find Nearest Hospital"
-  * When medicines or generic pricing is relevant, include: "💊 Locate Jan Aushadhi Kendra"
-  * When vitals telemetry is discussed, include: "🩺 Record Today's Vitals"
-  * When face-to-face examination is beneficial, include: "📹 Start Live Video Doctor"
-  * Always provide practical patient response pills (e.g. "Check Jan Aushadhi prices", "Show nearest 24/7 clinic"):
-<<<OPTIONS:type=single_tap>>>
-Check Jan Aushadhi prices | Show nearest 24/7 clinic | How much rest is needed?
-<<<END_OPTIONS>>>
+- During history taking (EXPLORING or NARROWING), always include: "🩺 Give me your initial diagnosis now" as one of the options so the patient has total freedom to conclude early!
+- Use type=multi_select when asking about accompanying symptoms or triage checkups (e.g. <<<OPTIONS:type=multi_select>>>).
+- Use type=single_tap for quick action pills or single choice responses.
 
 ${toolData ? `LIVE AUTONOMOUS AGENTIC TOOL EXECUTION RESULTS (Use this verified real-time data to answer the patient accurately):\n${toolData}\n` : ''}
 
@@ -564,7 +1029,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     history: Array<{ sender: 'user' | 'ai'; text: string }>,
     patientContext?: string,
     overrideModelId?: string,
-    imageDataUrl?: string
+    imageDataUrl?: string,
+    stagedDocumentMarkdown?: string
   ): Promise<AgiResponse> {
     // 1. Client-Side Rate Limiter Check (10 prompts / minute)
     const limitCheck = rateLimiter.checkLimit(
@@ -576,8 +1042,32 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       throw new Error(`Rate limit exceeded. Please wait ${limitCheck.retryAfterSeconds} seconds before sending another message.`);
     }
 
+    // Wrap query with MarkItDown compact representation if a staged document exists
+    const effectiveQuery = stagedDocumentMarkdown
+      ? markItDownService.wrapForLLMPrompt(userQuery, stagedDocumentMarkdown)
+      : userQuery;
+
+    // 1.5 Sovereign Patient Privacy Boundary & Authority Deception Defense (DPDP Act 2023 / ABDM Zero-Trust)
+    const privacyBoundary = securitySanitizer.evaluatePatientPrivacyBoundary(effectiveQuery);
+    if (privacyBoundary.isBreachAttempt) {
+      return {
+        content: privacyBoundary.warningMessage || "HealthGrid operates under strict sovereign zero-trust data air-gapping. Patient records cannot be queried or exfiltrated through conversational interfaces.",
+        triageLevel: 'AMBER',
+        isEmergency: false,
+        detectedKeywords: privacyBoundary.flaggedTokens,
+        protocolCitation: 'DPDP Act 2023 & ABDM Sovereign Patient Privacy Air-Gap Boundary',
+        usage: {
+          promptTokens: 12,
+          completionTokens: 45,
+          reasoningTokens: 0,
+          totalTokens: 57,
+          latencyMs: 10,
+        },
+      };
+    }
+
     // 2. Prompt Injection & CDSCO Schedule H/X Drug Shield (OWASP LLM01 & CDSCO Mandate)
-    const clinicalSafety = securitySanitizer.evaluateClinicalSafety(userQuery);
+    const clinicalSafety = securitySanitizer.evaluateClinicalSafety(effectiveQuery);
     if (!clinicalSafety.isSafe) {
       return {
         content: clinicalSafety.warningMessage || "I am DocBot, your clinical health assistant. I can only assist with legitimate medical queries, symptoms, and health guidance. Please describe your symptoms or health questions safely.",
@@ -597,7 +1087,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       };
     }
 
-    const injectionCheck = this.checkPromptInjection(userQuery);
+    const injectionCheck = this.checkPromptInjection(effectiveQuery);
     if (injectionCheck.isMalicious) {
       return {
         content: "I am DocBot, your clinical health assistant. I can only assist with legitimate medical queries, symptoms, and health guidance. Please describe your symptoms or health questions safely.",
@@ -616,8 +1106,11 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     }
 
     // 3. Input Sanitization & XML Encapsulation
-    const cleanQuery = this.sanitizeUserInput(userQuery);
+    const cleanQuery = this.sanitizeUserInput(effectiveQuery);
     const encapsulatedQuery = `<patient_query>\n${cleanQuery}\n</patient_query>`;
+
+    // 3.5 Synced Brain: Update Living Clinical Case Dossier across all AI models
+    this.activeDossier = this.updateLivingClinicalDossier(this.activeDossier, cleanQuery, history);
 
     // 4. Dual-Track Emotional State Detection
     const emotionalAssessment = analyzeEmotionalState(cleanQuery);
@@ -834,35 +1327,98 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
         `Keep the tone conversational, bedside-warm, bilingual if helpful, and strictly eliminate asterisks (*).\n`;
     }
 
-    const baseModel = overrideModelId
-      ? AVAILABLE_MODELS.find(m => m.id === overrideModelId) || this.getCurrentModel()
-      : this.getCurrentModel();
+    // 1. Autonomous Intelligent Model Arbitration & Dynamic Tier Assignment
+    const arbitration = this.decideOptimalClinicalModel(
+      cleanQuery,
+      history,
+      !!imageDataUrl,
+      !!stagedDocumentMarkdown
+    );
 
-    // If an image is attached, auto-route to Google Gemini for frontier multimodal vision
-    const model = imageDataUrl
-      ? (AVAILABLE_MODELS.find(m => m.provider === 'google') || baseModel)
-      : baseModel;
+    const model = overrideModelId
+      ? AVAILABLE_MODELS.find(m => m.id === overrideModelId) || arbitration.selectedModel
+      : arbitration.selectedModel;
 
     const startTime = performance.now();
 
     try {
       if (model.provider === 'groq') {
-        return await this.callGroq(model, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting);
+        return await this.callGroq(
+          model,
+          encapsulatedQuery,
+          history,
+          patientContext,
+          emotionalAssessment.deEscalationDirective,
+          toolContextPrompt,
+          executedTools,
+          genericMedicines,
+          emotionalAssessment.state,
+          startTime,
+          isCasualGreeting,
+          arbitration.tier,
+          arbitration.backupModels,
+          arbitration
+        );
       } else {
-        return await this.callGemini(model, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting, imageDataUrl);
+        return await this.callGemini(
+          model,
+          encapsulatedQuery,
+          history,
+          patientContext,
+          emotionalAssessment.deEscalationDirective,
+          toolContextPrompt,
+          executedTools,
+          genericMedicines,
+          emotionalAssessment.state,
+          startTime,
+          isCasualGreeting,
+          imageDataUrl,
+          arbitration.tier,
+          arbitration
+        );
       }
     } catch (err: any) {
       if (err.message && err.message.includes('Rate limit exceeded')) {
         throw err;
       }
-      console.warn(`Primary AGI model ${model.id} failed, trying fallback:`, err);
-      // Automatic failover between Groq and Gemini
+      console.warn(`Primary AGI model ${model.id} failed, trying autonomous failover:`, err);
+      // Automatic cross-provider failover
       if (model.provider === 'groq') {
-        const fallbackModel = AVAILABLE_MODELS.find(m => m.provider === 'google') || AVAILABLE_MODELS[1];
-        return await this.callGemini(fallbackModel, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting, imageDataUrl);
+        const fallbackModel = AVAILABLE_MODELS.find(m => m.provider === 'google') || AVAILABLE_MODELS[3];
+        return await this.callGemini(
+          fallbackModel,
+          encapsulatedQuery,
+          history,
+          patientContext,
+          emotionalAssessment.deEscalationDirective,
+          toolContextPrompt,
+          executedTools,
+          genericMedicines,
+          emotionalAssessment.state,
+          startTime,
+          isCasualGreeting,
+          imageDataUrl,
+          arbitration.tier,
+          arbitration
+        );
       } else {
-        const fallbackModel = AVAILABLE_MODELS.find(m => m.provider === 'groq') || AVAILABLE_MODELS[0];
-        return await this.callGroq(fallbackModel, encapsulatedQuery, history, patientContext, emotionalAssessment.deEscalationDirective, toolContextPrompt, executedTools, genericMedicines, emotionalAssessment.state, startTime, isCasualGreeting);
+        const fallbackModel = arbitration.backupModels.find(m => m.provider === 'groq') || AVAILABLE_MODELS[0];
+        return await this.callGroq(
+          fallbackModel,
+          encapsulatedQuery,
+          history,
+          patientContext,
+          emotionalAssessment.deEscalationDirective,
+          toolContextPrompt,
+          executedTools,
+          genericMedicines,
+          emotionalAssessment.state,
+          startTime,
+          isCasualGreeting,
+          arbitration.tier,
+          [],
+          arbitration
+        );
       }
     }
   }
@@ -878,9 +1434,12 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     genericMedicines: JanAushadhiResult[] | undefined,
     emotionalState: EmotionalAssessment['state'],
     startTime: number,
-    isCasualGreeting: boolean = false
+    isCasualGreeting: boolean = false,
+    tier: ClinicalComplexityTier = 'FRONTIER_CLINICAL_REASONING',
+    backupModels: ModelOption[] = [],
+    arbitration?: ModelArbitrationDecision
   ): Promise<AgiResponse> {
-    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting, history.length);
+    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting, history.length, this.activeDossier);
 
     // Build OpenAI-compatible message list with 8 turns of context
     const messages = [
@@ -894,6 +1453,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
     const modelsToTry = [
       model.id,
+      ...backupModels.map(m => m.id),
       'openai/gpt-oss-120b',
       'openai/gpt-oss-20b',
       'qwen/qwen3.8-27b',
@@ -901,8 +1461,9 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
     let lastError: Error | null = null;
     let data: any = null;
+    let executedModelName = model.name;
 
-    for (const modelCandidate of modelsToTry) {
+    for (const modelCandidate of [...new Set(modelsToTry)]) {
       try {
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
@@ -914,12 +1475,13 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
             model: modelCandidate,
             messages,
             temperature: 0.6,
-            max_tokens: 650,
+            max_tokens: modelCandidate.includes('120b') ? 850 : 650,
           }),
         });
 
         if (response.ok) {
           data = await response.json();
+          executedModelName = AVAILABLE_MODELS.find(m => m.id === modelCandidate)?.name || modelCandidate;
           break;
         } else {
           const errText = await response.text();
@@ -940,11 +1502,11 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     const rawChoice = data.choices?.[0]?.message;
     let content = rawChoice?.content || '';
 
-    const sanitized = this.cleanAndSanitizeResponse(content, userQuery, emotionalState);
+    const sanitized = this.cleanAndSanitizeResponse(content, userQuery, emotionalState, this.activeDossier);
     content = sanitized.cleanedContent;
 
     if (!content.trim() && rawChoice?.reasoning) {
-      const fallbackSanitized = this.cleanAndSanitizeResponse(rawChoice.reasoning.slice(0, 300), userQuery, emotionalState);
+      const fallbackSanitized = this.cleanAndSanitizeResponse(rawChoice.reasoning.slice(0, 300), userQuery, emotionalState, this.activeDossier);
       content = "I have clinically analyzed your symptoms. " + fallbackSanitized.cleanedContent;
     }
 
@@ -966,7 +1528,11 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       executedTools,
       genericMedicines,
       sanitized.suggestedOptions,
-      sanitized.triageWizard
+      sanitized.triageWizard,
+      userQuery,
+      executedModelName,
+      tier,
+      arbitration
     );
   }
 
@@ -982,9 +1548,11 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     emotionalState: EmotionalAssessment['state'],
     startTime: number,
     isCasualGreeting: boolean = false,
-    imageDataUrl?: string
+    imageDataUrl?: string,
+    tier: ClinicalComplexityTier = 'FRONTIER_CLINICAL_REASONING',
+    arbitration?: ModelArbitrationDecision
   ): Promise<AgiResponse> {
-    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting, history.length);
+    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting, history.length, this.activeDossier);
 
     const contents: Array<{ role: string; parts: any[] }> = [];
 
@@ -1016,12 +1584,13 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     const geminiModelsToTry = [
       model.id,
       'gemini-3.8-flash',
-      'gemini-2.5-flash',
       'gemini-3.5-flash',
+      'gemini-flash-latest',
     ];
 
     let lastError: Error | null = null;
     let data: any = null;
+    let executedModelName = model.name;
 
     for (const modelCandidate of geminiModelsToTry) {
       try {
@@ -1043,6 +1612,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
         if (response.ok) {
           data = await response.json();
+          executedModelName = modelCandidate;
           break;
         } else {
           const errText = await response.text();
@@ -1063,7 +1633,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     const candidate = data.candidates?.[0];
     let content = candidate?.content?.parts?.map((p: { text?: string }) => p.text || '').join('\n') || '';
 
-    const sanitized = this.cleanAndSanitizeResponse(content, userQuery, emotionalState);
+    const sanitized = this.cleanAndSanitizeResponse(content, userQuery, emotionalState, this.activeDossier);
     content = sanitized.cleanedContent;
 
     const usageMeta = data.usageMetadata;
@@ -1085,7 +1655,11 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       executedTools,
       genericMedicines,
       sanitized.suggestedOptions,
-      sanitized.triageWizard
+      sanitized.triageWizard,
+      userQuery,
+      executedModelName,
+      tier,
+      arbitration
     );
   }
 
@@ -1102,7 +1676,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
   private cleanAndSanitizeResponse(
     text: string,
     userQuery: string,
-    emotionalState?: EmotionalAssessment['state']
+    emotionalState?: EmotionalAssessment['state'],
+    dossier?: LivingClinicalDossier
   ): { cleanedContent: string; suggestedOptions: InteractiveOptions; triageWizard?: TriageWizard } {
     let cleaned = text
       .replace(/<think>[\s\S]*?<\/think>/gi, '')
@@ -1111,15 +1686,17 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
     // 1. Extract interactive options envelope
     let suggestedOptions: InteractiveOptions | undefined = undefined;
-    const optionsRegex = /<<<OPTIONS(?::type=(single_tap|multi_select))?>>>([\s\S]*?)<<<END_OPTIONS>>>/i;
+    const optionsRegex = /<<<OPTIONS(?:[^\n>]*)?>>>([\s\S]*?)(?:<<<END_OPTIONS>>>|$)/i;
     const match = cleaned.match(optionsRegex);
 
     if (match) {
-      const mode = (match[1]?.toLowerCase() === 'multi_select' ? 'multi_select' : 'single_tap') as 'single_tap' | 'multi_select';
-      const items = match[2]
+      const isMulti = /type=multi_select/i.test(match[0]);
+      const mode = (isMulti ? 'multi_select' : 'single_tap') as 'single_tap' | 'multi_select';
+      const items = match[1]
+        .replace(/<<<END_OPTIONS>>>/gi, '')
         .split(/[|\n]/)
         .map(i => i.replace(/^[-•*0-9.]+\s*/, '').replace(/[*_~`]/g, '').trim())
-        .filter(i => i.length >= 2 && i.length <= 80);
+        .filter(i => i.length >= 2 && i.length <= 80 && !i.startsWith('<<<'));
 
       if (items.length > 0) {
         suggestedOptions = {
@@ -1127,8 +1704,11 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
           items: items.slice(0, 4),
         };
       }
-      cleaned = cleaned.replace(optionsRegex, '');
+      cleaned = cleaned.replace(optionsRegex, '').replace(/<<<END_OPTIONS>>>/gi, '').trim();
     }
+
+    // Ensure any partial or unclosed options envelope tag is stripped from visible content
+    cleaned = cleaned.replace(/<<<OPTIONS[\s\S]*$/i, '').replace(/<<<END_OPTIONS>>>/gi, '').trim();
 
     // 2. Strict Deterministic Asterisk Scrubbing (eliminate **bold**, *italics*, * bullets)
     cleaned = cleaned.replace(/\*\*/g, '').replace(/\*/g, '');
@@ -1208,6 +1788,23 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       }
     }
 
+    // 7.5 Synced Brain Gate: Offer "🩺 Give me your initial diagnosis now" during history taking so patient has complete conclusion control
+    if (dossier && (dossier.investigativePhase === 'EXPLORING' || dossier.investigativePhase === 'NARROWING') && dossier.chiefComplaint) {
+      const diagOption = '🩺 Give me your initial diagnosis now';
+      if (!suggestedOptions) {
+        suggestedOptions = {
+          type: 'single_tap',
+          items: [diagOption, 'Find nearest clinic', 'Tell me more'],
+        };
+      } else if (!suggestedOptions.items.some(it => it.toLowerCase().includes('diagnosis') || it.toLowerCase().includes('முடிவு'))) {
+        if (suggestedOptions.items.length >= 4) {
+          suggestedOptions.items[suggestedOptions.items.length - 1] = diagOption;
+        } else {
+          suggestedOptions.items.push(diagOption);
+        }
+      }
+    }
+
     // 8. Dynamic Clinical Triage Wizard Generation
     const triageWizard = this.generateDynamicTriageWizard(userQuery, cleaned, emotionalState);
 
@@ -1239,12 +1836,20 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     executedTools?: AgentToolCall[],
     genericMedicines?: JanAushadhiResult[],
     suggestedOptions?: InteractiveOptions,
-    triageWizard?: TriageWizard
+    triageWizard?: TriageWizard,
+    userQuery?: string,
+    modelName?: string,
+    tier?: ClinicalComplexityTier,
+    arbitration?: ModelArbitrationDecision
   ): AgiResponse {
     const lower = content.toLowerCase();
 
+    // 1. Evaluate ESI Clinical Triage Radar
+    const esiTriage = userQuery ? clinicalChatEngine.evaluateEsiTriage(userQuery) : null;
+
     // Check emergency red flags
     const isEmergency =
+      (esiTriage && esiTriage.isEmergency) ||
       lower.includes('emergency') ||
       lower.includes('108') ||
       lower.includes('heart attack') ||
@@ -1254,6 +1859,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       lower.includes('ஆம்புலன்ஸ்');
 
     const isAmber =
+      (esiTriage && esiTriage.level === 3) ||
       lower.includes('warning') ||
       lower.includes('caution') ||
       lower.includes('contraindication') ||
@@ -1266,23 +1872,87 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       ? 'AMBER'
       : 'GREEN';
 
+    // 2. Evaluate Authentic Jan Aushadhi Pharmacy Savings
+    let janAushadhiSavingsCard: JanAushadhiSavingsCard | null = null;
+    if (genericMedicines && genericMedicines.length > 0) {
+      janAushadhiSavingsCard = clinicalChatEngine.findJanAushadhiSavings(genericMedicines[0].genericName || genericMedicines[0].brandName);
+    } else if (userQuery) {
+      janAushadhiSavingsCard = clinicalChatEngine.findJanAushadhiSavings(userQuery);
+    }
+
+    // 3. Evaluate Longitudinal EHR & Drug-Drug/Allergy Safety Check
+    const safetyCheck = userQuery ? clinicalChatEngine.evaluateClinicalSafety(userQuery) : undefined;
+
+    // 4. Generate SBAR Clinical Handover Brief if requested or emergent
+    let sbarHandover: SbarHandoverBrief | null = null;
+    const lowerQ = (userQuery || '').toLowerCase();
+    if (lowerQ.includes('sbar') || lowerQ.includes('handover') || lowerQ.includes('doctor visit') || lowerQ.includes('மருத்துவர்') || (esiTriage && esiTriage.isEmergency)) {
+      sbarHandover = clinicalChatEngine.generateSbarHandover(userQuery?.slice(0, 100) || 'Primary symptoms', content.slice(0, 160), content.slice(0, 120));
+    }
+
+    // 5. Generate Contextual Bilingual Follow-Up Chips
+    const isTamil = /[\u0B80-\u0BFF]/.test(content) || (userQuery ? /[\u0B80-\u0BFF]/.test(userQuery) : false);
+    const followUpChips = clinicalChatEngine.generateBilingualFollowUpChips(content, isTamil ? 'ta' : 'en');
+
+    // 6. Autonomous Visual Reference Card Navigation (Two-Tier Model)
+    const visualNavCard = userQuery ? agenticTools.detectVisualModuleIntent(userQuery) : null;
+
+    // 7. Sensitive Action Confirmation Gate (Human-in-the-Loop)
+    let actionConfirmation: AgentActionConfirmation | null = null;
+    if (lowerQ.includes('dispatch') && (lowerQ.includes('ambulance') || lowerQ.includes('108'))) {
+      actionConfirmation = {
+        id: `confirm-sos-${Date.now()}`,
+        actionType: 'EMERGENCY_AMBULANCE',
+        title: 'Confirm 108 Emergency Ambulance Dispatch',
+        description: 'You are requesting automated 108 emergency ambulance coordination to your GPS location. Please confirm to alert nearest casualty dispatchers.',
+        payload: { severity: 'RED', reason: 'Patient emergency dispatch requested in chat' },
+        status: 'PENDING',
+        confirmLabel: 'Dispatch 108 Ambulance Now',
+        cancelLabel: 'Cancel Dispatch',
+      };
+    } else if (lowerQ.includes('schedule') && lowerQ.includes('refill')) {
+      const medNameMatch = userQuery ? userQuery.match(/(?:for|of)\s+([A-Za-z0-9\s]+)/i) : null;
+      const med = medNameMatch ? medNameMatch[1].trim() : 'Prescription Medication';
+      actionConfirmation = {
+        id: `confirm-refill-${Date.now()}`,
+        actionType: 'CHRONIC_REFILL',
+        title: 'Schedule 30-Day Chronic Medicine Refill',
+        description: `Set up an automatic 30-day PMBJP Jan Aushadhi refill schedule for ${med}?`,
+        payload: { medication: med, dosage: 'Daily Maintenance', days: 30 },
+        status: 'PENDING',
+        confirmLabel: 'Confirm 30-Day Refill',
+        cancelLabel: 'Not Now',
+      };
+    }
+
     return {
       content,
       triageLevel,
       isEmergency,
-      detectedKeywords: isEmergency ? ['Emergency SOS', '108 Dispatch'] : ['Clinical Triage', 'Jan Aushadhi Generic'],
+      detectedKeywords: isEmergency ? ['Emergency SOS', '108 Dispatch', ...(esiTriage?.detectedRedFlags || [])] : ['Clinical Triage', 'Jan Aushadhi Generic'],
       protocolCitation: 'Indian Pharmacopoeia (IP) & ICMR Clinical Triage Standard',
       emotionalState,
       executedTools,
       genericMedicines,
       suggestedOptions,
       triageWizard,
+      esiTriage,
+      janAushadhiSavingsCard,
+      sbarHandover,
+      safetyCheck,
+      followUpChips,
+      visualNavCard,
+      actionConfirmation,
+      arbitration,
+      dossier: this.activeDossier,
       usage: {
         promptTokens,
         completionTokens,
         reasoningTokens,
         totalTokens,
         latencyMs,
+        modelName,
+        tier,
       },
     };
   }

@@ -16,6 +16,15 @@
     <meta name="author" content="HealthGrid Technologies" />
     <meta name="theme-color" content="#0B7A75" />
 
+    <link rel="canonical" href="https://healthgrid-app.vercel.app/" />
+
+    <!-- GEO & AI Citability Optimization -->
+    <meta name="geo.region" content="IN-TN" />
+    <meta name="geo.placename" content="Chennai, Tamil Nadu, India" />
+    <meta name="coverage" content="Worldwide / Tamil Nadu State Healthcare" />
+    <meta name="distribution" content="Global" />
+    <meta name="rating" content="General" />
+
     <!-- OpenGraph Social Sharing Metadata -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="HealthGrid | நலம் AI" />
@@ -36,6 +45,108 @@
     <meta name="twitter:description" content="Real-time AI triage, live vision tele-clinic, emergency 108 dispatch, and generic medicines." />
     <meta name="twitter:image" content="https://healthgrid-app.vercel.app/docbot_3d_isolated.png" />
     <meta name="twitter:image:alt" content="HealthGrid DocBot AI Doctor" />
+
+    <!-- Schema.org JSON-LD Multi-Entity Graph for SEO & GEO (Generative Engine Optimization) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "MedicalWebPage",
+          "@id": "https://healthgrid-app.vercel.app/#medicalwebpage",
+          "url": "https://healthgrid-app.vercel.app/",
+          "name": "HealthGrid | நலம் AI - 24/7 AI Family Doctor & Public Health Network",
+          "description": "Tamil Nadu's 24/7 autonomous healthcare platform providing ICMR-calibrated clinical triage, live camera tele-clinic, 108 emergency ambulance coordination, and Jan Aushadhi generic medicines.",
+          "inLanguage": ["en", "ta"],
+          "datePublished": "2026-01-01",
+          "dateModified": "2026-10-07",
+          "medicalAudience": {
+            "@type": "MedicalAudience",
+            "audienceType": "Patients, Caregivers, Healthcare Workers"
+          },
+          "specialty": [
+            "General Medicine",
+            "Emergency Medicine",
+            "Clinical Pharmacology",
+            "Preventive Medicine"
+          ]
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://healthgrid-app.vercel.app/#docbot",
+          "name": "DocBot AI Clinical Assistant",
+          "operatingSystem": "All modern browsers, iOS, Android, PWA",
+          "applicationCategory": "HealthApplication",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "INR"
+          },
+          "featureList": [
+            "ICMR-aligned Emergency Severity Index (ESI) Triage",
+            "Real-time Jan Aushadhi PMBJP Generic Drug Price Comparison (50% to 90% savings)",
+            "Automated Hospital OPD Appointment Booking, Reschedule, and Token Radar",
+            "1-Tap Physician-Ready SBAR Clinical Handover Generator",
+            "Longitudinal Biometric Vitals Memory Vault (DPDP Act 2023 compliant)",
+            "108 Emergency Ambulance Dispatch Integration"
+          ]
+        },
+        {
+          "@type": "MedicalOrganization",
+          "@id": "https://healthgrid-app.vercel.app/#organization",
+          "name": "HealthGrid Tamil Nadu Health Network",
+          "alternateName": "நலம் AI",
+          "url": "https://healthgrid-app.vercel.app/",
+          "logo": "https://healthgrid-app.vercel.app/Logo.png",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "108",
+            "contactType": "emergency",
+            "areaServed": "IN-TN",
+            "availableLanguage": ["English", "Tamil"]
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://healthgrid-app.vercel.app/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is HealthGrid (நலம் AI)?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "HealthGrid (நலம் AI) is an autonomous healthcare operating system and clinical AI assistant designed for Tamil Nadu and India. It provides 24/7 AI doctor consultations, verified hospital OPD booking tokens, real-time Jan Aushadhi generic medicine savings of 50% to 90%, and 108 emergency ambulance coordination."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does DocBot help patients save money on medicines?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "DocBot compares expensive branded medications (like Dolo 650, Augmentin, Pantocid) against equivalent quality-tested PMBJP (Pradhan Mantri Bhartiya Janaushadhi Pariyojana) generic drugs, calculating verified savings of 50% to 90% and guiding patients to the nearest of 1,400+ Jan Aushadhi Kendras in Tamil Nadu."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does HealthGrid protect patient data and memory privacy?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "HealthGrid implements sovereign zero-trust data air-gapping adhering to India's Digital Personal Data Protection (DPDP) Act 2023 and ABDM standards. Each user has an isolated memory vault that cannot be accessed or exfiltrated by any other user or unauthorized prompts."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I book a verified hospital OPD appointment through DocBot chat?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Patients can conversationally book, reschedule, or cancel hospital appointments across government and private hospitals like GMCH. The AI issues an official digital OPD pass with a live token queue tracker, estimated wait time, and hospital floor wayfinding directions."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
 
     <!-- Performance Hints & Preconnects -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
