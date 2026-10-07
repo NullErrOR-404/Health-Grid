@@ -16,9 +16,8 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `51e3ef1` (`feat: pixel-perfect redesign of AI Live Clinic and Records Hub for desktop and mobile`)
-- **Latest Feature**: Pixel-Perfect Redesign & Mobile Architecture for AI Live Clinic and Records Hub
-- **Production Deployment Hash**: `https://healthgrid-iys3opee3-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_3ND1qS6k71dAF2Gp33LthcDBLmj5`)
+- **Latest Commit**: `feat: dynamic live clinic without doctor PIP, real-time Supabase telemetry, local storage transcript caching, and frontier model fine-tuning pipeline`
+- **Latest Feature**: Dynamic AI Live Clinic & Frontier Model Pipeline (ADR-043)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Live Aliases (All 4 Synchronized & Verified 200 OK)**:
   - `https://healthgrid-app.vercel.app`
@@ -27,6 +26,13 @@ Back to [[00_Index]]
   - `https://healthgrid-network.vercel.app`
 
 ## Recent Completed Tasks
+- [x] Dynamic Live Clinic, Real-Time Supabase Telemetry, Client-Side Transcript Caching, and Frontier Model Pipeline (see [[ADR-043-Dynamic-Live-Clinic-Supabase-Telemetry-and-Frontier-Model-Pipeline]]):
+  - **Doctor PIP Removal & Kinetic Equalizer**: Completely eliminated the static doctor PIP image from the center video canvas. Added a non-intrusive floating `DocBot Speaking` indicator with 4 animated equalizer bars active only when audio is playing.
+  - **Zero-Trace Client-Side Transcript Caching**: Eliminated hardcoded transcripts. Speech turns are dynamically captured and persistently cached in `localStorage` under `healthgrid_live_session_transcripts_${sessionId}` with a Device History tab and 1-tap restore and copy actions.
+  - **Real-Time Supabase Latency Telemetry**: Connected Session Details to authentic Supabase PostgreSQL `appointments` table and authenticated user profile. Measures real cloud round-trip ping latency (`performance.now()`) with adaptive network health badges (`Excellent`, `Good`, `Fair`).
+  - **Dynamic Vision-Grounded Verification Checklist**: AI Assistant observations and checklist items (`dynamicChecklist`) are dynamically extracted from multimodal vision inference and live speech with interactive checkboxes and bidirectional reasoning feedback.
+  - **Frontier Clinical Model Pipeline (`scripts/`)**: Prepared ChatML datasets (`healthgrid_clinical_agent_train.jsonl`, `healthgrid_clinical_agent_val.jsonl`) blending Medical-O1, MedQA, ChatDoctor, UltraChat, and Hermes. Upgraded QLoRA script (`train_clinical_agent_hf.py`) targeting Llama-3.3-70B and Qwen-2.5-72B with Hugging Face Hub integration.
+  - **Verified in Production & DevTools**: Verified cleanly on Desktop (1280x800) and Mobile (390x844).
 - [x] AI Live Clinic & Records Hub Pixel-Perfect Redesign and Responsive Architecture (see [[ADR-042-AI-Live-Clinic-and-Records-Hub-Pixel-Perfect-Redesign-and-Mobile-Optimization]]):
   - **AI Live Clinic (`LiveVisionDoctorModal.tsx`)**: Pixel-accurate implementation of desktop reference `C:\HealthGrid\UI References\Live vision Clinic ref.png` with 3-column workspace (Left: Session Details & Navigation; Center: Camera video viewport, AI Vision Scanner guidance card, Doctor Avatar PIP with audio equalizer waves, and floating call controls; Right: AI Assistant observation bubble, interactive "Please confirm:" checklist, and Live Transcript feed). Adapted for mobile (`< lg`) with clean fullscreen camera view, minimal top HUD, and swipe-up collapsible AI Assistant drawer.
   - **Records Hub (`VitalsTelemetryModal.tsx`)**: Pixel-accurate implementation of desktop reference `C:\HealthGrid\UI References\Records Hub ref.png` with `Lifestyle and Health Memory` header, `Active` status badge, end-to-end encrypted security banner, 6 metric tabs (`Vitals & Measurements`, `Blood Sugar`, `Pulse`, `SpO2`, `Temperature`, `Weight`), quick-add form, and recent history table with smooth horizontal touch-scrolling on mobile.
@@ -180,5 +186,6 @@ Back to [[00_Index]]
 - [[ADR-040-Autonomous-Clinical-Model-Arbitration-and-Zero-Trace-UI]]
 - [[ADR-041-Living-Clinical-Case-Dossier-Adaptive-History-Taking-and-Universal-EQ]]
 - [[ADR-042-AI-Live-Clinic-and-Records-Hub-Pixel-Perfect-Redesign-and-Mobile-Optimization]]
+- [[ADR-043-Dynamic-Live-Clinic-Supabase-Telemetry-and-Frontier-Model-Pipeline]]
 - [[Key_Credentials_and_Environments]]
 

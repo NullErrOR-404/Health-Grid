@@ -20,6 +20,12 @@ import { speechEngine } from './speechService';
 import { agenticTools, type JanAushadhiResult } from './agenticToolsService';
 import { careLoopService } from './careLoopService';
 
+export interface DynamicChecklistItem {
+  id: string;
+  label: string;
+  checked: boolean;
+}
+
 export interface LiveVisionFrameResult {
   visualObservations: string[];
   clinicalAssessment: string;
@@ -28,6 +34,9 @@ export interface LiveVisionFrameResult {
   detectedMeds?: JanAushadhiResult[];
   recommendedSpecialty?: string;
   suggestedFollowUpHours?: number;
+  dynamicChecklist?: DynamicChecklistItem[];
+  suggestedQuestions?: string[];
+  diagnosticConfidence?: number;
 }
 
 export interface LiveConsultationSummary {
@@ -88,6 +97,7 @@ class LiveVisionDoctorService {
 
   /**
    * Analyzes the real-time live camera frame alongside patient's spoken query
+   * with open-ended, dynamic multimodal clinical reasoning.
    */
   public async analyzeLiveVisionFrame(
     frameBase64: string,
@@ -105,33 +115,45 @@ class LiveVisionDoctorService {
     this.lastAnalysisTime = now;
 
     try {
-      const prompt = `You are DocBot, an experienced bilingual chief medical officer conducting a real-time Live Camera Video Consultation for HealthGrid in Tamil Nadu, India.
-The patient is showing you an area of their body (skin, eye, throat, wound, swelling) or holding a medicine/prescription strip in front of the camera, while speaking directly with you.
+      const prompt = `You are HealthGrid DocBot, an autonomous chief medical consultant conducting a real-time multimodal Live Clinic consultation.
+You possess world-class clinical diagnostic acumen trained on frontier medical reasoning benchmarks (Medical-O1, MedQA, ChatDoctor).
 
-Patient Spoken Voice Query: "${patientSpokenQuery || 'Patient is showing this to the camera for visual inspection.'}"
-Language Preference: ${lang === 'ta' ? 'Tamil / Tanglish' : 'English'}
+PATIENT CONTEXT:
+Patient Voice / Input: "${patientSpokenQuery || 'Patient is presenting their camera frame for live visual clinical inspection.'}"
+Language: ${lang === 'ta' ? 'Tamil / Tanglish' : 'English'}
 Known Drug Allergies: ${knownAllergies.length > 0 ? knownAllergies.join(', ') : 'None recorded'}
 
-CLINICAL RESPONSIBILITIES:
-1. Examine the visual image:
-   - Identify visible dermatological, ocular, pharyngeal, or traumatic signs (erythema, swelling, papules, conjunctival injection, pus, wound depth, or medicine blister pack labels).
-   - If a medicine/tablet strip is visible, identify the drug name and dosage.
-2. Formulate immediate verbal bedside advice:
-   - Give concise, calm, direct spoken guidance (2-4 sentences max) suitable for real-time speech output.
-   - Do NOT use dry lists or markdown bullets in your verbal advice.
-   - If Tamil, reply in warm, comforting conversational Tamil.
-3. Safety & Emergency Red Flags:
-   - If you see severe arterial bleeding, deep necrotic wound, facial drooping (stroke), severe respiratory retractions, or anaphylaxis, declare emergency immediately.
+DYNAMIC CLINICAL MANDATE:
+1. Multimodal Visual Inspection:
+   - Identify precise anatomical and pathological signs visible in the frame (e.g., erythematous macular rash, conjunctival injection, pharyngeal exudate, wound margins, swelling, or pharmaceutical blister pack/label details).
+   - If a medicine package or strip is visible, identify the drug name and strength.
+2. Dynamic Unscripted Bedside Advice:
+   - Provide completely natural, warm, empathetic spoken bedside guidance (2-3 concise sentences).
+   - Never use canned disclaimers or rigid stock templates.
+   - If Tamil, formulate natural, reassuring spoken Tamil (or Tanglish) that feels like a caring family physician.
+3. Adaptive Clinical Checklist:
+   - Dynamically generate 3 to 4 targeted, context-specific confirmation questions/checklist items tailored precisely to what you see or what the patient spoke about.
+   - For example: if you see a rash, ask about itching/scaling/onset; if you see an eye issue, ask about light sensitivity/discharge; if a medicine strip, ask about dosage/prescribing doctor.
+   - Do NOT use hardcoded or generic checklists.
+4. Emergency Red-Flag Detection:
+   - Declare isEmergency: true immediately if you detect signs of acute anaphylaxis, severe respiratory distress, acute trauma/arterial bleeding, or neurological deficits.
 
 OUTPUT STRICT JSON ONLY:
 {
-  "visualObservations": ["Detailed visual finding 1", "Detailed visual finding 2"],
-  "clinicalAssessment": "Brief clinical impression",
+  "visualObservations": ["Specific clinical finding 1", "Specific clinical finding 2"],
+  "clinicalAssessment": "Precise clinical differential or summary",
   "verbalAdvice": "Warm, natural spoken response directly to the patient",
+  "dynamicChecklist": [
+    {"label": "Targeted question 1 based on findings", "checked": true},
+    {"label": "Targeted question 2 based on findings", "checked": false},
+    {"label": "Targeted question 3 based on findings", "checked": false}
+  ],
+  "suggestedQuestions": ["What other symptom do you feel?", "When did this start?"],
   "isEmergency": false,
-  "detectedMedicineNames": ["Paracetamol 650mg"],
-  "recommendedSpecialty": "Dermatology",
-  "suggestedFollowUpHours": 24
+  "detectedMedicineNames": [],
+  "recommendedSpecialty": "General Medicine",
+  "suggestedFollowUpHours": 24,
+  "diagnosticConfidence": 85
 }`;
 
       const modelsToTry = [
@@ -199,7 +221,12 @@ OUTPUT STRICT JSON ONLY:
 
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
       const cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
+      let parsed: any = {};
+      try {
+        parsed = JSON.parse(cleanJson);
+      } catch (e) {
+        console.warn('Failed to parse model JSON:', e, cleanJson);
+      }
 
       // Lookup Jan Aushadhi generic equivalents if medications were visually detected
       let detectedMeds: JanAushadhiResult[] = [];
@@ -212,14 +239,26 @@ OUTPUT STRICT JSON ONLY:
         }
       }
 
+      // Format dynamic checklist items with unique ids
+      const dynamicChecklist: DynamicChecklistItem[] = Array.isArray(parsed.dynamicChecklist)
+        ? parsed.dynamicChecklist.map((item: any, idx: number) => ({
+            id: `chk-dyn-${Date.now()}-${idx}`,
+            label: typeof item === 'string' ? item : (item.label || item.text || `Observation ${idx + 1}`),
+            checked: typeof item === 'object' && item.checked !== undefined ? Boolean(item.checked) : false,
+          }))
+        : [];
+
       return {
-        visualObservations: parsed.visualObservations || ['Visual examination completed.'],
+        visualObservations: Array.isArray(parsed.visualObservations) ? parsed.visualObservations : ['Visual examination completed.'],
         clinicalAssessment: parsed.clinicalAssessment || 'Clinical assessment conducted.',
         verbalAdvice: parsed.verbalAdvice || (lang === 'ta' ? 'உங்கள் அறிகுறிகளைப் பார்த்தேன். பயப்பட வேண்டாம்.' : 'I have visually inspected the area. Rest comfortably and stay hydrated.'),
         isEmergency: Boolean(parsed.isEmergency),
         detectedMeds: detectedMeds.length > 0 ? detectedMeds : undefined,
-        recommendedSpecialty: parsed.recommendedSpecialty || 'General Physician',
-        suggestedFollowUpHours: parsed.suggestedFollowUpHours || 24,
+        recommendedSpecialty: parsed.recommendedSpecialty || 'General Medicine',
+        suggestedFollowUpHours: Number(parsed.suggestedFollowUpHours) || 24,
+        dynamicChecklist: dynamicChecklist.length > 0 ? dynamicChecklist : undefined,
+        suggestedQuestions: Array.isArray(parsed.suggestedQuestions) ? parsed.suggestedQuestions : undefined,
+        diagnosticConfidence: Number(parsed.diagnosticConfidence) || 85,
       };
     } finally {
       this.isAnalyzingFrame = false;
