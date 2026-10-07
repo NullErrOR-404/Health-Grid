@@ -82,6 +82,7 @@ graph TD
     DEC --> ADR39[[ADR-039-Agentic-Doctor-Cross-Site-Execution-Zero-Trust-Memory-and-SEO-GEO]]
     DEC --> ADR40[[ADR-040-Autonomous-Clinical-Model-Arbitration-and-Zero-Trace-UI]]
     DEC --> ADR41[[ADR-041-Living-Clinical-Case-Dossier-Adaptive-History-Taking-and-Universal-EQ]]
+    DEC --> ADR42[[ADR-042-AI-Live-Clinic-and-Records-Hub-Pixel-Perfect-Redesign-and-Mobile-Optimization]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
 
@@ -164,6 +165,7 @@ graph TD
 - [[ADR-039-Agentic-Doctor-Cross-Site-Execution-Zero-Trust-Memory-and-SEO-GEO]]: Autonomous clinical agent cross-site execution with two-tier permissions (safe reads autonomous, sensitive mutations require in-chat confirmation), air-gapped multi-tenant memory per user, DPDP Act 2023 / ABDM authority impersonation defense, interactive visual module navigation cards, Generative Engine Optimization (GEO) with Schema.org JSON-LD and robots.txt, and Hugging Face QLoRA dataset preparation/training pipeline.
 - [[ADR-040-Autonomous-Clinical-Model-Arbitration-and-Zero-Trace-UI]]: Dynamic multi-factor clinical complexity scoring (0-100) autonomously arbitrating between Frontier Clinical Reasoning (`openai/gpt-oss-120b`), Vernacular & Intermediate (`qwen/qwen3.8-27b`), Instant Turbo (`openai/gpt-oss-20b`), and Multimodal Vision (`gemini-3.8-flash`), with seamless failover cascades and 100% zero-trace UI overhaul removing all manual model pickers, quota progress bars, and debug token footers.
 - [[ADR-041-Living-Clinical-Case-Dossier-Adaptive-History-Taking-and-Universal-EQ]]: Living Clinical Case Dossier working memory blackboard synchronized across all open-weight models (`openai/gpt-oss-120b`, `qwen/qwen3.8-27b`, `openai/gpt-oss-20b`, `gemini-3.8-flash`), SOCRATES history taking preventing premature turn-1 diagnoses, 4-phase gating (`EXPLORING` -> `NARROWING` -> `CONCLUDED` -> `EMERGENCY`) with patient initial diagnosis conclusion control, resilient interactive options extraction, and universal EQ intelligence with genuine humor, clean jokes, and versatile roleplay.
+- [[ADR-042-AI-Live-Clinic-and-Records-Hub-Pixel-Perfect-Redesign-and-Mobile-Optimization]]: Pixel-perfect redesign of AI Live Clinic (`Live vision Clinic ref.png`) with desktop 3-column workspace, floating AI Vision Scanner, PIP, interactive checklist, and minimal mobile fullscreen camera view with slide-up AI drawer; and Records Hub (`Records Hub ref.png`) with end-to-end encrypted security banner, 6 metric tabs, quick-add form, and mobile horizontal-scroll history table.
 
 ---
 

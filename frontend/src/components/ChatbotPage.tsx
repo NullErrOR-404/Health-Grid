@@ -5936,6 +5936,7 @@ ${sbar.recommendation}`;
         onClose={() => setIsLiveVisionOpen(false)}
         lang={lang}
         userId={currentUser?.id || 'guest-patient'}
+        patientName={activeBeneficiary ? activeBeneficiary.name : (currentUser?.name || 'Arjun Kumar')}
         onConsultationComplete={handleLiveConsultationComplete}
       />
 

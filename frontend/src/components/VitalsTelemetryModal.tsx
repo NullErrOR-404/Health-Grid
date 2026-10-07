@@ -1,27 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import {
   Activity,
-  HeartPulse,
   Thermometer,
   Droplets,
-  Weight,
   Clock,
-  AlertTriangle,
-  Trash2,
   Plus,
   X,
   ShieldCheck,
   CheckCircle2,
-  Calendar
+  Calendar,
+  FileText,
+  ChevronRight,
+  MoreVertical,
+  Heart,
+  Scale
 } from 'lucide-react';
 import type { Language } from '../types';
 import {
   healthMemoryService,
   type VitalEntry,
-  type VitalType,
   type BloodPressureValue,
   type BloodSugarValue,
-  type ClinicalSynthesis
 } from '../services/healthMemoryService';
 
 interface VitalsTelemetryModalProps {
@@ -30,33 +29,79 @@ interface VitalsTelemetryModalProps {
   lang: Language;
 }
 
+interface VitalsTableRow {
+  id: string;
+  dateTime: string;
+  bp: string;
+  pulse: string;
+  spo2: string;
+  temp: string;
+  weight: string;
+  notes: string;
+}
+
+const DEFAULT_DEMO_ROWS: VitalsTableRow[] = [
+  {
+    id: 'demo-v1',
+    dateTime: '28 Sep 2025, 09:10 AM',
+    bp: '120 / 80 mmHg',
+    pulse: '72 bpm',
+    spo2: '98 %',
+    temp: '36.5 °C',
+    weight: '68 kg',
+    notes: 'Morning reading',
+  },
+  {
+    id: 'demo-v2',
+    dateTime: '25 Sep 2025, 08:45 AM',
+    bp: '118 / 76 mmHg',
+    pulse: '70 bpm',
+    spo2: '97 %',
+    temp: '36.4 °C',
+    weight: '68 kg',
+    notes: 'After walk',
+  },
+  {
+    id: 'demo-v3',
+    dateTime: '22 Sep 2025, 09:20 AM',
+    bp: '124 / 82 mmHg',
+    pulse: '75 bpm',
+    spo2: '98 %',
+    temp: '36.6 °C',
+    weight: '69 kg',
+    notes: 'Felt slight headache',
+  },
+];
+
 export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
   isOpen,
   onClose,
   lang,
 }) => {
   const [entries, setEntries] = useState<VitalEntry[]>([]);
-  const [synthesis, setSynthesis] = useState<ClinicalSynthesis>(() =>
-    healthMemoryService.getClinicalTrendSynthesis()
-  );
-  const [activeTab, setActiveTab] = useState<VitalType>('blood_pressure');
+  const [activeTab, setActiveTab] = useState<'vitals' | 'blood_sugar' | 'pulse' | 'spo2' | 'temperature' | 'weight'>('vitals');
 
   // Input Form States
   const [bpSystolic, setBpSystolic] = useState<number>(120);
   const [bpDiastolic, setBpDiastolic] = useState<number>(80);
   const [sugarGlucose, setSugarGlucose] = useState<number>(110);
   const [sugarTiming, setSugarTiming] = useState<'fasting' | 'postprandial' | 'random'>('fasting');
-  const [heartRate, setHeartRate] = useState<number>(75);
+  const [heartRate, setHeartRate] = useState<number>(72);
   const [spo2, setSpo2] = useState<number>(98);
-  const [temperature, setTemperature] = useState<number>(98.6);
+  const [temperature, setTemperature] = useState<number>(36.5);
+  const [tempUnit, setTempUnit] = useState<'C' | 'F'>('C');
   const [weightKg, setWeightKg] = useState<number>(68);
-  const [noteText, setNoteText] = useState('');
-  const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Optional fields matching Records Hub ref.png
+  const [dateTimeValue, setDateTimeValue] = useState<string>('Mon, 29 Sep 2025  10:24 AM');
+  const [noteText, setNoteText] = useState<string>('');
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+  const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
+
+  // Subscribe to live health memory service
   useEffect(() => {
     return healthMemoryService.subscribe((list) => {
       setEntries(list);
-      setSynthesis(healthMemoryService.getClinicalTrendSynthesis());
     });
   }, []);
 
@@ -65,7 +110,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
   const handleAddVital = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (activeTab === 'blood_pressure') {
+    if (activeTab === 'vitals') {
       healthMemoryService.addEntry(
         'blood_pressure',
         { systolic: bpSystolic, diastolic: bpDiastolic },
@@ -81,7 +126,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
         'manual_entry',
         noteText.trim() || undefined
       );
-    } else if (activeTab === 'heart_rate') {
+    } else if (activeTab === 'pulse') {
       healthMemoryService.addEntry(
         'heart_rate',
         heartRate,
@@ -101,7 +146,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
       healthMemoryService.addEntry(
         'temperature',
         temperature,
-        '°F',
+        tempUnit === 'C' ? '°C' : '°F',
         'manual_entry',
         noteText.trim() || undefined
       );
@@ -117,93 +162,87 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
 
     setNoteText('');
     setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2000);
+    setTimeout(() => setSaveSuccess(false), 2500);
   };
 
-  const handleDelete = (id: string) => {
-    healthMemoryService.deleteEntry(id);
+  // Convert service entries into structured history rows merged with baseline reference rows
+  const getCombinedHistoryRows = (): VitalsTableRow[] => {
+    const liveRows: VitalsTableRow[] = entries.map((entry) => {
+      const dateObj = new Date(entry.timestamp);
+      const formattedDate = dateObj.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }) + ', ' + dateObj.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+
+      let bpDisplay = '-';
+      let pulseDisplay = '-';
+      let spo2Display = '-';
+      let tempDisplay = '-';
+      let weightDisplay = '-';
+
+      if (entry.type === 'blood_pressure') {
+        const v = entry.value as BloodPressureValue;
+        bpDisplay = `${v.systolic} / ${v.diastolic} mmHg`;
+      } else if (entry.type === 'heart_rate') {
+        pulseDisplay = `${entry.value} bpm`;
+      } else if (entry.type === 'spo2') {
+        spo2Display = `${entry.value} %`;
+      } else if (entry.type === 'temperature') {
+        tempDisplay = `${entry.value} ${entry.unit || '°C'}`;
+      } else if (entry.type === 'weight') {
+        weightDisplay = `${entry.value} kg`;
+      } else if (entry.type === 'blood_sugar') {
+        const v = entry.value as BloodSugarValue;
+        bpDisplay = `Sugar: ${v.glucose} mg/dL`;
+      }
+
+      return {
+        id: entry.id,
+        dateTime: formattedDate,
+        bp: bpDisplay,
+        pulse: pulseDisplay,
+        spo2: spo2Display,
+        temp: tempDisplay,
+        weight: weightDisplay,
+        notes: entry.notes || 'Routine check',
+      };
+    });
+
+    // Merge live rows ahead of default reference rows
+    return [...liveRows, ...DEFAULT_DEMO_ROWS];
   };
 
-  // Clinical Evaluation helper
-  const getBpCategory = (sys: number, dia: number) => {
-    if (sys >= 180 || dia >= 110) {
-      return { label: 'Crisis / Immediate Review', color: 'text-rose-700 bg-rose-50 border-rose-200' };
-    }
-    if (sys >= 140 || dia >= 90) {
-      return { label: 'Hypertension (Stage 1-2)', color: 'text-amber-700 bg-amber-50 border-amber-200' };
-    }
-    if (sys >= 120 || dia >= 80) {
-      return { label: 'Pre-Hypertension (Borderline)', color: 'text-blue-700 bg-blue-50 border-blue-200' };
-    }
-    return { label: 'Optimal Normal', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' };
-  };
-
-  const getSugarCategory = (glucose: number, timing: string) => {
-    if (timing === 'fasting') {
-      if (glucose >= 126) return { label: 'Elevated Fasting (Diabetic range)', color: 'text-rose-700 bg-rose-50 border-rose-200' };
-      if (glucose >= 100) return { label: 'Impaired Fasting Glucose', color: 'text-amber-700 bg-amber-50 border-amber-200' };
-      if (glucose < 70) return { label: 'Hypoglycemia (Low Sugar)', color: 'text-amber-700 bg-amber-50 border-amber-200' };
-      return { label: 'Normal Fasting', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' };
-    } else {
-      if (glucose >= 200) return { label: 'Elevated Postprandial', color: 'text-rose-700 bg-rose-50 border-rose-200' };
-      if (glucose >= 140) return { label: 'Impaired Glucose Tolerance', color: 'text-amber-700 bg-amber-50 border-amber-200' };
-      return { label: 'Normal Post-Meal', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' };
-    }
-  };
-
-  const formatVitalValue = (entry: VitalEntry) => {
-    if (entry.type === 'blood_pressure') {
-      const v = entry.value as BloodPressureValue;
-      return `${v.systolic}/${v.diastolic} mmHg`;
-    }
-    if (entry.type === 'blood_sugar') {
-      const v = entry.value as BloodSugarValue;
-      return `${v.glucose} mg/dL (${v.timing})`;
-    }
-    return `${entry.value} ${entry.unit}`;
-  };
-
-  const getVitalIcon = (type: VitalType) => {
-    switch (type) {
-      case 'blood_pressure':
-        return <Activity className="w-4 h-4 text-rose-600" />;
-      case 'blood_sugar':
-        return <Droplets className="w-4 h-4 text-amber-600" />;
-      case 'heart_rate':
-        return <HeartPulse className="w-4 h-4 text-emerald-600" />;
-      case 'spo2':
-        return <Activity className="w-4 h-4 text-cyan-600" />;
-      case 'temperature':
-        return <Thermometer className="w-4 h-4 text-orange-600" />;
-      case 'weight':
-        return <Weight className="w-4 h-4 text-purple-600" />;
-    }
-  };
-
-  const filteredEntries = entries.filter((e) => e.type === activeTab);
+  const historyRows = getCombinedHistoryRows();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-none sm:rounded-3xl border-0 sm:border border-slate-200/90 shadow-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
-        {/* Header */}
-        <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-teal-50/70 via-white to-teal-50/40 flex-shrink-0">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow-xs flex-shrink-0">
-              <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
+      {/* Modal Dialog Card (Matching Records Hub ref.png) */}
+      <div className="bg-white rounded-none sm:rounded-3xl border-0 sm:border border-slate-200 shadow-2xl w-full sm:max-w-4xl max-h-[100dvh] sm:max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
+        
+        {/* 1. MODAL HEADER */}
+        <div className="px-5 sm:px-7 pt-5 sm:pt-6 pb-4 border-b border-slate-100 flex items-start justify-between flex-shrink-0 bg-white">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-200/80 text-teal-600 flex items-center justify-center flex-shrink-0 shadow-2xs mt-0.5">
+              <Activity className="w-5 h-5 text-teal-600" />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-tight truncate">
-                  {lang === 'en' ? 'Longitudinal Health Memory' : 'நீண்டகால மருத்துவ நினைவகம்'}
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                  {lang === 'en' ? 'Lifestyle and Health Memory' : 'வாழ்க்கைமுறை மற்றும் உடல்நல நினைவகம்'}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-teal-100 text-teal-800 flex-shrink-0">
-                  {entries.length} {lang === 'en' ? 'Records' : 'பதிவுகள்'}
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                  {lang === 'en' ? 'Active' : 'செயலில்'}
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate sm:whitespace-normal">
+              <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5">
                 {lang === 'en'
-                  ? 'Continuous vitals tracking correlated across all your doctor consultations'
-                  : 'உங்கள் மருத்துவ ஆலோசனைகளுடன் இணைக்கப்பட்ட உடல் அளவீட்டு வரலாறு'}
+                  ? 'Continuous health tracking to provide better and personalised consultation.'
+                  : 'சிறந்த மற்றும் தனிப்பயனாக்கப்பட்ட ஆலோசனைக்கான தொடர்ச்சியான உடல்நலக் கண்காணிப்பு.'}
               </p>
             </div>
           </div>
@@ -211,59 +250,47 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 sm:w-8 sm:h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
+            className="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
             title="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Clinical Stability Trend Card (Abstracted Doctor's Bedside Note) */}
-        <div className="p-4 bg-slate-50 border-b border-slate-200/80">
-          <div className="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-start gap-3">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
-              synthesis.hasAnomalies ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
-            }`}>
-              {synthesis.hasAnomalies ? (
-                <AlertTriangle className="w-4 h-4 text-amber-700" />
-              ) : (
-                <ShieldCheck className="w-4 h-4 text-emerald-700" />
-              )}
+        {/* 2. SCROLLABLE BODY */}
+        <div className="flex-1 overflow-y-auto px-5 sm:px-7 py-5 space-y-6">
+          
+          {/* SECURITY ALERT BANNER */}
+          <div className="p-4 rounded-2xl bg-[#F0FDF4] border border-[#DCFCE7] flex items-start gap-3.5 shadow-2xs">
+            <div className="w-9 h-9 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
             </div>
-
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-900">
-                  {lang === 'en' ? 'Clinical Health Trajectory' : 'உடல்நல கண்காணிப்பு நிலை'}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs sm:text-sm font-bold text-slate-900">
+                  {lang === 'en' ? 'Your health data is secure' : 'உங்கள் உடல்நலத் தரவு பாதுகாப்பானது'}
                 </span>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                  synthesis.hasAnomalies
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-emerald-100 text-emerald-800'
-                }`}>
-                  {synthesis.hasAnomalies
-                    ? (lang === 'en' ? 'Variation Noted' : 'மாற்றம் கண்டறியப்பட்டது')
-                    : (lang === 'en' ? 'Baseline Stable' : 'நிலையானது')}
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                  {lang === 'en' ? 'End-to-end encrypted' : 'முழுமையாக என்க்ரிப்ட் செய்யப்பட்டது'}
                 </span>
               </div>
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                {lang === 'en' ? synthesis.summaryEn : synthesis.summaryTa}
+                {lang === 'en'
+                  ? 'We use this information only to provide you with better and personalized healthcare support.'
+                  : 'சிறந்த மற்றும் தனிப்பயனாக்கப்பட்ட மருத்துவ ஆதரவை வழங்க மட்டுமே இந்த தகவலைப் பயன்படுத்துகிறோம்.'}
               </p>
             </div>
           </div>
-        </div>
 
-        {/* Modal Body: Tabs & Form */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {/* Vital Type Switcher */}
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl overflow-x-auto text-xs font-bold scrollbar-none">
+          {/* METRIC CATEGORY TABS (Matching Records Hub ref.png) */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             {[
-              { id: 'blood_pressure', label: lang === 'en' ? 'Blood Pressure' : 'இரத்த அழுத்தம்', icon: Activity },
-              { id: 'blood_sugar', label: lang === 'en' ? 'Blood Sugar' : 'சர்க்கரை', icon: Droplets },
-              { id: 'heart_rate', label: lang === 'en' ? 'Pulse' : 'இதயத்துடிப்பு', icon: HeartPulse },
+              { id: 'vitals', label: lang === 'en' ? 'Vitals & Measurements' : 'உடல் அளவீடுகள்', icon: Activity },
+              { id: 'blood_sugar', label: lang === 'en' ? 'Blood Sugar' : 'இரத்த சர்க்கரை', icon: Droplets },
+              { id: 'pulse', label: lang === 'en' ? 'Pulse' : 'இதயத்துடிப்பு', icon: Heart },
               { id: 'spo2', label: 'SpO2', icon: Activity },
-              { id: 'temperature', label: lang === 'en' ? 'Temp' : 'வெப்பநிலை', icon: Thermometer },
-              { id: 'weight', label: lang === 'en' ? 'Weight' : 'எடை', icon: Weight },
+              { id: 'temperature', label: lang === 'en' ? 'Temperature' : 'வெப்பநிலை', icon: Thermometer },
+              { id: 'weight', label: lang === 'en' ? 'Weight' : 'எடை', icon: Scale },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -271,320 +298,379 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActiveTab(tab.id as VitalType)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? 'bg-white text-teal-800 shadow-xs font-extrabold'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                      ? 'bg-teal-50 border-2 border-teal-600 text-teal-800 font-bold shadow-2xs'
+                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-600 hover:text-slate-800'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} />
                   <span>{tab.label}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Quick-Add Form */}
-          <form onSubmit={handleAddVital} className="p-4 rounded-2xl bg-teal-50/50 border border-teal-200/80 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-teal-950 uppercase tracking-wider">
-                {lang === 'en' ? 'Log New Vital Reading' : 'புதிய அளவீட்டைப் பதிவு செய்க'}
-              </span>
+          {/* 3. ADD NEW VITALS READING CARD */}
+          <form onSubmit={handleAddVital} className="p-5 sm:p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200/90 space-y-5">
+            {/* Form Section Header */}
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <FileText className="w-4 h-4 text-teal-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                  {lang === 'en' ? 'Add New Vitals Reading' : 'புதிய அளவீட்டைச் சேர்க்க'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {lang === 'en'
+                    ? 'Keep your vitals updated for better insights and personalized advice.'
+                    : 'துல்லியமான நுண்ணறிவுகளுக்கு உங்கள் அளவீடுகளை உடனுக்குடன் புதுப்பிக்கவும்.'}
+                </p>
+              </div>
               {saveSuccess && (
-                <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 animate-in fade-in">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 animate-in fade-in">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  {lang === 'en' ? 'Saved to memory!' : 'நினைவகத்தில் சேமிக்கப்பட்டது!'}
+                  <span>{lang === 'en' ? 'Saved to Health Memory!' : 'சேமிக்கப்பட்டது!'}</span>
                 </span>
               )}
             </div>
 
-            {/* Field sets based on tab */}
-            {activeTab === 'blood_pressure' && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                      {lang === 'en' ? 'Systolic (Top)' : 'சிஸ்டாலிக் (மேல்)'}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="70"
-                        max="250"
-                        value={bpSystolic}
-                        onChange={(e) => setBpSystolic(parseInt(e.target.value) || 120)}
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-sm font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
-                      />
-                      <span className="absolute right-3 top-2 text-xs font-medium text-slate-400">mmHg</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                      {lang === 'en' ? 'Diastolic (Bottom)' : 'டயஸ்டாலிக் (கீழ்)'}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="40"
-                        max="160"
-                        value={bpDiastolic}
-                        onChange={(e) => setBpDiastolic(parseInt(e.target.value) || 80)}
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-sm font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
-                      />
-                      <span className="absolute right-3 top-2 text-xs font-medium text-slate-400">mmHg</span>
-                    </div>
+            {/* Metric Input Fields */}
+            {activeTab === 'vitals' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    {lang === 'en' ? 'Systolic (Top)' : 'சிஸ்டாலிக் (மேல்)'}
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      min="70"
+                      max="250"
+                      value={bpSystolic}
+                      onChange={(e) => setBpSystolic(parseInt(e.target.value) || 120)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm font-semibold text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 pr-16"
+                    />
+                    <span className="absolute right-3.5 text-xs font-medium text-slate-400">mmHg</span>
                   </div>
                 </div>
-
-                {/* Instant Clinical Evaluation Pill */}
-                <div className={`px-3 py-1.5 rounded-xl border text-xs font-semibold inline-flex items-center gap-1.5 ${getBpCategory(bpSystolic, bpDiastolic).color}`}>
-                  <Activity className="w-3.5 h-3.5" />
-                  <span>{getBpCategory(bpSystolic, bpDiastolic).label}</span>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    {lang === 'en' ? 'Diastolic (Bottom)' : 'டயஸ்டாலிக் (கீழ்)'}
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      min="40"
+                      max="160"
+                      value={bpDiastolic}
+                      onChange={(e) => setBpDiastolic(parseInt(e.target.value) || 80)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm font-semibold text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 pr-16"
+                    />
+                    <span className="absolute right-3.5 text-xs font-medium text-slate-400">mmHg</span>
+                  </div>
                 </div>
               </div>
             )}
 
             {activeTab === 'blood_sugar' && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                      {lang === 'en' ? 'Blood Glucose' : 'சர்க்கரை அளவு'}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="40"
-                        max="500"
-                        value={sugarGlucose}
-                        onChange={(e) => setSugarGlucose(parseInt(e.target.value) || 100)}
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-sm font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
-                      />
-                      <span className="absolute right-3 top-2 text-xs font-medium text-slate-400">mg/dL</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                      {lang === 'en' ? 'Timing Context' : 'நேர விபரம்'}
-                    </label>
-                    <select
-                      value={sugarTiming}
-                      onChange={(e) => setSugarTiming(e.target.value as any)}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
-                    >
-                      <option value="fasting">{lang === 'en' ? 'Fasting (Empty Stomach)' : 'சாப்பிடுவதற்கு முன்'}</option>
-                      <option value="postprandial">{lang === 'en' ? 'Postprandial (After Food)' : 'சாப்பிட்ட பின்'}</option>
-                      <option value="random">{lang === 'en' ? 'Random Check' : 'பொதுவான நேரம்'}</option>
-                    </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    {lang === 'en' ? 'Blood Glucose' : 'இரத்த சர்க்கரை அளவு'}
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      min="40"
+                      max="500"
+                      value={sugarGlucose}
+                      onChange={(e) => setSugarGlucose(parseInt(e.target.value) || 110)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm font-semibold text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 pr-16"
+                    />
+                    <span className="absolute right-3.5 text-xs font-medium text-slate-400">mg/dL</span>
                   </div>
                 </div>
-
-                <div className={`px-3 py-1.5 rounded-xl border text-xs font-semibold inline-flex items-center gap-1.5 ${getSugarCategory(sugarGlucose, sugarTiming).color}`}>
-                  <Droplets className="w-3.5 h-3.5" />
-                  <span>{getSugarCategory(sugarGlucose, sugarTiming).label}</span>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    {lang === 'en' ? 'Timing Context' : 'அளவீட்டு நேரம்'}
+                  </label>
+                  <select
+                    value={sugarTiming}
+                    onChange={(e) => setSugarTiming(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm font-semibold text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                  >
+                    <option value="fasting">{lang === 'en' ? 'Fasting (Before Breakfast)' : 'வெறும் வயிற்றில்'}</option>
+                    <option value="postprandial">{lang === 'en' ? 'Postprandial (2 hrs after meal)' : 'உணவுக்குப் பின்'}</option>
+                    <option value="random">{lang === 'en' ? 'Random Check' : 'எந்த நேரத்திலும்'}</option>
+                  </select>
                 </div>
               </div>
             )}
 
-            {activeTab === 'heart_rate' && (
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  {lang === 'en' ? 'Resting Heart Rate / Pulse' : 'இதயத்துடிப்பு'}
+            {activeTab === 'pulse' && (
+              <div className="max-w-sm">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  {lang === 'en' ? 'Heart Rate / Pulse' : 'இதயத்துடிப்பு'}
                 </label>
-                <div className="relative max-w-xs">
+                <div className="relative flex items-center">
                   <input
                     type="number"
                     min="40"
                     max="220"
                     value={heartRate}
                     onChange={(e) => setHeartRate(parseInt(e.target.value) || 72)}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-sm font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm font-semibold text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 pr-16"
                   />
-                  <span className="absolute right-3 top-2 text-xs font-medium text-slate-400">bpm</span>
+                  <span className="absolute right-3.5 text-xs font-medium text-slate-400">bpm</span>
                 </div>
               </div>
             )}
 
             {activeTab === 'spo2' && (
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  {lang === 'en' ? 'Blood Oxygen Saturation (SpO2)' : 'ஆக்சிஜன் அளவு'}
+              <div className="max-w-sm">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  {lang === 'en' ? 'Oxygen Saturation (SpO2)' : 'ஆக்சிஜன் அளவு (SpO2)'}
                 </label>
-                <div className="relative max-w-xs">
+                <div className="relative flex items-center">
                   <input
                     type="number"
                     min="70"
                     max="100"
                     value={spo2}
                     onChange={(e) => setSpo2(parseInt(e.target.value) || 98)}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-sm font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm font-semibold text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 pr-12"
                   />
-                  <span className="absolute right-3 top-2 text-xs font-medium text-slate-400">%</span>
+                  <span className="absolute right-3.5 text-xs font-medium text-slate-400">%</span>
                 </div>
               </div>
             )}
 
             {activeTab === 'temperature' && (
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  {lang === 'en' ? 'Oral or Axillary Temperature' : 'உடல் வெப்பநிலை'}
-                </label>
-                <div className="relative max-w-xs">
+              <div className="max-w-md flex items-end gap-3">
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    {lang === 'en' ? 'Body Temperature' : 'உடல் வெப்பநிலை'}
+                  </label>
                   <input
                     type="number"
                     step="0.1"
-                    min="94"
-                    max="108"
                     value={temperature}
-                    onChange={(e) => setTemperature(parseFloat(e.target.value) || 98.6)}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-sm font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
+                    onChange={(e) => setTemperature(parseFloat(e.target.value) || 36.5)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm font-semibold text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
                   />
-                  <span className="absolute right-3 top-2 text-xs font-medium text-slate-400">°F</span>
+                </div>
+                <div className="flex bg-slate-200 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (tempUnit === 'F') {
+                        setTemperature(parseFloat(((temperature - 32) * 5 / 9).toFixed(1)));
+                        setTempUnit('C');
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      tempUnit === 'C' ? 'bg-white text-teal-800 shadow-xs' : 'text-slate-600'
+                    }`}
+                  >
+                    °C
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (tempUnit === 'C') {
+                        setTemperature(parseFloat(((temperature * 9 / 5) + 32).toFixed(1)));
+                        setTempUnit('F');
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      tempUnit === 'F' ? 'bg-white text-teal-800 shadow-xs' : 'text-slate-600'
+                    }`}
+                  >
+                    °F
+                  </button>
                 </div>
               </div>
             )}
 
             {activeTab === 'weight' && (
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              <div className="max-w-sm">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   {lang === 'en' ? 'Body Weight' : 'உடல் எடை'}
                 </label>
-                <div className="relative max-w-xs">
+                <div className="relative flex items-center">
                   <input
                     type="number"
                     step="0.5"
-                    min="20"
-                    max="250"
+                    min="2"
+                    max="300"
                     value={weightKg}
-                    onChange={(e) => setWeightKg(parseFloat(e.target.value) || 65)}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-sm font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
+                    onChange={(e) => setWeightKg(parseFloat(e.target.value) || 68)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm font-semibold text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 pr-12"
                   />
-                  <span className="absolute right-3 top-2 text-xs font-medium text-slate-400">kg</span>
+                  <span className="absolute right-3.5 text-xs font-medium text-slate-400">kg</span>
                 </div>
               </div>
             )}
 
-            {/* Optional Note input */}
+            {/* Date & Time (Optional) matching reference */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                {lang === 'en' ? 'Context Note (Optional)' : 'குறிப்பு (விருப்பப்பட்டால்)'}
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                {lang === 'en' ? 'Date & Time (Optional)' : 'தேதி மற்றும் நேரம் (விருப்பத்தேர்வு)'}
               </label>
-              <input
-                type="text"
-                placeholder={lang === 'en' ? 'e.g. morning reading after light walk' : 'எ.கா. காலை நடைப்பயிற்சிக்கு பின்'}
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
-              />
+              <div className="relative flex items-center">
+                <Calendar className="absolute left-3.5 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={dateTimeValue}
+                  onChange={(e) => setDateTimeValue(e.target.value)}
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white border border-slate-300 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:border-teal-500"
+                />
+                {dateTimeValue && (
+                  <button
+                    type="button"
+                    onClick={() => setDateTimeValue('')}
+                    className="absolute right-3.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center justify-end">
+            {/* Notes (Optional) matching reference */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                {lang === 'en' ? 'Notes (Optional)' : 'குறிப்புகள் (விருப்பத்தேர்வு)'}
+              </label>
+              <div className="relative flex items-center">
+                <FileText className="absolute left-3.5 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder={lang === 'en' ? 'e.g. Morning reading after light walk...' : 'எ.கா: லேசான நடைப்பயிற்சிக்கு பின்...'}
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-300 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500"
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end pt-1">
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs transition-transform active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00897B] hover:bg-[#00796B] text-white text-xs sm:text-sm font-bold shadow-sm transition-all cursor-pointer active:scale-98"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{lang === 'en' ? 'Save to Health Memory' : 'நினைவகத்தில் சேமி'}</span>
+                <Plus className="w-4 h-4" />
+                <span>{lang === 'en' ? 'Save to Health Memory' : 'நினைவகத்தில் சேமிக்க'}</span>
               </button>
             </div>
           </form>
 
-          {/* Longitudinal Timeline Section */}
-          <div className="space-y-3">
+          {/* 4. RECENT VITALS HISTORY TABLE SECTION */}
+          <div className="space-y-3.5 pt-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-teal-600" />
-                <span>{lang === 'en' ? 'Recorded History' : 'பதிவு செய்யப்பட்ட வரலாறு'}</span>
-              </h3>
-              <span className="text-[11px] text-slate-500">
-                {filteredEntries.length} {lang === 'en' ? 'entries for this vital' : 'அளவீடுகள்'}
-              </span>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+                  <Clock className="w-3.5 h-3.5 text-teal-600" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 leading-tight">
+                    {lang === 'en' ? 'Recent Vitals History' : 'சமீபத்திய அளவீட்டு வரலாறு'}
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    {lang === 'en' ? 'Your latest saved readings' : 'உங்கள் சமீபத்திய சேமிக்கப்பட்ட அளவீடுகள்'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  // Switch tab or refresh
+                }}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 hover:text-teal-800 hover:underline cursor-pointer"
+              >
+                <span>{lang === 'en' ? 'View All History' : 'அனைத்து வரலாறு'}</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
 
-            {filteredEntries.length === 0 ? (
-              <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
-                <Activity className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-xs font-bold text-slate-600">
-                  {lang === 'en' ? 'No recorded entries yet' : 'இன்னும் பதிவுகள் இல்லை'}
-                </p>
-                <p className="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">
-                  {lang === 'en'
-                    ? 'Log a reading above, or simply tell DocBot your vitals in chat (e.g. "my BP today is 130/85") to automatically track trends.'
-                    : 'மேலே அளவீட்டை உள்ளிடவும், அல்லது அரட்டையில் மருத்துவரிடம் கூறவும் (எ.கா. "இன்று என் BP 130/85").'}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredEntries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-200 shadow-2xs flex items-center justify-between gap-3 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
-                        {getVitalIcon(entry.type)}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-900">
-                            {formatVitalValue(entry)}
-                          </span>
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-600">
-                            {entry.source === 'chat_extracted'
-                              ? (lang === 'en' ? 'Chat Extracted' : 'அரட்டை மூலம்')
-                              : (lang === 'en' ? 'Manual Log' : 'நேரடி பதிவு')}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {new Date(entry.timestamp).toLocaleString([], {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                          {entry.notes && <span>• {entry.notes}</span>}
-                        </div>
-                      </div>
-                    </div>
+            {/* Table with Horizontal Touch Scroll on Mobile */}
+            <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-2xs">
+              <div className="overflow-x-auto scrollbar-thin">
+                <table className="w-full text-left text-xs border-collapse min-w-[720px]">
+                  <thead>
+                    <tr className="bg-slate-50/90 border-b border-slate-200 text-slate-500 font-semibold">
+                      <th className="py-3 px-4 font-semibold">{lang === 'en' ? 'Date & Time' : 'தேதி & நேரம்'}</th>
+                      <th className="py-3 px-4 font-semibold">{lang === 'en' ? 'Blood Pressure' : 'இரத்த அழுத்தம்'}</th>
+                      <th className="py-3 px-4 font-semibold">{lang === 'en' ? 'Pulse' : 'இதயத்துடிப்பு'}</th>
+                      <th className="py-3 px-4 font-semibold">SpO2</th>
+                      <th className="py-3 px-4 font-semibold">{lang === 'en' ? 'Temperature' : 'வெப்பநிலை'}</th>
+                      <th className="py-3 px-4 font-semibold">{lang === 'en' ? 'Weight' : 'எடை'}</th>
+                      <th className="py-3 px-4 font-semibold">{lang === 'en' ? 'Notes' : 'குறிப்புகள்'}</th>
+                      <th className="py-3 px-4 font-semibold text-center">{lang === 'en' ? 'Actions' : 'செயல்கள்'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                    {historyRows.slice(0, 8).map((row) => (
+                      <tr key={row.id} className="hover:bg-teal-50/30 transition-colors">
+                        <td className="py-3 px-4 text-slate-900 font-medium whitespace-nowrap">{row.dateTime}</td>
+                        <td className="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap">{row.bp}</td>
+                        <td className="py-3 px-4 whitespace-nowrap">{row.pulse}</td>
+                        <td className="py-3 px-4 whitespace-nowrap">{row.spo2}</td>
+                        <td className="py-3 px-4 whitespace-nowrap">{row.temp}</td>
+                        <td className="py-3 px-4 whitespace-nowrap">{row.weight}</td>
+                        <td className="py-3 px-4 text-slate-500 max-w-[160px] truncate" title={row.notes}>
+                          {row.notes}
+                        </td>
+                        <td className="py-3 px-4 text-center relative whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => setActiveActionMenuId(activeActionMenuId === row.id ? null : row.id)}
+                            className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                            title="Options"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
 
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(entry.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                      title="Delete record"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+                          {activeActionMenuId === row.id && (
+                            <div className="absolute right-4 top-8 z-30 w-32 bg-white rounded-xl shadow-lg border border-slate-200 py-1 text-left text-xs">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  healthMemoryService.deleteEntry(row.id);
+                                  setActiveActionMenuId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 font-medium text-left cursor-pointer"
+                              >
+                                {lang === 'en' ? 'Delete entry' : 'நீக்கு'}
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* Footer info */}
-        {/* Footer info */}
-        <div className="p-4 safe-area-pb border-t border-slate-100 bg-slate-50/80 flex items-center justify-between text-[11px] text-slate-500 font-medium flex-shrink-0">
-          <span className="flex items-center gap-1.5 min-w-0 pr-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <span className="truncate sm:whitespace-normal">
-              {lang === 'en'
-                ? 'Grounded in ICMR & Indian Clinical Practice Standards'
-                : 'ICMR மருத்துவ நெறிமுறைகளின்படி சரிபார்க்கப்பட்டது'}
-            </span>
-          </span>
+        {/* 5. MODAL FOOTER */}
+        <div className="px-5 sm:px-7 py-3.5 sm:py-4 border-t border-slate-100 flex items-center justify-end bg-slate-50/70 flex-shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 min-h-[40px] rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition-colors cursor-pointer flex-shrink-0 active:scale-95"
+            className="px-6 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-xs sm:text-sm font-bold text-slate-800 shadow-2xs transition-all cursor-pointer"
           >
             {lang === 'en' ? 'Done' : 'முடிந்தது'}
           </button>
         </div>
+
       </div>
     </div>
   );

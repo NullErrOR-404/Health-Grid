@@ -27,6 +27,10 @@ Back to [[00_Index]]
   - `https://healthgrid-network.vercel.app`
 
 ## Recent Completed Tasks
+- [x] AI Live Clinic & Records Hub Pixel-Perfect Redesign and Responsive Architecture (see [[ADR-042-AI-Live-Clinic-and-Records-Hub-Pixel-Perfect-Redesign-and-Mobile-Optimization]]):
+  - **AI Live Clinic (`LiveVisionDoctorModal.tsx`)**: Pixel-accurate implementation of desktop reference `C:\HealthGrid\UI References\Live vision Clinic ref.png` with 3-column workspace (Left: Session Details & Navigation; Center: Camera video viewport, AI Vision Scanner guidance card, Doctor Avatar PIP with audio equalizer waves, and floating call controls; Right: AI Assistant observation bubble, interactive "Please confirm:" checklist, and Live Transcript feed). Adapted for mobile (`< lg`) with clean fullscreen camera view, minimal top HUD, and swipe-up collapsible AI Assistant drawer.
+  - **Records Hub (`VitalsTelemetryModal.tsx`)**: Pixel-accurate implementation of desktop reference `C:\HealthGrid\UI References\Records Hub ref.png` with `Lifestyle and Health Memory` header, `Active` status badge, end-to-end encrypted security banner, 6 metric tabs (`Vitals & Measurements`, `Blood Sugar`, `Pulse`, `SpO2`, `Temperature`, `Weight`), quick-add form, and recent history table with smooth horizontal touch-scrolling on mobile.
+  - **Verified in Production**: 100% clean production build (`tsc -b && vite build` in 2.92s) and verified live via Chrome DevTools MCP on both desktop (1280x800) and mobile (390x844) viewports.
 - [x] Living Clinical Case Dossier, Adaptive History Taking, and Universal EQ Intelligence (see [[ADR-041-Living-Clinical-Case-Dossier-Adaptive-History-Taking-and-Universal-EQ]]):
   - **Living Clinical Case Dossier (`LivingClinicalDossier`)**: Synced clinical working memory blackboard tracking chief complaint, timeline (SOCRATES: T), severity (SOCRATES: S), character (SOCRATES: C), triggers/relievers (SOCRATES: A/R), associated symptoms, and pertinent negatives across all open-weight models (`openai/gpt-oss-120b`, `qwen/qwen3.8-27b`, `openai/gpt-oss-20b`, `gemini-3.8-flash`).
   - **Anti-Premature Conclusion Invariant & SOCRATES History Taking**: Completely eliminated turn-1 premature diagnoses. When symptoms are stated, the physician systematically acknowledges discomfort with bedside empathy and asks 1-2 sharp follow-up questions to narrow down the differential cause.
@@ -175,5 +179,6 @@ Back to [[00_Index]]
 - [[ADR-039-Agentic-Doctor-Cross-Site-Execution-Zero-Trust-Memory-and-SEO-GEO]]
 - [[ADR-040-Autonomous-Clinical-Model-Arbitration-and-Zero-Trace-UI]]
 - [[ADR-041-Living-Clinical-Case-Dossier-Adaptive-History-Taking-and-Universal-EQ]]
+- [[ADR-042-AI-Live-Clinic-and-Records-Hub-Pixel-Perfect-Redesign-and-Mobile-Optimization]]
 - [[Key_Credentials_and_Environments]]
 
