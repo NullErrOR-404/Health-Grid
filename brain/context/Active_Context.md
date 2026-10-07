@@ -16,9 +16,9 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `121e5b2` (`feat: complete Doctors & OPD, Reports & Analytics, and Enterprise Zero-Trust Cybersecurity hardening`)
-- **Latest Feature**: Enterprise Zero-Trust Cybersecurity Hardening, Doctors & OPD Management, and Reports & Analytics Modules Deployed Live
-- **Production Deployment Hash**: `https://healthgrid-7w0ukfe10-sameen14nmofficial-8826s-projects.vercel.app` (Bundle: `index-B8nYu1nC.js`, CSS: `index-DhFscDrX.css`)
+- **Latest Commit**: `fabf8d3` (`feat: living clinical case dossier, dynamic model arbitrator, zero-trace UI, and universal EQ`)
+- **Latest Feature**: Living Clinical Case Dossier, Dynamic Clinical Model Arbitrator, Zero-Trace UI, and Universal EQ Intelligence Deployed Live
+- **Production Deployment Hash**: `https://healthgrid-h75ncip3q-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_3ZKGb11ELDVMBW37i75EMxsQdkWe`)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Live Aliases (All 4 Synchronized & Verified 200 OK)**:
   - `https://healthgrid-app.vercel.app`
