@@ -16,9 +16,9 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `fabf8d3` (`feat: living clinical case dossier, dynamic model arbitrator, zero-trace UI, and universal EQ`)
+- **Latest Commit**: `f576a9a` (`docs(brain): update Active_Context with commit fabf8d3 and vercel deployment`)
 - **Latest Feature**: Living Clinical Case Dossier, Dynamic Clinical Model Arbitrator, Zero-Trace UI, and Universal EQ Intelligence Deployed Live
-- **Production Deployment Hash**: `https://healthgrid-h75ncip3q-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_3ZKGb11ELDVMBW37i75EMxsQdkWe`)
+- **Production Deployment Hash**: `https://healthgrid-2pewq0i2h-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_BnYvSLhAW6XcxTu2mB5aWyexCd4x`)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Live Aliases (All 4 Synchronized & Verified 200 OK)**:
   - `https://healthgrid-app.vercel.app`
