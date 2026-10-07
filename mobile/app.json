@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "HealthGrid | நலம் AI",
+    "slug": "healthgrid",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0B1120",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.healthgrid.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "HealthGrid requires camera access for AI clinical visual inspection.",
+        "NSMicrophoneUsageDescription": "HealthGrid requires microphone access for voice consultations with DocBot.",
+        "NSLocationWhenInUseUsageDescription": "HealthGrid requires your location for real-time 108 emergency ambulance dispatch.",
+        "NSFaceIDUsageDescription": "HealthGrid requires biometric authentication to secure your health records."
+      }
+    },
+    "android": {
+      "package": "com.healthgrid.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B1120",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.VIBRATE"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow HealthGrid to access your camera for AI visual inspection of medicines and symptoms."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow HealthGrid to use your location for 108 Emergency Ambulance dispatch."
+        }
+      ],
+      "expo-secure-store",
+      "expo-local-authentication"
+    ]
+  }
+}

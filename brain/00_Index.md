@@ -84,6 +84,7 @@ graph TD
     DEC --> ADR41[[ADR-041-Living-Clinical-Case-Dossier-Adaptive-History-Taking-and-Universal-EQ]]
     DEC --> ADR42[[ADR-042-AI-Live-Clinic-and-Records-Hub-Pixel-Perfect-Redesign-and-Mobile-Optimization]]
     DEC --> ADR43[[ADR-043-Dynamic-Live-Clinic-Supabase-Telemetry-and-Frontier-Model-Pipeline]]
+    DEC --> ADR44[[ADR-044-React-Native-Android-APK-Architecture-and-OWASP-Mobile-Security]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
 
@@ -168,6 +169,7 @@ graph TD
 - [[ADR-041-Living-Clinical-Case-Dossier-Adaptive-History-Taking-and-Universal-EQ]]: Living Clinical Case Dossier working memory blackboard synchronized across all open-weight models (`openai/gpt-oss-120b`, `qwen/qwen3.8-27b`, `openai/gpt-oss-20b`, `gemini-3.8-flash`), SOCRATES history taking preventing premature turn-1 diagnoses, 4-phase gating (`EXPLORING` -> `NARROWING` -> `CONCLUDED` -> `EMERGENCY`) with patient initial diagnosis conclusion control, resilient interactive options extraction, and universal EQ intelligence with genuine humor, clean jokes, and versatile roleplay.
 - [[ADR-042-AI-Live-Clinic-and-Records-Hub-Pixel-Perfect-Redesign-and-Mobile-Optimization]]: Pixel-perfect redesign of AI Live Clinic (`Live vision Clinic ref.png`) with desktop 3-column workspace, floating AI Vision Scanner, PIP, interactive checklist, and minimal mobile fullscreen camera view with slide-up AI drawer; and Records Hub (`Records Hub ref.png`) with end-to-end encrypted security banner, 6 metric tabs, quick-add form, and mobile horizontal-scroll history table.
 - [[ADR-043-Dynamic-Live-Clinic-Supabase-Telemetry-and-Frontier-Model-Pipeline]]: Dynamic Live Clinic removing doctor PIP for full-bleed video canvas, client-side zero-trace transcript caching with local restore, authentic Supabase appointment queries with real network ping latency, dynamic vision-grounded clinical verification checklists, and frontier open-weight fine-tuning pipeline (Medical-O1, MedQA, ChatDoctor, UltraChat, Hermes).
+- [[ADR-044-React-Native-Android-APK-Architecture-and-OWASP-Mobile-Security]]: Real React Native Android application architecture (Expo SDK 57 / New Architecture) with complete OWASP Mobile Security Suite (Android Keystore AES-256, Biometric App Lock, Screen Privacy Shield FLAG_SECURE, Network Security Config, anti-ADB backup) and APK build pipelines.
 
 ---
 

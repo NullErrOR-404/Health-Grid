@@ -17,15 +17,27 @@ Back to [[00_Index]]
 ## Current System State
 - **Git Branch**: `main`
 - **Latest Commit**: `feat: dynamic live clinic without doctor PIP, real-time Supabase telemetry, local storage transcript caching, and frontier model fine-tuning pipeline`
-- **Latest Feature**: Dynamic AI Live Clinic & Frontier Model Pipeline (ADR-043)
+- **Latest Feature**: React Native Android APK Architecture & OWASP Mobile Security Suite (ADR-044)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Live Aliases (All 4 Synchronized & Verified 200 OK)**:
   - `https://healthgrid-app.vercel.app`
   - `https://healthgrid-nu.vercel.app`
   - `https://healthgrid-live.vercel.app`
   - `https://healthgrid-network.vercel.app`
+- **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+- [x] React Native Android APK Architecture, OWASP Mobile Security Suite, and EAS / Gradle Build Pipelines (see [[ADR-044-React-Native-Android-APK-Architecture-and-OWASP-Mobile-Security]]):
+  - **Native Architecture**: Built complete React Native Expo SDK 57 project in `mobile/` with TypeScript (0 compile errors), native navigation, and dark clinical UI tokens.
+  - **Full OWASP Mobile Security Suite**:
+    * Hardware-backed Android Keystore via `expo-secure-store` (AES-256 GCM encrypted preferences in Android TEE / StrongBox).
+    * Biometric App Lock via `expo-local-authentication` (Fingerprint/FaceID prompt to unlock confidential health vault).
+    * Screen Privacy Shield (`FLAG_SECURE`) configured in `MainActivity.kt` to block screenshots and task switcher previews.
+    * Network Security Config (`network_security_config.xml`) forbidding cleartext traffic and enforcing TLS 1.3 pinning.
+    * Anti-ADB data exfiltration via `android:allowBackup="false"`.
+    * Device integrity evaluation and cryptographic SHA-256 hardware fingerprinting (`deviceIntegrityService.ts`).
+  - **4-Core Mobile Screens**: DocBot AI Chat with voice synthesis (`ChatScreen.tsx`), AI Live Clinic with native CameraX, zero doctor PIP, and Keystore transcript cache (`LiveClinicScreen.tsx`), Biometric Records Hub (`RecordsHubScreen.tsx`), and 108 Emergency Casualty with GPS (`EmergencyScreen.tsx`).
+  - **Build & APK Channels**: Prebuilt native Android project with Gradle 9.3.1 and Android Studio JBR (Java 25) alongside EAS Cloud Build profile (`eas.json`) targeting direct `.apk` distribution.
 - [x] Dynamic Live Clinic, Real-Time Supabase Telemetry, Client-Side Transcript Caching, and Frontier Model Pipeline (see [[ADR-043-Dynamic-Live-Clinic-Supabase-Telemetry-and-Frontier-Model-Pipeline]]):
   - **Doctor PIP Removal & Kinetic Equalizer**: Completely eliminated the static doctor PIP image from the center video canvas. Added a non-intrusive floating `DocBot Speaking` indicator with 4 animated equalizer bars active only when audio is playing.
   - **Zero-Trace Client-Side Transcript Caching**: Eliminated hardcoded transcripts. Speech turns are dynamically captured and persistently cached in `localStorage` under `healthgrid_live_session_transcripts_${sessionId}` with a Device History tab and 1-tap restore and copy actions.
@@ -187,5 +199,6 @@ Back to [[00_Index]]
 - [[ADR-041-Living-Clinical-Case-Dossier-Adaptive-History-Taking-and-Universal-EQ]]
 - [[ADR-042-AI-Live-Clinic-and-Records-Hub-Pixel-Perfect-Redesign-and-Mobile-Optimization]]
 - [[ADR-043-Dynamic-Live-Clinic-Supabase-Telemetry-and-Frontier-Model-Pipeline]]
+- [[ADR-044-React-Native-Android-APK-Architecture-and-OWASP-Mobile-Security]]
 - [[Key_Credentials_and_Environments]]
 
