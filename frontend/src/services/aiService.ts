@@ -16,6 +16,7 @@ import { vectorRagService } from './vectorRagService';
 import { careLoopService } from './careLoopService';
 import { authService } from './authService';
 import { fuzzyClinicalMatcher } from './fuzzyClinicalMatcher';
+import { securitySanitizer } from './securitySanitizer';
 
 export interface InteractiveOptions {
   type: 'single_tap' | 'multi_select';
@@ -575,7 +576,27 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       throw new Error(`Rate limit exceeded. Please wait ${limitCheck.retryAfterSeconds} seconds before sending another message.`);
     }
 
-    // 2. Prompt Injection & Adversarial Pre-Screening (OWASP LLM01)
+    // 2. Prompt Injection & CDSCO Schedule H/X Drug Shield (OWASP LLM01 & CDSCO Mandate)
+    const clinicalSafety = securitySanitizer.evaluateClinicalSafety(userQuery);
+    if (!clinicalSafety.isSafe) {
+      return {
+        content: clinicalSafety.warningMessage || "I am DocBot, your clinical health assistant. I can only assist with legitimate medical queries, symptoms, and health guidance. Please describe your symptoms or health questions safely.",
+        triageLevel: clinicalSafety.isRestrictedSubstance ? 'AMBER' : 'GREEN',
+        isEmergency: false,
+        detectedKeywords: clinicalSafety.flaggedTokens,
+        protocolCitation: clinicalSafety.isRestrictedSubstance
+          ? 'CDSCO Schedule H/X Statutory Controlled Substance Shield'
+          : 'HealthGrid Zero-Trust AI Safety Protocol (OWASP LLM01 Mitigation)',
+        usage: {
+          promptTokens: 10,
+          completionTokens: 30,
+          reasoningTokens: 0,
+          totalTokens: 40,
+          latencyMs: 15,
+        },
+      };
+    }
+
     const injectionCheck = this.checkPromptInjection(userQuery);
     if (injectionCheck.isMalicious) {
       return {

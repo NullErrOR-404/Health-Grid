@@ -3,6 +3,9 @@
  * Seamlessly interfaces with Spring Boot 3.3 Backend (/api) & Supabase pgvector.
  */
 
+import { authService } from './authService';
+import { securityGuard } from './securityGuard';
+
 const API_BASE_URL = 'http://localhost:8080/api';
 
 export interface TriageApiRequest {
@@ -151,10 +154,19 @@ class HealthGridApiClient {
    * Sends custom instruction to onboard paramedic tablet
    */
   async sendInstruction(dispatchId: string, instruction: string): Promise<boolean> {
+    // 1. Zero-Trust Access Gate
+    securityGuard.requireAuthentication('send paramedic instruction', ['HEALTHCARE_PROFESSIONAL', 'DOCTOR', 'ADMIN', 'PARAMEDIC']);
+
     try {
+      const token = await authService.getAccessToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${API_BASE_URL}/emergency/instruction`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ dispatchId, instruction }),
       });
       return res.ok;

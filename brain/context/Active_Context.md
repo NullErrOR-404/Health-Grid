@@ -6,7 +6,7 @@ tags:
   - tasks
   - active
 created: 2026-10-02
-last_updated: 2026-10-05
+last_updated: 2026-10-07
 parent: "[[00_Index]]"
 ---
 
@@ -16,7 +16,7 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Feature**: Emergency Department (Casualty) ERP Module with Live Telemetry & Supabase Cloud Sync
+- **Latest Feature**: Doctors & OPD Management and Reports & Analytics Modules with Real Supabase PostgreSQL Telemetry (Zero Hardcoding)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Live Aliases**:
   - `https://healthgrid-nu.vercel.app`
@@ -80,11 +80,22 @@ Back to [[00_Index]]
 - [x] Architected and Implemented Hospital ERP Appointments Management End-to-End Workflow (ADR-030): Fully implemented dedicated, pixel-accurate Appointments module (`AppointmentsView.tsx`) matching reference design (`Appointments ERP ref.png`), backed by Supabase PostgreSQL `appointments` table with real-time subscriptions, bidirectional active OPD queue bridge, 8 interactive clinical modals, calibrated dynamic circular gauge metrics (Total 148, Checked In 102 (69%), Waiting 28 (19%), Cancelled / No Show 18 (12%)), real clinical placeholder patients seeded in Supabase cloud, and dedicated Citizen Mobile App booking pass and queue tracker on `ProfilePage.tsx` and `Navbar.tsx`.
 - [x] Architected and Implemented Hospital ERP IPD & Bed Management End-to-End Workflow (ADR-029): Fully implemented dedicated, pixel-accurate Inpatient Bed Management (IpdBedManagementView.tsx) matching reference design, backed by Supabase public.hospital_beds table and ipdBedService.ts, with live ward filters (ICU, General, Emergency, Pediatric), bed visual grid, real patient admissions, and drawer details.
 - [x] Architected and Implemented Hospital ERP Emergency Department End-to-End Workflow (ADR-031): Fully implemented dedicated, pixel-accurate Emergency Casualty module (EmergencyView.tsx) matching reference design (Emergency ERP ref.png), backed by Supabase PostgreSQL public.emergency_cases table with real-time pub/sub subscriptions, 3-tier ESI triage, 4 dynamic metric cards, 11 interactive clinical modals (Register, Status, Vitals, STAT Tests, Admit to IPD, Specialist Consult, Discharge, Call Family, Triage Settings, Shift Report, Print Wristband), and live IPD bed transfer bridge.
-- [x] Synchronized Multi-Project Vercel Production Domain Aliases (ADR-033): Solved stale deployment issue across healthgrid-app.vercel.app, healthgrid-live.vercel.app, and healthgrid-network.vercel.app by reassigning them from legacy frontend project to authoritative production deployment (healthgrid-cmaojgkz1-sameen14nmofficial-8826s-projects.vercel.app). All 4 production aliases verified serving bundle index-BsgxhCpB.js and index-V3cCV6X7.css with 100% interactive visibility of IPD, Emergency, and Appointments.
+- [x] Synchronized Multi-Project Vercel Production Domain Aliases (ADR-033): Solved stale deployment issue across healthgrid-app.vercel.app, healthgrid-nu.vercel.app, healthgrid-live.vercel.app, and healthgrid-network.vercel.app by reassigning them from legacy frontend project to authoritative production deployment (healthgrid-cmaojgkz1-sameen14nmofficial-8826s-projects.vercel.app). All 4 production aliases verified serving bundle index-BsgxhCpB.js and index-V3cCV6X7.css with 100% interactive visibility of IPD, Emergency, and Appointments.
+- [x] Architected and Implemented Hospital ERP Doctors & OPD Management End-to-End Workflow (ADR-034): Fully implemented dedicated Doctors & OPD module (DoctorsOpdView.tsx) matching reference design (Doctors & OPD.png), backed by Supabase PostgreSQL public.doctors schema, 4 live KPI metric cards (Total Doctors 24, In OPD Today 12, Available 10, On Leave 2), real doctor rosters (24 seeded physicians across all medical specialties), interactive modals (Add/Edit doctor, Profile Drawer, Weekly Schedule, Consultation Rooms), and live OPD patient queue handoff with zero hardcoding.
+- [x] Architected and Implemented Hospital ERP Reports & Analytics Suite End-to-End Workflow (ADR-035): Fully implemented dedicated Reports & Analytics module (ReportsAnalyticsView.tsx) matching reference design (Reports & Analytics ref.png), backed by pure real database aggregations from live tables (patients, appointments, ipd_admissions, emergency_cases, ipd_beds), Recharts visual analytics suite (AreaChart patient volume trends, Donut department distribution, 79% Bed Occupancy Gauge, Revenue Overview stacked bars, Top 5 Departments ranked table), 6 functional tabs, live date filtering, and multi-format CSV / Print report export.
+- [x] Architected and Implemented Enterprise Zero-Trust Cybersecurity Overhaul & OWASP Benchmark Hardening (ADR-036):
+  - **In-Memory Secure Session Architecture**: Stripped raw JWT Bearer tokens from browser `localStorage` in `authService.ts`. Engineered `sessionSecurityManager.ts` storing volatile access tokens strictly in memory closures with automated silent background refreshes.
+  - **Cryptographic Device Fingerprinting**: Bound all active sessions to a deterministic SHA-256 canvas/audio/screen device fingerprint hash (`generateDeviceFingerprint()`), instantly invalidating stolen tokens replayed on foreign devices or disparate IP origins.
+  - **Multi-Dimensional Tiered Rate Limiting**: Hardened Java 21 `RateLimitingFilter.java` with strict anti-IP spoofing regex (`IPV4_PATTERN` & `IPV6_PATTERN`), JWT identity-bound buckets (`user:<hash>`), tiered token quotas (Auth: 5/5min, AI: 10/min, Mutations: 20/min, General: 60/min), and RFC 6585 headers (`X-RateLimit-*`, `Retry-After`). Upgraded client `rateLimiter.ts` with 30s exponential circuit breakers.
+  - **Client-Side Zero-Trust Authorization Barrier**: Created `securityGuard.ts` enforcing `requireAuthentication()`, `enforceRateLimit()`, and `executeSecureMutation()` on all clinical writes. Gated `doctorOpdService.ts`, `appointmentService.ts`, `ipdBedService.ts`, and `emergencyService.ts` against unauthenticated tampering, dispatching custom `healthgrid:auth_required` events. Attached dynamic bearer tokens to backend calls in `api.ts`.
+  - **Input Sanitization, Prompt Injection & CDSCO Schedule H/X Drug Shield**: Built `securitySanitizer.ts` with multi-pass HTML tag stripping, SQL injection pattern heuristics, path traversal neutralizing, and an Indian statutory Schedule H/X controlled substance analyzer (Fentanyl, Morphine, Alprazolam, Diazepam, Tramadol, Ketamine). Embedded safety evaluation directly into `consultAgiDoctor()` in `aiService.ts` and gated `prescriptionAiService.ts`.
+  - **Database Row-Level Security (RLS)**: Executed `scripts/setup_security_rls_and_policies.js` against live Supabase PostgreSQL (`db.cosnhycbvsxedogtejos.supabase.co`), enabling RLS and enforcing strict `authenticated` role-based policies on `doctors`, `appointments`, `emergency_cases`, `ipd_beds`, `ipd_admissions`, `patients`, and `medicines`.
+  - **Hardened HTTP Security Headers**: Updated `vercel.json` and Spring Security `SecurityConfig.java` with Content-Security-Policy (CSP), 2-year HSTS with preload, `X-Frame-Options: SAMEORIGIN`, `Cross-Origin-Opener-Policy: same-origin-allow-popups` (COOP), `Cross-Origin-Resource-Policy: same-origin` (CORP), `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`.
 
 ## In-Flight / Next Focus
 - [x] All 4 Vercel aliases synchronized to latest deployment hash.
 - [x] Confirmed live visibility of IPD & Bed Management, Appointments, and Emergency Department on all aliases.
+- [x] Enterprise Zero-Trust Cybersecurity hardening completed and documented in [[ADR-036-Enterprise-Zero-Trust-Cybersecurity-and-OWASP-Hardening]].
 - [ ] Ongoing monitoring of Supabase real-time channels and edge cache invalidation.
 - [ ] Real-time updates to this Second Brain whenever new clinical features or architectural modifications ship.
 
@@ -112,5 +123,8 @@ Back to [[00_Index]]
 - [[ADR-031-Hospital-ERP-Emergency-Department-End-to-End-Architecture]]
 - [[ADR-032-Zero-Latency-Keep-Alive-and-Kinetic-Performance-Architecture]]
 - [[ADR-033-Vercel-Multi-Project-Domain-Alias-Synchronization]]
+- [[ADR-034-Hospital-ERP-Doctors-and-OPD-Management]]
+- [[ADR-035-Hospital-ERP-Reports-and-Analytics-Suite]]
+- [[ADR-036-Enterprise-Zero-Trust-Cybersecurity-and-OWASP-Hardening]]
 - [[Key_Credentials_and_Environments]]
 

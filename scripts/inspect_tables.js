@@ -7,12 +7,12 @@ const client = new Client({
 
 async function main() {
   await client.connect();
-  const res = await client.query('SELECT id, health_id, full_name, phone_number, age, gender FROM public.patients LIMIT 20;');
-  console.log('PATIENTS IN DB:');
+  const res = await client.query('SELECT doctor_code, name, department, specialization, opd_days, total_slots, booked_slots, status, reg_no FROM public.doctors WHERE doctor_code IS NOT NULL ORDER BY doctor_code ASC LIMIT 10;');
+  console.log('TOP 10 DOCTORS IN DB:');
   console.table(res.rows);
-  const docs = await client.query('SELECT id, name, department, designation FROM public.doctors;');
-  console.log('DOCTORS IN DB:');
-  console.table(docs.rows);
+  const statusCounts = await client.query('SELECT status, count(*) FROM public.doctors WHERE doctor_code IS NOT NULL GROUP BY status;');
+  console.log('STATUS DISTRIBUTION:');
+  console.table(statusCounts.rows);
   await client.end();
 }
 

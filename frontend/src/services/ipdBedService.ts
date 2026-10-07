@@ -7,6 +7,8 @@
 
 import { supabase } from './supabaseClient';
 import { unifiedPatientStore } from './unifiedPatientStore';
+import { securityGuard } from './securityGuard';
+import { securitySanitizer } from './securitySanitizer';
 
 export interface IpdWard {
   id: string;
@@ -422,6 +424,13 @@ class IpdBedService {
     admissionType?: string;
     chiefComplaint?: string;
   }): Promise<{ success: boolean; admissionNumber: string; error?: string }> {
+    // 1. Zero-Trust Access Gate (OWASP A01:2021)
+    securityGuard.requireAuthentication('admit patient to inpatient ward', ['HEALTHCARE_PROFESSIONAL', 'DOCTOR', 'ADMIN']);
+    securityGuard.enforceRateLimit('mutation:ipd_admit');
+
+    const sanitizedPatientName = securitySanitizer.sanitizeText(params.patientName);
+    const sanitizedDiagnosis = securitySanitizer.sanitizeText(params.diagnosis);
+    const sanitizedDoctorName = securitySanitizer.sanitizeText(params.doctorName);
     const admissionNumber = `IPD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`;
 
     try {
@@ -440,7 +449,7 @@ class IpdBedService {
         .insert([{
           admission_number: admissionNumber,
           patient_health_id: params.patientHealthId,
-          patient_name: params.patientName,
+          patient_name: sanitizedPatientName,
           patient_age: params.patientAge,
           patient_gender: params.patientGender,
           patient_phone: params.patientPhone,
@@ -449,13 +458,13 @@ class IpdBedService {
           ward_code: params.wardCode,
           ward_name: params.wardName,
           department: 'General Medicine',
-          doctor_name: params.doctorName,
+          doctor_name: sanitizedDoctorName,
           admission_date: new Date().toISOString(),
           expected_discharge: params.expectedDischarge,
           status: 'Active',
-          diagnosis: params.diagnosis,
+          diagnosis: sanitizedDiagnosis,
           admission_type: params.admissionType || 'Emergency',
-          chief_complaint: params.chiefComplaint || params.diagnosis,
+          chief_complaint: params.chiefComplaint ? securitySanitizer.sanitizeText(params.chiefComplaint) : sanitizedDiagnosis,
         }]);
 
       if (admError) {
@@ -469,7 +478,7 @@ class IpdBedService {
         .update({
           status: 'Occupied',
           current_patient_health_id: params.patientHealthId,
-          current_patient_name: params.patientName,
+          current_patient_name: sanitizedPatientName,
           updated_at: new Date().toISOString(),
         })
         .eq('bed_number', params.bedNumber);
@@ -527,6 +536,10 @@ class IpdBedService {
     transferReason: string;
     authorizedBy: string;
   }): Promise<{ success: boolean; error?: string }> {
+    // 1. Zero-Trust Access Gate
+    securityGuard.requireAuthentication('transfer patient to different ward/bed', ['HEALTHCARE_PROFESSIONAL', 'DOCTOR', 'ADMIN']);
+    securityGuard.enforceRateLimit('mutation:ipd_transfer');
+
     try {
       // 1. Get new bed
       const { data: newBedData } = await supabase

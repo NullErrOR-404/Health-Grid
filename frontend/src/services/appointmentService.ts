@@ -7,6 +7,8 @@
 
 import { supabase } from './supabaseClient';
 import { unifiedPatientStore } from './unifiedPatientStore';
+import { securityGuard } from './securityGuard';
+import { securitySanitizer } from './securitySanitizer';
 
 export type AppointmentStatus =
   | 'Scheduled'
@@ -524,29 +526,39 @@ class AppointmentService {
    * Schedule a new appointment
    */
   public async createAppointment(payload: Partial<Appointment>): Promise<Appointment> {
+    // 1. Zero-Trust Access Gate (OWASP A01:2021)
+    const user = securityGuard.requireAuthentication('book or schedule an appointment');
+    securityGuard.enforceRateLimit('mutation:create_appointment');
+
     const nextSeq = this.appointments.length + 1;
     const todayNum = new Date().toISOString().slice(2, 10).replace(/-/g, '');
     const appointmentId = payload.appointment_id || `APPT${todayNum}${String(nextSeq).padStart(3, '0')}`;
 
+    // 2. Input Sanitization
+    const patientName = securitySanitizer.sanitizeText(payload.patient_name || user.name || 'Patient');
+    const patientHealthId = payload.patient_health_id || user.healthId || 'HG001245';
+    const reasonForVisit = securitySanitizer.sanitizeText(payload.reason_for_visit || '');
+    const notes = securitySanitizer.sanitizeText(payload.notes || '');
+
     const newAppointment: Appointment = {
       id: `apt-${Date.now()}`,
       appointment_id: appointmentId,
-      patient_health_id: payload.patient_health_id || 'HG001245',
-      patient_name: payload.patient_name || 'Walk-in Patient',
-      patient_phone: payload.patient_phone || '+91 98765 43210',
+      patient_health_id: patientHealthId,
+      patient_name: patientName,
+      patient_phone: payload.patient_phone || user.phone || '+91 98765 43210',
       patient_age: payload.patient_age || 30,
       patient_gender: payload.patient_gender || 'Male',
       patient_avatar: payload.patient_avatar || '',
-      doctor_name: payload.doctor_name || 'Dr. Mohamed',
-      department: payload.department || 'General Medicine',
+      doctor_name: securitySanitizer.sanitizeText(payload.doctor_name || 'Dr. Mohamed'),
+      department: securitySanitizer.sanitizeText(payload.department || 'General Medicine'),
       appointment_date: payload.appointment_date || new Date().toISOString().slice(0, 10),
       appointment_time: payload.appointment_time || '10:00 AM',
       appointment_type: payload.appointment_type || 'Consultation',
       status: payload.status || 'Scheduled',
       checked_in_at: payload.checked_in_at || null,
       source: payload.source || 'Online Booking',
-      reason_for_visit: payload.reason_for_visit || '',
-      notes: payload.notes || '',
+      reason_for_visit: reasonForVisit,
+      notes: notes,
       clinical_observations: payload.clinical_observations || '',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -601,6 +613,10 @@ class AppointmentService {
     newStatus: AppointmentStatus,
     extra?: { reason?: string; notes?: string }
   ): Promise<boolean> {
+    // 1. Zero-Trust Access Gate
+    securityGuard.requireAuthentication('update appointment status');
+    securityGuard.enforceRateLimit('mutation:update_appointment_status');
+
     const idx = this.appointments.findIndex((a) => a.id === id || a.appointment_id === id);
     if (idx === -1) return false;
 

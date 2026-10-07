@@ -8,6 +8,7 @@ import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { medicalRecordService } from './medicalRecordService';
 import { rateLimiter } from './rateLimiter';
+import { sessionSecurityManager } from './sessionSecurityManager';
 
 export type UserRole = 'PERSONAL' | 'HEALTHCARE_PROFESSIONAL';
 
@@ -143,9 +144,12 @@ class AuthService {
   private saveToStorage(user: AuthUser | null) {
     this.currentUser = user;
     if (user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      // Strip raw bearer token from localStorage to prevent XSS credential theft (OWASP ASVS Level 3)
+      const safeStorageUser = { ...user, token: undefined };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(safeStorageUser));
     } else {
       localStorage.removeItem(STORAGE_KEY);
+      sessionSecurityManager.terminateSession('USER_LOGOUT');
     }
     this.notifyListeners();
   }
@@ -231,6 +235,20 @@ class AuthService {
       };
 
       this.saveToStorage(user);
+
+      // Establish hardened in-memory session bound to physical device fingerprint
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const rawToken = sessionData?.session?.access_token || sbUser.id;
+        await sessionSecurityManager.establishSession(
+          rawToken,
+          sbUser.id,
+          user.role,
+          healthId
+        );
+      } catch (sessErr) {
+        console.warn('Could not bind in-memory session fingerprint:', sessErr);
+      }
     } catch (e) {
       console.warn('Could not sync user profile from Supabase:', e);
       const meta = sbUser.user_metadata || {};
@@ -251,6 +269,15 @@ class AuthService {
         token: sbUser.id,
       };
       this.saveToStorage(fallbackUser);
+
+      try {
+        await sessionSecurityManager.establishSession(
+          sbUser.id,
+          sbUser.id,
+          fallbackUser.role,
+          fallbackUser.healthId
+        );
+      } catch {}
     }
   }
 
@@ -276,6 +303,27 @@ class AuthService {
 
   isAuthenticated(): boolean {
     return this.currentUser !== null;
+  }
+
+  /**
+   * Retrieves active, validated Bearer token with device fingerprint & sliding timeout check.
+   */
+  async getAccessToken(): Promise<string | null> {
+    const memToken = await sessionSecurityManager.getValidAccessToken();
+    if (memToken) return memToken;
+
+    // Attempt silent refresh from Supabase session if valid
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token && this.currentUser) {
+      await sessionSecurityManager.establishSession(
+        session.access_token,
+        this.currentUser.id,
+        this.currentUser.role,
+        this.currentUser.healthId
+      );
+      return session.access_token;
+    }
+    return null;
   }
 
   /**

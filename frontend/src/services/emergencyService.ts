@@ -7,6 +7,8 @@
 
 import { supabase } from './supabaseClient';
 import { ipdBedService } from './ipdBedService';
+import { securityGuard } from './securityGuard';
+import { securitySanitizer } from './securitySanitizer';
 
 export type EmergencyTriageLevel = 'Red' | 'Yellow' | 'Green' | 'Black';
 export type EmergencyStatus = 'Waiting' | 'In Treatment' | 'Observation' | 'Discharged' | 'Transferred' | 'Triage';
@@ -242,9 +244,19 @@ class EmergencyService {
     allergies?: string;
     initial_vitals?: Partial<EmergencyVitals>;
   }): Promise<{ success: boolean; data?: EmergencyCase; error?: string }> {
+    // 1. Zero-Trust Access Gate (OWASP A01:2021)
+    securityGuard.requireAuthentication('register patient in emergency casualty ward', ['HEALTHCARE_PROFESSIONAL', 'DOCTOR', 'ADMIN', 'PARAMEDIC']);
+    securityGuard.enforceRateLimit('mutation:emergency_register');
+
     const timestamp = new Date();
     const caseNumber = `ER-${timestamp.getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const healthId = params.patient_health_id?.trim() || `HG-${timestamp.getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // 2. Input Sanitization
+    const patientName = securitySanitizer.sanitizeText(params.patient_name);
+    const chiefComplaint = securitySanitizer.sanitizeText(params.chief_complaint);
+    const erLocation = securitySanitizer.sanitizeText(params.er_location);
+    const assignedDoctor = securitySanitizer.sanitizeText(params.assigned_doctor_name);
 
     const initialVitals: EmergencyVitals = {
       bp: params.initial_vitals?.bp || '120/80',
@@ -264,7 +276,7 @@ class EmergencyService {
     const newCase: Partial<EmergencyCase> = {
       case_number: caseNumber,
       patient_health_id: healthId,
-      patient_name: params.patient_name,
+      patient_name: patientName,
       patient_phone: params.patient_phone || '+91 98765 00000',
       patient_age: params.patient_age,
       patient_gender: params.patient_gender,
@@ -273,9 +285,9 @@ class EmergencyService {
       status: params.triage_level === 'Red' ? 'In Treatment' : 'Waiting',
       arrival_time: timestamp.toISOString(),
       mode_of_arrival: params.mode_of_arrival,
-      chief_complaint: params.chief_complaint,
-      assigned_doctor_name: params.assigned_doctor_name,
-      er_location: params.er_location,
+      chief_complaint: chiefComplaint,
+      assigned_doctor_name: assignedDoctor,
+      er_location: erLocation,
       accompanied_by: params.accompanied_by || 'Self',
       allergies: params.allergies || 'No known allergies',
       latest_vitals: initialVitals,
@@ -286,7 +298,7 @@ class EmergencyService {
           id: `cn-${Date.now()}`,
           author: 'Triage Desk',
           role: 'Triage Nurse',
-          content: `Registered as ${params.triage_level} code via ${params.mode_of_arrival}. Chief presentation: ${params.chief_complaint}.`,
+          content: `Registered as ${params.triage_level} code via ${params.mode_of_arrival}. Chief presentation: ${chiefComplaint}.`,
           created_at: timestamp.toISOString(),
         },
       ],
@@ -329,6 +341,10 @@ class EmergencyService {
     newStatus: EmergencyStatus,
     reason?: string
   ): Promise<{ success: boolean; error?: string }> {
+    // 1. Zero-Trust Access Gate
+    securityGuard.requireAuthentication('update emergency casualty status', ['HEALTHCARE_PROFESSIONAL', 'DOCTOR', 'ADMIN', 'PARAMEDIC']);
+    securityGuard.enforceRateLimit('mutation:emergency_status');
+
     const existing = this.cases.find((c) => c.id === id);
     if (!existing) return { success: false, error: 'Case not found' };
 

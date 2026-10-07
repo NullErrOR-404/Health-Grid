@@ -74,6 +74,9 @@ graph TD
     DEC --> ADR31[[ADR-031-Hospital-ERP-Emergency-Department-End-to-End-Architecture]]
     DEC --> ADR32[[ADR-032-Zero-Latency-Keep-Alive-and-Kinetic-Performance-Architecture]]
     DEC --> ADR33[[ADR-033-Vercel-Multi-Project-Domain-Alias-Synchronization]]
+    DEC --> ADR34[[ADR-034-Hospital-ERP-Doctors-and-OPD-Management]]
+    DEC --> ADR35[[ADR-035-Hospital-ERP-Reports-and-Analytics-Suite]]
+    DEC --> ADR36[[ADR-036-Enterprise-Zero-Trust-Cybersecurity-and-OWASP-Hardening]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
 
@@ -148,6 +151,9 @@ graph TD
 - [[ADR-031-Hospital-ERP-Emergency-Department-End-to-End-Architecture]]: End-to-end implementation of Emergency Department matching clinical reference design (`Emergency ERP ref.png`), authentic PostgreSQL Supabase schema with RLS policies, 3-tier ESI triage, 4 dynamic metric cards, 8 interactive clinical modals (Register, Status, Vitals, STAT Tests, Admit to IPD, Specialist Consult, Discharge, Call Family), and real-time pub/sub synchronization.
 - [[ADR-032-Zero-Latency-Keep-Alive-and-Kinetic-Performance-Architecture]]: Three-tier platform performance architecture featuring sub-millisecond (0.6ms - 1.4ms) in-memory keep-alive DOM switching, kinetic smooth scrolling in Lenis, background idle route prefetching, and dedicated motion vendor chunk.
 - [[ADR-033-Vercel-Multi-Project-Domain-Alias-Synchronization]]: Resolution of split-project production deployment caching across Vercel aliases, harmonizing healthgrid-app.vercel.app, healthgrid-nu.vercel.app, healthgrid-live.vercel.app, and healthgrid-network.vercel.app onto authoritative production build deployments with zero stale asset leakage.
+- [[ADR-034-Hospital-ERP-Doctors-and-OPD-Management]]: End-to-end implementation of Doctors & OPD management matching clinical reference design (`Doctors & OPD.png`), backed by Supabase PostgreSQL `public.doctors` schema, 4 live KPI metric cards, real doctor rosters (24 seeded physicians), interactive modals (Add/Edit doctor, Profile Drawer, Weekly Schedule, Consultation Rooms), and live OPD patient queue handoff with zero hardcoding.
+- [[ADR-035-Hospital-ERP-Reports-and-Analytics-Suite]]: End-to-end implementation of Reports & Analytics matching clinical reference design (`Reports & Analytics ref.png`), pure database aggregations across `patients`, `appointments`, `ipd_admissions`, `emergency_cases`, and `ipd_beds`, Recharts visual analytics suite (AreaChart, Donut, BarChart, Bed Occupancy Gauge), 6 functional tabs, live date filtering, and dynamic CSV / Print report export.
+- [[ADR-036-Enterprise-Zero-Trust-Cybersecurity-and-OWASP-Hardening]]: Comprehensive enterprise-grade cybersecurity overhaul from dual Senior Cybersecurity Analyst and Senior Red Team perspectives: volatile in-memory session token storage, cryptographic SHA-256 device fingerprinting, multi-dimensional tiered rate limiting with anti-IP spoofing, Zero-Trust authentication barriers on all clinical mutations and server communication, dual-plane input sanitization with CDSCO Schedule H/X controlled drug shields, PostgreSQL Row-Level Security (RLS) enforcement, and industrial HTTP security headers (CSP, HSTS, COOP, CORP).
 
 ---
 

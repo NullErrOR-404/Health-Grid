@@ -26,10 +26,8 @@ import {
   ShoppingCart,
   Boxes,
   Wrench,
-  UserCog,
   BarChart3,
   Settings,
-  ShieldAlert,
   ArrowUpRight,
   LogOut,
   X,
@@ -50,6 +48,8 @@ import { OpdManagementView } from './OpdManagementView';
 import { IpdBedManagementView } from './IpdBedManagementView';
 import { AppointmentsView } from './AppointmentsView';
 import { EmergencyView } from './EmergencyView';
+import { DoctorsOpdView } from './DoctorsOpdView';
+import { ReportsAnalyticsView } from './ReportsAnalyticsView';
 import { lenisService } from '../../services/lenisService';
 
 interface HospitalErpDashboardProps {
@@ -164,15 +164,13 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
         { id: 'Procurement', label: 'Procurement', icon: ShoppingCart },
         { id: 'Inventory & Stores', label: 'Inventory & Stores', icon: Boxes },
         { id: 'Assets & Maintenance', label: 'Assets & Maintenance', icon: Wrench },
-        { id: 'HR & Staff Management', label: 'HR & Staff Management', icon: UserCog },
-        { id: 'Reports & Analytics', label: 'Reports & Analytics', icon: BarChart3 },
       ],
     },
     {
-      category: 'ADMINISTRATION',
+      category: 'REPORTS',
       items: [
-        { id: 'Hospital Settings', label: 'Hospital Settings', icon: Settings },
-        { id: 'Audit Logs', label: 'Audit Logs', icon: ShieldAlert },
+        { id: 'Reports & Analytics', label: 'Reports & Analytics', icon: BarChart3 },
+        { id: 'Settings', label: 'Settings', icon: Settings },
       ],
     },
   ];
@@ -508,10 +506,30 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
           </div>
         )}
 
+        {visitedTabs.has('Doctors & OPD') && (
+          <div className={activeMenu === 'Doctors & OPD' ? "flex-1 flex flex-col min-w-0" : "hidden"}>
+            <DoctorsOpdView
+              triggerToast={triggerToast}
+              onNavigateToOpdWithPatient={(patId) => {
+                setSelectedOpdPatientId(patId);
+                setActiveMenu('OPD Management');
+              }}
+            />
+          </div>
+        )}
+
+        {visitedTabs.has('Reports & Analytics') && (
+          <div className={activeMenu === 'Reports & Analytics' ? "flex-1 flex flex-col min-w-0" : "hidden"}>
+            <ReportsAnalyticsView
+              triggerToast={triggerToast}
+            />
+          </div>
+        )}
+
         {/* Executive Overview Dashboard (Shown for 'Dashboard' or unassigned modules) */}
         <main
           className={`flex-1 overflow-y-auto p-4 lg:p-7 space-y-6 ${
-            !['Patient Management', 'OPD Management', 'OPD / Consultations', 'IPD & Bed Management', 'Appointments', 'Emergency', 'Emergency / Casualty'].includes(activeMenu)
+            !['Patient Management', 'OPD Management', 'OPD / Consultations', 'IPD & Bed Management', 'Appointments', 'Emergency', 'Emergency / Casualty', 'Doctors & OPD', 'Reports & Analytics'].includes(activeMenu)
               ? 'block'
               : 'hidden'
           }`}

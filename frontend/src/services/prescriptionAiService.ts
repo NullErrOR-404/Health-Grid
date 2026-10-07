@@ -18,6 +18,8 @@
 import { supabase } from './supabaseClient';
 import { rateLimiter, RATE_LIMIT_CONFIGS } from './rateLimiter';
 import { INITIAL_CACHE_CATALOG } from './medicineStoreService';
+import { securityGuard } from './securityGuard';
+import { securitySanitizer } from './securitySanitizer';
 
 export interface ScannedMedicine {
   id: string;
@@ -338,7 +340,10 @@ class PrescriptionAiService {
     imageSources: (string | File)[] | string | File,
     knownAllergies: string[] = []
   ): Promise<PrescriptionAnalysisResult> {
-    // Client-side rate limiter to prevent Vision OCR API abuse
+    // 1. Zero-Trust Access Gate (OWASP A01:2021)
+    securityGuard.requireAuthentication('scan and analyze medical prescription');
+
+    // 2. Client-side rate limiter to prevent Vision OCR API abuse
     const limitCheck = rateLimiter.checkLimit(
       'PRESCRIPTION_OCR',
       RATE_LIMIT_CONFIGS.PRESCRIPTION_OCR.maxRequests,
@@ -1343,15 +1348,21 @@ Return ONLY valid JSON matching this schema:
       }
 
       const userId = session.user.id; // Strictly individual UUID
+      securityGuard.enforceRateLimit('mutation:prescription_save');
+
+      // Sanitize fields before database persistence (anti-Stored XSS)
+      const sanitizedDoctor = securitySanitizer.sanitizeText(result.doctorName || 'Dr. Consultant Physician');
+      const sanitizedClinic = securitySanitizer.sanitizeText(result.clinicOrHospital || 'HealthGrid Care Network');
+      const sanitizedDiagnosis = securitySanitizer.sanitizeText(result.diagnosisNotes || 'Prescribed medications');
 
       // 1. Record in dedicated prescriptions audit table (isolated by user_id)
       try {
         await supabase.from('prescriptions').insert({
           user_id: userId,
-          doctor_name: result.doctorName,
-          clinic_hospital: result.clinicOrHospital,
+          doctor_name: sanitizedDoctor,
+          clinic_hospital: sanitizedClinic,
           prescription_date: result.date,
-          diagnosis: result.diagnosisNotes,
+          diagnosis: sanitizedDiagnosis,
           medications: result.medications,
           dosage_schedule: result.dosageSchedule,
           safety_radar: result.safetyRadar,
