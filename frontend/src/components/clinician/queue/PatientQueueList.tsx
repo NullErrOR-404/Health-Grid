@@ -13,6 +13,9 @@ import {
   Stethoscope,
   Clock,
   UserCheck,
+  FileText,
+  XCircle,
+  MessageSquare,
 } from 'lucide-react';
 import type { PatientQueueItem } from '../../../types/clinician';
 import { clinicianStore } from '../../../services/clinician/clinicianWorkflowStore';
@@ -295,43 +298,87 @@ export const PatientQueueList: React.FC<PatientQueueListProps> = ({
                     </button>
 
                     {openMenuId === item.id && (
-                      <div className="absolute right-0 top-9 w-48 bg-white rounded-xl shadow-lg border border-slate-200 p-1.5 z-30 animate-in fade-in duration-100">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onStartConsultation(item.patientId);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full text-left px-3 py-2 text-xs font-bold text-teal-700 hover:bg-teal-50 rounded-lg flex items-center gap-2"
-                        >
-                          <Stethoscope className="w-3.5 h-3.5" />
-                          <span>Start Consultation</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            clinicianStore.updateQueueStatus(item.id, 'IN_CONSULTATION');
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2 font-medium"
-                        >
-                          <UserCheck className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Mark Arrived / Roomed</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            clinicianStore.updateQueueStatus(item.id, 'COMPLETED');
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2 font-medium"
-                        >
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Mark Completed</span>
-                        </button>
+                      <div className="absolute right-0 top-9 w-52 bg-white rounded-xl shadow-xl border border-slate-200/90 p-1.5 z-30 animate-in fade-in duration-100 divide-y divide-slate-100">
+                        <div className="pb-1 space-y-0.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onStartConsultation(item.patientId);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full text-left px-3 py-2 text-xs font-bold text-teal-700 hover:bg-teal-50 rounded-lg flex items-center gap-2"
+                          >
+                            <Stethoscope className="w-3.5 h-3.5 text-teal-600" />
+                            <span>{item.status === 'IN_CONSULTATION' ? 'Resume Consultation' : 'Start Consultation'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenChart(item.patientId);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2 font-medium"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Open Patient Chart</span>
+                          </button>
+                        </div>
+
+                        <div className="py-1 space-y-0.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              clinicianStore.updateQueueStatus(item.id, 'IN_CONSULTATION');
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2 font-medium"
+                          >
+                            <UserCheck className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Mark Arrived / Roomed</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              clinicianStore.setActiveTab('messages');
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2 font-medium"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Contact Patient</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              clinicianStore.updateQueueStatus(item.id, 'COMPLETED');
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2 font-medium"
+                          >
+                            <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Mark Completed</span>
+                          </button>
+                        </div>
+
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              clinicianStore.updateQueueStatus(item.id, 'SCHEDULED');
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 font-medium"
+                          >
+                            <XCircle className="w-3.5 h-3.5 text-rose-500" />
+                            <span>Mark No-Show / Cancel</span>
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

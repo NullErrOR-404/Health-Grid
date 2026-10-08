@@ -79,20 +79,22 @@ class ClinicianWorkflowStore {
   }
 
   private loadInitialState(): ClinicianStoreState {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          ...parsed,
-          // Always ensure seed objects are healthy
-          clinician: parsed.clinician || SEED_CLINICIAN,
-          facilities: parsed.facilities || SEED_FACILITIES,
-          orderSets: parsed.orderSets || SEED_ORDER_SETS,
-        };
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return {
+            ...parsed,
+            // Always ensure seed objects are healthy
+            clinician: parsed.clinician || SEED_CLINICIAN,
+            facilities: parsed.facilities || SEED_FACILITIES,
+            orderSets: parsed.orderSets || SEED_ORDER_SETS,
+          };
+        }
+      } catch (e) {
+        console.warn('Failed to parse cached clinician store:', e);
       }
-    } catch (e) {
-      console.warn('Failed to parse cached clinician store:', e);
     }
 
     return {
@@ -125,10 +127,12 @@ class ClinicianWorkflowStore {
   }
 
   private persist() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
-    } catch {
-      // ignore
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+      } catch {
+        // ignore
+      }
     }
     this.notify();
   }

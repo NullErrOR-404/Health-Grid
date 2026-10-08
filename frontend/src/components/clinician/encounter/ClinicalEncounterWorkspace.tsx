@@ -883,6 +883,178 @@ export const ClinicalEncounterWorkspace: React.FC<ClinicalEncounterWorkspaceProp
               </div>
             </div>
           )}
+
+          {/* STAGE 10: REVIEW & SIGN-OFF */}
+          {activeStage === 'sign-off' && (
+            <div className="space-y-5 max-w-3xl">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Encounter Review & Final Sign-Off</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Verify documentation completeness, staged orders, and prescriptions prior to permanent electronic signature.
+                </p>
+              </div>
+
+              {/* Review Checklist */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    Encounter Verification Checklist
+                  </span>
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Ready for Signature
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900">Patient Identity Verified</div>
+                      <div className="text-[11px] text-slate-500">{patient.name} ({patient.age}y, {patient.gender}) • UHID: {patient.uhid}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900">Chief Complaint Documented</div>
+                      <div className="text-[11px] text-slate-500">{encounter.chiefComplaint}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900">Physical Examination Recorded</div>
+                      <div className="text-[11px] text-slate-500">General, HEENT, CVS, Resp vitals assessed</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900">Clinical Assessment & Problems</div>
+                      <div className="text-[11px] text-slate-500">{encounter.diagnoses.map((d) => d.name).join(', ') || 'Documented'}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900">Staged Diagnostic Orders</div>
+                      <div className="text-[11px] text-slate-500">{encounter.orders?.length || 0} order(s) queued for hospital lab/imaging</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900">Prescription & Med Reconciliation</div>
+                      <div className="text-[11px] text-slate-500">{encounter.prescriptions?.length || 0} active prescription(s) staged</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900">Specialist Referral</div>
+                      <div className="text-[11px] text-slate-500">{targetSpecialty} referral documented</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900">Follow-Up Schedule</div>
+                      <div className="text-[11px] text-slate-500">In {followUpDue}: {followUpReason}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SOAP Note Summary Box */}
+              <div className="bg-slate-50 rounded-2xl border border-slate-200/80 p-4 space-y-2 text-xs">
+                <div className="font-bold text-slate-900">Electronic SOAP Note Preview</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2 bg-white rounded-lg border border-slate-100">
+                    <span className="font-bold text-teal-800">S: </span>
+                    <span className="text-slate-600">{soapS || encounter.chiefComplaint}</span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-100">
+                    <span className="font-bold text-teal-800">O: </span>
+                    <span className="text-slate-600">{soapO || `Temp ${encounter.vitals?.tempF || 98.6}°F, BP ${encounter.vitals?.bpSystolic || 120}/${encounter.vitals?.bpDiastolic || 80}`}</span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-100">
+                    <span className="font-bold text-teal-800">A: </span>
+                    <span className="text-slate-600">{soapA || assessmentText || 'Clinical assessment completed.'}</span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-100">
+                    <span className="font-bold text-teal-800">P: </span>
+                    <span className="text-slate-600">{soapP || planText || 'Treatment plan initiated.'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legal Sign & Close Bar */}
+              <div className="p-4 bg-teal-50/70 rounded-2xl border border-teal-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck className="w-5 h-5 text-teal-700 shrink-0" />
+                  <div>
+                    <div className="text-xs font-bold text-teal-950">
+                      Digitally Sign & Lock Clinical Record
+                    </div>
+                    <div className="text-[11px] text-teal-800">
+                      Closing commits orders, issues prescriptions, updates patient timeline, and marks queue complete.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setActiveStage('follow-up')}
+                    className="px-3 py-2 text-xs text-slate-600 hover:bg-slate-200/60 rounded-xl"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clinicianStore.updateEncounter(encounter.id, {
+                        hpi: hpiText,
+                        assessment: assessmentText,
+                        plan: planText,
+                        patientInstructions,
+                        followUp: {
+                          id: `fu_${Date.now()}`,
+                          patientId: patient.id,
+                          patientName: patient.name,
+                          encounterId: encounter.id,
+                          dueDate: new Date().toISOString().split('T')[0],
+                          dueLabel: followUpDue,
+                          reason: followUpReason,
+                          priority: 'NORMAL',
+                          status: 'PENDING',
+                        },
+                        soapNote: {
+                          subjective: soapS,
+                          objective: soapO,
+                          assessment: soapA,
+                          plan: soapP,
+                        },
+                      });
+                      clinicianStore.signAndCloseEncounter(encounter.id);
+                      onExit();
+                    }}
+                    className="flex-1 sm:flex-initial px-5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-700/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Sign & Close Encounter 🔒</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
