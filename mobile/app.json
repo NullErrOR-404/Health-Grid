@@ -54,6 +54,11 @@
       ],
       "expo-secure-store",
       "expo-local-authentication"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4f4c7442-70ff-43a8-ab35-80e9024cf1d3"
+      }
+    }
   }
 }

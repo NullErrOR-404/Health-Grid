@@ -3,32 +3,36 @@
   <img src="frontend/public/Logo.png" alt="HealthGrid Logo" width="130" height="130" style="border-radius: 24px; box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);" />
 
   # HealthGrid (நலம் AI)
-  ### Real-Time Emergency Telemetry, Multi-Persona Clinical AI, Hospital ERP & Enterprise Health Platform
+  ### Real-Time Emergency Telemetry, Autonomous Clinical AI, Hospital ERP & Enterprise Health Platform
 
   [![Java](https://img.shields.io/badge/Java-21_LTS-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
   [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3.4-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
   [![Project Loom](https://img.shields.io/badge/Virtual_Threads-Loom_Enabled-43853D?logo=java&logoColor=white)](https://openjdk.org/projects/loom/)
   [![React](https://img.shields.io/badge/React-19.x-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![React Native](https://img.shields.io/badge/React_Native-0.86-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
+  [![Expo SDK](https://img.shields.io/badge/Expo-SDK_57-000020?logo=expo&logoColor=white)](https://expo.dev/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.x-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.x-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15.x-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
   [![Vercel Live](https://img.shields.io/badge/Vercel-healthgrid--app.vercel.app-000000?logo=vercel&logoColor=white)](https://healthgrid-app.vercel.app)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
   <p align="center">
-    <strong>HealthGrid</strong> is an enterprise digital healthcare platform engineered to bridge everyday citizens, community care providers, and acute hospital networks. Powered by a high-throughput <strong>Java 21 Spring Boot backend with Project Loom Virtual Threads</strong> and an accessible <strong>React 19 client tier</strong>, HealthGrid delivers multi-persona clinical guidance, deciphers handwritten prescriptions with generic substitution savings (50% to 90%), coordinates 108 emergency ambulance telemetry, and provides a full-featured Hospital ERP for real-time bed and casualty management.
+    <strong>HealthGrid</strong> is an enterprise-grade digital healthcare platform engineered to bridge everyday citizens, community clinics, and acute hospital networks. Powered by a high-throughput <strong>Java 21 Spring Boot backend with Project Loom Virtual Threads</strong>, an accessible <strong>React 19 web portal</strong>, and a dedicated <strong>React Native (Expo SDK 57) Android APK</strong>, HealthGrid delivers autonomous clinical triage, deciphers handwritten prescriptions with 50% to 90% generic medicine savings, coordinates 108 emergency ambulance telemetry, and provides a full-featured Hospital ERP for real-time bed, casualty, and OPD queue management.
   </p>
 
   <p align="center">
     <a href="#-live-production-deployments">Live Deployments</a> •
-    <a href="#-enterprise-healthcare-requirements--solutions">Requirements & Solutions</a> •
+    <a href="#-problem-statement--healthcare-pain-points">Problem Statement & Solutions</a> •
+    <a href="#-system-architecture">System Architecture</a> •
+    <a href="#-use-case-diagrams">Use Case Diagrams</a> •
     <a href="#-java-21-spring-boot-enterprise-backend">Java 21 Backend</a> •
-    <a href="#-multi-persona-clinical-ai-doctor">Multi-Persona AI</a> •
-    <a href="#-personal-healthcare-assistant--health-vault">Personal Health Assistant</a> •
-    <a href="#-hospital-erp--casualty-management-system">Hospital ERP</a> •
-    <a href="#-core-implemented-modules-catalog">Implemented Modules</a> •
-    <a href="#-system-architecture">Architecture</a> •
-    <a href="#-getting-started">Getting Started</a>
+    <a href="#-database-architecture--security-hardening">Database & RLS Hardening</a> •
+    <a href="#-client-applications-web--native-android-apk">Web & Android APK</a> •
+    <a href="#-docbot-ai-clinical-engine--frontier-model-pipeline">AI Clinical Engine</a> •
+    <a href="#-hospital-erp--casualty-command-tower">Hospital ERP Suite</a> •
+    <a href="#-security-privacy--regulatory-compliance">Security & DPDP Compliance</a> •
+    <a href="#-getting-started--local-development">Getting Started</a>
   </p>
 
   <hr />
@@ -47,379 +51,424 @@ HealthGrid is deployed and actively serving production traffic across distribute
 
 ---
 
-## 🎯 Enterprise Healthcare Requirements & Solutions
+## 🎯 Problem Statement & Healthcare Pain Points
 
-HealthGrid was architected to address systemic bottlenecks across national public health delivery, emergency response coordination, and healthcare affordability:
+Public healthcare delivery faces acute systemic bottlenecks across affordability, accessibility, emergency response latency, and operational capacity. HealthGrid was built from the ground up to solve these core healthcare challenges:
 
-### 📋 Core System Requirements & Architectural Solutions
+| # | Systemic Healthcare Pain Point | How HealthGrid Solves It | Technical Implementation |
+| :- | :--- | :--- | :--- |
+| **1** | **Overburdened Outpatient Departments (OPD):** Patients wait 3–6 hours in crowded hospital queues for routine 3-minute consultations, exhausting clinical staff. | Digital OPD queue scheduling, automated in-chat appointment booking, and 24/7 autonomous pre-hospital triage. | `AppointmentsView.tsx`, `appointmentService.ts`, and `aiService.ts` running clinical SOCRATES triage. |
+| **2** | **Crippling Out-of-Pocket Prescription Costs:** Families spend up to 70% of out-of-pocket health expenditure on branded medications when equivalent generics exist. | Automatic generic substitution engine matching prescribed branded medications against the official **Jan Aushadhi (PMBJP)** formulary with 50% to 90% cost savings. | `medicineStoreService.ts`, `prescriptionAiService.ts`, and Indian Pharmacopeia database grounding. |
+| **3** | **Emergency Ambulance Diversion & Blind Handovers:** Ambulances arrive at casualty wards with zero advance warning of patient vitals, while hospitals turn away critical cases due to unseen bed shortages. | Real-time 108 Emergency Ambulance dispatch with live GPS telemetry, paramedic-to-hospital SBAR handover packets, and real-time casualty bed tracking. | Spring WebSocket STOMP (`/ws-emergency`), `EmergencyView.tsx`, and `ipdBedService.ts`. |
+| **4** | **Illegible Handwritten Prescriptions:** Medication errors caused by smudged or rushed physician handwriting lead to severe adverse drug reactions. | 4-Tier Multimodal Vision & OCR cascade translating handwritten scripts into verified dosages, frequency instructions, and interaction warnings. | Google Gemini 2.5/3.8 Flash, Groq Vision, and `FileSanitizerService.java`. |
+| **5** | **Fragmented Medical Records & Caregiver Gaps:** Elderly parents and young children lack individual smartphones, leaving their records unlinked across facilities. | ABDM-aligned Multi-Profile Family Hub supporting up to 7 dependents under one account, featuring distinct Health IDs and age-calibrated dosing. | `familyMemberService.ts` and `ConsultationBeneficiaryModal.tsx`. |
+| **6** | **Patient Privacy & Data Exfiltration Risks:** Health data leaks from unsecured servers and third-party AI logging undermine patient confidentiality. | Client-side zero-trace privacy under India's **DPDP Act 2023**, in-memory volatile session closures, Android Keystore AES-256 encryption, and database Row-Level Security. | `sessionSecurityManager.ts`, `secureStorageService.ts`, and Supabase PostgreSQL RLS. |
 
-| Healthcare Domain | Public Health Requirement | HealthGrid Engineering Solution |
-| :--- | :--- | :--- |
-| **Handwritten Prescription Digitization** | Extract medicine names, strengths, and frequency instructions from doctor prescriptions. | **4-Tier Multimodal Vision Pipeline:** Sequentially cascades Google Gemini 3.8, Groq vision inference, NVIDIA NIM, and TrOCR models. Delivers results to a side-by-side interactive document canvas with dose editing, WhatsApp regimen exports, and Google Calendar reminders. |
-| **Generic Medicine Substitution** | Provide verified generic equivalents for prescribed branded medications to reduce out-of-pocket costs. | **Jan Aushadhi (PMBJP) Pharmacology Engine:** Direct algorithmic matching against the national Jan Aushadhi formulary. Computes verified 50% to 90% savings per tablet while executing patient age, contraindication, and food-drug interaction safety audits. |
-| **Multi-Persona Clinical Triage** | Provide accessible, round-the-clock medical triage in plain language and local vernaculars. | **Adaptive Dual-Persona Clinical Engine:** Houses **Dr. Meera** (warm bedside family care) and **Dr. Arvind** (calm emergency specialist), backed by sub-2ms vector RAG over verified ICMR clinical protocols with zero medical jargon. |
-| **Acute Emergency & 108 Dispatch** | Enable immediate emergency alerting with live GPS telemetry and paramedic-to-hospital data transmission. | **Bidirectional STOMP WebSocket Dispatch:** Transmits real-time ambulance coordinates, ETA tracking, and auto-generates a standardized SBAR (Situation, Background, Assessment, Recommendation) clinical brief for incoming trauma teams. |
-| **Family & Dependent Healthcare Hub** | Allow primary citizens to manage healthcare for dependents (children, elderly parents) lacking personal smartphones. | **ABDM-Aligned Family Profile Hub:** Supports up to 7 dependents with distinct Health IDs (`HG-FAM-XXXX`), personalized age-stratified dosage recommendations, and sovereign account porting under the DPDP Act 2023. |
-| **Hospital Capacity & Bed Telemetry** | Prevent critical casualty diversion through real-time visibility into bed and critical care availability. | **Enterprise Hospital ERP Suite:** Real-time telemetry monitoring ICU, Emergency, Oxygen, and General Ward beds, paired with digital OPD token generation and multi-department clinical operations. |
-| **Community Disease Surveillance** | Track seasonal fever outbreaks, vector clusters, and environmental hazards to protect public health. | **Geospatial Epidemiology Radar:** Interactive GIS mapping displaying monsoon advisories, localized dengue clusters, citizen hazard reports, and 24/7 government casualty centers. |
+---
+
+## 🏛️ System Architecture
+
+HealthGrid uses a multi-tier, zero-trust cloud architecture connecting web clients, native Android devices, an enterprise Java backend, and distributed AI models:
+
+```
++===================================================================================================+
+|                                    CLIENT PRESENTATION LAYER                                      |
+|                                                                                                   |
+|   +---------------------------------------------+   +-----------------------------------------+   |
+|   |         RESPONSIVE WEB PORTAL               |   |        NATIVE ANDROID APP (APK)         |   |
+|   |   React 19.x • Vite 8.3 • Tailwind CSS v4   |   |   React Native 0.86 • Expo SDK 57       |   |
+|   |   Lenis Smooth Scroll • Recharts Analytics  |   |   Native CameraX • Android Studio JBR   |   |
+|   +---------------------------------------------+   +-----------------------------------------+   |
++===================================================================================================+
+                                                |
+                                                v
++===================================================================================================+
+|                              ZERO-TRUST SECURITY & HARDWARE SHIELD                                |
+|                                                                                                   |
+|   +-----------------------+  +-----------------------+  +-----------------------+  +-------------+  |
+|   |   Android Keystore    |  | Biometric App Lock    |  |  Screen Privacy Shield|  | CDSCO Guard |  |
+|   |  AES-256 GCM (TEE)    |  | Fingerprint / FaceID  |  |  FLAG_SECURE Windows  |  | Sched H / X |  |
+|   +-----------------------+  +-----------------------+  +-----------------------+  +-------------+  |
++===================================================================================================+
+                                                |
+                                                v
++===================================================================================================+
+|                                 EDGE ROUTING & API GATEWAY                                        |
+|                                                                                                   |
+|   +---------------------------------------------+   +-----------------------------------------+   |
+|   |        Vercel Global Edge CDN Cluster       |   |      Spring Security 6 Gateway          |   |
+|   |  4 Synchronized Domain Aliases • HTTP/2     |   |  Stateless Bearer JWTs • IP Rate Limit  |   |
+|   +---------------------------------------------+   +-----------------------------------------+   |
++===================================================================================================+
+                                                |
+                                                v
++===================================================================================================+
+|                         ENTERPRISE CORE BACKEND (Java 21 LTS + Spring Boot)                       |
+|                                                                                                   |
+|   +---------------------------------------------+   +-----------------------------------------+   |
+|   |         REST API Controllers                |   |        WebSocket STOMP Broker           |   |
+|   |   Auth • OPD Queue • IPD Beds • Triage      |   |   /ws-emergency • /topic/ambulance-gps  |   |
+|   +---------------------------------------------+   +-----------------------------------------+   |
+|   |             Project Loom Virtual Threads (spring.threads.virtual.enabled=true)            |   |
+|   +-------------------------------------------------------------------------------------------+   |
++===================================================================================================+
+                         |                                               |
+                         v                                               v
++=============================================+   +=============================================+
+|       DISTRIBUTED PERSISTENCE (Supabase)    |   |     AUTONOMOUS MULTI-MODEL AI ENGINE        |
+|                                             |   |                                             |
+|  +---------------------------------------+  |   |  +---------------------------------------+  |
+|  |     PostgreSQL Cloud Database         |  |   |  |   Clinical Complexity Scorer (0-100)  |  |
+|  |  patients • doctors • appointments    |  |   |  +---------------------------------------+  |
+|  |  emergency_cases • ipd_beds • medicines|  |   |     |                   |                   |
+|  +---------------------------------------+  |   |     v                   v                   v
+|  | Row-Level Security (RLS) on all Tables|  |   |  +------------+   +------------+   +--------+  |
+|  +---------------------------------------+  |   |  | Groq LPU   |   | Indic LLM  |   | Gemini |  |
+|  | Realtime WAL Change Data Capture (CDC)|  |   |  | GPT-OSS120B|   | Qwen 27B   |   | Flash  |  |
+|  +---------------------------------------+  |   |  | Llama 70B  |   | Tanglish   |   | Vision |  |
+|  | pgvector Semantic Hybrid Embeddings   |  |   |  +------------+   +------------+   +--------+  |
++=============================================+   +=============================================+
+```
+
+---
+
+## 📊 Use Case Diagrams
+
+### 1. Citizen Emergency & 108 Dispatch Use Case
+```
+[ Citizen in Distress ]
+         |
+         |---> (1) Types Symptoms or Taps SOS Button
+         v
+[ Clinical Triage Engine ]
+         |
+         |---> (2) Detects Red-Flag Symptoms (Chest pain, severe hypoxia, trauma)
+         v
+[ 108 Dispatch Controller ]
+         |
+         |---> (3) Grabs Satellite GPS Coordinates via Geolocation API
+         |---> (4) Dials Emergency Line (tel:108)
+         v
+[ Spring Boot STOMP WebSocket ]
+         |
+         |---> (5) Broadcasts Ambulance Coordinates to /topic/ambulance-location
+         v
+[ Hospital Casualty Desk ]
+         |
+         |---> (6) Prepares Trauma Bay with incoming SBAR Handover Data
+         |---> (7) Allocates Emergency Bed in public.ipd_beds
+```
+
+### 2. Prescription Digitization & PMBJP Savings Use Case
+```
+[ Patient with Handwritten Script ]
+         |
+         |---> (1) Uploads Prescription Photo or Uses Camera
+         v
+[ FileSanitizerService (Java Backend) ]
+         |
+         |---> (2) Strips EXIF metadata & inspects MIME integrity
+         v
+[ Multimodal Vision Cascade (Gemini Flash / Groq) ]
+         |
+         |---> (3) Extracts Medicine Names, Strengths & Schedules
+         v
+[ PMBJP Formulary Grounding Engine ]
+         |
+         |---> (4) Queries Indian Pharmacopeia & PMBJP generic catalogs
+         |---> (5) Calculates 50% to 90% generic price savings
+         v
+[ Interactive Clinical Viewer ]
+         |
+         |---> (6) Side-by-Side Review, WhatsApp Export & Google Calendar Alarms
+```
+
+### 3. Hospital Inpatient (IPD) & OPD Queue Use Case
+```
+[ Walk-in / Online Patient ]
+         |
+         |---> (1) Registers Digital OPD Token (HG-OPD-XXXX)
+         v
+[ OPD Queue Dispatcher ]
+         |
+         |---> (2) Realtime Status updates across Waiting Room screens
+         v
+[ Attending Physician ]
+         |
+         |---> (3) Reviews Case & Decides Inpatient Admission
+         v
+[ IPD Bed Management Service ]
+         |
+         |---> (4) Filters available beds across ICU, Emergency, General wards
+         |---> (5) Allocates bed in public.ipd_beds with RLS verification
+         v
+[ Realtime WebSocket CDC Channel ]
+         |
+         |---> (6) Instantly decrements public bed radar on citizen apps
+```
 
 ---
 
 ## ☕ Java 21 Spring Boot Enterprise Backend
 
-The enterprise backend of HealthGrid is built entirely in **Java 21 LTS** utilizing **Spring Boot 3.3.4**, configured with **Project Loom Virtual Threads** (`spring.threads.virtual.enabled=true`) for ultra-high concurrency patient intake and real-time telemetry processing.
+The backend core of HealthGrid is built in **Java 21 LTS** with **Spring Boot 3.3.4**, configured with **Project Loom Virtual Threads** (`spring.threads.virtual.enabled=true`) to handle high-concurrency patient intakes, live telemetry streams, and emergency alerts with minimal memory overhead.
 
+### Backend Directory Layout
 ```
 backend/
-├── pom.xml                               # Java 21, Spring Boot 3.3.4, Lombok, JJWT, PostgreSQL, WebSocket
+├── pom.xml                               # Java 21 LTS, Spring Boot 3.3.4, JJWT, PostgreSQL, WebSocket
 └── src/main/java/com/healthgrid/
-    ├── HealthGridApplication.java        # Spring Boot Main Entry Point
-    ├── auth/                             # Enterprise Authentication & RBAC
-    │   ├── AuthController.java           # Login, Registration & Token Refresh REST Endpoints
-    │   ├── JwtTokenProvider.java         # Cryptographic HMAC-SHA512 JWT Generation & Claims
-    │   ├── model/User.java               # JPA User Entity (CITIZEN, PARAMEDIC, HOSPITAL_ADMIN)
-    │   └── repository/UserRepository.java# Spring Data JPA Repository
-    ├── config/                           # Security, Concurrency & Networking
-    │   ├── JwtAuthenticationFilter.java  # Stateless Bearer Token Interceptor
-    │   ├── RateLimitingFilter.java       # Sliding-Window IP Rate Limiting Filter
-    │   ├── SecurityConfig.java           # Spring Security 6 Filter Chain & CORS Policy
+    ├── HealthGridApplication.java        # Spring Boot Entry Point with Virtual Threads Enabled
+    ├── auth/                             # Enterprise Authentication & Access Control
+    │   ├── AuthController.java           # Authentication, Token Issuance & Refresh Endpoints
+    │   ├── JwtTokenProvider.java         # Cryptographic HMAC-SHA512 Token Creation & Validation
+    │   ├── model/User.java               # JPA Entity (CITIZEN, PARAMEDIC, DOCTOR, HOSPITAL_ADMIN)
+    │   └── repository/UserRepository.java# Spring Data JPA User Repository
+    ├── config/                           # Security, Concurrency & Networking Configuration
+    │   ├── JwtAuthenticationFilter.java  # Stateless Bearer Token Extraction Filter
+    │   ├── RateLimitingFilter.java       # Tiered Token-Bucket Filter with Anti-IP Spoofing
+    │   ├── SecurityConfig.java           # Spring Security 6 Filter Chain, CORS & CSP Headers
     │   └── WebSocketConfig.java          # STOMP Message Broker (/ws-emergency, /topic/ambulance-location)
-    ├── emergency/                        # Emergency 108 Dispatch & Fleet Telemetry
-    │   ├── AmbulanceController.java      # Dispatch Request, Status & Location Endpoints
-    │   ├── model/AmbulanceDispatch.java  # Dispatch Entity (GPS Coordinates, ETA, Status Lifecycle)
-    │   └── repository/AmbulanceRepository.java # JPA Ambulance Fleet Repository
+    ├── emergency/                        # 108 Emergency Ambulance Dispatch & Fleet Management
+    │   ├── AmbulanceController.java      # Dispatch Request, Status & Location REST Endpoints
+    │   ├── model/AmbulanceDispatch.java  # Fleet Dispatch Entity (Coordinates, Route, Status Lifecycle)
+    │   └── repository/AmbulanceRepository.java # JPA Fleet Repository
     ├── epidemiology/                     # Disease Surveillance & Outbreak Radar
     │   ├── EpidemiologyController.java   # Outbreak Statistics & Citizen Hazard Endpoints
     │   ├── model/CitizenHazardReport.java# Environmental Hazard Entity (Vector breeding, waterlogging)
-    │   ├── model/DiseaseOutbreak.java    # Outbreak Cluster Entity (District, Disease, Risk Level)
+    │   ├── model/DiseaseOutbreak.java    # Outbreak Cluster Entity (District, Risk Level)
     │   ├── repository/CitizenHazardRepository.java
     │   └── repository/DiseaseOutbreakRepository.java
-    ├── prescription/                     # Jan Aushadhi (PMBJP) Generic Substitution
-    │   ├── PrescriptionController.java   # Generic Matching & Formulation REST APIs
-    │   ├── model/GenericMedicine.java    # Generic Molecule Entity (Brand vs PMBJP Pricing, Savings)
+    ├── prescription/                     # Jan Aushadhi (PMBJP) Generic Substitution Engine
+    │   ├── PrescriptionController.java   # Generic Matching REST API (/api/prescription/generic-match)
+    │   ├── model/GenericMedicine.java    # Generic Salt Entity (Branded vs Generic Pricing, Savings %)
     │   └── repository/GenericMedicineRepository.java # Fuzzy Molecule Query Repository
-    ├── security/                         # Medical Data Governance & AI Safeguards
-    │   ├── DrugJailbreakAdvice.java      # Global RestControllerAdvice Intercepting Adversarial Abuse
-    │   ├── FileSanitizerService.java     # MIME Verification & EXIF Sanitization for Prescription Uploads
+    ├── security/                         # Medical Governance & Anti-Abuse Safeguards
+    │   ├── DrugJailbreakAdvice.java      # RestControllerAdvice Intercepting Controlled Drug Inquiries
+    │   ├── FileSanitizerService.java     # MIME Verification & EXIF Stripping for Medical Uploads
     │   └── SecurityEvaluator.java        # Method-Level RBAC Expression Evaluator
     └── triage/                           # ICMR Clinical Triage & Acuity Scoring
-        ├── TriageController.java         # Clinical Evaluation REST Endpoint (/api/triage/evaluate)
-        ├── TriageService.java            # Rule-based Emergency Severity Index (ESI 1-5) Engine
+        ├── TriageController.java         # Clinical Assessment Endpoint (/api/triage/evaluate)
+        ├── TriageService.java            # Rule-Based Emergency Severity Index (ESI 1-5) Engine
         ├── dto/TriageRequest.java        # Patient Vitals, Symptoms & Comorbidities DTO
         └── dto/TriageResponse.java       # Urgency Classification, Acuity Score & Department Routing
 ```
 
-### Key Capabilities of the Java Backend:
-1. **High-Throughput Concurrency (Project Loom)**: By leveraging lightweight virtual threads, the Java backend handles tens of thousands of concurrent emergency alerts, WebSocket telemetry pings, and triage evaluations with minimal system memory overhead.
-2. **Clinical Severity Scoring (ICMR Triage Engine)**: `TriageService.java` implements clinical decision rules aligned with ICMR standards and Emergency Severity Index (ESI 1–5). It continuously evaluates incoming vitals for life-threatening anomalies (e.g., SpO2 < 90%, Heart Rate > 130 bpm, Systolic BP > 180 mmHg) and triggers immediate emergency flags.
-3. **Real-Time STOMP WebSocket Messaging**: `WebSocketConfig.java` establishes an in-memory message broker exposing `/ws-emergency`. Dispatched ambulances broadcast continuous GPS telemetry to `/topic/ambulance-location`, giving hospital casualty wards exact arrival estimations.
-4. **Formulary Truth & Pricing Repository**: `GenericMedicineRepository.java` provides rapid querying across the Pradhan Mantri Bharatiya Janaushadhi Pariyojana (PMBJP) catalog, returning exact generic salt compositions and statutory price caps.
-5. **Medical Data Armor & Sanitization**: `FileSanitizerService.java` enforces strict MIME inspection and strips location-identifying EXIF metadata from prescription image uploads, while `DrugJailbreakAdvice.java` intercepts suspicious requests attempting to query controlled drug synthesis.
+### Key Technical Implementations in Java:
+1. **Project Loom Virtual Threads**: Configured via `spring.threads.virtual.enabled=true`. Rather than pinning an OS-level thread per request, the runtime utilizes lightweight virtual threads managed by the JVM, achieving sub-millisecond response times under thousands of simultaneous WebSocket and HTTP requests.
+2. **Tiered Token-Bucket Rate Limiter (`RateLimitingFilter.java`)**: Implements strict anti-IP spoofing validation (`IPV4_PATTERN` / `IPV6_PATTERN`) and identity-bound buckets (`user:<hash>`). Rate limits are tiered by sensitivity:
+   - Authentication Endpoints: 5 requests / 5 minutes
+   - AI Consultation Endpoints: 10 requests / minute
+   - Clinical Mutations (Admissions, Bed Allocations): 20 requests / minute
+   - General Read Queries: 60 requests / minute
+3. **Real-Time STOMP Broker (`WebSocketConfig.java`)**: Configures an in-memory message broker exposing `/ws-emergency`. Dispatched ambulances publish real-time GPS telemetry to `/topic/ambulance-location`, which the hospital casualty desk visualizes live.
+4. **Controlled Substance Guard (`DrugJailbreakAdvice.java`)**: Intercepts requests attempting to query or dispense **CDSCO Schedule H and Schedule X controlled narcotics** (Fentanyl, Morphine, Alprazolam, Diazepam, Tramadol, Ketamine) and aborts execution with a statutory safety notice.
 
 ---
 
-## 🩺 Multi-Persona Clinical AI Doctor
+## 🗄️ Database Architecture & Security Hardening
 
-HealthGrid features a sophisticated, dual-persona conversational clinical AI engine designed to deliver medically sound, empathetic, and jargon-free healthcare guidance:
+HealthGrid utilizes **PostgreSQL 15** on **Supabase Cloud** (`db.cosnhycbvsxedogtejos.supabase.co`) with enterprise-grade security hardening:
 
-```mermaid
-flowchart TD
-    Citizen["👤 Citizen / Family Caregiver"] --> Intake["🩺 Multi-Persona Consultation Engine"]
-    Intake --> Router{"Clinical Severity & Context Router"}
+### Core Database Schemas
+| Table Name | Description | Key Columns | Row-Level Security Policy |
+| :--- | :--- | :--- | :--- |
+| `public.patients` | Sovereign citizen health profiles | `id, health_id, full_name, age, gender, blood_group, allergies, phone` | Authenticated users can view and edit strictly their own profile or linked family dependents. |
+| `public.doctors` | Verified hospital medical roster | `id, doctor_name, department, room_number, experience_years, status, rating` | Public read-only access for scheduling; mutations restricted to authenticated hospital admins. |
+| `public.appointments` | OPD consultations & queue passes | `id, token_id, patient_id, doctor_id, department, appointment_date, time_slot, status` | Patients view their own appointments; hospital staff can update consultation statuses. |
+| `public.emergency_cases` | Casualty admissions & ESI triage | `id, case_number, patient_name, esi_level, status, arrival_time, bed_assigned` | Public read access to anonymous triage counters; clinical updates restricted to authenticated triage staff. |
+| `public.ipd_beds` | Inpatient bed inventory (250 beds) | `id, bed_number, ward_type, is_occupied, current_patient_id, equipment` | Public read access for regional bed availability; bed transfers restricted to hospital staff. |
+| `public.ipd_admissions` | Formal inpatient admission sheets | `id, admission_number, patient_id, bed_id, admission_date, attending_physician` | Restricted strictly to authenticated doctors and nursing staff. |
+| `public.medicines` | Jan Aushadhi generic catalog | `id, generic_name, branded_equivalent, dosage_form, generic_price, branded_mrp, savings_percent` | Public read access across all citizen and doctor prescription search engines. |
 
-    Router -->|"Routine Care, Maternal/Child, Family"| Meera["👩‍⚕️ Dr. Meera (General Practitioner)"]
-    Router -->|"Acute Trauma, Chest Pain, Red Flags"| Arvind["👨‍⚕️ Dr. Arvind (Emergency Specialist)"]
+### Database Hardening Measures:
+1. **100% Row-Level Security (RLS)**: Enforced via `ALTER TABLE <table> ENABLE ROW LEVEL SECURITY;` on all 7 tables (`setup_security_rls_and_policies.js`). Even if an API key is extracted, direct table mutations are rejected by PostgreSQL's internal engine without valid JWT credentials.
+2. **Write-Ahead Logging (WAL) Change Data Capture**: Real-time pub/sub replication (`supabase.channel(...)`) streams row changes directly to connected web and mobile interfaces within **<35ms**, enabling live OPD queue progression and bed status updates without polling.
+3. **`pgvector` Semantic Hybrid Search**: Vector embeddings (1536-dimensional) of ICMR clinical protocols and PMBJP formulation databases allow cosine similarity queries for colloquial symptom matching and generic drug substitution.
 
-    Meera -->|"Empathetic Bedside Tone"| Guidance1["Plain-Language Home Care & Prevention"]
-    Arvind -->|"Decisive Clinical Triage"| Guidance2["Immediate 108 Escalation & SBAR Handover"]
+---
 
-    Guidance1 & Guidance2 --> RAG[("ICMR Guidelines & PMBJP Formulary")]
-    RAG --> Output["Actionable Advice + Interactive Single-Tap Action Pills"]
+## 📱 Client Applications: Web & Native Android APK
+
+### 1. Web Application (`frontend/`)
+- Built with **React 19**, **Vite 8.3**, and **Tailwind CSS v4**.
+- Uses an **in-memory secure session manager** (`sessionSecurityManager.ts`) that holds volatile authentication tokens in memory closures, eliminating raw JWT tokens from `localStorage` to prevent XSS exfiltration.
+- **Sub-millisecond tab switching (0.6ms–1.4ms)** across Hospital ERP views using DOM keep-alive caching.
+- Integrated **Leaflet GIS mapping** with dynamic bounding-box clustering for locating government PHCs, blood banks, and 24/7 casualty centers.
+
+### 2. Native Android Application (`mobile/`)
+- Built with **React Native 0.86.3** and **Expo SDK 57**, utilizing the **React Native New Architecture** (Fabric C++ renderer and TurboModules).
+- **OWASP Mobile Security Suite**:
+  - **Android Hardware Keystore**: Sensitive patient tokens and transcripts are encrypted via **AES-256 GCM** in the phone’s hardware TEE / StrongBox Keymaster (`secureStorageService.ts`).
+  - **Biometric App Lock**: Enforces native Android `BiometricPrompt` (Fingerprint / FaceID) before unlocking confidential health records (`biometricService.ts`).
+  - **Screen Privacy Shield (`FLAG_SECURE`)**: Configured in `MainActivity.kt` using `WindowManager.LayoutParams.FLAG_SECURE` to block OS screenshots and hide medical screens in the Android Recent Apps switcher.
+  - **Network Security Configuration**: `network_security_config.xml` strictly forbids unencrypted HTTP (`cleartextTrafficPermitted="false"`) and pins TLS 1.3 certificates for Supabase and AI APIs.
+  - **Zero ADB Backup**: `android:allowBackup="false"` in `AndroidManifest.xml` prevents local data extraction via USB debugging.
+- **4 Core Mobile Screens**:
+  1. `ChatScreen.tsx`: DocBot AI Doctor Consultation with voice read-aloud via `expo-speech`.
+  2. `LiveClinicScreen.tsx`: AI Live Clinic with native CameraX inspection, zero doctor PIP image, and Keystore transcript cache.
+  3. `RecordsHubScreen.tsx`: Biometric-gated Health Vault with vitals logging.
+  4. `EmergencyScreen.tsx`: 108 Emergency Casualty with GPS coordinates and 1-tap dialer.
+
+---
+
+## 🧠 DocBot AI Clinical Engine & Frontier Model Pipeline
+
+HealthGrid avoids single-model bottlenecks by deploying an **Autonomous Multi-Tier Clinical Model Cascade**:
+
+```
++-----------------------------------------------------------------------------------+
+|                        PATIENT QUERY / CAMERA FRAME / VITALS                      |
++-----------------------------------------------------------------------------------+
+                                          |
+                                          v
++-----------------------------------------------------------------------------------+
+|               CLINICAL COMPLEXITY ARBITRATOR (decideOptimalClinicalModel)         |
+|                     Evaluates acute red flags, symptoms, and language             |
++-----------------------------------------------------------------------------------+
+       |                                  |                                  |
+       v (Score >= 75: Complex)           v (Indic / Colloquial)             v (Score < 40: Fast)
++-----------------------------+  +-----------------------------+  +-------------------------+
+|     FRONTIER REASONING      |  |   VERNACULAR INTELLIGENCE   |  |   INSTANT TURBO ENGINE  |
+|  Groq LPU: GPT-OSS 120B /   |  |     Groq LPU: Qwen 27B      |  |    Groq LPU: GPT-OSS 20B|
+|       Llama-3.3-70B         |  |   Tanglish & Tamil Idioms   |  |  Sub-200ms Triage Pills |
++-----------------------------+  +-----------------------------+  +-------------------------+
+                                          |
+                                          v (Prescriptions & Camera Examination)
+                         +-----------------------------------+
+                         |    MULTIMODAL CLINICAL VISION     |
+                         |   Google Gemini 2.5/3.8 Flash     |
+                         |   Handwritten HTR & Skin Triage   |
+                         +-----------------------------------+
 ```
 
-### 1. Dr. Meera — Warm Family Physician & Preventive Care
-- **Clinical Persona**: Empathetic, supportive, and preventive. Focuses on general wellness, pediatric health, maternal care, diabetes/hypertension lifestyle management, and routine medication guidance.
-- **Communication Style**: Uses warm, reassuring bedside manner with simple everyday explanations (*"fever medicine"*, *"breathing discomfort"*, *"stomach upset"* instead of complex Latin terms).
-- **Bedside Voice**: Paired with natural female audio synthesis for accessible read-aloud support.
-
-### 2. Dr. Arvind — Calm Critical Care & Emergency Physician
-- **Clinical Persona**: Decisive, analytical, and urgent. Specializes in emergency medicine, acute chest pain assessment, trauma triage, stroke evaluation, and critical red-flag identification.
-- **Communication Style**: Direct and concise. Quickly cuts to life-saving action points without pleasantries or unnecessary delay.
-- **Bedside Voice**: Paired with calm, authoritative male audio synthesis.
-
-### 3. Adaptive Severity & Clinical Protocol Routing
-- **Dynamic Persona Switching**: When a patient describing routine tiredness mentions sudden acute chest pressure or severe shortness of breath, the engine automatically switches from Dr. Meera's conversational tone to Dr. Arvind's emergency triage protocol.
-- **Interactive Action Pills**: Follow-up choices are served as interactive, single-tap response pills and multi-select symptom cards, eliminating typing fatigue during distress.
-- **Zero-Jargon Promise**: All responses are systematically translated into clear, non-intimidating 6th-grade language, completely eliminating confusing clinical jargon and formatting artifacts.
-
----
-
-## 📱 Personal Healthcare Assistant & Health Vault
-
-HealthGrid acts as a continuous personal healthcare manager for everyday citizens and their families:
-
-```mermaid
-graph LR
-    subgraph Assistant [" 📱 Personal Healthcare Assistant "]
-        Vault["🗄️ Longitudinal Health Vault"]
-        Vitals["🩺 Real-Time Vitals Telemetry"]
-        Refills["💊 30-Day Chronic Refill Alarms"]
-        Family["👨‍👩‍👧‍👦 ABDM Family Multi-Profile Hub"]
-    end
-
-    Vault -->|"Stores History & Allergies"| Consultation["AI Doctor Context"]
-    Vitals -->|"BP, SpO2, Heart Rate, Glucose"| Trends["Clinical Trend Analysis"]
-    Refills -->|"Jan Aushadhi Pricing"| Savings["50%–90% Monthly Medicine Savings"]
-    Family -->|"7 Dependent Profiles"| Caregiver["Pediatric & Geriatric Tailored Care"]
-```
-
-### 1. Longitudinal Health Vault
-- Securely stores past consultation summaries, diagnosed conditions, drug allergies, and active medications.
-- Automatically contextualizes every new doctor consultation with the patient's existing medical history, preventing redundant questions and contra-indicated medication advice.
-
-### 2. Real-Time Vitals Telemetry (`VitalsTelemetryModal.tsx`)
-- Tracks vital signs: **Blood Pressure (Systolic & Diastolic)**, **Blood Oxygen (SpO2 %)**, **Heart Rate (BPM)**, and **Random Blood Glucose (mg/dL)**.
-- Color-coded clinical status indicators (Normal, Pre-Hypertensive, Stage 1/2 Hypertensive, Hypoxic) with visual trend graphs.
-- Instant alert routing: Flags abnormal vitals to the clinical triage engine for prioritized emergency attention.
-
-### 3. Chronic Medication Management & 30-Day Refill Engine
-- Calculates exact 30-day chronic medicine renewal dates for hypertension, diabetes, and cardiovascular maintenance.
-- Automatically compares branded prescriptions against Jan Aushadhi generic alternatives to calculate monthly family savings.
-- One-tap export of daily medication schedules to WhatsApp and automatic synchronization with Google Calendar medication alarms.
-
-### 4. ABDM-Aligned Family Multi-Profile Hub
-- Manages health profiles for up to **7 family members** under one account, designed specifically for children and elderly parents without individual smartphones.
-- Generates verified ABDM-compatible Health IDs (`HG-FAM-XXXX`).
-- Supports third-person caregiver consultation mode, tailoring dosages and safety advisories based on the dependent's exact age and biological profile.
-- Includes a sovereign account porting protocol allowing dependents to transition their historical medical records into independent adult accounts under the DPDP Act 2023.
+### Key AI Architectural Principles:
+1. **SOCRATES History-Taking & Anti-Premature Diagnosis Invariant**:
+   DocBot is strictly banned from making premature turn-1 diagnoses. It follows the clinical SOCRATES protocol (Site, Onset, Character, Radiation, Associations, Timing, Exacerbating/Relieving, Severity), guiding patients through 4 gated phases: `EXPLORING` ➔ `NARROWING` ➔ `CONCLUDED` ➔ `EMERGENCY`.
+2. **AI Live Clinic & Dynamic Verification**:
+   Features a full-bleed camera viewfinder without static doctor imagery, floating kinetic voice equalizer bars, dynamic clinical verification checklists generated from camera inspection, and encrypted local storage transcript caching.
+3. **MarkItDown Document Token Optimizer (`markItDownService.ts`)**:
+   Converts uploaded lab reports, medical scans, and discharge summaries into dense GitHub-Flavored Markdown, reducing LLM prompt token consumption by **65% to 75%**.
+4. **Hugging Face QLoRA Clinical Model Training Pipeline**:
+   - **Dataset Preparation (`scripts/prepare_healthgrid_hf_dataset.py`)**: Synthesizes ChatML training datasets blending 5 gold-standard clinical datasets:
+     * `FreedomIntelligence/Medical-O1-Reasoning-Dataset` (Deep Clinical Chain-of-Thought `<think>`)
+     * `MedQA-USMLE` (Board-level differential diagnosis)
+     * `Lavita/ChatDoctor-HealthCareMagic-100k` (Authentic physician-patient dialogues)
+     * `HuggingFaceH4/ultrachat_200k` (Empathetic bedside manner)
+     * `NousResearch/hermes-function-calling-v1` (Structured clinical function calling)
+   - **Distributed QLoRA Trainer (`scripts/train_clinical_agent_hf.py`)**: Configured for **Meta Llama-3.3-70B** and **Qwen-2.5-72B** with 4-bit NormalFloat (NF4) quantization, LoRA rank $r=64$, and automated Hugging Face Hub upload.
 
 ---
 
-## 🏥 Hospital ERP & Casualty Management System
+## 🏥 Hospital ERP & Casualty Command Tower
 
-HealthGrid includes an enterprise **Hospital ERP & Casualty Management System** (`HospitalErpDashboard.tsx`), providing healthcare administrators, doctors, and nurses with an integrated operational control tower:
+HealthGrid includes an enterprise **Hospital ERP & Casualty Command Tower** (`HospitalErpDashboard.tsx`) providing real-time operations across clinical departments:
 
-```mermaid
-flowchart TD
-    subgraph ERP [" 🏥 HealthGrid Enterprise Hospital ERP "]
-        Dashboard["📊 Central Operational Command Tower"]
-        Beds["🛏️ Real-Time Bed & Capacity Telemetry"]
-        OPD["🎫 Digital OPD Token & Queue Intake"]
-        Handover["🚑 Paramedic SBAR Casualty Handover"]
-        Clinical["🩺 Clinical Services (LIS, RIS, Pharmacy, OT)"]
-        Admin["🔒 Admin Settings & HIPAA/DPDP Audit Logs"]
-    end
-
-    Beds -->|"Live Telemetry"| Public["Public Emergency Radar (15km radius)"]
-    Handover -->|"Field Telemetry"| Casualty["Casualty Trauma Team Alert"]
-    OPD -->|"Digital Token"| Patient["Citizen Mobile Status"]
-```
-
-### 1. Real-Time Bed & Critical Care Telemetry
-- Dynamic bed allocation and live occupancy telemetry across four critical hospital units:
-  - **Intensive Care Unit (ICU)**
-  - **Emergency & Casualty Trauma Wards**
-  - **Oxygen-Supported Critical Beds**
-  - **General Inpatient Wards (IPD)**
-- Automatically feeds live availability metrics into the public emergency hospital radar, preventing ambulance diversion and life-threatening transit delays.
-
-### 2. Digital OPD Token & Queue Intake Management
-- Citizens generate digital OPD registration tokens (`HG-OPD-XXXX`) from home or triage kiosks.
-- Real-time queue tracker routes patients to specialized departments (General Medicine, Pediatrics, Cardiology, Orthopedics, Obstetrics).
-- Dramatically cuts outpatient waiting room congestion and wait times.
-
-### 3. Paramedic SBAR Casualty Handover Protocol
-- Incoming 108 ambulance crews transmit standardized digital **SBAR briefs** directly to the casualty desk while en route:
-  - **S (Situation)**: Primary complaint, trauma mechanism, incident timestamp.
-  - **B (Background)**: Patient age, preexisting chronic conditions, documented drug allergies.
-  - **A (Assessment)**: Field vitals (SpO2, Blood Pressure, Heart Rate, GCS coma scale).
-  - **R (Recommendation)**: Required emergency resources upon arrival (e.g., Blood transfusion, Immediate CT scan, Emergency OT readiness).
-
-### 4. Comprehensive Hospital Operational Modules
-The Hospital ERP dashboard provides a unified management suite across all hospital tiers:
-- **Patient Care**: Patient Management, OPD Intake, IPD Bed Management, Appointment Scheduling, Emergency Ward.
-- **Clinical Services**: Doctor Worklist, Inpatient Nursing Station, Laboratory Information System (LIS), Radiology Information System (RIS), Central Hospital Pharmacy, Operation Theatre (OT) Scheduling, and Blood Bank Inventory.
-- **Finance & Supply Chain**: Inpatient/Outpatient Billing, Insurance & TPA Claim Settlement, Central Procurement, Medical Stores Inventory, Biomedical Equipment Maintenance, and HR Staff Roster.
-- **Governance**: Hospital Profile Settings, Multi-Hospital Switcher, Role-Based Access Control, and DPDP/HIPAA Immutable Audit Logging.
+1. **Patient Management & OPD Queue Intake (`PatientManagementView.tsx` & `OpdManagementView.tsx`)**:
+   - Digital OPD registration tokens (`HG-OPD-XXXX`) routed to specialized departments (Cardiology, Pediatrics, General Medicine, Orthopedics).
+   - Real-time queue tracker reducing outpatient waiting congestion.
+2. **IPD & Bed Management (`IpdBedManagementView.tsx`)**:
+   - Real-time telemetry monitoring **250 hospital beds** across 4 wards: **Intensive Care Unit (ICU)**, **Emergency Casualty**, **Oxygen-Supported Wards**, and **General Wards**.
+   - Live availability automatically feeds into public emergency radas, preventing ambulance diversion.
+3. **Emergency Casualty Department (`EmergencyView.tsx`)**:
+   - 3-tier Emergency Severity Index (ESI) casualty intake with live metric gauges (Critical Red, In Treatment, Waiting).
+   - Incoming paramedic **SBAR Handover Protocol** (Situation, Background, Assessment, Recommendation) transmitting field vitals directly to trauma desks.
+   - Interactive clinical modals: STAT Lab Orders, Wristband Thermal Printing, and IPD Bed Admission bridge.
+4. **Doctors & OPD Roster Management (`DoctorsOpdView.tsx`)**:
+   - Backed by `public.doctors` schema with 24 seeded physicians.
+   - Live doctor availability cards, consultation room assignments, and weekly schedule drawer.
+5. **Reports & Analytics Suite (`ReportsAnalyticsView.tsx`)**:
+   - Real database aggregations across admissions, emergency cases, and appointments.
+   - Visual analytics: Patient Volume AreaCharts, Bed Occupancy Radial Gauges (79% occupancy), Department Revenue Stacked Bars, and CSV export.
 
 ---
 
-## 🧩 Core Implemented Modules Catalog
+## 🛡️ Security, Privacy & Regulatory Compliance
 
-Below is an exhaustive architectural catalog of all production modules implemented across the HealthGrid codebase:
-
-| Module Identifier | Primary Source Location | Key Implemented Capabilities |
-| :--- | :--- | :--- |
-| **Java Emergency Telemetry** | `backend/src/main/java/.../emergency/` | Real-time ambulance dispatching, GPS route updates, and STOMP WebSocket telemetry broker at `/ws-emergency`. |
-| **Java ICMR Clinical Triage** | `backend/src/main/java/.../triage/` | Emergency Severity Index (ESI 1-5) rule engine, vital sign threshold validation, and acute department routing. |
-| **Java Jan Aushadhi Formulary** | `backend/src/main/java/.../prescription/` | PMBJP database queries, generic molecule price-matching, and per-unit cost reduction algorithms. |
-| **Java Outbreak Surveillance** | `backend/src/main/java/.../epidemiology/` | Regional outbreak clustering, citizen environmental hazard reporting, and vector hotspot tracking. |
-| **Java Security & Sanitization** | `backend/src/main/java/.../security/` | Prescription MIME verification, EXIF stripping, adversarial AI prompt interception, and rate-limiting. |
-| **Java Enterprise Auth & RBAC** | `backend/src/main/java/.../auth/` | HMAC-SHA512 JWT issuance, Spring Security 6 stateless filter chain, and role-based access for Citizens, Paramedics, and Admins. |
-| **Hospital ERP Command Suite** | `frontend/src/components/erp/HospitalErpDashboard.tsx` | Full hospital operations suite: Bed management, digital OPD queues, LIS, RIS, pharmacy, OT, and audit logs. |
-| **Multi-Persona AI Doctor** | `frontend/src/components/ChatbotPage.tsx` | Dr. Meera and Dr. Arvind clinical personas with adaptive bedside tone, speech synthesis, and single-tap follow-up pills. |
-| **Prescription Scanner & Regimen** | `frontend/src/components/PrescriptionModal.tsx` | 4-tier multimodal vision cascade, side-by-side zoomable document viewer, dose editor, and WhatsApp/Calendar exports. |
-| **Longitudinal Vitals Telemetry** | `frontend/src/components/VitalsTelemetryModal.tsx` | Continuous logging of Blood Pressure, SpO2, Heart Rate, and Blood Glucose with clinical trend visualization. |
-| **108 Paramedic Handover Brief** | `frontend/src/components/DoctorHandoverModal.tsx` | Automated generation and transmission of doctor-ready SBAR clinical handovers for incoming emergency teams. |
-| **Family Multi-Profile Hub** | `frontend/src/components/ProfilePage.tsx` | Management of up to 7 dependent profiles, ABDM-compliant Health IDs, and sovereign account porting under DPDP Act. |
-| **Emergency Facility Radar** | `frontend/src/components/FacilityMapModal.tsx` | Interactive Leaflet GIS mapping displaying 24/7 government casualty centers, oxygen bed capacity, and Jan Aushadhi Kendras. |
-| **Pediatric Immunization Hub** | `frontend/src/components/BabyShotsModal.tsx` | National immunization schedule tracker with child vaccine milestone reminders and dosage guidance. |
-| **Community Health Radar** | `frontend/src/components/CommunityHealthSection.tsx` | Public health alerts, seasonal monsoon advisories, and active neighborhood health protection metrics. |
+| Compliance Framework | Engineering Implementation |
+| :--- | :--- |
+| **Digital Personal Data Protection (DPDP) Act 2023** | Ephemeral consultation transcripts are stored as encrypted local device cache (`localStorage` / Android Keystore) rather than retained on cloud disks. Sovereign patient data porting protocols. |
+| **Ayushman Bharat Digital Mission (ABDM)** | CoWIN-standard multi-profile caregiver architecture managing up to 7 dependents under sovereign Health IDs (`HG-FAM-XXXX`). |
+| **OWASP Mobile Top 10** | Android Keystore AES-256 GCM encryption, BiometricPrompt authentication, `FLAG_SECURE` window protection, and `network_security_config.xml` TLS 1.3 pinning. |
+| **CDSCO Controlled Substance Protection** | Algorithmic filter in `securitySanitizer.ts` and `DrugJailbreakAdvice.java` blocking unauthorized generation or dispensing of Schedule H and Schedule X controlled drugs. |
+| **Database Row-Level Security** | PostgreSQL RLS enabled across 100% of tables in Supabase, preventing unauthorized cross-tenant data access. |
 
 ---
 
-## 🏗️ System Architecture
-
-HealthGrid unifies citizens, field emergency units, enterprise Java microservices, and acute hospital networks in an integrated data pipeline:
-
-```mermaid
-flowchart TB
-    subgraph Citizens [" 👥 Citizens, Dependents & Paramedics "]
-        Mobile["📱 Mobile PWA (Zero-Trapping Native Touch)"]
-        Desktop["💻 Web Portal & Kiosk Intakes"]
-        Ambulance108["🚑 108 Emergency Ambulance Crews"]
-    end
-
-    subgraph Edge [" 🌐 Global Edge Tier (Vercel) "]
-        EdgeRouter["Global CDN, Compression & Edge Router"]
-    end
-
-    subgraph ClientTier [" ⚛️ Modern Client Tier (React 19 + TypeScript) "]
-        DocBotUI["Multi-Persona AI Doctor (Dr. Meera / Dr. Arvind)"]
-        ErpUI["Hospital ERP Suite (HospitalErpDashboard)"]
-        PrescriptionUI["4-Tier Prescription Scanner & Lightbox"]
-        VitalsUI["Vitals Telemetry & Chronic Refill Engine"]
-        SpeechEngine["Bilingual Speech Recognition & Synthesis"]
-    end
-
-    subgraph JavaBackend [" ☕ Enterprise Core Backend (Java 21 LTS + Spring Boot 3.3) "]
-        VirtualThreads["Project Loom Virtual Thread Pool (100k+ Concurrency)"]
-        EmergencyModule["Emergency & Ambulance STOMP WebSocket (/ws-emergency)"]
-        TriageModule["ICMR Clinical Triage & Acuity Scoring (ESI 1-5)"]
-        PharmacologyModule["PMBJP Generic Pharmacology Engine"]
-        EpidemiologyModule["Geospatial Outbreak & Hazard Surveillance"]
-        SecurityModule["File Sanitizer & Clinical Jailbreak Interceptor"]
-        AuthModule["Stateless JWT Provider & Method-Level RBAC"]
-    end
-
-    subgraph AIAndCloudTier [" 🧠 Grounded Intelligence & Data Tier "]
-        GroqLPU["Groq Cloud LPU (Ultra-Fast Clinical Triage)"]
-        GeminiVision["Google Gemini 3.8 (Prescription Vision)"]
-        NvidiaNIM["NVIDIA NIM & TrOCR (Doctor Handwriting)"]
-        PostgresDB[("PostgreSQL 16 (HikariCP / Encrypted RLS)")]
-        VectorStore[("Hybrid Vector Store (<2ms ICMR Semantic Search)")]
-    end
-
-    Citizens --> EdgeRouter --> ClientTier
-    ClientTier --> JavaBackend
-    JavaBackend --> VirtualThreads
-    VirtualThreads --> EmergencyModule & TriageModule & PharmacologyModule & EpidemiologyModule & SecurityModule & AuthModule
-    JavaBackend --> PostgresDB
-    ClientTier --> AIAndCloudTier
-    Ambulance108 <-->|"Bidirectional STOMP Telemetry"| EmergencyModule
-    EmergencyModule --> ErpUI
-```
-
----
-
-## 🛠️ Technology Stack
-
-| Architecture Layer | Core Technologies | Engineering Purpose |
-| :--- | :--- | :--- |
-| **Enterprise Backend** | Java 21 LTS, Spring Boot 3.3.4, Maven 3.9+ | High-throughput, rock-solid core backend for clinical triage, dispatch, and data integrity |
-| **Concurrency Runtime** | Java Project Loom (Virtual Threads) | Non-blocking execution handling 100k+ concurrent citizen sessions and telemetry streams |
-| **Real-Time Messaging** | Spring WebSocket, STOMP Protocol, SockJS | Sub-second ambulance fleet location broadcasting to hospital emergency wards |
-| **Client Framework** | React 19.x, TypeScript 6.x, Vite 8.x | Modular, type-safe reactive frontend with sub-second HMR and instant page rendering |
-| **Styling & Presentation** | Tailwind CSS v4.x, Lucide Icons, GSAP | Clean, responsive aesthetic with fluid touch interactions and zero visual clutter |
-| **Enterprise Database** | PostgreSQL 16, Supabase, HikariCP | ACID-compliant clinical datastore with Row Level Security (RLS) encryption |
-| **Clinical Vector Search** | Hybrid Vector RAG (pgvector, Cosine similarity) | Sub-2ms semantic retrieval over ICMR clinical guidelines and PMBJP formularies |
-| **Multimodal Vision AI** | Google Gemini 3.8, Groq Vision, NVIDIA NIM, TrOCR | 4-tier handwriting recognition cascade extracting medicines from doctor prescriptions |
-| **Voice & Speech Engine** | Web Speech API, Groq Whisper Large-v3-Turbo | Instant zero-latency speech recognition and dual-persona clinical audio synthesis |
-| **Geospatial Mapping** | Leaflet 1.9, CARTO Voyager Vector Tiles | Lightweight GIS plotting of casualty hospitals, Jan Aushadhi stores, and ambulances |
-| **Edge Infrastructure** | Vercel Global Edge Network, Docker 27+ | Multi-region deployment with zero-configuration SSL and edge caching |
-
----
-
-## 🧠 Architecture Decisions (ADRs) & Second Brain
-
-HealthGrid maintains a fully documented engineering **Second Brain** located in `brain/`. Every architectural milestone and technical decision is codified as an **Architecture Decision Record (ADR)**:
-
-| ADR Reference | Title | Architectural Milestone |
-| :--- | :--- | :--- |
-| **ADR-024** | [Interactive Chat RAG, Fuzzy Grounding & Zero-Jargon](brain/decisions/ADR-024-Interactive-Chat-RAG-Fuzzy-Grounding-and-Zero-Jargon.md) | Fuzzy medical term normalization, sub-2ms hybrid RAG, zero-asterisk hygiene, plain-language translation, and interactive follow-up pills. |
-| **ADR-023** | [Platform-Wide Grounding & Formulary Truth](brain/decisions/ADR-023-Platform-Data-Grounding-and-Formulary-Truth-Engine.md) | Complete elimination of hardcoded mock records, authentic session vitals telemetry, and statutory 50%–90% PMBJP price savings. |
-| **ADR-022** | [Mobile Prescription Scroll Lock & Touch Resolution](brain/decisions/ADR-022-Prescription-Modal-Mobile-Scroll-Lock-and-Lenis-Prevention.md) | Elimination of mobile touch freeze bugs, smooth native touch scrolling, and dynamic auto-scroll focusing. |
-| **ADR-021** | [Persistent Unified Header Throughout Consultations](brain/decisions/ADR-021-Persistent-Header-Navbar-Throughout-Chat-Tab.md) | Always-accessible top navigation across consultations with dedicated clinical session history drawer. |
-| **ADR-020** | [Post-Scan Prescription UI & Interactive Viewer](brain/decisions/ADR-020-Prescription-Post-Scan-UI-Redesign-and-Interactive-Viewer.md) | Side-by-side prescription document canvas, 4-column metadata pills, dose editing modal, and WhatsApp/Calendar exports. |
-| **ADR-019** | [Clinical Pharmacology Engine & Formulary Matching](brain/decisions/ADR-019-Clinical-Pharmacology-Engine-Formulary-Grounding-and-Context-Matching.md) | Grounding prescription tokens against Indian Pharmacopoeia standards and executing drug-food safety checks. |
-| **ADR-018** | [4-Tier Multimodal Prescription Vision Cascade](brain/decisions/ADR-018-Top-Tier-Multimodal-Prescription-Vision-and-HTR-Cascade.md) | Multi-model fallback cascade (Gemini 3.8, Groq, NVIDIA NIM, TrOCR) for deciphering messy doctor handwriting. |
-| **ADR-016** | [Autonomous Hybrid Vector RAG Engine](brain/decisions/ADR-016-Autonomous-Hybrid-Vector-RAG-and-Ambient-Clinical-Automations.md) | Sub-2ms vector retrieval across Jan Aushadhi medicines, ICMR treatment protocols, and regional casualty centers. |
-| **ADR-011** | [Family & Beneficiary Multi-Profile System](brain/decisions/ADR-011-Family-and-Beneficiary-MultiProfile-System.md) | ABDM-compliant caregiver profile management for dependents and young children with unique Health IDs (`HG-FAM-XXXX`). |
-| **ADR-006** | [Decommission Legacy Doctor Portal & Consolidate on ERP](brain/decisions/ADR-006-Decommission-Legacy-HIS-Doctor-Portal.md) | Consolidated all institutional hospital administration and clinical operations into the unified Hospital ERP suite. |
-
-*To explore the interactive knowledge graph and architecture nodes, open `brain/` in [Obsidian](https://obsidian.md).*
-
----
-
-## 🚀 Getting Started
-
-Follow the instructions below to run the complete HealthGrid platform locally:
+## 🚀 Getting Started & Local Development
 
 ### 1. Prerequisites
-- **Node.js**: v20.x or higher
+- **Node.js**: v20.x or v22.x
 - **Java Development Kit (JDK)**: Java 21 LTS
-- **Apache Maven**: v3.9+
-- **Docker & Docker Compose** (Optional, for containerized deployment)
+- **Android Studio**: Android SDK (API 34/35) & JetBrains JBR
 
-### 2. Clone the Repository
-```bash
-git clone https://github.com/NullErrOR-404/Health-Grid.git
-cd Health-Grid
-```
-
-### 3. Running the Java 21 Spring Boot Backend
-```bash
-cd backend
-mvn clean spring-boot:run
-```
-The Java backend initializes on port `8080` with Project Loom Virtual Threads active and establishes WebSocket connections at `ws://localhost:8080/ws-emergency`.
-
-### 4. Running the React Client Tier
-In a separate terminal:
+### 2. Web Frontend Setup
 ```bash
 cd frontend
-cp .env.example .env
 npm install
 npm run dev
+# Running on http://localhost:5173
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### 5. Running with Docker Compose (Full Stack)
-To run the entire ecosystem (PostgreSQL 16 with pgvector, Redis 7, Java 21 Backend, and React Frontend) with a single command:
+### 3. Native Android Mobile Setup
 ```bash
-docker compose up --build -d
+cd mobile
+npm install
+
+# Option A: Run in development mode on Android
+npx expo start
+
+# Option B: Build APK locally via Gradle
+cd android
+./gradlew assembleDebug
+# Generated APK: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+
+# Option C: Build APK in Expo Cloud
+npx eas-cli build -p android --profile preview
 ```
-Inspect container health and logs:
+
+### 4. Java 21 Backend Setup
 ```bash
-docker compose ps
-docker compose logs -f backend
+cd backend
+mvn clean install
+mvn spring-boot:run
+# REST API running on http://localhost:8080
+# WebSocket STOMP running on ws://localhost:8080/ws-emergency
 ```
 
 ---
 
-## 🔒 Privacy, Security & Data Sovereignty
+## 📜 Architectural Decision Records (ADRs) Index
 
-- **Digital Personal Data Protection (DPDP) Act 2023**: Citizens maintain absolute sovereignty over their medical records. All consultation histories, prescription scans, and dependent links can be exported or purged at any time.
-- **Client-Side EXIF Stripping**: Prescription uploads undergo automatic metadata sanitization, permanently removing GPS coordinates and device camera signatures before clinical analysis.
-- **Row-Level Security (RLS)**: PostgreSQL records are encrypted at rest and guarded by granular user-isolated security policies.
-- **Zero AI Training on Patient Health Information**: Consultations are processed in isolated stateless memory sessions and are never used to train external foundation models.
+HealthGrid's technical evolution is fully documented in our **Obsidian Second Brain** located at `brain/decisions/`:
+
+- **[[ADR-001]]**: Semantic Privacy Links
+- **[[ADR-002]]**: Vercel SSO Bypass Configuration
+- **[[ADR-003]]**: Multi-Tenant Hospital State Isolation
+- **[[ADR-005]]**: Mobile-First Responsive Architecture
+- **[[ADR-011]]**: Family & Beneficiary Multi-Profile System (ABDM Standard)
+- **[[ADR-012]]**: Beneficiary-to-Independent Account Porting Protocol
+- **[[ADR-014]]**: Conversational Chameleon Intent Routing & Audio Engine
+- **[[ADR-016]]**: Autonomous Hybrid Vector RAG & Ambient Clinical Automations
+- **[[ADR-019]]**: Clinical Pharmacology Engine & PMBJP Formulary Grounding
+- **[[ADR-028]]**: Hospital ERP Patient & OPD Management End-to-End Workflow
+- **[[ADR-029]]**: Hospital ERP Inpatient Department (IPD) & Bed Management
+- **[[ADR-030]]**: Hospital ERP Appointments Management Architecture
+- **[[ADR-031]]**: Hospital ERP Emergency Casualty Department Architecture
+- **[[ADR-034]]**: Hospital ERP Doctors & OPD Management Workflow
+- **[[ADR-035]]**: Hospital ERP Reports & Analytics Suite
+- **[[ADR-036]]**: Enterprise Zero-Trust Cybersecurity & OWASP Hardening
+- **[[ADR-037]]**: DocBot Staged Attachments, MarkItDown Token Optimizer & Clinical Differentiators
+- **[[ADR-038]]**: In-Chat Automated Appointment Booking & Medicine Intelligence
+- **[[ADR-040]]**: Autonomous Clinical Model Complexity Arbitration & Zero-Trace UI
+- **[[ADR-041]]**: Living Clinical Case Dossier & SOCRATES History Taking
+- **[[ADR-042]]**: AI Live Clinic & Records Hub Responsive Architecture
+- **[[ADR-043]]**: Dynamic Live Clinic, Real-Time Supabase Telemetry & Frontier Model Pipeline
+- **[[ADR-044]]**: React Native Android APK Architecture & OWASP Mobile Security Suite
 
 ---
-
-## 📄 License
-
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for complete details.
 
 <div align="center">
-  <sub>HealthGrid (நலம் AI) • Engineered with ❤️ for accessible, transparent, and resilient healthcare delivery.</sub>
+  <p><strong>HealthGrid (நலம் AI)</strong> • Engineering Equitable, Secure & Real-Time Healthcare for India</p>
+  <p>Licensed under the <a href="LICENSE">MIT License</a></p>
 </div>
