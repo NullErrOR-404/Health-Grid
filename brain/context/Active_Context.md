@@ -16,8 +16,8 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `feat(ai): 8B clinical LLM fine-tuning pipeline with 1-click Colab notebook and free-tier Hugging Face serverless cloud serving` (`d4e431f`)
-- **Latest Documentation Milestone**: Comprehensive Modular Engineering Documentation Suite created in `Docs/` covering PRD, TRD, UI/UX Design, Backend Schema, User Flow, and Implementation Plan (see [[ADR-046-Comprehensive-Engineering-Documentation-Suite-PRD-TRD-UIUX-Schema-Flow-Plan]])
+- **Latest Commit**: `feat(clinician): production-grade clinician operating system & workstation with my queue, longitudinal chart, and embedded ai assistant`
+- **Latest Documentation Milestone**: Comprehensive Modular Engineering Documentation Suite created in `Docs/` and ADR-047 Clinician Operating System (see [[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]])
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Live Aliases (All 4 Synchronized & Verified 200 OK)**:
   - `https://healthgrid-app.vercel.app`
@@ -27,6 +27,16 @@ Back to [[00_Index]]
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+- [x] Production-Grade Clinician Operating System & Workstation (see [[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]]):
+  - **Visual & UI Language**: Pixel-accurate implementation of `C:\HealthGrid\UI References\My queue Reference.png` ("My Queue" screen) with white/light-blue background, navy typography, `#0D9488` teal accents, amber attention badges, red clinical alerts, and high-density clinical workstation layout (1440px - 1920px).
+  - **Shared Reactive State Engine & Domain Models** (`frontend/src/types/clinician.ts`, `frontend/src/services/clinician/clinicianWorkflowStore.ts`): Relational data integrity across `Patient` -> `Appointment` -> `Queue` -> `Encounter` -> `Orders` -> `Results` -> `Inbox` -> `Follow-up` -> `Chart Timeline`.
+  - **Clinical Decision Support (CDS) Engine** (`frontend/src/services/clinician/cdsRulesEngine.ts`): Rule evaluation for penicillin allergies, ACEi/ARB + MRA severe hyperkalemia alerts (K+ 6.2), CKD NSAID nephrotoxicity, and annual diabetic surveillance care gaps.
+  - **My Queue Workspace** (`MyQueueView.tsx`): Top greeting ("Good morning, Dr. Mohamed ☀️"), 4-card KPI box ("Needs Your Attention ->"), queue list with status tabs, "What to Know Today" pre-visit brief card, and 3-card bottom row (Today's Schedule, Follow-ups Due, Recent Results to Review).
+  - **Clinical Encounter Workspace** (`ClinicalEncounterWorkspace.tsx`): Dedicated full-screen clinical encounter workspace (not a popup modal) featuring 10 sequential stages: 1. Overview, 2. History (HPI), 3. Examination, 4. Assessment, 5. Plan & CDS, 6. Orders, 7. Rx & Medication Reconciliation, 8. Referral, 9. Follow-up, 10. SOAP Sign & Close 🔒.
+  - **Longitudinal Patient Chart** (`PatientChartWorkspace.tsx`): Comprehensive 16-tab patient record (Overview, Timeline, Encounters, Problems, Medications, Allergies, Results, Orders, Referrals, Documents, Vitals, Histories, Care Team, Care Gaps).
+  - **Secondary Workspaces**: Appointments schedule & check-in (`ClinicianAppointmentsView.tsx`), Longitudinal Patient Registry (`PatientsDirectoryView.tsx`), Surveillance Follow-ups (`FollowUpsWorkspaceView.tsx`), Specialist Referrals (`ReferralsWorkspaceView.tsx`), 8-Category Clinical Inbox (`ClinicalInboxView.tsx`), Contextual Communication (`ClinicianMessagesView.tsx`), and Clinical Tools & Guidelines (`ClinicalToolsViews.tsx`).
+  - **Embedded HealthGrid AI Assistant** (`ClinicianAiDrawer.tsx`): Right-docked clinical assistant with kinetic voice equalizer, 6 quick prompt chips, SOAP drafting, order set application, and explicit confirmation safety gates for consequential actions.
+  - **Application Integration**: Seamless route `/clinician` / `/my-queue` lazy-loaded chunk (`ClinicianPortalLayout.js` 221 kB) and automatic redirect when logging in via `LoginModal.tsx` as `HEALTHCARE_PROFESSIONAL`.
 - [x] Comprehensive Modular Engineering Documentation Suite (`Docs/`) (see [[ADR-046-Comprehensive-Engineering-Documentation-Suite-PRD-TRD-UIUX-Schema-Flow-Plan]]):
   - **PRD (`Docs/PRD/`)**: Executive summary, 6 core personas, functional requirements (DocBot triage, Live Clinic, Jan Aushadhi, ERP), and non-functional requirements (DPDP Act 2023, CDSCO Schedule H/X guard, SLAs).
   - **TRD (`Docs/TRD/`)**: Multi-tier architecture, Java 21 Spring Boot Project Loom virtual threads, STOMP WebSockets, React Native Expo 57 OWASP Mobile Top 10 security, and multi-model AI complexity arbiter.

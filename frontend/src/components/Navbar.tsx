@@ -321,6 +321,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <span>{lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை (டோக்கன்)'}</span>
                       </button>
                     )}
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setMoreDropdownOpen(false);
+                        window.history.pushState({}, '', '/clinician');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                      }} 
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-teal-700 bg-teal-50/60 hover:bg-teal-100/70 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <Stethoscope className="w-4 h-4 text-teal-700" />
+                      <span>{lang === 'en' ? 'Clinician Portal (My Queue)' : 'மருத்துவர் பணிமனை (வரிசை)'}</span>
+                    </button>
                     <div className="border-t border-slate-100 my-1"></div>
                     <div className="px-3 py-1 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
                       {lang === 'en' ? 'Emergency 24x7' : 'அவசர உதவி'}
@@ -507,6 +519,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                         >
                           <User className="w-4 h-4 text-[#00A896]" />
                           <span>{lang === 'en' ? 'View Profile' : 'சுயவிவரம் காண்க'}</span>
+                        </button>
+
+                        {/* Clinician Workstation / My Queue */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            window.history.pushState({}, '', '/clinician');
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-teal-800 bg-teal-50/70 hover:bg-teal-100 font-semibold text-xs transition-colors cursor-pointer text-left border border-teal-200/80"
+                        >
+                          <Stethoscope className="w-4 h-4 text-teal-600" />
+                          <span>{lang === 'en' ? 'Clinician Portal (My Queue)' : 'மருத்துவர் பணிமனை'}</span>
                         </button>
 
                         {/* Family & Beneficiaries */}

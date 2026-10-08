@@ -85,8 +85,12 @@ graph TD
     DEC --> ADR42[[ADR-042-AI-Live-Clinic-and-Records-Hub-Pixel-Perfect-Redesign-and-Mobile-Optimization]]
     DEC --> ADR43[[ADR-043-Dynamic-Live-Clinic-Supabase-Telemetry-and-Frontier-Model-Pipeline]]
     DEC --> ADR44[[ADR-044-React-Native-Android-APK-Architecture-and-OWASP-Mobile-Security]]
+    DEC --> ADR45[[ADR-045-Billion-Parameter-Clinical-Model-FineTuning-and-Free-Tier-Cloud-Serving]]
+    DEC --> ADR46[[ADR-046-Comprehensive-Engineering-Documentation-Suite-PRD-TRD-UIUX-Schema-Flow-Plan]]
+    DEC --> ADR47[[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
+    MOD --> CLIN[[Clinician_Portal_Operating_System]]
 
     CTX --> ACT[[Active_Context]]
     CTX --> CRED[[Key_Credentials_and_Environments]]
@@ -115,6 +119,7 @@ graph TD
 - [[Emergency_108_Ambulance]]: Real-time ambulance dispatch with GPS ETA tracking, vitals telemetry, and digital doctor handover.
 - [[Generic_Medicines_PMBJP]]: Jan Aushadhi generic pharmaceutical store with up to 89% chronic savings engine and Kendra locator.
 - [[Hospital_Bed_Locator]]: Interactive Leaflet geospatial map locating government PHCs, casualty centers, and blood banks.
+- [[Clinician_Portal_Operating_System]]: Enterprise-grade Clinician Portal ("My Queue", longitudinal patient chart, 10-stage encounter workspace, order sets, CDS rules engine, and embedded HealthGrid AI clinical assistant).
 - [[Hospital_Information_System_HIS]]: *(Decommissioned / Deprecated)* Legacy doctor portal prototype superseded by [[Hospital_ERP_Dashboard]].
 - [[Hospital_ERP_Dashboard]]: Hospital administrator operations, dynamic credentials, inventory tracking, and clinical alerts.
 
@@ -171,6 +176,8 @@ graph TD
 - [[ADR-043-Dynamic-Live-Clinic-Supabase-Telemetry-and-Frontier-Model-Pipeline]]: Dynamic Live Clinic removing doctor PIP for full-bleed video canvas, client-side zero-trace transcript caching with local restore, authentic Supabase appointment queries with real network ping latency, dynamic vision-grounded clinical verification checklists, and frontier open-weight fine-tuning pipeline (Medical-O1, MedQA, ChatDoctor, UltraChat, Hermes).
 - [[ADR-044-React-Native-Android-APK-Architecture-and-OWASP-Mobile-Security]]: Real React Native Android application architecture (Expo SDK 57 / New Architecture) with complete OWASP Mobile Security Suite (Android Keystore AES-256, Biometric App Lock, Screen Privacy Shield FLAG_SECURE, Network Security Config, anti-ADB backup) and APK build pipelines.
 - [[ADR-045-Billion-Parameter-Clinical-Model-FineTuning-and-Free-Tier-Cloud-Serving]]: 8-Billion parameter clinical LLM fine-tuning pipeline targeting Meta Llama-3.1-8B-Instruct with Unsloth AI QLoRA on free Google Colab T4 GPU, multi-task dataset (Medical-O1, MedQA, ChatDoctor, PMBJP), and 100% free-tier cloud deployment via Hugging Face Serverless Inference API integrated into the deployed HealthGrid web and mobile apps.
+- [[ADR-046-Comprehensive-Engineering-Documentation-Suite-PRD-TRD-UIUX-Schema-Flow-Plan]]: Comprehensive 6-document engineering documentation suite (PRD, TRD, UI/UX Specification, Database Schema, System Architecture & User Flow, and 12-Week Implementation Plan) detailing HealthGrid's dual citizen/clinician operating system.
+- [[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]]: Enterprise-grade Clinician Portal architecture matching visual reference (`My queue Reference.png`) and modern EHR depth (Epic, Oracle Health, athenaOne) with minimal premium UX, reactive Pub/Sub store, 10-stage clinical encounters, CDS rules engine, longitudinal patient charts, and embedded HealthGrid AI assistant.
 
 ---
 

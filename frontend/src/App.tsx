@@ -25,6 +25,7 @@ const NotFoundPage = lazy(() => import('./components/NotFoundPage').then(m => ({
 const ThankYouPage = lazy(() => import('./components/ThankYouPage').then(m => ({ default: m.ThankYouPage })));
 const MedicineStorePage = lazy(() => import('./components/MedicineStorePage').then(m => ({ default: m.MedicineStorePage })));
 const HospitalErpDashboard = lazy(() => import('./components/erp/HospitalErpDashboard').then(m => ({ default: m.HospitalErpDashboard })));
+const ClinicianPortalLayout = lazy(() => import('./components/clinician/ClinicianPortalLayout').then(m => ({ default: m.ClinicianPortalLayout })));
 
 // Lazy-loaded On-Demand Modals
 const AmbulanceModal = lazy(() => import('./components/AmbulanceModal').then(m => ({ default: m.AmbulanceModal })));
@@ -44,6 +45,7 @@ export const prefetchRouteChunks = {
   maps: () => import('./components/FindCareNearYou'),
   medicines: () => import('./components/MedicineStorePage'),
   'hospital-erp': () => import('./components/erp/HospitalErpDashboard'),
+  'clinician-portal': () => import('./components/clinician/ClinicianPortalLayout'),
   privacy: () => import('./components/PrivacyPolicyPage'),
   ambulance: () => import('./components/AmbulanceModal'),
   prescription: () => import('./components/PrescriptionModal'),
@@ -73,7 +75,7 @@ const ViewLoadingFallback = () => (
   </div>
 );
 
-export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'hospital-erp';
+export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'hospital-erp' | 'clinician-portal';
 
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -157,6 +159,8 @@ export default function App() {
         setCurrentView('maps');
       } else if (pathname === '/medicines' || hash === '#medicines' || hash === '#/medicines') {
         setCurrentView('medicines');
+      } else if (pathname === '/clinician' || pathname === '/doctor' || pathname === '/my-queue' || hash === '#clinician' || hash === '#doctor' || hash === '#my-queue' || hash === '#/clinician') {
+        setCurrentView('clinician-portal');
       } else if (pathname === '/his' || pathname === '/doctor-portal' || hash === '#his' || hash === '#/his' || hash === '#doctor-portal' || pathname === '/hospital-erp' || pathname === '/hospital-portal' || hash === '#hospital-erp' || hash === '#hospital-portal' || hash === '#/hospital-erp') {
         setCurrentView('hospital-erp');
       } else if (hash === '#prescription' || hash === '#/prescription' || hash === '#scan-prescription') {
@@ -222,6 +226,10 @@ export default function App() {
         title = 'HealthGrid Hospital ERP | Autonomous Multi-Tenant Healthcare Operations';
         desc = 'Unified hospital ERP management: OPD and IPD censuses, real-time bed occupancy, department activity, revenue flow, and clinical alerts.';
         break;
+      case 'clinician-portal':
+        title = 'HealthGrid Clinician Operating System | My Queue & Patient Care';
+        desc = 'Production-grade enterprise clinician workstation with queue management, longitudinal charts, and embedded HealthGrid AI clinical assistant.';
+        break;
       case 'not-found':
         title = lang === 'en' ? '404 - Page Not Found | HealthGrid' : '404 - பக்கம் கிடைக்கவில்லை | HealthGrid';
         desc = lang === 'en' ? 'The requested health service page could not be located.' : 'பக்கம் கிடைக்கவில்லை.';
@@ -285,9 +293,13 @@ export default function App() {
     }
   };
 
-  const handleGlobalLoginSuccess = (_user: AuthUser) => {
+  const handleGlobalLoginSuccess = (user: AuthUser) => {
     setIsLoginOpen(false);
     setLoginNotice(null);
+    if (user.role === 'HEALTHCARE_PROFESSIONAL') {
+      navigateToView('clinician-portal');
+      return;
+    }
     if (pendingAuthActionRef.current) {
       const act = pendingAuthActionRef.current;
       pendingAuthActionRef.current = null;
@@ -706,6 +718,17 @@ export default function App() {
           initialHospital={activeErpHospital}
           adminName={activeErpAdmin}
           onExit={() => navigateToView('landing')}
+        />
+      </Suspense>
+    );
+  }
+
+  // Render Dedicated Clinician Operating System & Workstation (Matching My queue Reference.png)
+  if (currentView === 'clinician-portal') {
+    return (
+      <Suspense fallback={<ViewLoadingFallback />}>
+        <ClinicianPortalLayout
+          onExitPortal={() => navigateToView('landing')}
         />
       </Suspense>
     );
