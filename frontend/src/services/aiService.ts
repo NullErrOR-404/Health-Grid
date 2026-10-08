@@ -410,7 +410,7 @@ export function analyzeEmotionalState(query: string): EmotionalAssessment {
 const DEFAULT_GROQ_KEY = (import.meta.env.VITE_GROQ_API_KEY as string) || '';
 const DEFAULT_GEMINI_KEY = (import.meta.env.VITE_GEMINI_API_KEY as string) || '';
 const DEFAULT_HF_KEY = (import.meta.env.VITE_HF_API_KEY as string) || '';
-const DEFAULT_HF_MODEL = (import.meta.env.VITE_HF_FINE_TUNED_MODEL as string) || 'HealthGrid/clinical-agent-llama-3.1-8b-adapter';
+const DEFAULT_HF_MODEL = (import.meta.env.VITE_HF_FINE_TUNED_MODEL as string) || 'mhdsameen/healthgrid-clinical-llama-3.1-8b';
 
 class AgiIntelligenceService {
   private groqApiKey: string = DEFAULT_GROQ_KEY;
@@ -1613,7 +1613,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       { role: 'user', content: userQuery },
     ];
 
-    const hfModelTarget = this.hfFineTunedModelId || 'HealthGrid/clinical-agent-llama-3.1-8b-adapter';
+    const hfModelTarget = this.hfFineTunedModelId || 'mhdsameen/healthgrid-clinical-llama-3.1-8b';
     const endpointsToTry = [
       `https://router.huggingface.co/hf-inference/models/${hfModelTarget}/v1/chat/completions`,
       `https://api-inference.huggingface.co/models/${hfModelTarget}/v1/chat/completions`,
