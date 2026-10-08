@@ -27,6 +27,10 @@ Back to [[00_Index]]
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+- [x] 8-Billion Parameter Clinical LLM Fine-Tuning Pipeline & Free-Tier Cloud Serving (see [[ADR-045-Billion-Parameter-Clinical-Model-FineTuning-and-Free-Tier-Cloud-Serving]]):
+  - **1-Click Google Colab Notebook**: Created `notebooks/HealthGrid_Llama3_8B_Clinical_FineTuning.ipynb` utilizing Unsloth AI QLoRA on free Google Colab T4 GPU (70% VRAM reduction, 5x faster training).
+  - **Expanded Multi-Task Dataset**: Updated `scripts/prepare_healthgrid_hf_dataset.py` generating 101 training and 18 validation samples blending Medical-O1 reasoning (`<thought>`), MedQA-USMLE diagnostics, ChatDoctor bedside dialogues, Jan Aushadhi generic savings, and DPDP Act 2023 authority impersonation defenses.
+  - **Free-Tier Cloud Serverless Serving**: Connected Hugging Face Serverless Inference API (`https://router.huggingface.co/hf-inference/models/...`) directly into `frontend/src/services/aiService.ts` (`callHuggingFace`) with zero-cost hosting, automatic Groq/Gemini failover, and model dropdown selector in `VoiceChatModal.tsx`.
 - [x] React Native Android APK Architecture, OWASP Mobile Security Suite, and EAS / Gradle Build Pipelines (see [[ADR-044-React-Native-Android-APK-Architecture-and-OWASP-Mobile-Security]]):
   - **Native Architecture**: Built complete React Native Expo SDK 57 project in `mobile/` with TypeScript (0 compile errors), native navigation, and dark clinical UI tokens.
   - **Full OWASP Mobile Security Suite**:

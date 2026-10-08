@@ -464,7 +464,7 @@ Active Prescriptions: ${patientProfile.records
                 <span className="font-bold tracking-tight hidden sm:inline">{currentModel.name}</span>
                 <span className="font-bold tracking-tight sm:hidden">{currentModel.name.split(' ')[0]}</span>
                 <span className="text-[9px] bg-white/20 text-cyan-200 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider">
-                  {currentModel.provider === 'groq' ? 'Groq' : 'Gemini'}
+                  {currentModel.provider === 'huggingface' ? 'HF 8B' : currentModel.provider === 'groq' ? 'Groq' : 'Gemini'}
                 </span>
                 <ChevronDown className={`w-3 h-3 text-white/70 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
               </button>
@@ -500,13 +500,17 @@ Active Prescriptions: ${patientProfile.records
                             }`}
                           >
                             <div className={`p-2 rounded-xl mt-0.5 ${
-                              model.provider === 'google'
+                              model.provider === 'huggingface'
+                                ? 'bg-purple-500/20 text-purple-300'
+                                : model.provider === 'google'
                                 ? 'bg-cyan-500/20 text-cyan-300'
                                 : model.isReasoning
                                 ? 'bg-emerald-500/20 text-emerald-300'
                                 : 'bg-amber-500/20 text-amber-300'
                             }`}>
-                              {model.provider === 'google' ? (
+                              {model.provider === 'huggingface' ? (
+                                <Brain className="w-4 h-4 text-purple-300" />
+                              ) : model.provider === 'google' ? (
                                 <Sparkles className="w-4 h-4" />
                               ) : model.isReasoning ? (
                                 <Brain className="w-4 h-4" />
@@ -611,7 +615,7 @@ Active Prescriptions: ${patientProfile.records
                   <span className="text-white">{currentModel.name}</span>
                   <span className="text-[10px] text-slate-500">|</span>
                   <span className="text-teal-400 font-mono text-[10px]">
-                    {currentModel.provider === 'groq' ? 'Groq LPU' : 'Google Gemini'}
+                    {currentModel.provider === 'huggingface' ? 'Hugging Face Serverless' : currentModel.provider === 'groq' ? 'Groq LPU' : 'Google Gemini'}
                   </span>
                 </span>
               </div>

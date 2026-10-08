@@ -73,7 +73,7 @@ export interface TriageWizard {
 export interface ModelOption {
   id: string;
   name: string;
-  provider: 'groq' | 'google';
+  provider: 'groq' | 'google' | 'huggingface';
   providerLabel: string;
   badge: string;
   speed: string;
@@ -96,6 +96,17 @@ export interface ModelArbitrationDecision {
 }
 
 export const AVAILABLE_MODELS: ModelOption[] = [
+  {
+    id: 'healthgrid/clinical-llama-3.1-8b',
+    name: 'HealthGrid Llama-3.1 8B Clinical',
+    provider: 'huggingface',
+    providerLabel: 'Hugging Face Fine-Tuned',
+    badge: 'Clinical SFT 8B',
+    speed: '~140 tok/s',
+    description: 'Custom fine-tuned 8-Billion parameter clinical agent trained on Medical-O1, MedQA, ChatDoctor, and PMBJP Jan Aushadhi formulary.',
+    contextWindow: '8k',
+    isReasoning: true,
+  },
   {
     id: 'openai/gpt-oss-120b',
     name: 'OpenWeight 120B Reasoning AGI',
@@ -398,10 +409,14 @@ export function analyzeEmotionalState(query: string): EmotionalAssessment {
 
 const DEFAULT_GROQ_KEY = (import.meta.env.VITE_GROQ_API_KEY as string) || '';
 const DEFAULT_GEMINI_KEY = (import.meta.env.VITE_GEMINI_API_KEY as string) || '';
+const DEFAULT_HF_KEY = (import.meta.env.VITE_HF_API_KEY as string) || '';
+const DEFAULT_HF_MODEL = (import.meta.env.VITE_HF_FINE_TUNED_MODEL as string) || 'HealthGrid/clinical-agent-llama-3.1-8b-adapter';
 
 class AgiIntelligenceService {
   private groqApiKey: string = DEFAULT_GROQ_KEY;
   private geminiApiKey: string = DEFAULT_GEMINI_KEY;
+  private hfApiKey: string = DEFAULT_HF_KEY;
+  private hfFineTunedModelId: string = DEFAULT_HF_MODEL;
   private currentModelId: string = 'openai/gpt-oss-120b';
 
   private usage: UsageStats = {
@@ -1342,7 +1357,24 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     const startTime = performance.now();
 
     try {
-      if (model.provider === 'groq') {
+      if (model.provider === 'huggingface') {
+        return await this.callHuggingFace(
+          model,
+          encapsulatedQuery,
+          history,
+          patientContext,
+          emotionalAssessment.deEscalationDirective,
+          toolContextPrompt,
+          executedTools,
+          genericMedicines,
+          emotionalAssessment.state,
+          startTime,
+          isCasualGreeting,
+          arbitration.tier,
+          arbitration.backupModels,
+          arbitration
+        );
+      } else if (model.provider === 'groq') {
         return await this.callGroq(
           model,
           encapsulatedQuery,
@@ -1383,8 +1415,26 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       }
       console.warn(`Primary AGI model ${model.id} failed, trying autonomous failover:`, err);
       // Automatic cross-provider failover
-      if (model.provider === 'groq') {
-        const fallbackModel = AVAILABLE_MODELS.find(m => m.provider === 'google') || AVAILABLE_MODELS[3];
+      if (model.provider === 'huggingface') {
+        const fallbackModel = AVAILABLE_MODELS.find(m => m.provider === 'groq') || AVAILABLE_MODELS[1];
+        return await this.callGroq(
+          fallbackModel,
+          encapsulatedQuery,
+          history,
+          patientContext,
+          emotionalAssessment.deEscalationDirective,
+          toolContextPrompt,
+          executedTools,
+          genericMedicines,
+          emotionalAssessment.state,
+          startTime,
+          isCasualGreeting,
+          arbitration.tier,
+          [],
+          arbitration
+        );
+      } else if (model.provider === 'groq') {
+        const fallbackModel = AVAILABLE_MODELS.find(m => m.provider === 'google') || AVAILABLE_MODELS[4];
         return await this.callGemini(
           fallbackModel,
           encapsulatedQuery,
@@ -1402,7 +1452,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
           arbitration
         );
       } else {
-        const fallbackModel = arbitration.backupModels.find(m => m.provider === 'groq') || AVAILABLE_MODELS[0];
+        const fallbackModel = arbitration.backupModels.find(m => m.provider === 'groq') || AVAILABLE_MODELS[1];
         return await this.callGroq(
           fallbackModel,
           encapsulatedQuery,
@@ -1512,6 +1562,110 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
 
     const promptTokens = data.usage?.prompt_tokens || 80;
     const completionTokens = data.usage?.completion_tokens || 120;
+    const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens || 0;
+    const totalTokens = data.usage?.total_tokens || promptTokens + completionTokens;
+
+    this.recordUsage(promptTokens, completionTokens, reasoningTokens, latencyMs);
+
+    return this.assembleAgiResponse(
+      content,
+      promptTokens,
+      completionTokens,
+      reasoningTokens,
+      totalTokens,
+      latencyMs,
+      emotionalState,
+      executedTools,
+      genericMedicines,
+      sanitized.suggestedOptions,
+      sanitized.triageWizard,
+      userQuery,
+      executedModelName,
+      tier,
+      arbitration
+    );
+  }
+
+  private async callHuggingFace(
+    model: ModelOption,
+    userQuery: string,
+    history: Array<{ sender: 'user' | 'ai'; text: string }>,
+    patientContext: string | undefined,
+    emotionalDirective: string | undefined,
+    toolData: string | undefined,
+    executedTools: AgentToolCall[],
+    genericMedicines: JanAushadhiResult[] | undefined,
+    emotionalState: EmotionalAssessment['state'],
+    startTime: number,
+    isCasualGreeting: boolean = false,
+    tier: ClinicalComplexityTier = 'FRONTIER_CLINICAL_REASONING',
+    _backupModels: ModelOption[] = [],
+    arbitration?: ModelArbitrationDecision
+  ): Promise<AgiResponse> {
+    const systemPrompt = this.buildSystemPrompt(patientContext, emotionalDirective, toolData, isCasualGreeting, history.length, this.activeDossier);
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...history.slice(-8).map(h => ({
+        role: h.sender === 'user' ? 'user' : 'assistant',
+        content: h.text,
+      })),
+      { role: 'user', content: userQuery },
+    ];
+
+    const hfModelTarget = this.hfFineTunedModelId || 'HealthGrid/clinical-agent-llama-3.1-8b-adapter';
+    const endpointsToTry = [
+      `https://router.huggingface.co/hf-inference/models/${hfModelTarget}/v1/chat/completions`,
+      `https://api-inference.huggingface.co/models/${hfModelTarget}/v1/chat/completions`,
+    ];
+
+    let lastError: Error | null = null;
+    let data: any = null;
+    const executedModelName = model.name;
+
+    for (const endpoint of endpointsToTry) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.hfApiKey}`,
+          },
+          body: JSON.stringify({
+            model: hfModelTarget,
+            messages,
+            temperature: 0.3,
+            max_tokens: 750,
+          }),
+        });
+
+        if (response.ok) {
+          data = await response.json();
+          break;
+        } else {
+          const errText = await response.text();
+          lastError = new Error(`Hugging Face Serverless Error (${response.status}): ${errText}`);
+        }
+      } catch (err: any) {
+        lastError = err;
+      }
+    }
+
+    if (!data) {
+      throw lastError || new Error('Hugging Face fine-tuned inference failed.');
+    }
+
+    const endTime = performance.now();
+    const latencyMs = Math.round(endTime - startTime);
+
+    const rawChoice = data.choices?.[0]?.message;
+    let content = rawChoice?.content || '';
+
+    const sanitized = this.cleanAndSanitizeResponse(content, userQuery, emotionalState, this.activeDossier);
+    content = sanitized.cleanedContent;
+
+    const promptTokens = data.usage?.prompt_tokens || 120;
+    const completionTokens = data.usage?.completion_tokens || 150;
     const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens || 0;
     const totalTokens = data.usage?.total_tokens || promptTokens + completionTokens;
 

@@ -20,9 +20,9 @@ import sys
 
 # Load Hugging Face Token from environment or .env
 HF_TOKEN = os.environ.get("HF_TOKEN") or os.environ.get("VITE_HF_API_KEY", "")
-BASE_MODEL = os.environ.get("BASE_MODEL", "meta-llama/Llama-3.3-70B-Instruct")
+BASE_MODEL = os.environ.get("BASE_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "./healthgrid-clinical-agent-adapter")
-HUB_MODEL_ID = os.environ.get("HUB_MODEL_ID", "HealthGrid/clinical-agent-llama-3.3-70b-adapter")
+HUB_MODEL_ID = os.environ.get("HUB_MODEL_ID", "HealthGrid/clinical-agent-llama-3.1-8b-adapter")
 TRAIN_FILE = "data/healthgrid_clinical_agent_train.jsonl"
 VAL_FILE = "data/healthgrid_clinical_agent_val.jsonl"
 

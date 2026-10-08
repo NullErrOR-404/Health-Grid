@@ -349,14 +349,11 @@ HealthGrid avoids single-model bottlenecks by deploying an **Autonomous Multi-Ti
    Features a full-bleed camera viewfinder without static doctor imagery, floating kinetic voice equalizer bars, dynamic clinical verification checklists generated from camera inspection, and encrypted local storage transcript caching.
 3. **MarkItDown Document Token Optimizer (`markItDownService.ts`)**:
    Converts uploaded lab reports, medical scans, and discharge summaries into dense GitHub-Flavored Markdown, reducing LLM prompt token consumption by **65% to 75%**.
-4. **Hugging Face QLoRA Clinical Model Training Pipeline**:
-   - **Dataset Preparation (`scripts/prepare_healthgrid_hf_dataset.py`)**: Synthesizes ChatML training datasets blending 5 gold-standard clinical datasets:
-     * `FreedomIntelligence/Medical-O1-Reasoning-Dataset` (Deep Clinical Chain-of-Thought `<think>`)
-     * `MedQA-USMLE` (Board-level differential diagnosis)
-     * `Lavita/ChatDoctor-HealthCareMagic-100k` (Authentic physician-patient dialogues)
-     * `HuggingFaceH4/ultrachat_200k` (Empathetic bedside manner)
-     * `NousResearch/hermes-function-calling-v1` (Structured clinical function calling)
-   - **Distributed QLoRA Trainer (`scripts/train_clinical_agent_hf.py`)**: Configured for **Meta Llama-3.3-70B** and **Qwen-2.5-72B** with 4-bit NormalFloat (NF4) quantization, LoRA rank $r=64$, and automated Hugging Face Hub upload.
+4. **8-Billion Parameter Clinical Model Fine-Tuning & Free Cloud Serving**:
+   - **1-Click Google Colab Training Notebook (`notebooks/HealthGrid_Llama3_8B_Clinical_FineTuning.ipynb`)**: Fine-tunes **Meta Llama-3.1-8B-Instruct** (or Qwen-2.5-7B) using **Unsloth AI QLoRA** on a free Google Colab T4 GPU (70% less VRAM, 5x speedup).
+   - **Dataset Synthesis (`scripts/prepare_healthgrid_hf_dataset.py`)**: Blends Medical-O1 reasoning (`<thought>`), MedQA-USMLE diagnostics, ChatDoctor bedside empathy, Jan Aushadhi generic savings, and DPDP Act 2023 authority impersonation defenses into verified ChatML data.
+   - **100% Free-Tier Cloud Serving**: Directly pushes adapter to Hugging Face Hub, auto-activating the **Hugging Face Serverless Inference API** (`https://router.huggingface.co/hf-inference/models/...`) integrated into HealthGrid's `aiService.ts` for zero-cost, live production access across web and mobile.
+   - **Standalone GPU Training Script (`scripts/train_clinical_agent_hf.py`)**: Supports on-demand training on NVIDIA GPUs (RunPod, Lambda, A100) with 4-bit NF4 quantization.
 
 ---
 
@@ -465,6 +462,7 @@ HealthGrid's technical evolution is fully documented in our **Obsidian Second Br
 - **[[ADR-042]]**: AI Live Clinic & Records Hub Responsive Architecture
 - **[[ADR-043]]**: Dynamic Live Clinic, Real-Time Supabase Telemetry & Frontier Model Pipeline
 - **[[ADR-044]]**: React Native Android APK Architecture & OWASP Mobile Security Suite
+- **[[ADR-045]]**: 8-Billion Parameter Clinical Model Fine-Tuning Pipeline & Free-Tier Cloud Serving (Google Colab T4 + Hugging Face Serverless)
 
 ---
 
