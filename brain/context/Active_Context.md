@@ -16,14 +16,15 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `feat(clinician): production-grade clinician operating system & workstation with my queue, longitudinal chart, and embedded ai assistant`
+- **Latest Commit**: `06c1cff` (`feat(clinician): add stage 10 encounter review checklist, digital sign-off lock, context menu actions, and automated verification suite`)
 - **Latest Documentation Milestone**: Comprehensive Modular Engineering Documentation Suite created in `Docs/` and ADR-047 Clinician Operating System (see [[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]])
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
-- **Live Aliases (All 4 Synchronized & Verified 200 OK)**:
+- **Live Aliases (All 5 Synchronized & Verified 200 OK with Latest Bundle `index-BT0SNg7I.js`)**:
   - `https://healthgrid-app.vercel.app`
   - `https://healthgrid-nu.vercel.app`
   - `https://healthgrid-live.vercel.app`
   - `https://healthgrid-network.vercel.app`
+  - `https://frontend-kappa-nine-29.vercel.app`
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
