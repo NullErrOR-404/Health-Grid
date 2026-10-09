@@ -1,4 +1,5 @@
 # ⚙️ Technical Requirements Document (TRD)
+
 ## Module 03: Native Android APK Architecture & OWASP Mobile Security
 
 ---
@@ -7,7 +8,7 @@
 
 The mobile client is built on **React Native 0.86.3** and **Expo SDK 57**, utilizing the **React Native New Architecture** (Fabric C++ renderer and TurboModules) for high-performance camera inspection, biometric authentication, and hardware-accelerated encryption.
 
-```
+```text
 mobile/
 ├── package.json                          # React Native 0.86.3, Expo 57, Lucide Icons, Supabase JS
 ├── App.tsx                               # Clinical Bottom Navigation Dock with Integrity Watcher
@@ -71,7 +72,7 @@ graph TD
 
 ## 2. OWASP Mobile Top 10 Security Implementations
 
-```
+```text
 +=================================================================================================+
 |                              OWASP MOBILE TOP 10 HARDENING SPECS                                |
 +=================================================================================================+
@@ -110,15 +111,18 @@ graph TD
 The project is configured for two parallel, reliable APK build pipelines:
 
 ### 3.1 Local Android Studio Gradle Wrapper Build
+
 ```bash
 cd mobile/android
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 .\gradlew.bat assembleDebug
 ```
+
 * **Output Path**: `mobile/android/app/build/outputs/apk/debug/app-debug.apk`
 * **Direct Install via ADB**: `adb install -r app-debug.apk`
 
 ### 3.2 Cloud EAS Build Pipeline (`mobile/eas.json`)
+
 ```json
 {
   "cli": { "version": ">= 15.0.0" },
@@ -131,5 +135,6 @@ $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
   }
 }
 ```
+
 * **Build Command**: `npx eas-cli build -p android --profile preview`
 * **Output**: Downloadable release `.apk` hosted on Expo Cloud for instant device side-loading.

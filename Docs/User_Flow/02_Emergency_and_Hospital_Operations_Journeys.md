@@ -1,11 +1,12 @@
 # 🗺️ User Flow Specifications
+
 ## Module 02: Emergency Telemetry & Hospital ERP Operations
 
 ---
 
 ## 1. Journey 1: 108 Emergency SOS Dispatch & Trauma Handover
 
-```
+```text
 [ Citizen in Acute Distress / Paramedic in Transit ]
                      │
                      ▼
@@ -72,7 +73,7 @@ flowchart TD
 
 ## 3. Journey 3: Physician Examination to IPD Bed Allocation
 
-```
+```text
 [ Attending Physician Examines Patient in OPD or Casualty ]
                        │
                        ▼

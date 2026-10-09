@@ -17,6 +17,7 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Context
+
 1. **LoginModal Mobile Scroll Trapping**:
    - On mobile viewports (<640px and <1024px), users clicking "Sign In" encountered a locked modal card where scrolling down was blocked.
    - Root cause: Each view (`PERSONA_SELECT`, `HEALTHCARE_PROFESSIONAL`, `HOSPITAL`, `PERSONAL`) had a 600px+ marketing banner column stacked above the interactive form (`w-full`), coupled with `min-h-[660px]` and outer `flex items-center` with `h-full`, clipping forms off-screen and trapping touch momentum.
@@ -26,6 +27,7 @@ Back to [[00_Index]]
    - Inside the chat interface, suggestion cards were bulky 2-column rectangular boxes with large icons that occupied unnecessary vertical space.
 
 ## Decision
+
 1. **LoginModal Mobile Scroll & Direct Account Access**:
    - Hidden the desktop marketing illustration banners on mobile viewports (`hidden lg:flex lg:w-[49%]`) across all 4 modal views.
    - Replaced fixed desktop minimum heights (`min-h-[660px]`) with responsive heights (`min-h-0 lg:min-h-[660px] flex-1`).
@@ -46,11 +48,13 @@ Back to [[00_Index]]
    - Standardized input bar docked controls (AGI model selector, Doctor Voice Persona segment, and message voice indicators) to use concise `rounded-full` pill styling.
 
 ## Consequences
+
 - **Instant Mobile Usability**: Users can immediately tap account types and scroll down through login credentials on any mobile device without trapped scrolling.
 - **Zero Header Wrapping in Chat**: Header actions occupy only ~260px on mobile, perfectly coexisting with the DocBot AI brand mark.
 - **Unified Pill Design Language**: The chat interface now features consistent, modern rounded-full pill micro-interactions that feel native and refined.
 
 ## Related Notes
+
 - [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]
 - [[ADR-005-Mobile-First-Responsive-Architecture]]
 - [[Design_System_Tokens]]

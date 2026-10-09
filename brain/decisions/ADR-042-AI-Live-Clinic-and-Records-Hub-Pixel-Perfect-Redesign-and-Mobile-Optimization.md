@@ -1,13 +1,16 @@
 # ADR-042: AI Live Clinic & Records Hub Pixel-Perfect Redesign and Responsive Architecture
 
 ## Context
+
 User requested a complete visual overhaul for two major consultation modules in the DocBot AI chatbot interface:
+
 1. **AI Live Clinic Section**: Pixel-accurate implementation of desktop reference `C:\HealthGrid\UI References\Live vision Clinic ref.png` while adapting cleanly and minimally for mobile viewports without clutter.
 2. **Records Hub (Lifestyle and Health Memory)**: Pixel-accurate implementation of desktop reference `C:\HealthGrid\UI References\Records Hub ref.png`, providing an end-to-end encrypted security banner, 6 category metric pills, a quick-add form, and a recent vitals history table with horizontal touch-scrolling on mobile.
 
 ## Decision
 
 ### 1. AI Live Clinic Architecture (`LiveVisionDoctorModal.tsx`)
+
 - **Desktop Workspace Layout (`lg:flex`)**:
   - **Left Sidebar**: Live Clinic branding, interactive navigation tabs (`Video Consultation` with pulsing `Live` pill, `Patient Information`, `AI Clinical Notes`, `Prescriptions`, `Lab Investigations`, `Share & Follow-up`), and persistent Session Details card (`Patient`, `Age/Gender`, `Consultation Type`, live ticker `Duration`, `Consultation ID`, `Network Good`).
   - **Center Viewport**: Full-bleed camera viewfinder (with automatic fallback to high-fidelity simulated patient stream if camera permissions are unavailable), top controls (`● 08:24` recording timer, flip camera, fullscreen toggle, 3-dots menu), floating glassmorphic AI Vision Scanner card with 3 clinical tips, Doctor Avatar Picture-in-Picture (PIP) with animated audio equalizer waves, and floating bottom capsule call controls (`Mute`, `Stop Video`, `End Call`, `Share`, `More`).
@@ -21,6 +24,7 @@ User requested a complete visual overhaul for two major consultation modules in 
   - Concluding the call immediately closes the live tele-clinic view and injects a verified SBAR clinical consultation summary card directly into the chat stream.
 
 ### 2. Records Hub Architecture (`VitalsTelemetryModal.tsx`)
+
 - **Desktop Modal Layout**:
   - Clean dialog matching `Records Hub ref.png` with `Lifestyle and Health Memory` header, `Active` status badge, and close button.
   - End-to-end encryption security banner (`Your health data is secure`).
@@ -34,6 +38,7 @@ User requested a complete visual overhaul for two major consultation modules in 
   - History table equipped with smooth horizontal touch-scrolling (`overflow-x-auto`) to display complete multi-metric columns without breaking layout.
 
 ## Verification & Status
+
 - **TypeScript & Build Verification**: Passed with 0 errors (`npm run build` in 2.92s).
 - **Live Chrome DevTools Verification**:
   - Captured `desktop_records_hub_modal_1791388215785.png` (pixel-identical match to `Records Hub ref.png`).

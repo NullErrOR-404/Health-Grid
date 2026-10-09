@@ -1,4 +1,5 @@
 # 🎯 Product Requirements Document (PRD)
+
 ## Module 02: Functional Requirements Specification
 
 ---
@@ -6,6 +7,7 @@
 ## 1. Citizen & Patient Experience Modules
 
 ### 1.1 DocBot AI Autonomous Clinical Consultant
+
 * **Conversational Diagnostic Triage**: Operates as a chief medical AI consultant conducting structured history taking adhering to the **clinical SOCRATES protocol** (Site, Onset, Character, Radiation, Associations, Timing, Exacerbating/Relieving factors, Severity).
 * **Anti-Premature Diagnosis Invariant**: Forbidden from making immediate turn-1 diagnoses. Progresses through 4 gated phases:
   `EXPLORING` $\rightarrow$ `NARROWING` $\rightarrow$ `CONCLUDED` $\rightarrow$ `EMERGENCY`.
@@ -25,6 +27,7 @@ stateDiagram-v2
 ```
 
 ### 1.2 AI Live Clinic (`LiveVisionDoctorModal.tsx` & `LiveClinicScreen.tsx`)
+
 * **Full-Bleed Viewfinder**: Native camera feed (HTML5 MediaDevices on web, native CameraX on Android) with **zero static doctor imagery** for realistic immersion.
 * **Kinetic Audio Equalizer**: Floating non-intrusive `DocBot Speaking` indicator displaying 4 animated kinetic sound bars active exclusively during audio playback.
 * **Dynamic Clinical Verification Checklist**: AI dynamically extracts observable symptoms and asks the patient to confirm targeted visual signs via interactive checkboxes.
@@ -32,6 +35,7 @@ stateDiagram-v2
 * **Real-Time Supabase Telemetry**: Displays verified appointment details and live round-trip ping latency (`performance.now()`) with adaptive network health badges (`Excellent`, `Good`, `Fair`).
 
 ### 1.3 Personal Health Vault & Records Hub (`VitalsTelemetryModal.tsx` & `RecordsHubScreen.tsx`)
+
 * **6-Metric Clinical Navigation**: Tabbed tracking across:
   1. *Vitals & Measurements* (BP, Blood Glucose, BMI, Resting Heart Rate)
   2. *Blood Sugar* (Fasting, Postprandial, HbA1c)
@@ -42,10 +46,12 @@ stateDiagram-v2
 * **Zero-Knowledge Privacy**: End-to-end encrypted local storage; biometric authentication prompt (Fingerprint / FaceID) on mobile before opening vault.
 
 ### 1.4 ABDM Multi-Profile Family Hub (`ConsultationBeneficiaryModal.tsx`)
+
 * **CoWIN-Standard Caregiver Architecture**: Primary account holders can manage up to 7 family dependents (elderly parents, infants, spouses) without requiring separate smartphones.
 * **Sovereign Health IDs**: Generates distinct Health IDs (`HG-FAM-XXXX`) with age-calibrated dosing rules and independent medical dossiers.
 
 ### 1.5 108 Emergency Casualty SOS Dispatch (`EmergencyView.tsx` & `EmergencyScreen.tsx`)
+
 * **1-Tap Satellite Dispatch**: Captures precise GPS coordinates via browser/device Geolocation APIs.
 * **Real-Time Fleet Telemetry**: Connects to Spring WebSocket STOMP (`/ws-emergency`) broadcasting ambulance route progress.
 * **Paramedic SBAR Handover**: Transmits digital Situation, Background, Assessment, Recommendation briefs directly to hospital trauma desks before ambulance arrival.
@@ -54,7 +60,7 @@ stateDiagram-v2
 
 ## 2. Prescription Digitization & PMBJP Generic Store
 
-```
+```text
 [ Handwritten Prescription Slip ]
                │
                ▼
@@ -81,10 +87,12 @@ stateDiagram-v2
 ## 3. Hospital ERP & Casualty Command Tower
 
 ### 3.1 Patient Management & OPD Queue Intake
+
 * **Digital Token Dispatch**: Assigns unique OPD queue tokens (`HG-OPD-XXXX`) routed to specialized hospital departments (Cardiology, Pediatrics, General Medicine, Orthopedics).
 * **Live Waiting Room Radar**: Real-time waiting time estimations decremented dynamically as doctors complete consultations.
 
 ### 3.2 Inpatient Department (IPD) & 250-Bed Telemetry
+
 * **Bed Inventory Tracking**: Live status across **250 hospital beds** segmented into 4 clinical wards:
   1. *Intensive Care Unit (ICU)* (Critical ventilators and multi-parameter monitors)
   2. *Emergency Casualty Ward* (Trauma bays and crash carts)
@@ -93,19 +101,22 @@ stateDiagram-v2
 * **Real-Time CDC Synchronization**: When a bed is allocated or vacated, PostgreSQL WAL Change Data Capture broadcasts updates to all connected screens in **<35ms**, preventing ambulance diversion.
 
 ### 3.3 Emergency Casualty Department
+
 * **3-Tier ESI Acuity Intake**: Color-coded casualty triage gauges:
-  - *Critical Red (Immediate Life Threat)*
-  - *In Treatment (Stabilizing)*
-  - *Waiting (Urgent Observation)*
+  * *Critical Red (Immediate Life Threat)*
+  * *In Treatment (Stabilizing)*
+  * *Waiting (Urgent Observation)*
 * **Clinical Actions Desk**: Instant STAT laboratory order placement, wristband thermal printing generation, and 1-tap admission to IPD beds.
 
 ### 3.4 Doctors & OPD Roster Management
+
 * **Physician Scheduling**: Backed by `public.doctors` database schema with 24 seeded specialist doctors across 8 clinical departments.
 * **Consultation Room Routing**: Real-time room assignments and live availability toggling (`On Duty`, `In Consultation`, `On Break`).
 
 ### 3.5 Reports & Analytics Suite
+
 * **Database Aggregation**: Real metrics compiled from Supabase tables:
-  - *Patient Intake Volume*: AreaCharts depicting daily patient registrations.
-  - *Bed Occupancy Gauge*: Radial bar gauge tracking hospital capacity (e.g. 79% occupancy).
-  - *Department Revenue Breakdown*: Stacked bars reflecting OPD consultations, IPD admissions, and pharmacy dispensations.
-  - *Data Portability*: 1-tap CSV report generation for statutory health directorate audits.
+  * *Patient Intake Volume*: AreaCharts depicting daily patient registrations.
+  * *Bed Occupancy Gauge*: Radial bar gauge tracking hospital capacity (e.g. 79% occupancy).
+  * *Department Revenue Breakdown*: Stacked bars reflecting OPD consultations, IPD admissions, and pharmacy dispensations.
+  * *Data Portability*: 1-tap CSV report generation for statutory health directorate audits.

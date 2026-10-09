@@ -1,4 +1,5 @@
 # 📅 Implementation Plan
+
 ## Module 01: Engineering Milestones, Phased Roadmap & Technical Evolution
 
 ---
@@ -7,7 +8,7 @@
 
 HealthGrid has progressed through 6 rigorously planned engineering phases to reach its finalized enterprise architecture:
 
-```
+```text
 +=================================================================================================+
 |                                  HEALTHGRID ENGINEERING ROADMAP                                 |
 +=================================================================================================+

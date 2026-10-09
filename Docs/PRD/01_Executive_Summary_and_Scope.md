@@ -1,15 +1,16 @@
 # 🎯 Product Requirements Document (PRD)
+
 ## Module 01: Executive Summary, Problem Statement & Scope
 
 ---
 
 ## 1. Executive Summary
 
-**HealthGrid (நலம் AI)** is a unified digital healthcare operating system engineered to resolve systemic bottlenecks across citizen accessibility, out-of-pocket medical expenditures, acute emergency ambulance routing, and hospital clinical throughput. 
+**HealthGrid (நலம் AI)** is a unified digital healthcare operating system engineered to resolve systemic bottlenecks across citizen accessibility, out-of-pocket medical expenditures, acute emergency ambulance routing, and hospital clinical throughput.
 
 By integrating autonomous pre-hospital clinical AI triage, real-time Jan Aushadhi (PMBJP) generic drug price substitution, camera-based live tele-examination, 108 Emergency Ambulance telemetry with digital trauma handovers, and an enterprise multi-department Hospital ERP suite, HealthGrid creates a continuous digital bridge between citizens in remote communities and tertiary medical institutions.
 
-```
+```text
 +=================================================================================================+
 |                                     HEALTHGRID ECOSYSTEM VISION                                 |
 +=================================================================================================+
@@ -53,7 +54,7 @@ Public and private healthcare systems face severe systemic challenges across aff
 
 ### Target Personas
 
-```
+```text
 +-------------------------------------------------------------------------------------------------+
 |                                     HEALTHGRID PERSONA MATRIX                                   |
 +-------------------------------------------------------------------------------------------------+
@@ -80,6 +81,7 @@ Public and private healthcare systems face severe systemic challenges across aff
 ```
 
 ### Out-of-Scope (Non-Goals)
+
 * **Automated Surgical Interventions**: HealthGrid is an assistive clinical intelligence and workflow platform; it does not perform automated invasive procedures.
 * **Direct Narcotics Dispensing**: The platform strictly prohibits autonomous generation or dispensing of CDSCO Schedule H and Schedule X controlled narcotics.
 * **Replacing In-Person Physical Trauma Triage**: DocBot provides pre-hospital guidance and emergency dispatch; acute life-threatening trauma requires physical physician care.

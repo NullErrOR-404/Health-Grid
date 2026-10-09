@@ -1,4 +1,5 @@
 # 🎨 UI/UX Design Specifications
+
 ## Module 01: Design System, Tokens & Aesthetic Philosophy
 
 ---
@@ -7,7 +8,7 @@
 
 HealthGrid rejects generic, flat hospital interfaces in favor of a **clinical dark mode** with glassmorphic elevation, high-contrast vital indicators, and kinetic micro-animations. Medical stress is high; interface design must instill calm, certainty, and authoritative professionalism.
 
-```
+```text
 +=================================================================================================+
 |                                  HEALTHGRID DESIGN SYSTEM SPECS                                 |
 +=================================================================================================+
@@ -40,11 +41,11 @@ HealthGrid rejects generic, flat hospital interfaces in favor of a **clinical da
 ## 3. Typography Architecture
 
 * **Primary Font Family**: `Inter, system-ui, -apple-system, sans-serif`
-  - High legibility at small sizes (10px–12px) for complex medication dosing and vital telemetry.
+  * High legibility at small sizes (10px–12px) for complex medication dosing and vital telemetry.
 * **Display / Brand Font**: `Outfit, sans-serif`
-  - Clean, modern geometry for hero banners, modal titles, and hospital names.
+  * Clean, modern geometry for hero banners, modal titles, and hospital names.
 * **Monospace Font**: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`
-  - Used for OPD token codes (`HG-OPD-1042`), biometric Health IDs (`HG-FAM-8821`), dosages (`500mg IP`), and network latency gauges (`24ms`).
+  * Used for OPD token codes (`HG-OPD-1042`), biometric Health IDs (`HG-FAM-8821`), dosages (`500mg IP`), and network latency gauges (`24ms`).
 
 ---
 
@@ -62,13 +63,13 @@ HealthGrid rejects generic, flat hospital interfaces in favor of a **clinical da
 ```
 
 * **Z-Index Layer Hierarchy**:
-  - `z-0`: Base GIS Maps & Canvas Viewports
-  - `z-10`: Interactive ERP Cards & Table Views
-  - `z-20`: Floating Call Controls & Audio Indicators
-  - `z-30`: Sticky Headers, Mobile Bottom Docks
-  - `z-40`: Modal Backdrops & Dismiss Overlays
-  - `z-50`: Fullscreen Modals (Live Clinic, Records Hub, Voice Chat)
-  - `z-60`: 108 Emergency Casualty SOS Confirmation Layer
+  * `z-0`: Base GIS Maps & Canvas Viewports
+  * `z-10`: Interactive ERP Cards & Table Views
+  * `z-20`: Floating Call Controls & Audio Indicators
+  * `z-30`: Sticky Headers, Mobile Bottom Docks
+  * `z-40`: Modal Backdrops & Dismiss Overlays
+  * `z-50`: Fullscreen Modals (Live Clinic, Records Hub, Voice Chat)
+  * `z-60`: 108 Emergency Casualty SOS Confirmation Layer
 
 ---
 

@@ -2,8 +2,9 @@
 
   <img src="frontend/public/Logo.png" alt="HealthGrid Logo" width="130" height="130" style="border-radius: 24px; box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);" />
 
-  # HealthGrid (நலம் AI)
-  ### Real-Time Emergency Telemetry, Autonomous Clinical AI, Hospital ERP & Enterprise Health Platform
+# HealthGrid (நலம் AI)
+
+## Real-Time Emergency Telemetry, Autonomous Clinical AI, Hospital ERP & Enterprise Health Platform
 
   [![Java](https://img.shields.io/badge/Java-21_LTS-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
   [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3.4-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
@@ -70,7 +71,7 @@ Public healthcare delivery faces acute systemic bottlenecks across affordability
 
 HealthGrid uses a multi-tier, zero-trust cloud architecture connecting web clients, native Android devices, an enterprise Java backend, and distributed AI models:
 
-```
+```text
 +===================================================================================================+
 |                                    CLIENT PRESENTATION LAYER                                      |
 |                                                                                                   |
@@ -135,7 +136,8 @@ HealthGrid uses a multi-tier, zero-trust cloud architecture connecting web clien
 ## 📊 Use Case Diagrams
 
 ### 1. Citizen Emergency & 108 Dispatch Use Case
-```
+
+```text
 [ Citizen in Distress ]
          |
          |---> (1) Types Symptoms or Taps SOS Button
@@ -160,7 +162,8 @@ HealthGrid uses a multi-tier, zero-trust cloud architecture connecting web clien
 ```
 
 ### 2. Prescription Digitization & PMBJP Savings Use Case
-```
+
+```text
 [ Patient with Handwritten Script ]
          |
          |---> (1) Uploads Prescription Photo or Uses Camera
@@ -184,7 +187,8 @@ HealthGrid uses a multi-tier, zero-trust cloud architecture connecting web clien
 ```
 
 ### 3. Hospital Inpatient (IPD) & OPD Queue Use Case
-```
+
+```text
 [ Walk-in / Online Patient ]
          |
          |---> (1) Registers Digital OPD Token (HG-OPD-XXXX)
@@ -214,7 +218,8 @@ HealthGrid uses a multi-tier, zero-trust cloud architecture connecting web clien
 The backend core of HealthGrid is built in **Java 21 LTS** with **Spring Boot 3.3.4**, configured with **Project Loom Virtual Threads** (`spring.threads.virtual.enabled=true`) to handle high-concurrency patient intakes, live telemetry streams, and emergency alerts with minimal memory overhead.
 
 ### Backend Directory Layout
-```
+
+```text
 backend/
 ├── pom.xml                               # Java 21 LTS, Spring Boot 3.3.4, JJWT, PostgreSQL, WebSocket
 └── src/main/java/com/healthgrid/
@@ -254,7 +259,8 @@ backend/
         └── dto/TriageResponse.java       # Urgency Classification, Acuity Score & Department Routing
 ```
 
-### Key Technical Implementations in Java:
+### Key Technical Implementations in Java
+
 1. **Project Loom Virtual Threads**: Configured via `spring.threads.virtual.enabled=true`. Rather than pinning an OS-level thread per request, the runtime utilizes lightweight virtual threads managed by the JVM, achieving sub-millisecond response times under thousands of simultaneous WebSocket and HTTP requests.
 2. **Tiered Token-Bucket Rate Limiter (`RateLimitingFilter.java`)**: Implements strict anti-IP spoofing validation (`IPV4_PATTERN` / `IPV6_PATTERN`) and identity-bound buckets (`user:<hash>`). Rate limits are tiered by sensitivity:
    - Authentication Endpoints: 5 requests / 5 minutes
@@ -271,6 +277,7 @@ backend/
 HealthGrid utilizes **PostgreSQL 15** on **Supabase Cloud** (`db.cosnhycbvsxedogtejos.supabase.co`) with enterprise-grade security hardening:
 
 ### Core Database Schemas
+
 | Table Name | Description | Key Columns | Row-Level Security Policy |
 | :--- | :--- | :--- | :--- |
 | `public.patients` | Sovereign citizen health profiles | `id, health_id, full_name, age, gender, blood_group, allergies, phone` | Authenticated users can view and edit strictly their own profile or linked family dependents. |
@@ -281,7 +288,8 @@ HealthGrid utilizes **PostgreSQL 15** on **Supabase Cloud** (`db.cosnhycbvsxedog
 | `public.ipd_admissions` | Formal inpatient admission sheets | `id, admission_number, patient_id, bed_id, admission_date, attending_physician` | Restricted strictly to authenticated doctors and nursing staff. |
 | `public.medicines` | Jan Aushadhi generic catalog | `id, generic_name, branded_equivalent, dosage_form, generic_price, branded_mrp, savings_percent` | Public read access across all citizen and doctor prescription search engines. |
 
-### Database Hardening Measures:
+### Database Hardening Measures
+
 1. **100% Row-Level Security (RLS)**: Enforced via `ALTER TABLE <table> ENABLE ROW LEVEL SECURITY;` on all 7 tables (`setup_security_rls_and_policies.js`). Even if an API key is extracted, direct table mutations are rejected by PostgreSQL's internal engine without valid JWT credentials.
 2. **Write-Ahead Logging (WAL) Change Data Capture**: Real-time pub/sub replication (`supabase.channel(...)`) streams row changes directly to connected web and mobile interfaces within **<35ms**, enabling live OPD queue progression and bed status updates without polling.
 3. **`pgvector` Semantic Hybrid Search**: Vector embeddings (1536-dimensional) of ICMR clinical protocols and PMBJP formulation databases allow cosine similarity queries for colloquial symptom matching and generic drug substitution.
@@ -291,12 +299,14 @@ HealthGrid utilizes **PostgreSQL 15** on **Supabase Cloud** (`db.cosnhycbvsxedog
 ## 📱 Client Applications: Web & Native Android APK
 
 ### 1. Web Application (`frontend/`)
+
 - Built with **React 19**, **Vite 8.3**, and **Tailwind CSS v4**.
 - Uses an **in-memory secure session manager** (`sessionSecurityManager.ts`) that holds volatile authentication tokens in memory closures, eliminating raw JWT tokens from `localStorage` to prevent XSS exfiltration.
 - **Sub-millisecond tab switching (0.6ms–1.4ms)** across Hospital ERP views using DOM keep-alive caching.
 - Integrated **Leaflet GIS mapping** with dynamic bounding-box clustering for locating government PHCs, blood banks, and 24/7 casualty centers.
 
 ### 2. Native Android Application (`mobile/`)
+
 - Built with **React Native 0.86.3** and **Expo SDK 57**, utilizing the **React Native New Architecture** (Fabric C++ renderer and TurboModules).
 - **OWASP Mobile Security Suite**:
   - **Android Hardware Keystore**: Sensitive patient tokens and transcripts are encrypted via **AES-256 GCM** in the phone’s hardware TEE / StrongBox Keymaster (`secureStorageService.ts`).
@@ -316,7 +326,7 @@ HealthGrid utilizes **PostgreSQL 15** on **Supabase Cloud** (`db.cosnhycbvsxedog
 
 HealthGrid avoids single-model bottlenecks by deploying an **Autonomous Multi-Tier Clinical Model Cascade**:
 
-```
+```text
 +-----------------------------------------------------------------------------------+
 |                        PATIENT QUERY / CAMERA FRAME / VITALS                      |
 +-----------------------------------------------------------------------------------+
@@ -342,7 +352,8 @@ HealthGrid avoids single-model bottlenecks by deploying an **Autonomous Multi-Ti
                          +-----------------------------------+
 ```
 
-### Key AI Architectural Principles:
+### Key AI Architectural Principles
+
 1. **SOCRATES History-Taking & Anti-Premature Diagnosis Invariant**:
    DocBot is strictly banned from making premature turn-1 diagnoses. It follows the clinical SOCRATES protocol (Site, Onset, Character, Radiation, Associations, Timing, Exacerbating/Relieving, Severity), guiding patients through 4 gated phases: `EXPLORING` ➔ `NARROWING` ➔ `CONCLUDED` ➔ `EMERGENCY`.
 2. **AI Live Clinic & Dynamic Verification**:
@@ -395,11 +406,13 @@ HealthGrid includes an enterprise **Hospital ERP & Casualty Command Tower** (`Ho
 ## 🚀 Getting Started & Local Development
 
 ### 1. Prerequisites
+
 - **Node.js**: v20.x or v22.x
 - **Java Development Kit (JDK)**: Java 21 LTS
 - **Android Studio**: Android SDK (API 34/35) & JetBrains JBR
 
 ### 2. Web Frontend Setup
+
 ```bash
 cd frontend
 npm install
@@ -408,6 +421,7 @@ npm run dev
 ```
 
 ### 3. Native Android Mobile Setup
+
 ```bash
 cd mobile
 npm install
@@ -425,6 +439,7 @@ npx eas-cli build -p android --profile preview
 ```
 
 ### 4. Java 21 Backend Setup
+
 ```bash
 cd backend
 mvn clean install

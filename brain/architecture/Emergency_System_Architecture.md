@@ -106,6 +106,7 @@ sequenceDiagram
 ---
 
 ## 5. Related Decisions & Architectural Notes
+
 - [[ADR-031-Hospital-ERP-Emergency-Department-End-to-End-Architecture]]
 - [[ADR-030-Hospital-ERP-Appointments-Management-End-to-End-Architecture]]
 - [[ADR-029-Hospital-ERP-Inpatient-Department-and-Bed-Management]]

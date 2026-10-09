@@ -19,6 +19,7 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Overview
+
 The **HealthGrid Clinician Portal** is an enterprise-grade clinician operating system designed for attending physicians, specialists, and clinical care teams. Built with the workflow depth of modern EHR platforms (Epic Hyperspace, Oracle Health/Cerner, athenaOne, MEDITECH Expanse) and delivered with a minimal, modern, calm interface matching the visual reference (`UI References/My queue Reference.png`).
 
 The system strictly enforces the **Clinician Workstation** boundary—focusing solely on patient care, queues, longitudinal records, clinical documentation, order sets, results acknowledgement, and clinical decision support—while delegating hospital administrative, blood bank, and back-office billing operations to the [[Hospital_ERP_Dashboard]].
@@ -28,6 +29,7 @@ The system strictly enforces the **Clinician Workstation** boundary—focusing s
 ## 🏛️ Technical Architecture
 
 ### 1. File Structure & Core Components
+
 - **Orchestrator**: `frontend/src/components/clinician/ClinicianPortalLayout.tsx`
 - **Global Navigation**: `ClinicianSidebar.tsx` (collapsible pinned sidebar) and `ClinicianTopBar.tsx` (global search `Ctrl+K`, facility selector, notifications popover, clinician profile)
 - **Embedded AI Assistant**: `ClinicianAiDrawer.tsx` (voice-enabled clinical co-pilot, ambient scribe prompts, differential generator, DDx, and drug interaction analyzer)
@@ -45,6 +47,7 @@ The system strictly enforces the **Clinician Workstation** boundary—focusing s
   - `tools/ClinicalToolsViews.tsx`: Specialty templates, order sets, clinical guidelines (ADA, AHA, ICMR), bedside BMI calculator, settings, and help
 
 ### 2. State & Data Layer
+
 - **Domain Types**: `frontend/src/types/clinician.ts` (`ClinicianProfile`, `FacilityEntity`, `PatientEntity`, `PatientQueueItem`, `ClinicalEncounter`, `OrderItem`, `ResultItem`, `ReferralItem`, `FollowUpItem`, `ClinicalInboxItem`, `ClinicalDecisionAlert`, `OrderSetTemplate`)
 - **Reactive Workflow Store**: `frontend/src/services/clinician/clinicianWorkflowStore.ts` with Pub/Sub subscriptions, persistent `localStorage` cache, queue state machine, and consultation mutations
 - **Clinical Decision Support**: `frontend/src/services/clinician/cdsRulesEngine.ts` evaluating drug allergies, drug-drug interactions (e.g. ACEi + MRA hyperkalemia), renal contraindications (CKD NSAID), and preventive care gaps
@@ -53,6 +56,7 @@ The system strictly enforces the **Clinician Workstation** boundary—focusing s
 ---
 
 ## 🔒 Safety, Access, and Design Principles
+
 1. **Multi-Facility Selection**: Smooth switching between affiliated clinics (e.g., *Apollo Clinic, Chennai*, *Kauvery Hospital*, *SIMS Hospital*).
 2. **Keyboard Accessibility**: `Ctrl + K` global patient search shortcut, rapid status transitions.
 3. **Safety & CDS Overrides**: All drug-allergy interactions and contraindications require explicit clinician override justification before order submission.
@@ -62,6 +66,7 @@ The system strictly enforces the **Clinician Workstation** boundary—focusing s
 ---
 
 ## 🔗 Related Notes
+
 - [[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]]
 - [[Hospital_ERP_Dashboard]]
 - [[ADR-028-Hospital-ERP-Patient-and-OPD-Management-End-to-End-Architecture]]

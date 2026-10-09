@@ -5,6 +5,7 @@
 The frontend client for **HealthGrid**, an autonomous real-time emergency telemetry and predictive community healthcare network.
 
 ## Key Modules
+
 - **`src/components/FindCareNearYou.tsx`**: High-performance geospatial radar with Leaflet and CARTO raster tiles for healthcare facilities.
 - **`src/components/FloatingDoctorMascot.tsx` & `LiveRiggedDocBot.tsx`**: Dynamic 3D clinical avatar with gesture kinematics and speech interaction.
 - **`src/components/VoiceChatModal.tsx`**: Real-time vernacular clinical triage powered by Groq LPU and Google Gemini.
@@ -14,13 +15,16 @@ The frontend client for **HealthGrid**, an autonomous real-time emergency teleme
 - **`src/services/lenisService.ts`**: Inertial smooth scroll engine with automatic modal suppression.
 
 ## Development
+
 ```bash
 npm install
 npm run dev
 ```
 
 ## Production Build
+
 ```bash
 npm run build
 ```
+
 Generates optimized static output in `dist/` ready for global CDN deployment on Vercel.

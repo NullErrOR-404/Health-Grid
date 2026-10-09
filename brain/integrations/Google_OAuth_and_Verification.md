@@ -14,6 +14,7 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Overview
+
 To move Google Sign-In out of "Testing" into "Production" and remove the unverified app warning, Google Cloud Console requires strict branding, domain ownership, and user data transparency checks.
 
 ## Verification Requirements Matrix
@@ -28,6 +29,7 @@ To move Google Sign-In out of "Testing" into "Production" and remove the unverif
 | **Accessible Terms Link** | Semantic HTML `<a href="/terms">` tags in footer and policy sections. | ✅ Crawlable |
 
 ## OAuth Scopes Requested
+
 - `openid`: Cryptographic token verification via Supabase without storing Google passwords.
 - `.../auth/userinfo.email`: Links private health vaults, doctor tokens, and prescriptions to user.
 - `.../auth/userinfo.profile`: Displays user name on the medical dashboard.
@@ -36,6 +38,7 @@ To move Google Sign-In out of "Testing" into "Production" and remove the unverif
 > HealthGrid never requests access to Google Drive, Gmail, Google Contacts, or browsing history.
 
 ## Related Notes
+
 - [[ADR-001-Semantic-Privacy-Links]]
 - [[ADR-002-Vercel-SSO-Bypass]]
 - [[ADR-004-User-Data-Transparency-Hero]]

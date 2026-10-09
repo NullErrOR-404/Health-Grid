@@ -16,12 +16,15 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Context
+
 When inspecting the deployed application on small-screen mobile devices (<640px viewport width), several horizontal overflow issues occurred:
+
 1. The Navbar header was fixed at `h-20` (80px), occupying disproportionate vertical screen space.
 2. The wide horizontal logo (`Logo.png`) combined with the language pill (`[ EN ⌵ ]`), notification bell, user profile pill, and SOS ambulance button overwhelmed narrow viewports (360px–412px), pushing the hamburger menu out of view and triggering horizontal scroll.
 3. Users requiring emergency assistance had multiple competing SOS buttons that clashed in the top bar.
 
 ## Decision
+
 1. **Zero-Overflow Compact Mobile Top Bar**:
    - Rescaled header container height from static `h-20` to responsive `h-16 sm:h-20` (64px mobile / 80px desktop).
    - Constrained mobile logo to `h-8 sm:h-11 max-w-[130px] sm:max-w-none` to guarantee left-hand breathing space.
@@ -37,11 +40,13 @@ When inspecting the deployed application on small-screen mobile devices (<640px 
    - Preserved the persistent thumb-zone emergency dock in `App.tsx`, ensuring `108` is always one tap away without polluting the top navbar.
 
 ## Consequences
+
 - **Zero Horizontal Overflow**: Guaranteed fit across all modern mobile viewports (down to 320px width).
 - **Flawless Aesthetic Hierarchy**: Clean, brand-focused header that smoothly transitions to the expanded desktop layout at `md` (768px).
 - **Uncompromised Emergency Access**: Users can dispatch an ambulance from the bottom dock, from the hero section, or from the top of the mobile navigation drawer.
 
 ## Related Notes
+
 - [[ADR-005-Mobile-First-Responsive-Architecture]]
 - [[Design_System_Tokens]]
 - [[Mobile_UI_UX_Laws_Audit]]

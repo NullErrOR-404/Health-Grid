@@ -55,6 +55,7 @@ graph TD
 ### Database: Supabase PostgreSQL (`cosnhycbvsxedogtejos.supabase.co`)
 
 ### Entity: `public.appointments`
+
 - `id` (UUID, Primary Key)
 - `appointment_id` (TEXT, Unique, e.g. `APPT250929001`)
 - `patient_id` (UUID, Foreign Key to `public.patients(id)`)

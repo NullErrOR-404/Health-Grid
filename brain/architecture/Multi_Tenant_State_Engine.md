@@ -14,9 +14,11 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Problem
+
 In a centralized healthcare network, hospitals (e.g. Govt Medical College, Apollo, MIOT) need isolated administrative userspaces so patient censuses, ICU beds, revenue counters, and doctor rosters do not leak into another facility.
 
 ## Implementation Architecture
+
 Implemented in `frontend/src/services/hospitalUserspaceService.ts`:
 
 - **Storage Key**: `healthgrid_erp_userspace_${hospitalCode}` in `localStorage`.
@@ -36,6 +38,7 @@ graph LR
 ```
 
 ## Mock Test Credentials (GMCH HG-H002)
+
 - **Hospital**: Govt Medical College & Hospital, Omandurar
 - **Code**: `HG-H002`
 - **Username**: `gmch_admin`
@@ -44,6 +47,7 @@ graph LR
 See [[Key_Credentials_and_Environments]] for all test accounts.
 
 ## Related Notes
+
 - [[Hospital_ERP_Dashboard]]
 - [[Hospital_Information_System_HIS]]
 - [[ADR-003-MultiTenant-Hospital-Isolation]]

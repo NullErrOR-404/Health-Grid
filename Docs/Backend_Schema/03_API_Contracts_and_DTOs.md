@@ -1,4 +1,5 @@
 # 🗄️ Backend Schema & Database Specifications
+
 ## Module 03: REST API Contracts, WebSocket Channels & DTOs
 
 ---
@@ -6,9 +7,11 @@
 ## 1. Core REST API Endpoints
 
 ### 1.1 Authentication & Identity (`/api/auth`)
+
 * `POST /api/auth/login`
-  - **Request**: `{ "phone": "+919876543210", "otp": "482910" }`
-  - **Response (200 OK)**:
+  * **Request**: `{ "phone": "+919876543210", "otp": "482910" }`
+  * **Response (200 OK)**:
+
     ```json
     {
       "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...",
@@ -17,13 +20,16 @@
       "expiresIn": 86400
     }
     ```
+
 * `POST /api/auth/refresh`
-  - **Request**: Bearer token in `Authorization` header.
-  - **Response (200 OK)**: Refreshed JWT token.
+  * **Request**: Bearer token in `Authorization` header.
+  * **Response (200 OK)**: Refreshed JWT token.
 
 ### 1.2 Clinical Triage & Acuity (`/api/triage`)
+
 * `POST /api/triage/evaluate`
-  - **Request**:
+  * **Request**:
+
     ```json
     {
       "patientAge": 45,
@@ -37,7 +43,9 @@
       "comorbidities": ["Type 2 Diabetes", "Hypertension"]
     }
     ```
-  - **Response (200 OK)**:
+
+  * **Response (200 OK)**:
+
     ```json
     {
       "esiLevel": 1,
@@ -50,8 +58,10 @@
     ```
 
 ### 1.3 Jan Aushadhi Generic Medicine Engine (`/api/prescription`)
+
 * `GET /api/prescription/generic-match?query=Pantocid%2040`
-  - **Response (200 OK)**:
+  * **Response (200 OK)**:
+
     ```json
     {
       "searchedBrand": "Pantocid 40",
@@ -67,9 +77,11 @@
     ```
 
 ### 1.4 Hospital Inpatient (IPD) Bed Management (`/api/ipd`)
+
 * `GET /api/ipd/beds`
-  - **Query Params**: `?wardType=ICU&isOccupied=false`
-  - **Response (200 OK)**:
+  * **Query Params**: `?wardType=ICU&isOccupied=false`
+  * **Response (200 OK)**:
+
     ```json
     [
       {
@@ -82,15 +94,16 @@
       }
     ]
     ```
+
 * `PATCH /api/ipd/beds/{id}/allocate`
-  - **Request**: `{ "patientId": "e2f1a...", "attendingPhysician": "Dr. V. Raman" }`
-  - **Response (200 OK)**: Updated bed entity with `isOccupied: true`.
+  * **Request**: `{ "patientId": "e2f1a...", "attendingPhysician": "Dr. V. Raman" }`
+  * **Response (200 OK)**: Updated bed entity with `isOccupied: true`.
 
 ---
 
 ## 2. Real-Time WebSocket STOMP Channels (`/ws-emergency`)
 
-```
+```text
 +=================================================================================================+
 |                            WEBSOCKET STOMP PUBLISH / SUBSCRIBE MATRIX                           |
 +=================================================================================================+
@@ -105,6 +118,7 @@
 ```
 
 ### 2.1 GPS Telemetry Broadcast Payload (`/topic/ambulance-location`)
+
 ```json
 {
   "dispatchId": "108-DISP-8921",
@@ -122,6 +136,7 @@
 ```
 
 ### 2.2 SBAR Paramedic Handover Brief Payload
+
 ```json
 {
   "situation": "45-year-old male with acute retrosternal chest pain and diaphoresis.",

@@ -38,11 +38,13 @@ parent: "[[00_Index]]"
    - HTML5 canvas preprocessing sharpens cursive ink strokes (`contrast(1.18) brightness(1.02)`) and applies clean white backgrounds to eliminate dark PNG transparency artifacts.
 
 ## 📊 Verification & Results
+
 - Verified `gemini-3.8-flash` live endpoint returning HTTP 200 OK with multimodal image inputs.
 - Verified Groq `qwen/qwen3.8-27b` and `openai/gpt-oss-120b` returning HTTP 200 OK.
 - Verified Vite and TypeScript production build passes with 0 errors (`✓ built in 1.73s`).
 
 ## 🔗 Related Notes
+
 - [[00_Index]]
 - [[Active_Context]]
 - [[ADR-017-Clinical-Synergy-and-Prescription-Demographic-OCR]]

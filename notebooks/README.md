@@ -29,6 +29,7 @@ Once uploaded to Hugging Face Hub (e.g., `your-username/healthgrid-clinical-llam
 
 1. **Zero-Cost Serverless Inference**:
    Hugging Face automatically exposes your model via their **Free Serverless Inference API**:
+
    ```http
    POST https://router.huggingface.co/hf-inference/models/your-username/healthgrid-clinical-llama-3.1-8b
    Authorization: Bearer <YOUR_HF_TOKEN>
@@ -36,6 +37,7 @@ Once uploaded to Hugging Face Hub (e.g., `your-username/healthgrid-clinical-llam
 
 2. **Wire to HealthGrid Web & Mobile**:
    Update `frontend/.env` (and your Vercel Project Environment Variables):
+
    ```env
    VITE_HF_API_KEY=hf_yourWriteOrReadTokenHere
    VITE_HF_FINE_TUNED_MODEL=your-username/healthgrid-clinical-llama-3.1-8b
@@ -48,6 +50,7 @@ Once uploaded to Hugging Face Hub (e.g., `your-username/healthgrid-clinical-llam
 ## 📊 Dataset Composition
 
 The training data (`data/healthgrid_clinical_agent_train.jsonl`) incorporates:
+
 - **Medical-O1 Reasoning**: Clinical chain-of-thought (`<thought>...</thought>`) before generating final patient prose.
 - **MedQA-USMLE**: Board-certified differential diagnoses and pharmacological mechanisms.
 - **ChatDoctor**: Authentic doctor-patient bedside dialogues and active symptom listening.

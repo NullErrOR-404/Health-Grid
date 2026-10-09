@@ -43,6 +43,7 @@ HealthGrid is synchronized across 4 high-availability Vercel production aliases:
 | `/hospital-erp`      | `hospital-erp` | [[Hospital_ERP_Dashboard]] (Multi-tenant)                                                       |
 
 ## Related Notes
+
 - [[ADR-002-Vercel-SSO-Bypass]]
 - [[Google_OAuth_and_Verification]]
 - [[Tech_Stack]]

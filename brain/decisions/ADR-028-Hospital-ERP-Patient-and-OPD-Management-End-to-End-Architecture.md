@@ -1,17 +1,21 @@
 # ADR-028: Hospital ERP Patient & OPD Management End-to-End Architecture
 
 ## Status
+
 Accepted
 
 ## Date
+
 2026-10-06
 
 ## Context
+
 HealthGrid's hospital administration workspace previously relied on a generic dashboard overview without dedicated, pixel-accurate operational modules for Patient Management and OPD Management as depicted in the clinical reference designs (`Patient management ERP Ref.png` and `OPD management ERP ref.png`). Furthermore, citizen personal vaults (`healthMemoryService`), doctor tele-clinics, and hospital ERP data existed in disparate silos without a unified federated HealthID bridge.
 
 ## Decisions Made
 
 ### 1. Unified Federated Patient & Hospital Store (`unifiedPatientStore.ts`)
+
 - Created an ABDM-compliant central reactive store bridging citizen personal vaults (`healthMemoryService`), multi-profile family beneficiaries (`familyMemberService`), and hospital operational workspaces.
 - Every citizen and patient is indexed by their sovereign HealthID (e.g. `HG001245` or auto-generated `HG-XXXX`).
 - Entering or looking up a HealthID automatically fetches longitudinal medical records (demographics, blood group, recorded allergies, chronic conditions, past hospital visits, prescriptions, and vitals).
@@ -19,6 +23,7 @@ HealthGrid's hospital administration workspace previously relied on a generic da
 - Vitals recorded in the hospital OPD automatically sync to the citizen's personal longitudinal health vault with timestamp and clinical facility tags.
 
 ### 2. Patient Management Module (`PatientManagementView.tsx`)
+
 - Built pixel-accurate interface matching `Patient management ERP Ref.png`:
   - 4 Dynamic Top KPI Cards: Total Patients (1,248), Today's Visits (86), New Patients (14), Active Follow-ups (132) with percentage trends.
   - Granular Search & Filter System: Dynamic search across Name, HealthID, Phone, and Visit Reason; filter pills for All Patients, Today, New, Follow-ups, and More Filters dropdown.
@@ -33,6 +38,7 @@ HealthGrid's hospital administration workspace previously relied on a generic da
   - Registration Modal (`AddPatientModal.tsx`): Supports instant HealthID lookup or new patient enrollment.
 
 ### 3. OPD Management Module (`OpdManagementView.tsx`)
+
 - Built pixel-accurate interface matching `OPD management ERP ref.png`:
   - Top Action Header: `[+ New OPD Registration]` (`OpdRegistrationModal.tsx`), `[🚶 Walk-in Patient]` (`WalkInModal.tsx`), and `[📄 Today's Reports]` (`TodayReportsModal.tsx`).
   - 4 Dynamic Stat Cards: Total OPD Patients (540), Currently Waiting (live count), In Consultation (pulsing Live indicator), and Completed Today (recalculated dynamically).
@@ -48,11 +54,13 @@ HealthGrid's hospital administration workspace previously relied on a generic da
     - Patient Alerts with `+ Add` alert trigger, Blood Group, and Chronic Conditions edit badges.
 
 ### 4. Cross-Module Real-Time Reactivity
+
 - State modifications in Patient Management (e.g. adding a patient or editing allergies) immediately propagate to OPD Management and the main hospital KPI cards.
 - Status changes in OPD Management (e.g. advancing Token 01 to "In Consultation" or "Completed") dynamically recalculate Currently Waiting, In Consultation, and Completed counters in real time.
 - Vitals saved in OPD are instantly reflected in the patient's longitudinal history and personal portal.
 
 ## Consequences
+
 - **Clinical Efficiency**: Hospital staff and physicians can manage walk-ins, triage queues, consultation notes, prescriptions, and billing in a unified, tactile interface.
 - **Interoperability**: Bridges hospital operations with citizen health sovereignty under ABDM guidelines.
 - **Verification**: Verified end-to-end via automated browser subagent with zero build and lint errors.

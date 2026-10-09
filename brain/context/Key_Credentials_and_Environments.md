@@ -21,14 +21,17 @@ Back to [[00_Index]]
 | **HG-H003** | Stanley Medical College & Hospital | `stanley_admin` | `Stanley#Hospital2026` | Hospital Admin |
 
 ## Test Citizen / Patient Accounts
+
 - **Default Guest / Patient Session**: Unauthenticated public browsing for all triage and locator tools.
 - **Mock Personal User**: `Mohamed` (`mohamed.patient@healthgrid.in`) with linked medical vault.
 
 ## Verification Secrets & Tokens
+
 - **Google Search Console Token**: `ixCkAfcqTBWKJbQBgViU10-aGK94QfGPP_BxmUnEiUY` (In `frontend/index.html`).
 - **Google OAuth Client**: Configured via Supabase Auth Dashboard.
 
 ## Multimodal Vision & OCR AI Providers (4-Tier Cascade)
+
 | Tier | Provider | Key Variable | Active Models | Role |
 | :--- | :--- | :--- | :--- | :--- |
 | **Tier 1** | Google DeepMind | `VITE_GEMINI_API_KEY` | `gemini-3.8-flash`, `gemini-3.5-flash-lite` | Primary multimodal prescription OCR & live camera vision |
@@ -36,8 +39,8 @@ Back to [[00_Index]]
 | **Tier 3** | NVIDIA NIM | `VITE_NVIDIA_API_KEY` | `meta/llama-3.2-11b-vision-instruct`, `meta/llama-3.2-90b-vision-instruct` | Enterprise high-precision VLM cursive handwriting decipherer |
 | **Tier 4** | Hugging Face | `VITE_HF_API_KEY` | `microsoft/trocr-base-handwritten` | Specialized Transformer OCR for doctor handwriting recognition |
 
-
 ## Related Notes
+
 - [[Multi_Tenant_State_Engine]]
 - [[Hospital_ERP_Dashboard]]
 - [[Supabase_Auth]]

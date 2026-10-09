@@ -1,9 +1,11 @@
 # ADR-044: React Native Android Architecture, OWASP Mobile Security Suite, and APK Generation
 
 ## Context
+
 Following the web application enhancements in [[ADR-043-Dynamic-Live-Clinic-Supabase-Telemetry-and-Frontier-Model-Pipeline]], the user requested packaging HealthGrid as a real industry-standard Android application (`.apk`) equipped with comprehensive mobile security implementations mirroring and extending the web application's zero-trust security architecture.
 
 Through `/grill-me` design alignment, the following architectural decisions were resolved:
+
 1. **Technology Stack**: React Native (Expo SDK 57 / New Architecture) compiling to native Android views (not a simple webview wrapper), matching the mobile architecture used by frontier tech scaleups (Meta, Shopify, Discord).
 2. **Repository Structure**: Dedicated `mobile/` directory at repository root (`C:\HealthGrid\mobile`), maintaining clean separation between web and mobile build artifacts.
 3. **UI & Design System**: NativeWind / Tailwind CSS tokens matching HealthGrid's 8pt spatial grid, dark slate theme (`#0B1120`), and emerald accents (`#10B981`).
@@ -16,11 +18,13 @@ Through `/grill-me` design alignment, the following architectural decisions were
 ## Decision
 
 ### 1. Dedicated Mobile Architecture (`C:\HealthGrid\mobile`)
+
 - Scaffolded Expo SDK 57 TypeScript application with React Native 0.86.3 and React 19.2.3.
 - Environment variables (`EXPO_PUBLIC_*`) linked in `.env` for Supabase, Groq, Gemini, and Hugging Face.
 - Root navigation in `App.tsx` featuring a 4-tab clinical bottom dock with dynamic active states.
 
 ### 2. OWASP Mobile Security Suite Implementation
+
 - **Hardware-Backed Android Keystore (`secureStorageService.ts`)**:
   - Leverages `expo-secure-store` utilizing AES-256 GCM authenticated encryption.
   - Keys, tokens, session profiles, and clinical transcripts are stored inside Android's Hardware TEE (Trusted Execution Environment) / StrongBox Keymaster.
@@ -39,6 +43,7 @@ Through `/grill-me` design alignment, the following architectural decisions were
   - Generates deterministic hardware fingerprint hashes using SHA-256 via `expo-crypto`.
 
 ### 3. Core Mobile Clinical Screens
+
 - **DocBot AI Doctor (`ChatScreen.tsx`)**:
   - Real-time conversational AI doctor with Groq Llama-3.3-70B and Gemini fallbacks.
   - Strict zero-asterisk sanitization, bedside empathy, dynamic option pills (`<<<OPTIONS>>>`), expandable quick vitals drawer, and native Indian English/Tamil voice read-aloud via `expo-speech`.
@@ -59,6 +64,7 @@ Through `/grill-me` design alignment, the following architectural decisions were
   - Telemetry cards for nearest casualty trauma centers (RGGGH, Omandurar, Kilpauk).
 
 ### 4. Build Pipelines & APK Output
+
 - **EAS Cloud Build Profile (`eas.json`)**:
   - Configured `preview` profile with `android.buildType: "apk"` for instant installable APK generation in Expo Cloud (`npx eas-cli build -p android --profile preview`).
 - **Local Gradle Wrapper (`mobile/android`)**:
@@ -68,6 +74,7 @@ Through `/grill-me` design alignment, the following architectural decisions were
 ---
 
 ## Status
+
 - **TypeScript**: 100% strict compilation pass with 0 errors (`npx tsc --noEmit`).
 - **Prebuild**: Native Android project successfully prebuilt with all security attributes.
 - **Status**: Ready for APK generation via EAS Cloud Build or local Gradle.

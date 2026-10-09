@@ -1,11 +1,12 @@
 # 🗺️ User Flow Specifications
+
 ## Module 01: Citizen & Patient Clinical Journeys
 
 ---
 
 ## 1. Journey 1: Citizen Symptom Triage to Consultation
 
-```
+```text
 [ Citizen Opens DocBot Chat ]
               │
               ▼
@@ -57,7 +58,7 @@ sequenceDiagram
 
 ## 2. Journey 2: AI Live Clinic Virtual Consultation
 
-```
+```text
 [ Citizen Launches AI Live Clinic ]
               │
               ▼

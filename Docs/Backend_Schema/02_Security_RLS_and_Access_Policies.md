@@ -1,4 +1,5 @@
 # 🗄️ Backend Schema & Database Specifications
+
 ## Module 02: Row-Level Security (RLS) & Access Control Policies
 
 ---
@@ -7,7 +8,7 @@
 
 In HealthGrid, **100% of tables** have PostgreSQL Row-Level Security enabled. Even if a client API key is compromised, PostgreSQL's internal query planner evaluates the execution context against the authenticated JWT session claims (`auth.uid()` and `auth.jwt() ->> 'role'`), denying unauthorized cross-tenant mutations:
 
-```
+```text
 +=================================================================================================+
 |                              DATABASE ROW-LEVEL SECURITY TOPOLOGY                               |
 +=================================================================================================+

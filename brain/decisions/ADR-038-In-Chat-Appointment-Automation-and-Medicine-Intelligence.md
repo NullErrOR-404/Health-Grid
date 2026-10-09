@@ -1,15 +1,19 @@
 # ADR-038: In-Chat Appointment Automation and Medicine Intelligence
 
 ## Status
+
 **ACCEPTED** (Implemented and Verified via Browser Automation)
 
 ## Date
+
 2026-10-07
 
 ## Context & Problem Statement
+
 Patients using DocBot previously needed to navigate away to the appointment booking module or ERP to reserve an OPD consultation. They requested a streamlined, conversational booking automation directly inside the chat interface matching `UI References/ChatUi ref.png`, where follow-up questions, fill-in-the-blank doctor and symptom inputs, interactive hospital switchers, real doctor carousels, and an instant OPD pass verification are handled seamlessly without breaking conversational context. Furthermore, patients asking about medicines required immediate access to authentic Jan Aushadhi pricing comparisons, indications in English and Tamil, and direct links to the nearest Kendras.
 
 ## Decision
+
 We implemented a complete end-to-end interactive in-chat appointment booking and medicine intelligence system inside `frontend/src/components/ChatbotPage.tsx` and associated services:
 
 1. **In-Chat 5-Step Interactive Booking Stepper (`renderAppointmentStepper`)**:
@@ -65,6 +69,7 @@ We implemented a complete end-to-end interactive in-chat appointment booking and
      - `[ 🩺 Talk to Doctor ]`
 
 ## Verification & Status
+
 - **Automated Verification**: Verified end-to-end via Chrome DevTools MCP against `http://localhost:5173/chat`:
   - Test 1 (NLP Auto-Extraction): Query `"Book Dr. Mohamed tomorrow morning for fever"` parsed doctor entity, department, and tomorrow date, mounted pre-selected carousel and Jan Aushadhi fever price comparison.
   - Test 2 (Confirmation & Live Queue): Clicked `[ Confirm Appointment ]`, generating digital pass `APPT261007199` and Live OPD Queue Radar with Token #99 and 4-stage milestone progression.
@@ -73,6 +78,7 @@ We implemented a complete end-to-end interactive in-chat appointment booking and
 - **Production Build**: `tsc -b && vite build` passed with zero errors.
 
 ## Consequences
+
 - **User Experience**: Drastically reduces patient drop-off by removing context switching; patients can book, reschedule, cancel, and track verified hospital appointments entirely within conversation.
 - **Architectural Integrity**: Uses real data from `doctorOpdService.ts`, `appointmentService.ts`, `unifiedPatientStore.ts`, and `medicineStoreService.ts` with zero mock strings or fake IDs.
 - **Responsive Standard**: 100% compliant with mobile-first and desktop-rich design requirements.

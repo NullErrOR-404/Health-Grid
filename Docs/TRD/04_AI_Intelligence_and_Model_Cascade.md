@@ -1,4 +1,5 @@
 # ⚙️ Technical Requirements Document (TRD)
+
 ## Module 04: Autonomous AI Intelligence, Model Cascade & Clinical Gating
 
 ---
@@ -7,7 +8,7 @@
 
 HealthGrid prevents vendor lock-in, rate-limit outages, and single-model bottlenecks by deploying an **Autonomous Multi-Tier Clinical Model Cascade** in `frontend/src/services/aiService.ts`:
 
-```
+```text
 +-----------------------------------------------------------------------------------+
 |                        PATIENT QUERY / CAMERA FRAME / VITALS                      |
 +-----------------------------------------------------------------------------------+
@@ -53,7 +54,9 @@ flowchart TD
 ## 2. Clinical Gating & SOCRATES History-Taking Invariants
 
 ### 2.1 The Anti-Premature Diagnosis Invariant
+
 In real-world clinical practice, a physician never proclaims a definitive diagnosis after hearing a single symptom sentence. DocBot strictly implements this rule:
+
 * **Turn 1 Mandatory Behavior**: When a patient states a complaint (e.g. *"I have severe stomach pain"*), the AI must acknowledge the discomfort with warm bedside empathy and ask **1 to 2 targeted clinical questions** regarding duration, exact location, radiation, or associated symptoms.
 * **Gated Diagnostic Conclusion**: A differential diagnosis and Jan Aushadhi generic plan can only be issued when:
   1. Diagnostic Certainty Score reaches $\ge 75\%$, OR
@@ -62,7 +65,9 @@ In real-world clinical practice, a physician never proclaims a definitive diagno
   4. The patient explicitly clicks the `[ 🩺 Give me your initial diagnosis now ]` override chip.
 
 ### 2.2 Living Clinical Case Dossier (`LivingClinicalDossier`)
+
 The conversational state maintains an active clinical blackboard synchronized across model invocations:
+
 * **Chief Complaint**: Canonical symptom statement.
 * **Timeline (SOCRATES: T)**: Duration and onset progression (e.g., 3 days, acute postprandial).
 * **Severity (SOCRATES: S)**: Patient-reported intensity score (1 to 10).
@@ -75,7 +80,7 @@ The conversational state maintains an active clinical blackboard synchronized ac
 
 ## 3. Two-Tier Agentic Tool Permission Model
 
-```
+```text
 +=================================================================================================+
 |                            TWO-TIER AGENTIC EXECUTION PERMISSIONS                               |
 +=================================================================================================+

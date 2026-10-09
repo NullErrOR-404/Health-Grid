@@ -17,6 +17,7 @@ This catalog documents the granular responsive, typography, image alignment, and
 ---
 
 ## 🌐 1. Global Layout & Shell
+
 - **Files**: `frontend/src/App.tsx`, `frontend/src/components/Navbar.tsx`, `frontend/src/components/Footer.tsx`, `frontend/src/index.css`
 - **Audit Findings**:
   - `RoamingDocBot` was mounted globally, drifting across mobile screens and covering buttons or text.
@@ -34,6 +35,7 @@ This catalog documents the granular responsive, typography, image alignment, and
 ---
 
 ## 🏠 2. Landing Page
+
 - **Files**: `HeroSection.tsx`, `ActionCards.tsx`, `OAuthTransparencySection.tsx`, `CommunityHealthSection.tsx`, `GovAlertMarquee.tsx`
 - **Audit Findings**:
   - `HeroSection.tsx`: On mobile, the 3D DocBot mascot card in the right column was either pushed below the fold with weak spacing or caused awkward vertical jumping.
@@ -50,6 +52,7 @@ This catalog documents the granular responsive, typography, image alignment, and
 ---
 
 ## 🤖 3. DocBot TeleClinic Consultation (`ChatbotPage.tsx`)
+
 - **Audit Findings**:
   - Fixed-height chat view occasionally conflicted with mobile browser viewport (`100vh` vs `100dvh`), hiding the input text field beneath the mobile virtual keyboard.
   - 288px left sidebar was rendered side-by-side with chat chamber on mobile, crushing viewport width.
@@ -63,6 +66,7 @@ This catalog documents the granular responsive, typography, image alignment, and
 ---
 
 ## 💊 4. Jan Aushadhi Generic Medicine Store (`MedicineStorePage.tsx`)
+
 - **Audit Findings**:
   - Category filter pills had visible scrollbars that overlapped card headers.
   - Search input placeholder was truncated on narrow mobile screens.
@@ -75,6 +79,7 @@ This catalog documents the granular responsive, typography, image alignment, and
 ---
 
 ## 📍 5. Hospital & Bed Locator Map (`FindCareNearYou.tsx`, `FacilityMapModal.tsx`)
+
 - **Audit Findings**:
   - Leaflet map container height on mobile was fixed, squeezing the hospital list cards below into a tiny vertical sliver.
   - Map tiles miscalculated render coordinates when toggled from hidden mobile tabs.
@@ -87,6 +92,7 @@ This catalog documents the granular responsive, typography, image alignment, and
 ---
 
 ## 🏥 6. Hospital Information System & ERP (`HospitalInformationSystem.tsx`, `HospitalErpDashboard.tsx`)
+
 - **Audit Findings**:
   - HIS top tab bar squashed buttons on mobile screens.
   - Hospital ERP dashboard lacked a mobile navigation menu entirely (`hidden md:flex`), leaving mobile administrators unable to switch modules.
@@ -99,6 +105,7 @@ This catalog documents the granular responsive, typography, image alignment, and
 ---
 
 ## 🪟 7. Clinical Modals & Drawers
+
 - **Files**: `AmbulanceModal.tsx`, `VoiceChatModal.tsx`, `PrescriptionModal.tsx`, `BabyShotsModal.tsx`, `DoctorHandoverModal.tsx`, `PatientIntakeModal.tsx`, `HealthGuideModal.tsx`, `LoginModal.tsx`, `VitalsTelemetryModal.tsx`, `RegisterHospitalModal.tsx`
 - **Audit Findings**:
   - Floating centered modals (`max-w-2xl mx-auto rounded-3xl`) clipped header and footer buttons on mobile screens with virtual keyboards.

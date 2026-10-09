@@ -17,14 +17,16 @@ parent: "[[00_Index]]"
 # 🏛️ ADR-046: Comprehensive Engineering Documentation Suite
 
 ## Context
-As HealthGrid finalized its end-to-end fullstack platform—spanning React 19 web presentation, React Native Expo 57 native Android APK with OWASP Mobile Top 10 hardening, Java 21 Spring Boot Project Loom backend, Supabase PostgreSQL with 100% Row-Level Security (RLS), and an 8B clinical LLM fine-tuning pipeline—there was a critical need for an authoritative, modular engineering documentation repository. 
+
+As HealthGrid finalized its end-to-end fullstack platform—spanning React 19 web presentation, React Native Expo 57 native Android APK with OWASP Mobile Top 10 hardening, Java 21 Spring Boot Project Loom backend, Supabase PostgreSQL with 100% Row-Level Security (RLS), and an 8B clinical LLM fine-tuning pipeline—there was a critical need for an authoritative, modular engineering documentation repository.
 
 Future AI coding agents and human engineers require instant, high-fidelity context before modifying code or designing features to prevent architectural drift, broken assumptions, data exfiltration vulnerabilities, or duplicate implementations.
 
 ## Decision
+
 We established a dedicated, modular engineering documentation architecture inside `Docs/` organized across 6 dedicated directories with standardized Snake_Case cross-platform paths, dual visualization diagrams (Unicode/ASCII text boxes for terminal/CLI rendering + GitHub-flavored Mermaid diagrams for visual rendering), and strict adherence to technical governance (zero mentions of the acronym "SIH"):
 
-```
+```text
 Docs/
 ├── README.md                            # Central Documentation Hub & Navigation Master
 │
@@ -59,6 +61,7 @@ Docs/
 ```
 
 ## Consequences & Guarantees
+
 1. **AI Agent Context Grounding**: Any AI coding subagent or developer initializing a session can ingest these structured documents to immediately understand all database schemas, DTOs, security constraints, and UI design rules before generating code.
 2. **Deterministic Security Invariants**: Explicit documentation of PostgreSQL RLS policies, Java anti-IP spoofing token-bucket filters, CDSCO Schedule H/X guards, and Android Keystore TEE encryption prevents inadvertent removal of defense-in-depth layers during refactoring.
 3. **Cross-Platform Portability**: Naming conventions (`Docs/UI_UX_Design`, etc.) remain fully compliant across Windows, Linux, and macOS environments, avoiding illegal character pitfalls.

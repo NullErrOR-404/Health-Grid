@@ -1,10 +1,13 @@
 # ADR-047: HealthGrid Clinician Operating System & Clinical Workflow Architecture
 
 ## Status
-**Accepted & Implemented**
+
+Current status: Accepted & Implemented.
 
 ## Context
+
 HealthGrid encompasses three major product surfaces:
+
 1. **PERSONAL**: Patient-facing health vault, AI triage, tele-clinic, and PMBJP generic pharmacy.
 2. **PROFESSIONAL**: Clinician operating system and workstation for doctors, nurses, and clinical teams.
 3. **HOSPITAL**: Hospital ERP / HIS for multi-tenant bed occupancy, billing, pharmacy inventory, and department operations.
@@ -12,6 +15,7 @@ HealthGrid encompasses three major product surfaces:
 Prior to this implementation, clinicians lacked a dedicated, longitudinal clinical workspace matching the enterprise depth of modern systems like Epic, Oracle Health, and athenaOne, while strictly retaining a clean, calm, modern, and minimal user experience without dashboard clutter or legacy complexity.
 
 ## Decision
+
 We designed and implemented the production-grade Clinician Operating System for HealthGrid, anchored visually by the reference design language (`My queue Reference.png`) and architecturally by a 38-section enterprise clinical workflow specification:
 
 1. **Domain Models & Type System** (`frontend/src/types/clinician.ts`):
@@ -55,12 +59,14 @@ We designed and implemented the production-grade Clinician Operating System for 
    - Added `/clinician`, `/doctor`, `/my-queue` direct URL route support.
 
 ## Consequences
+
 - **Positive**: Complete clinical workflow depth matching tier-1 enterprise EHRs without visual clutter or cognitive overload.
 - **Positive**: Strict data continuity across queue, encounters, orders, results, follow-ups, and longitudinal charts.
 - **Positive**: Embedded HealthGrid AI assistant respects clinical safety protocols and requires explicit confirmation for consequential actions.
 - **Positive**: Production bundle builds cleanly (`dist/assets/ClinicianPortalLayout-B1-gE7Rq.js` 221 kB) with 0 TypeScript errors.
 
 ## Related Documentation
+
 - [[00_Index]]
 - [[Active_Context]]
 - [[ADR-028-Hospital-ERP-Patient-and-OPD-Management-End-to-End-Architecture]]

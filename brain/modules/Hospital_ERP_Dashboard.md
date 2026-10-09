@@ -14,14 +14,17 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Overview
+
 A unified enterprise resource planning (ERP) operational interface for hospital administrators and medical superintendents.
 
 ## Technical Architecture
+
 - **Component**: `frontend/src/components/erp/HospitalErpDashboard.tsx`
 - **Userspace Isolation**: Driven by [[Multi_Tenant_State_Engine]] (`healthgrid_erp_userspace_${hospitalCode}`).
 - **Route**: Accessible at `/hospital-erp` or `/hospital-portal`.
 
 ## Core Features
+
 1. **Live Bed & Census Management**:
    - Total beds, ICU occupancy, ventilator status, discharge turnover rates.
 2. **Departmental Activity Streams**:
@@ -33,6 +36,7 @@ A unified enterprise resource planning (ERP) operational interface for hospital 
    - See [[ADR-003-MultiTenant-Hospital-Isolation]].
 
 ## Related Notes
+
 - [[Multi_Tenant_State_Engine]]
 - [[Hospital_Information_System_HIS]]
 - [[Key_Credentials_and_Environments]]

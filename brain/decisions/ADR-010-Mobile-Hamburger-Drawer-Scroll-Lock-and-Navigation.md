@@ -19,7 +19,9 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Context
+
 During live-device mobile testing of HealthGrid on mobile smartphones (iOS Safari, Android Chrome), two critical user experience deficiencies were discovered with the mobile hamburger navigation drawer:
+
 1. **Vertical Disconnect from Government Marquee**:
    - The government health alert ticker (`GovAlertMarquee`) was positioned as a static bar outside the sticky header, while the hamburger drawer was rendered at an arbitrary top offset (`top-16`, 64px). This severed the visual connection between the marquee and the drawer, cutting through the navbar and preventing the drawer from blending into the top bar.
 2. **Frozen / Trapped Touch Scrolling Inside Hamburger Section**:
@@ -65,14 +67,17 @@ We implemented a coordinated **Seamless Marquee Alignment & Unrestricted Touch-S
 ## Consequences
 
 ### Positive
+
 - **100% Fluid Mobile Scrolling**: Citizens can effortlessly swipe down and up through all health services, cards, and options with native inertia.
 - **Zero Gap Aesthetic**: The hamburger drawer opens cleanly flush against the government alert marquee, creating a cohesive, professional government-grade health portal interface.
 - **Clear Wayfinding**: Prominent `[← Back]` and `[✕ Close]` buttons remain docked at the top of the drawer directly below the marquee for effortless dismissal.
 
 ### Negative / Trade-offs
+
 - The marquee remains visible above the open hamburger menu; this is intentional as it maintains real-time public health broadcast awareness.
 
 ## Related Notes
+
 - [[ADR-008-Mobile-Navbar-Zero-Overflow-Architecture]]
 - [[ADR-009-Mobile-Login-Scroll-and-ChatUI-Minimal-Pills]]
 - [[Design_System_Tokens]]

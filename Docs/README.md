@@ -6,7 +6,7 @@ Welcome to the comprehensive technical and operational documentation repository 
 
 ## 🗂️ Documentation Navigation Directory
 
-```
+```text
 Docs/
 ├── README.md                            # Documentation Hub & Navigation Master (This File)
 │

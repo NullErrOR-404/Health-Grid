@@ -27,7 +27,7 @@ Back to [[00_Index]]
 
 ## Key Directories
 
-```
+```text
 HealthGrid/
 ├── brain/                   # Obsidian Second Brain (Knowledge Graph)
 ├── frontend/
@@ -42,6 +42,7 @@ HealthGrid/
 ```
 
 ## Related Notes
+
 - [[Deployment_and_Domains]]
 - [[Multi_Tenant_State_Engine]]
 - [[AI_Providers_and_LLMs]]

@@ -24,18 +24,23 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Context & Problem Statement
+
 On mobile devices (iOS Safari and Android Chrome), after a user completed uploading or capturing a prescription, the post-scan 2-column results UI rendered inside `PrescriptionModal.tsx`. However, the user was completely unable to scroll down past the initial prescription preview viewport to inspect extracted medicines, dosages, savings breakdown, clinical disclaimers, or bottom action buttons ("Save to Health Profile", "Find Medicines", "Hear Instructions").
 
 ## Root Cause Analysis
+
 1. **Lenis Pause Lockout & CSS Rule Gap**:
    When any modal opens, `App.tsx` calls `lenisService.pause()`. This adds `html.lenis-stopped` to the root `<html>` element.
    In `frontend/src/index.css`:
+
    ```css
    html.lenis-stopped, html.lenis-stopped body {
      overflow: hidden !important;
    }
    ```
+
    To allow inner modal scrolling during a pause, Lenis and the HealthGrid CSS design system require `data-lenis-prevent="true"`, which grants:
+
    ```css
    html.lenis-stopped [data-lenis-prevent],
    [data-lenis-prevent="true"] {
@@ -44,6 +49,7 @@ On mobile devices (iOS Safari and Android Chrome), after a user completed upload
      -webkit-overflow-scrolling: touch !important;
    }
    ```
+
    `PrescriptionModal.tsx` was completely missing `data-lenis-prevent` attributes on its outer backdrop, modal card, and inner scrollable body. As a consequence, mobile browsers suppressed touch drag gestures completely inside the modal.
 
 2. **Mobile Dynamic Viewport Boundary**:
@@ -57,7 +63,8 @@ On mobile devices (iOS Safari and Android Chrome), after a user completed upload
 
 ## Comprehensive Root Cause Analysis & Resolution (Post-Audit 2026-10-05)
 
-### Deep Technical Root Causes Uncovered:
+### Deep Technical Root Causes Uncovered
+
 1. **Lenis `VirtualScroll` Touch Event Interception**:
    - Lenis binds `touchstart`, `touchmove`, and `touchend` listeners to `window` with `{ passive: false }`.
    - When `lenisService.pause()` was called upon modal opening, it invoked `lenisInstance.stop()`, setting `_isStopped = true`.
@@ -81,10 +88,10 @@ On mobile devices (iOS Safari and Android Chrome), after a user completed upload
 ---
 
 ## Verification & Outcomes
+
 - `npm run build` (`tsc -b && vite build`) passed with 0 errors in 1.89s.
 - Chrome DevTools mobile emulation (390x844 with touch enabled) verified:
   - `htmlOverflowY`: `"auto"`, `bodyOverflowY`: `"auto"`.
   - Auto-scroll to `scrollTop: 140` brings "Analyze Prescription" into immediate focus.
   - Smooth downward scrolling to `scrollTop: 420` brings "How it works?", "Tips for better results", and "Recent Uploads" smoothly into view.
   - Reset to `scrollTop: 0` functions effortlessly.
-

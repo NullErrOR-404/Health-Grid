@@ -1,4 +1,5 @@
 # 🎨 UI/UX Design Specifications
+
 ## Module 02: Screen Layouts, Responsive Grids & Viewport Breakpoints
 
 ---
@@ -17,7 +18,8 @@ HealthGrid adheres to a **Mobile-First Responsive Grid** ensuring zero horizonta
 ## 2. AI Live Clinic Responsive Layout
 
 ### Desktop Layout (3-Column Clinical Workspace)
-```
+
+```text
 +-------------------------------------------------------------------------------------------------+
 |                                  DESKTOP AI LIVE CLINIC (>= 1024px)                             |
 +-------------------------------------------------------------------------------------------------+
@@ -31,7 +33,8 @@ HealthGrid adheres to a **Mobile-First Responsive Grid** ensuring zero horizonta
 ```
 
 ### Mobile Layout (< 1024px)
-```
+
+```text
 +-------------------------------------------------------------+
 |               MOBILE AI LIVE CLINIC (< 1024px)              |
 +-------------------------------------------------------------+
@@ -77,14 +80,14 @@ flowchart LR
 * **Quick-Add Measurement Form**:
   Compact inline inputs with automatic clinical range validation (e.g. Systolic BP 70–240 mmHg, SpO2 70–100%).
 * **Longitudinal History Table**:
-  - Desktop: Multi-column tabular view with timestamp, reading, clinical status badge (`Normal`, `Elevated`, `Critical`), and actions.
-  - Mobile: Smooth horizontal touch scrolling with sticky timestamp column preventing table truncation.
+  * Desktop: Multi-column tabular view with timestamp, reading, clinical status badge (`Normal`, `Elevated`, `Critical`), and actions.
+  * Mobile: Smooth horizontal touch scrolling with sticky timestamp column preventing table truncation.
 
 ---
 
 ## 4. Hospital ERP Dashboard Layout (`HospitalErpDashboard.tsx`)
 
-```
+```text
 +=================================================================================================+
 |                              HOSPITAL ERP CASUALTY COMMAND TOWER                                |
 +=================================================================================================+

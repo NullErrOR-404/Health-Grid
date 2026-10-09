@@ -1,4 +1,5 @@
 # ⚙️ Technical Requirements Document (TRD)
+
 ## Module 01: System Architecture, Technology Stack & Topology
 
 ---
@@ -7,7 +8,7 @@
 
 HealthGrid employs a zero-trust, decoupled cloud architecture connecting responsive web clients, native Android devices, an enterprise Java backend, and distributed AI models:
 
-```
+```text
 +===================================================================================================+
 |                                    CLIENT PRESENTATION LAYER                                      |
 |                                                                                                   |
@@ -134,4 +135,4 @@ graph TD
 | **Messaging** | Spring STOMP WebSockets | 3.3.4 | Sub-second bidirectional ambulance telemetry and trauma desk alerts. |
 | **Cloud Database** | PostgreSQL on Supabase | 15.x | ACID persistence, WAL Change Data Capture, 100% Row-Level Security. |
 | **Vector Search** | pgvector + Hybrid RAG | 0.5.x | High-dimensional embeddings matching colloquial symptoms to ICMR guidelines. |
-| **Inference Providers**| Groq LPU, Google Gemini, HF | API v1 | Sub-300ms open-weight inference, multimodal OCR, free serverless 8B serving. |
+| **Inference Providers** | Groq LPU, Google Gemini, HF | API v1 | Sub-300ms open-weight inference, multimodal OCR, free serverless 8B serving. |

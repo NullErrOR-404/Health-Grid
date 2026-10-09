@@ -17,9 +17,11 @@ authors:
 # ADR-049: 10-Stage Clinical Encounter Workspace Persistence, CDS 1-Tap Resolutions, and Digital Signature Lock
 
 ## 🎯 Context & Problem Statement
-The HealthGrid Clinician Operating System previously established the foundational 10-Stage Clinical Encounter navigation (`overview` → `history` → `exam` → `assessment` → `plan` → `orders` → `prescription` → `referral` → `follow-up` → `sign-off`) and initial user queue interfaces ([[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]], [[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]]). 
+
+The HealthGrid Clinician Operating System previously established the foundational 10-Stage Clinical Encounter navigation (`overview` → `history` → `exam` → `assessment` → `plan` → `orders` → `prescription` → `referral` → `follow-up` → `sign-off`) and initial user queue interfaces ([[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]], [[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]]).
 
 However, several critical enterprise EHR capabilities remained unpersisted:
+
 1. Encounter state, clinical orders, and e-prescriptions were only kept in volatile client-side memory or LocalStorage.
 2. Clinical Decision Support (CDS) alerts displayed passive notifications without 1-tap actionable clinical intervention paths (e.g., swapping penicillin-class drugs to macrolides upon allergy detection, or adding STAT serum electrolytes during ACEi + MRA hyperkalemia risk).
 3. The sign-off workflow lacked cryptographic non-repudiation, immutable locking, and medical council registration provenance (`TN-MC-84920`).
@@ -28,6 +30,7 @@ However, several critical enterprise EHR capabilities remained unpersisted:
 ---
 
 ## 🏛️ Decision Drivers
+
 1. **Hybrid Relational & Structured Document Architecture**: Combine relational integrity (for orders and prescriptions that need querying and analytics) with structured JSONB (for complex SOAP notes and physical examination findings).
 2. **Instant Optimistic UI with Resilient Background Synchronization**: Clinicians operate in fast-paced OPD settings; UI state must update with zero perceived latency while guaranteeing background synchronization with Supabase PostgreSQL.
 3. **Medical-Legal Immutability**: Once an encounter is signed and closed, all editable inputs must lock into read-only mode, displaying a verifiable cryptographic SHA-256 signature hash and registration details.
@@ -39,7 +42,9 @@ However, several critical enterprise EHR capabilities remained unpersisted:
 ## 📐 Architecture & Key Changes
 
 ### 1. Database Schema Migration (`public.encounters`, `public.prescriptions`, `public.clinical_orders`)
+
 We introduced three first-class PostgreSQL tables in Supabase:
+
 - **`public.encounters`**:
   - `id` (TEXT PRIMARY KEY)
   - `patient_id` (UUID REFERENCES `public.patients(id)`)
@@ -67,7 +72,9 @@ We introduced three first-class PostgreSQL tables in Supabase:
 - **Row Level Security**: Configured open permissive RLS policies (`FOR ALL USING (true) WITH CHECK (true)`) across all three tables to prevent anonymous query loops and guarantee seamless synchronization.
 
 ### 2. CDS 1-Tap Actionable Resolutions Engine
+
 Extended `frontend/src/services/clinician/cdsRulesEngine.ts` to emit structured resolution payloads:
+
 - **Penicillin Allergy Shield**: Automatically provides 1-tap swap to `Azithromycin 500 mg OD (3 days)`.
 - **Severe Hyperkalemia Shield (ACEi + MRA)**: Emits 1-tap `STAT Serum Electrolytes (Na+, K+, Cl-) [STAT]` clinical order.
 - **CKD Stage 3b NSAID Nephrotoxicity**: Emits 1-tap swap to safe alternative `Paracetamol 650 mg TDS (3 days)`.
@@ -76,7 +83,9 @@ Extended `frontend/src/services/clinician/cdsRulesEngine.ts` to emit structured 
 - **Clinical Justification Override**: Clinicians can supply an explicit justification note, permanently stamped into `encounter.overrideJustifications`.
 
 ### 3. Clinician Workflow Store & Background Persistence
+
 Extended `frontend/src/services/clinician/clinicianWorkflowStore.ts`:
+
 - **`updateEncounter()`**: Immediate local store update + async upsert to `public.encounters`.
 - **`addOrderToEncounter()` & `applyOrderSetToEncounter()`**: Immediate local push + async insert into `public.clinical_orders`.
 - **`removeOrderFromEncounter()`**: Immediate state filter + async delete from `public.clinical_orders`.
@@ -90,7 +99,9 @@ Extended `frontend/src/services/clinician/clinicianWorkflowStore.ts`:
   - Marks active queue item as `COMPLETED`.
 
 ### 4. Locked Audit Workspace UI
+
 Updated `frontend/src/components/clinician/encounter/ClinicalEncounterWorkspace.tsx`:
+
 - **Top Audit Banner**: Prominently renders a green cryptographic verification badge with doctor credentials, verification timestamp, and the SHA-256 signature hash.
 - **Stage Navigation & Guards**: When locked, all text inputs, textareas, and order action buttons are disabled/read-only.
 - **CDS Resolution Cards**: In-place action buttons ("Swap to Safe Alternative", "Add Recommended Order", "Override Justification") with immediate toast notices.
@@ -99,6 +110,7 @@ Updated `frontend/src/components/clinician/encounter/ClinicalEncounterWorkspace.
 ---
 
 ## ⚡ Verification & Consequences
+
 - **Build Status**: Verified with `tsc -b && vite build` (0 errors).
 - **PostgreSQL Connectivity**: Successfully connected to Supabase PostgreSQL (`db.cosnhycbvsxedogtejos.supabase.co:5432/postgres`), schema created, and tested.
 - **Digital Non-Repudiation**: Guarantees tamper-evident audit records adhering to ABDM/NHA digital prescription standards.

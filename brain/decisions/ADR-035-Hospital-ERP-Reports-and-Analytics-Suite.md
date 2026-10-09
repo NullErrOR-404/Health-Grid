@@ -19,7 +19,8 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Context
-Hospital executive management, medical superintendents, and operational leads need clear, real-time insight into patient volumes, clinical outcomes, bed occupancy, department workloads, and revenue streams. Traditional hospital reporting often relies on static, disconnected PDF dumps or delayed batch jobs. 
+
+Hospital executive management, medical superintendents, and operational leads need clear, real-time insight into patient volumes, clinical outcomes, bed occupancy, department workloads, and revenue streams. Traditional hospital reporting often relies on static, disconnected PDF dumps or delayed batch jobs.
 
 HealthGrid required a unified, high-fidelity Reports & Analytics module matching the reference design in `UI References/Reports & Analytics ref.png`, powered entirely by real database aggregations from live tables (`patients`, `appointments`, `ipd_admissions`, `emergency_cases`, `ipd_beds`) with zero hardcoded values, live date-range filtering, and instant export capabilities.
 
@@ -54,11 +55,13 @@ HealthGrid required a unified, high-fidelity Reports & Analytics module matching
    - **Printable Report**: Formats report data into a clean, printer-friendly summary view invoking native `window.print()`.
 
 ## Consequences
+
 - **Positive**: 100% real database calculations with zero mock numbers or hardcoded charts.
 - **Positive**: High visual fidelity matching `Reports & Analytics ref.png` with smooth Recharts interactions and responsive layouts.
 - **Positive**: Complete hospital operational transparency across clinical, financial, and bed management domains.
 
 ## Related Notes
+
 - [[Hospital_ERP_Dashboard]]
 - [[ADR-034-Hospital-ERP-Doctors-and-OPD-Management]]
 - [[ADR-029-IPD-and-Bed-Management-End-to-End-Architecture]]

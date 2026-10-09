@@ -31,11 +31,14 @@ HealthGrid enforces an uncompromising privacy architecture tailored for clinical
    - Patient vaults in `localStorage` or Supabase use cryptographic tokens tied to session authentication.
 
 ## Transparent Disclosures
+
 The public homepage displays a dedicated transparency banner. See:
+
 - [[ADR-004-User-Data-Transparency-Hero]]
 - [[Google_OAuth_and_Verification]]
 
 ## Related Notes
+
 - [[ADR-001-Semantic-Privacy-Links]]
 - [[Supabase_Auth]]
 - [[Google_OAuth_and_Verification]]

@@ -1,11 +1,12 @@
 # 🗄️ Backend Schema & Database Specifications
+
 ## Module 01: PostgreSQL Database Schemas, Tables & ERD
 
 ---
 
 ## 1. Entity-Relationship Diagram (ERD)
 
-```
+```text
 +-------------------------------------------------------------------------------------------------+
 |                                 HEALTHGRID POSTGRESQL CLUSTER ERD                               |
 +-------------------------------------------------------------------------------------------------+
@@ -138,6 +139,7 @@ erDiagram
 ## 2. Table Schemas & Constraints (DDL)
 
 ### 2.1 `public.patients`
+
 ```sql
 CREATE TABLE public.patients (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -155,6 +157,7 @@ CREATE INDEX idx_patients_health_id ON public.patients(health_id);
 ```
 
 ### 2.2 `public.doctors`
+
 ```sql
 CREATE TABLE public.doctors (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -172,6 +175,7 @@ CREATE INDEX idx_doctors_department ON public.doctors(department);
 ```
 
 ### 2.3 `public.appointments`
+
 ```sql
 CREATE TABLE public.appointments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -189,6 +193,7 @@ CREATE INDEX idx_appointments_date ON public.appointments(appointment_date);
 ```
 
 ### 2.4 `public.ipd_beds` (250 Hospital Beds)
+
 ```sql
 CREATE TABLE public.ipd_beds (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -203,6 +208,7 @@ CREATE INDEX idx_ipd_beds_ward ON public.ipd_beds(ward_type, is_occupied);
 ```
 
 ### 2.5 `public.emergency_cases`
+
 ```sql
 CREATE TABLE public.emergency_cases (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -218,6 +224,7 @@ CREATE INDEX idx_emergency_esi ON public.emergency_cases(esi_level, triage_categ
 ```
 
 ### 2.6 `public.medicines` (Jan Aushadhi Formulary)
+
 ```sql
 CREATE TABLE public.medicines (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

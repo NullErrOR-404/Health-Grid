@@ -1,4 +1,5 @@
 # 🚀 Implementation Plan
+
 ## Module 02: Testing, Verification, Quality Gates & Deployment Runbooks
 
 ---
@@ -7,7 +8,7 @@
 
 HealthGrid enforces strict multi-stage quality gates to guarantee clinical accuracy, deterministic data security, zero-downtime scalability, and mobile hardening before any code reaches production.
 
-```
+```text
 +=================================================================================================+
 |                              HEALTHGRID VERIFICATION & CI/CD PIPELINE                           |
 +=================================================================================================+
@@ -73,29 +74,37 @@ flowchart TD
 ## 2. Testing Quality Gates
 
 ### Gate A: Frontend & Mobile Type Safety
+
 Both web and native presentation layers must pass zero-warning TypeScript checks:
+
 ```bash
 # Run in c:\HealthGrid\frontend
 cd c:\HealthGrid\frontend
 npx tsc --noEmit
 npm run build
 ```
+
 * **Acceptance Criteria**: Exit code `0`. Bundle size report generated with no circular dependency warnings.
 
 ### Gate B: Java 21 Enterprise Backend Verification
+
 The Spring Boot enterprise service must compile and pass all test suites on Project Loom virtual threads:
+
 ```bash
 # Run in c:\HealthGrid\backend-java
 cd c:\HealthGrid\backend-java
 mvn clean test
 ```
+
 * **Acceptance Criteria**: All JUnit tests pass, including:
   1. `RateLimiterFilterTest`: Verifies 429 response when client exceeds 300 requests/minute.
   2. `DrugJailbreakAdviceTest`: Verifies that requests attempting to prescribe Morphine, Fentanyl, or Alprazolam without an authenticated specialist medical registration number (RMP) are blocked with a `403 Forbidden` response and an audit log event.
   3. `VirtualThreadExecutorTest`: Confirms dispatching 10,000 parallel requests without OS thread starvation.
 
 ### Gate C: Supabase PostgreSQL Row-Level Security (RLS) Verification
+
 Execute SQL verification against the production or staging Supabase instance to ensure zero data leaks:
+
 ```sql
 -- Verify all 7 core tables have RLS enabled
 SELECT tablename, rowsecurity 
@@ -103,6 +112,7 @@ FROM pg_tables
 WHERE schemaname = 'public' 
   AND tablename IN ('patients', 'doctors', 'appointments', 'emergency_cases', 'ipd_beds', 'ipd_admissions', 'medicines');
 ```
+
 * **Acceptance Criteria**: All 7 rows must return `rowsecurity = true`. Any table returning `false` fails the deployment gate immediately.
 
 ---
@@ -110,13 +120,16 @@ WHERE schemaname = 'public'
 ## 3. Local Development Runbooks
 
 ### Runbook 1: Frontend Development Server
+
 ```bash
 cd c:\HealthGrid\frontend
 npm install
 npm run dev
 ```
+
 * **URL**: `http://localhost:5173`
 * **Configuration**: Ensure `.env` contains:
+
   ```env
   VITE_SUPABASE_URL=https://<project-ref>.supabase.co
   VITE_SUPABASE_ANON_KEY=<anon-jwt>
@@ -126,15 +139,18 @@ npm run dev
   ```
 
 ### Runbook 2: Java 21 Spring Boot Backend Server
+
 ```bash
 cd c:\HealthGrid\backend-java
 mvn spring-boot:run
 ```
+
 * **Port**: `8080`
 * **WebSocket Endpoint**: `ws://localhost:8080/ws-emergency`
 * **Health Check**: `GET http://localhost:8080/actuator/health`
 
 ### Runbook 3: Native Android Mobile Build (Local Debug APK)
+
 ```bash
 # From workspace root
 npx expo run:android
@@ -143,6 +159,7 @@ npx expo run:android
 cd android
 .\gradlew.bat assembleDebug
 ```
+
 * **Output Artifact**: `android/app/build/outputs/apk/debug/app-debug.apk`
 
 ---
@@ -150,11 +167,14 @@ cd android
 ## 4. Production Deployment Runbooks
 
 ### Deployment 1: Global Edge Web Deployment (Vercel)
+
 HealthGrid web application is architected for Vercel edge deployment:
+
 ```bash
 cd c:\HealthGrid\frontend
 npx vercel --prod
 ```
+
 * **Build Command**: `npm run build`
 * **Output Directory**: `dist`
 * **Header Policies**:
@@ -164,7 +184,9 @@ npx vercel --prod
   * `Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' https://apis.google.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.groq.com https://generativelanguage.googleapis.com https://api-inference.huggingface.co;`
 
 ### Deployment 2: Native Android APK Packaging (Cloud EAS)
+
 For preview and release distribution without local Android Studio / NDK overhead:
+
 ```bash
 # Configure project credentials
 npx eas login
@@ -198,6 +220,7 @@ sequenceDiagram
 ## 5. Operations, Circuit Breakers & Incident Runbooks
 
 ### Incident 1: Groq LPU Rate Limit Exceeded (HTTP 429)
+
 * **Trigger**: Sudden surge in DocBot triage conversations exceeding Groq tier limits.
 * **Automated Mitigation**:
   1. `aiService.ts` complexity arbiter intercepts HTTP 429 response.
@@ -206,6 +229,7 @@ sequenceDiagram
 * **Human Operator Action**: Check Groq dashboard usage metrics; scale tier or adjust token quota in `aiService.ts`.
 
 ### Incident 2: High Casualty Surge & Bed Saturation (ICU/Emergency Wards)
+
 * **Trigger**: Hospital casualty intake registers mass casualty incident (MCI, ESI 1 or 2).
 * **Automated Mitigation**:
   1. STOMP WebSocket channel `/topic/emergency-dispatch` broadcasts high-priority alert to all connected medical workstations.
@@ -213,6 +237,7 @@ sequenceDiagram
 * **Operator Action**: Click "Convert General to Oxygen Bed" in ERP Ward Manager to reallocate dynamic inventory.
 
 ### Incident 3: Network Disconnect on Paramedic Ambulance Tablet
+
 * **Trigger**: Paramedic in transit loses 4G/5G cellular connectivity while completing SBAR handover.
 * **Automated Mitigation**:
   1. Frontend / Native App caches SBAR vitals into IndexedDB / Encrypted SQLite local storage.

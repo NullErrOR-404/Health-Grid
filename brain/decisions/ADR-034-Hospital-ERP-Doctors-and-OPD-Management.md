@@ -18,6 +18,7 @@ parent: "[[00_Index]]"
 Back to [[00_Index]]
 
 ## Context
+
 High-volume hospital outpatient departments (OPD) require unified management of medical staff, consultation rooms, OPD schedules, daily patient token queues, and real-time consultation handoffs. Clinicians and clinical administrators must be able to inspect doctor rosters, monitor booked vs total appointment slots, adjust weekly OPD shift schedules, manage consultation rooms, and call waiting patients directly into active consultations without hardcoding or page reload latencies.
 
 HealthGrid required an end-to-end, production-grade Doctors & OPD module matching the visual reference design in `UI References/Doctors & OPD.png`, backed by pure real database values with zero static placeholders.
@@ -51,11 +52,13 @@ HealthGrid required an end-to-end, production-grade Doctors & OPD module matchin
    Engineered inline SVG initials avatar generation (`getFallbackAvatar`) with `onError` event recovery, ensuring doctor cards remain visually pristine even under network dropouts or image source failures.
 
 ## Consequences
+
 - **Positive**: 100% real database values from Supabase PostgreSQL with zero mock numbers or hardcoded rosters.
 - **Positive**: Pixel-accurate layout matching `Doctors & OPD.png` with instant keep-alive tab switching (<1ms).
 - **Positive**: Seamless clinical transition from OPD doctor schedule to active patient consultation queue.
 
 ## Related Notes
+
 - [[Hospital_ERP_Dashboard]]
 - [[Appointments_System_Architecture]]
 - [[ADR-028-Hospital-ERP-Patient-and-OPD-Management-End-to-End-Architecture]]
