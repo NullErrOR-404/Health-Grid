@@ -36,8 +36,33 @@ export const MyQueueView: React.FC<MyQueueViewProps> = ({
     storeState.patients[0];
 
   const activeQueueItem = storeState.queue.find(
-    (q) => q.patientId === activePatient.id
+    (q) => q.patientId === activePatient?.id
   );
+
+  // Dynamic Date & Greeting
+  const currentDateFormatted = new Date().toLocaleDateString('en-US', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  const currentHour = new Date().getHours();
+  const greetingTimeOfDay =
+    currentHour < 12 ? 'Good morning' : currentHour < 17 ? 'Good afternoon' : 'Good evening';
+  const greetingEmoji = currentHour < 18 ? '☀️' : '🌙';
+  const doctorDisplayName = storeState.clinician?.name || 'Doctor';
+
+  // Dynamic Queue Status Counters
+  const totalPatientsToday = storeState.queue.length;
+  const waitingPatientsCount = storeState.queue.filter((q) => q.status === 'WAITING').length;
+  const inConsultationPatientsCount = storeState.queue.filter((q) => q.status === 'IN_CONSULTATION').length;
+  const scheduledLaterCount = storeState.queue.filter((q) => q.status === 'SCHEDULED').length;
+
+  // Dynamic Attention Counters
+  const abnormalResultsCount = storeState.results.filter((r) => r.isAbnormal || r.isCritical).length;
+  const unsignedNotesCount = storeState.encounters.filter((e) => e.status === 'IN_PROGRESS' || e.status === 'READY_FOR_SIGN').length;
+  const referralUpdatesCount = storeState.referrals.filter((r) => r.status === 'REPORT_RECEIVED' || r.status === 'SENT').length;
+  const followUpsDueCount = storeState.followUps.filter((f) => f.status === 'PENDING').length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
@@ -46,20 +71,20 @@ export const MyQueueView: React.FC<MyQueueViewProps> = ({
         {/* Left: Greeting & Headline */}
         <div>
           <div className="text-xs font-semibold text-slate-400">
-            Mon, 29 Sep 2025
+            {currentDateFormatted}
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2 mt-0.5">
-            <span>Good morning, Dr. Mohamed</span>
-            <span className="text-amber-500">☀️</span>
+            <span>{greetingTimeOfDay}, {doctorDisplayName}</span>
+            <span className="text-amber-500">{greetingEmoji}</span>
           </h1>
           <div className="text-xs text-slate-500 flex items-center gap-2 mt-1">
-            <span className="font-semibold text-slate-700">12 patients today</span>
+            <span className="font-semibold text-slate-700">{totalPatientsToday} patients today</span>
             <span>•</span>
-            <span className="text-teal-700 font-semibold">4 waiting</span>
+            <span className="text-teal-700 font-semibold">{waitingPatientsCount} waiting</span>
             <span>•</span>
-            <span className="text-sky-700 font-semibold">2 in consultation</span>
+            <span className="text-sky-700 font-semibold">{inConsultationPatientsCount} in consultation</span>
             <span>•</span>
-            <span>6 scheduled later</span>
+            <span>{scheduledLaterCount} scheduled later</span>
           </div>
         </div>
 
@@ -71,7 +96,7 @@ export const MyQueueView: React.FC<MyQueueViewProps> = ({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {/* 2 Abnormal Results */}
+            {/* Abnormal Results */}
             <button
               type="button"
               onClick={() => clinicianStore.setActiveTab('inbox')}
@@ -81,12 +106,12 @@ export const MyQueueView: React.FC<MyQueueViewProps> = ({
                 <AlertTriangle className="w-3.5 h-3.5" />
               </div>
               <div className="leading-tight">
-                <div className="text-xs font-bold text-rose-950">2</div>
+                <div className="text-xs font-bold text-rose-950">{abnormalResultsCount}</div>
                 <div className="text-[10px] text-rose-700 font-medium">Abnormal results</div>
               </div>
             </button>
 
-            {/* 3 Unsigned Notes */}
+            {/* Unsigned Notes */}
             <button
               type="button"
               onClick={() => clinicianStore.setActiveTab('inbox')}
@@ -96,12 +121,12 @@ export const MyQueueView: React.FC<MyQueueViewProps> = ({
                 <FileText className="w-3.5 h-3.5" />
               </div>
               <div className="leading-tight">
-                <div className="text-xs font-bold text-sky-950">3</div>
+                <div className="text-xs font-bold text-sky-950">{unsignedNotesCount}</div>
                 <div className="text-[10px] text-sky-700 font-medium">Unsigned notes</div>
               </div>
             </button>
 
-            {/* 1 Referral Update */}
+            {/* Referral Update */}
             <button
               type="button"
               onClick={() => clinicianStore.setActiveTab('referrals')}
@@ -111,12 +136,12 @@ export const MyQueueView: React.FC<MyQueueViewProps> = ({
                 <Users className="w-3.5 h-3.5" />
               </div>
               <div className="leading-tight">
-                <div className="text-xs font-bold text-teal-950">1</div>
-                <div className="text-[10px] text-teal-700 font-medium">Referral update</div>
+                <div className="text-xs font-bold text-teal-950">{referralUpdatesCount}</div>
+                <div className="text-[10px] text-teal-700 font-medium">Referral updates</div>
               </div>
             </button>
 
-            {/* 2 Follow-ups Due */}
+            {/* Follow-ups Due */}
             <button
               type="button"
               onClick={() => clinicianStore.setActiveTab('follow-ups')}
@@ -126,7 +151,7 @@ export const MyQueueView: React.FC<MyQueueViewProps> = ({
                 <MessageSquare className="w-3.5 h-3.5" />
               </div>
               <div className="leading-tight">
-                <div className="text-xs font-bold text-sky-950">2</div>
+                <div className="text-xs font-bold text-sky-950">{followUpsDueCount}</div>
                 <div className="text-[10px] text-sky-700 font-medium">Follow-ups due</div>
               </div>
             </button>

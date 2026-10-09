@@ -88,6 +88,7 @@ graph TD
     DEC --> ADR45[[ADR-045-Billion-Parameter-Clinical-Model-FineTuning-and-Free-Tier-Cloud-Serving]]
     DEC --> ADR46[[ADR-046-Comprehensive-Engineering-Documentation-Suite-PRD-TRD-UIUX-Schema-Flow-Plan]]
     DEC --> ADR47[[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]]
+    DEC --> ADR48[[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
     MOD --> CLIN[[Clinician_Portal_Operating_System]]
@@ -178,6 +179,7 @@ graph TD
 - [[ADR-045-Billion-Parameter-Clinical-Model-FineTuning-and-Free-Tier-Cloud-Serving]]: 8-Billion parameter clinical LLM fine-tuning pipeline targeting Meta Llama-3.1-8B-Instruct with Unsloth AI QLoRA on free Google Colab T4 GPU, multi-task dataset (Medical-O1, MedQA, ChatDoctor, PMBJP), and 100% free-tier cloud deployment via Hugging Face Serverless Inference API integrated into the deployed HealthGrid web and mobile apps.
 - [[ADR-046-Comprehensive-Engineering-Documentation-Suite-PRD-TRD-UIUX-Schema-Flow-Plan]]: Comprehensive 6-document engineering documentation suite (PRD, TRD, UI/UX Specification, Database Schema, System Architecture & User Flow, and 12-Week Implementation Plan) detailing HealthGrid's dual citizen/clinician operating system.
 - [[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]]: Enterprise-grade Clinician Portal architecture matching visual reference (`My queue Reference.png`) and modern EHR depth (Epic, Oracle Health, athenaOne) with minimal premium UX, reactive Pub/Sub store, 10-stage clinical encounters, CDS rules engine, longitudinal patient charts, and embedded HealthGrid AI assistant.
+- [[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]]: End-to-end authentic clinical database seeding (50 real patients, sovereign ABDM UHIDs, 50 appointments), RBAC roles schema (`public.user_roles`), open RLS security policies, live-first Supabase bidirectional sync, dynamic greetings/dates, and zero-hardcoded mock users across Clinician and ERP workspaces.
 
 ---
 

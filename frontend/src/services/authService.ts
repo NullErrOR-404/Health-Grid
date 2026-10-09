@@ -9,7 +9,13 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { rateLimiter } from './rateLimiter';
 import { sessionSecurityManager } from './sessionSecurityManager';
 
-export type UserRole = 'PERSONAL' | 'HEALTHCARE_PROFESSIONAL';
+export type UserRole =
+  | 'PERSONAL'
+  | 'HEALTHCARE_PROFESSIONAL'
+  | 'CITIZEN'
+  | 'DOCTOR'
+  | 'HOSPITAL_STAFF'
+  | 'SUPER_ADMIN';
 
 export interface AuthUser {
   id: string;
@@ -220,12 +226,27 @@ class AuthService {
           .then();
       }
 
+      // Check user_roles table for role assignments
+      let assignedRole: UserRole = (meta.role as UserRole) || 'CITIZEN';
+      try {
+        const { data: roleRow } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', sbUser.id)
+          .maybeSingle();
+        if (roleRow?.role) {
+          assignedRole = roleRow.role as UserRole;
+        }
+      } catch {
+        // fallback to meta.role or CITIZEN
+      }
+
       const user: AuthUser = {
         id: sbUser.id,
         name: sanitizedName,
         email: sbUser.email || meta.email || '',
         phone: profile?.phone_number || meta.phone || sbUser.phone || '',
-        role: (meta.role as UserRole) || 'PERSONAL',
+        role: assignedRole,
         avatarUrl: profile?.avatar_url || meta.avatar_url || undefined,
         healthId,
         age: profile?.age ?? meta.age ?? undefined,

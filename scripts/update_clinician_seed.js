@@ -1,4 +1,16 @@
-// ==============================================================================
+/**
+ * Script to update frontend/src/services/clinician/clinicianDataSeed.ts
+ * Integrates all 50 authentic database patients and real appointments for Dr. Mohamed.
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const targetPath = path.resolve('frontend/src/services/clinician/clinicianDataSeed.ts');
+console.log('Target clinicianDataSeed path:', targetPath);
+
+// Let's create the script to build the clean clinicianDataSeed.ts
+const clinicianSeedContent = `// ==============================================================================
 // HealthGrid Clinician Portal — Authentic Clinical Data Seed
 // Directly synchronizes with Supabase PostgreSQL public.patients & public.appointments
 // Zero Hardcoding: Uses real database UUIDs, sovereign ABDM HealthIDs, and live records
@@ -23,6 +35,8 @@ import type {
 import {
   AUTHENTIC_PATIENTS_50,
   AUTHENTIC_APPOINTMENTS_TODAY,
+  type DatabasePatientRecord,
+  type DatabaseAppointmentRecord,
 } from '../generatedPatientsData';
 
 export const SEED_CLINICIAN: ClinicianProfile = {
@@ -649,7 +663,7 @@ export const SEED_PATIENTS: PatientEntity[] = AUTHENTIC_PATIENTS_50.map((p, idx)
       recordedAt: '09:00 AM',
     },
     allergies: (p.known_allergies || []).map((alg, aIdx) => ({
-      id: `alg_${p.id.slice(0, 8)}_${aIdx}`,
+      id: \`alg_\${p.id.slice(0, 8)}_\${aIdx}\`,
       allergen: alg,
       category: 'MEDICATION' as const,
       severity: 'MODERATE' as const,
@@ -658,7 +672,7 @@ export const SEED_PATIENTS: PatientEntity[] = AUTHENTIC_PATIENTS_50.map((p, idx)
       status: 'ACTIVE' as const,
     })),
     medications: (p.current_medications || []).map((med, mIdx) => ({
-      id: `med_${p.id.slice(0, 8)}_${mIdx}`,
+      id: \`med_\${p.id.slice(0, 8)}_\${mIdx}\`,
       name: med.name,
       genericName: med.name,
       dosage: med.dosage || '10 mg',
@@ -670,7 +684,7 @@ export const SEED_PATIENTS: PatientEntity[] = AUTHENTIC_PATIENTS_50.map((p, idx)
       instructions: 'Take as prescribed with water',
     })),
     problems: (p.chronic_conditions || []).filter(c => c !== 'None reported').map((c, pIdx) => ({
-      id: `prob_${p.id.slice(0, 8)}_${pIdx}`,
+      id: \`prob_\${p.id.slice(0, 8)}_\${pIdx}\`,
       code: 'R68.89',
       name: c,
       category: 'General Clinical',
@@ -679,7 +693,7 @@ export const SEED_PATIENTS: PatientEntity[] = AUTHENTIC_PATIENTS_50.map((p, idx)
     })),
     investigations: [
       {
-        id: `inv_${p.id.slice(0, 8)}`,
+        id: \`inv_\${p.id.slice(0, 8)}\`,
         testName: 'General Metabolic & CBC Panel',
         date: 'Recent',
         status: (idx % 3 === 0 ? 'Abnormal' : 'Normal') as any,
@@ -688,7 +702,7 @@ export const SEED_PATIENTS: PatientEntity[] = AUTHENTIC_PATIENTS_50.map((p, idx)
     ],
     pastVisits: [
       {
-        id: `vis_${p.id.slice(0, 8)}`,
+        id: \`vis_\${p.id.slice(0, 8)}\`,
         date: '10 Aug 2025',
         reason: condition,
         provider: 'Dr. Mohamed',
@@ -698,7 +712,7 @@ export const SEED_PATIENTS: PatientEntity[] = AUTHENTIC_PATIENTS_50.map((p, idx)
     ],
     careGaps: idx % 4 === 0 ? [
       {
-        id: `gap_${p.id.slice(0, 8)}`,
+        id: \`gap_\${p.id.slice(0, 8)}\`,
         title: 'Routine Health Review & Preventive Care',
         dueText: 'Due in 2 weeks',
         status: 'DUE_SOON' as const,
@@ -776,7 +790,7 @@ export const SEED_QUEUE_ITEMS: PatientQueueItem[] = (
   const visitType = determineVisitType(appt.appointment_type, appt.reason_for_visit);
 
   return {
-    id: `q_${appt.id.slice(0, 8)}_${idx}`,
+    id: \`q_\${appt.id.slice(0, 8)}_\${idx}\`,
     patientId: patient.id,
     patient,
     appointmentId: appt.appointment_id || appt.id,
@@ -1015,42 +1029,42 @@ export const SEED_INBOX_ITEMS: ClinicalInboxItem[] = [
 export const SEED_ORDER_SETS: OrderSetTemplate[] = [
   {
     id: 'os_fever_workup',
-    name: 'Acute Febrile Illness / Dengue Workup',
+    title: 'Acute Febrile Illness / Dengue Workup',
     description: 'Protocol-based workup for acute fever (>100°F) lasting 2-5 days with suspected vector-borne or viral etiology.',
-    specialty: 'INFECTIOUS',
+    category: 'INFECTIOUS',
     items: [
-      { category: 'LABORATORY', name: 'Complete Blood Count (CBC) with Platelets & Differential', code: 'LAB-CBC', defaultNotes: 'Stat order' },
-      { category: 'LABORATORY', name: 'Dengue NS1 Antigen Rapid Card', code: 'LAB-DENGUE', defaultNotes: 'Stat card test' },
-      { category: 'LABORATORY', name: 'Peripheral Smear for Malarial Parasite (QBC)', code: 'LAB-MP', defaultNotes: 'Routine smear' },
-      { category: 'MEDICATION', name: 'Paracetamol 650mg TDS (SOS for temp > 99.5°F)', code: 'MED-PCM-650', defaultNotes: 'Oral after food. Do NOT co-administer NSAIDs/Ibuprofen.' },
-      { category: 'MEDICATION', name: 'Oral Rehydration Salts (ORS) 1 Sachet in 1L daily', code: 'MED-ORS', defaultNotes: 'Sip steadily throughout the day' },
-      { category: 'PROCEDURE', name: 'Fluid therapy: Drink min 2.5-3 Liters liquids daily (Coconut water, kanji, ORS)', code: 'PRC-FLUID', defaultNotes: 'Hydration therapy' },
+      { id: 'i1', category: 'LAB', name: 'Complete Blood Count (CBC) with Platelets & Differential', priority: 'STAT', selected: true },
+      { id: 'i2', category: 'LAB', name: 'Dengue NS1 Antigen Rapid Card', priority: 'STAT', selected: true },
+      { id: 'i3', category: 'LAB', name: 'Peripheral Smear for Malarial Parasite (QBC)', priority: 'ROUTINE', selected: false },
+      { id: 'i4', category: 'MED', name: 'Paracetamol 650mg TDS (SOS for temp > 99.5°F)', instructions: 'Oral after food. Do NOT co-administer NSAIDs/Ibuprofen.', selected: true },
+      { id: 'i5', category: 'MED', name: 'Oral Rehydration Salts (ORS) 1 Sachet in 1L daily', instructions: 'Sip steadily throughout the day', selected: true },
+      { id: 'i6', category: 'INSTRUCTION', name: 'Fluid therapy: Drink min 2.5-3 Liters liquids daily (Coconut water, kanji, ORS)', selected: true },
     ],
   },
   {
     id: 'os_htn_review',
-    name: 'Essential Hypertension Review & Organ Screening',
+    title: 'Essential Hypertension Review & Organ Screening',
     description: 'Quarterly review protocol for established hypertensive patients on dual/triple antihypertensive regimen.',
-    specialty: 'CARDIO',
+    category: 'CARDIO',
     items: [
-      { category: 'LABORATORY', name: 'Serum Electrolytes (Na+, K+, Cl-)', code: 'LAB-SE', defaultNotes: 'Routine panel' },
-      { category: 'LABORATORY', name: 'Serum Creatinine & Blood Urea Nitrogen', code: 'LAB-RFT', defaultNotes: 'Renal panel' },
-      { category: 'PROCEDURE', name: '12-Lead Electrocardiogram (ECG)', code: 'DX-ECG', defaultNotes: 'Resting ECG' },
-      { category: 'MEDICATION', name: 'Telmisartan 40mg OD + Amlodipine 5mg OD', code: 'MED-TEL-AML', defaultNotes: 'Adherence check and pill count verification' },
-      { category: 'PROCEDURE', name: 'Dietary Sodium restriction: < 2g sodium (1 tsp salt) daily. Home BP log recording.', code: 'PRC-SALT', defaultNotes: 'Dietary guideline' },
+      { id: 'h1', category: 'LAB', name: 'Serum Electrolytes (Na+, K+, Cl-)', priority: 'ROUTINE', selected: true },
+      { id: 'h2', category: 'LAB', name: 'Serum Creatinine & Blood Urea Nitrogen', priority: 'ROUTINE', selected: true },
+      { id: 'h3', category: 'DIAGNOSTIC', name: '12-Lead Electrocardiogram (ECG)', priority: 'ROUTINE', selected: true },
+      { id: 'h4', category: 'MED', name: 'Telmisartan 40mg OD + Amlodipine 5mg OD', instructions: 'Adherence check and pill count verification', selected: true },
+      { id: 'h5', category: 'INSTRUCTION', name: 'Dietary Sodium restriction: < 2g sodium (1 tsp salt) daily. Home BP log recording.', selected: true },
     ],
   },
   {
     id: 'os_t2d_comprehensive',
-    name: 'Type 2 Diabetes Quarterly Evaluation',
+    title: 'Type 2 Diabetes Quarterly Evaluation',
     description: 'Comprehensive glycemic review, microvascular complication screening, and Jan Aushadhi generic optimization.',
-    specialty: 'METABOLIC',
+    category: 'METABOLIC',
     items: [
-      { category: 'LABORATORY', name: 'Glycated Hemoglobin (HbA1c)', code: 'LAB-HBA1C', defaultNotes: 'Quarterly check' },
-      { category: 'LABORATORY', name: 'Fasting and Postprandial Blood Glucose', code: 'LAB-FBS-PPBS', defaultNotes: 'Fasting + PP' },
-      { category: 'LABORATORY', name: 'Urine Microalbumin/Creatinine Ratio (UACR)', code: 'LAB-UACR', defaultNotes: 'Renal risk' },
-      { category: 'PROCEDURE', name: 'Bilateral Monofilament Diabetic Foot Examination', code: 'PRC-FOOT', defaultNotes: 'Neuropathy check' },
-      { category: 'MEDICATION', name: 'Metformin 500mg BD + Dapagliflozin 10mg OD', code: 'MED-MET-DAPA', defaultNotes: 'Take post meals' },
+      { id: 'd1', category: 'LAB', name: 'Glycated Hemoglobin (HbA1c)', priority: 'ROUTINE', selected: true },
+      { id: 'd2', category: 'LAB', name: 'Fasting and Postprandial Blood Glucose', priority: 'ROUTINE', selected: true },
+      { id: 'd3', category: 'LAB', name: 'Urine Microalbumin/Creatinine Ratio (UACR)', priority: 'ROUTINE', selected: true },
+      { id: 'd4', category: 'DIAGNOSTIC', name: 'Bilateral Monofilament Diabetic Foot Examination', priority: 'ROUTINE', selected: true },
+      { id: 'd5', category: 'MED', name: 'Metformin 500mg BD + Dapagliflozin 10mg OD', instructions: 'Take post meals', selected: true },
     ],
   },
 ];
@@ -1080,11 +1094,13 @@ export const SEED_ENCOUNTERS: ClinicalEncounter[] = [
     },
     vitals: { ...priyaPatient.vitals },
     physicalExam: {
-      general: 'Conscious, oriented, febrile to touch. PR 98 bpm regular, BP 118/76 mmHg, SpO2 98% on room air, RR 18/min. Pharynx mildly congested.',
+      general: 'Conscious, oriented, febrile to touch. No pallor, icterus, cyanosis, clubbing, or peripheral lymphadenopathy.',
+      vitalsReview: 'PR 98 bpm regular, BP 118/76 mmHg, SpO2 98% on room air, RR 18/min.',
+      ent: 'Pharynx mildly congested, no exudates. Tympanic membranes clear bilaterally.',
       cardiovascular: 'S1, S2 heard. No murmurs.',
       respiratory: 'Bilateral vesicular breath sounds, no wheeze or crepitations.',
       abdomen: 'Soft, non-tender, no hepatosplenomegaly. Bowel sounds normal.',
-      skin: 'No petechiae or purpuric rash. Tourniquet test negative.',
+      extremities: 'No petechiae or purpuric rash. Tourniquet test negative.',
     },
     assessment: 'Acute Viral Syndrome / Suspected Arboviral Infection (Early Dengue versus Chikungunya)',
     diagnoses: [
@@ -1097,7 +1113,7 @@ export const SEED_ENCOUNTERS: ClinicalEncounter[] = [
         status: 'ACTIVE',
       },
     ],
-    plan: '1. Hydration therapy with oral rehydration solution (2-3 L/day).\n2. Paracetamol 650mg for antipyretic relief.\n3. Complete Blood Count and Dengue NS1 screening.\n4. Avoid NSAIDs (Ibuprofen/Aspirin) due to platelet bleeding risk.',
+    plan: '1. Hydration therapy with oral rehydration solution (2-3 L/day).\\n2. Paracetamol 650mg for antipyretic relief.\\n3. Complete Blood Count and Dengue NS1 screening.\\n4. Avoid NSAIDs (Ibuprofen/Aspirin) due to platelet bleeding risk.',
     medicationReconciliations: [],
     orders: [
       {
@@ -1158,7 +1174,7 @@ export const SEED_ENCOUNTERS: ClinicalEncounter[] = [
       status: 'PENDING',
       notes: 'Review platelet trend. Return immediately if persistent vomiting, abdominal pain, or bleeding gums occur.',
     },
-    patientInstructions: '1. Drink ample fluids (coconut water, ORS, lemon water).\n2. Rest adequately.\n3. Take Paracetamol 650mg strictly as prescribed.\n4. RED FLAGS: Extreme dizziness, severe abdominal pain, persistent vomiting, or petechiae/bleeding — report to emergency immediately.',
+    patientInstructions: '1. Drink ample fluids (coconut water, ORS, lemon water).\\n2. Rest adequately.\\n3. Take Paracetamol 650mg strictly as prescribed.\\n4. RED FLAGS: Extreme dizziness, severe abdominal pain, persistent vomiting, or petechiae/bleeding — report to emergency immediately.',
     soapNote: {
       subjective: 'Patient reports 2-day history of acute fever, generalized body aches, and retro-orbital headache. No GI upset or respiratory distress.',
       objective: 'Temp 99.1°F, PR 98 bpm, BP 118/76 mmHg, SpO2 98%. Chest clear, abdomen soft, no tourniquet sign.',
@@ -1167,3 +1183,7 @@ export const SEED_ENCOUNTERS: ClinicalEncounter[] = [
     },
   },
 ];
+`;
+
+fs.writeFileSync(targetPath, clinicianSeedContent, 'utf8');
+console.log('Successfully updated clinicianDataSeed.ts with all 50 patients and authentic appointments!');

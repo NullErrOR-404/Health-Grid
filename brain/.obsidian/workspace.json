@@ -184,6 +184,9 @@
   },
   "active": "287d32495fe46cef",
   "lastOpenFiles": [
+    "decisions/ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync.md",
+    "architecture/Deployment_and_Domains.md",
+    "decisions/ADR-018-Top-Tier-Multimodal-Prescription-Vision-and-HTR-Cascade.md",
     "decisions/ADR-034-Hospital-ERP-Doctors-and-OPD-Management.md",
     "context/Active_Context.md",
     "decisions/ADR-038-In-Chat-Appointment-Automation-and-Medicine-Intelligence.md",

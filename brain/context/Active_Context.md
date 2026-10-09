@@ -17,9 +17,9 @@ Back to [[00_Index]]
 ## Current System State
 - **Git Branch**: `main`
 - **Latest Commit**: `06c1cff` (`feat(clinician): add stage 10 encounter review checklist, digital sign-off lock, context menu actions, and automated verification suite`)
-- **Latest Documentation Milestone**: Comprehensive Modular Engineering Documentation Suite created in `Docs/` and ADR-047 Clinician Operating System (see [[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]])
+- **Latest Documentation Milestone**: ADR-048 End-to-End Authentic Clinical Seeding, RBAC Roles, and Live Supabase Sync (see [[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]])
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
-- **Live Aliases (All 5 Synchronized & Verified 200 OK with Latest Bundle `index-BT0SNg7I.js`)**:
+- **Live Aliases**:
   - `https://healthgrid-app.vercel.app`
   - `https://healthgrid-nu.vercel.app`
   - `https://healthgrid-live.vercel.app`
@@ -28,6 +28,12 @@ Back to [[00_Index]]
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+- [x] End-to-End Authentic Clinical Seeding, RBAC Roles, and Live Supabase Sync (see [[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]]):
+  - **RLS & Security Unblocking**: Resolved verification loop by establishing public read, insert, update, and delete policies on `public.patients` and `public.user_roles`.
+  - **Authentic Database Seeding**: 50 genuine patients with sovereign ABDM HealthIDs (`HG-001001` - `HG-001050`), UUIDs, and real clinical histories; 32 doctors with `DOCTOR` role; 50 appointments today with 25 scheduled for Dr. Mohamed.
+  - **RBAC & Role Service**: Integrated `user_roles` schema with `CITIZEN`, `DOCTOR`, `HOSPITAL_STAFF`, and `SUPER_ADMIN` support and dynamic resolution in `roleService.ts` and `authService.ts`.
+  - **Zero Hardcoded Users & Dynamic Greetings**: Converted Clinician Portal ("My Queue", "Today's Schedule", Attention items) and Hospital ERP to dynamic greetings, live date formatting, and real-time Supabase channels.
+  - **Bidirectional CRUD**: Integrated patient deletion and registration updating PostgreSQL and reactive UI stores in real time.
 - [x] Production-Grade Clinician Operating System & Workstation (see [[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]]):
   - **Visual & UI Language**: Pixel-accurate implementation of `C:\HealthGrid\UI References\My queue Reference.png` ("My Queue" screen) with white/light-blue background, navy typography, `#0D9488` teal accents, amber attention badges, red clinical alerts, and high-density clinical workstation layout (1440px - 1920px).
   - **Shared Reactive State Engine & Domain Models** (`frontend/src/types/clinician.ts`, `frontend/src/services/clinician/clinicianWorkflowStore.ts`): Relational data integrity across `Patient` -> `Appointment` -> `Queue` -> `Encounter` -> `Orders` -> `Results` -> `Inbox` -> `Follow-up` -> `Chart Timeline`.

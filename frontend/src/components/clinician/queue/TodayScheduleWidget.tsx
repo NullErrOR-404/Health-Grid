@@ -16,61 +16,34 @@ interface ScheduleRow {
   statusDot: 'green' | 'teal' | 'amber' | 'gray';
 }
 
-const SCHEDULE_ROWS: ScheduleRow[] = [
-  {
-    time: '09:00',
-    patientId: 'pat_ramesh_kumar',
-    patientName: 'Ramesh Kumar',
-    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-    visitType: 'Follow-up',
-    statusDot: 'green',
-  },
-  {
-    time: '09:30',
-    patientId: 'pat_priya_sharma',
-    patientName: 'Priya Sharma',
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-    visitType: 'New Patient',
-    statusDot: 'teal',
-  },
-  {
-    time: '10:00',
-    patientId: 'pat_arun_prakash',
-    patientName: 'Arun Prakash',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    visitType: 'Follow-up',
-    statusDot: 'amber',
-  },
-  {
-    time: '10:30',
-    patientId: 'pat_meena_iyer',
-    patientName: 'Meena Iyer',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-    visitType: 'Review Results',
-    statusDot: 'amber',
-  },
-  {
-    time: '11:00',
-    patientId: 'pat_sathish_n',
-    patientName: 'Sathish N',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    visitType: 'Follow-up',
-    statusDot: 'amber',
-  },
-  {
-    time: '11:30',
-    patientId: 'pat_lakshmi_devi',
-    patientName: 'Lakshmi Devi',
-    avatarUrl: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=150&auto=format&fit=crop&q=80',
-    visitType: 'New Patient',
-    statusDot: 'gray',
-  },
-];
-
 export const TodayScheduleWidget: React.FC<TodayScheduleWidgetProps> = ({
   onViewCalendar,
   onSelectPatient,
 }) => {
+  const queue = clinicianStore.getState().queue;
+  const scheduleRows: ScheduleRow[] = queue.slice(0, 6).map((q) => {
+    let statusDot: 'green' | 'teal' | 'amber' | 'gray' = 'gray';
+    if (q.status === 'IN_CONSULTATION') statusDot = 'green';
+    else if (q.status === 'WAITING') statusDot = 'teal';
+    else if (q.status === 'SCHEDULED') statusDot = 'amber';
+
+    const visitTypeLabel =
+      q.visitType === 'NEW_PATIENT'
+        ? 'New Patient'
+        : q.visitType === 'FOLLOW_UP'
+        ? 'Follow-up'
+        : 'Review Results';
+
+    return {
+      time: q.time,
+      patientId: q.patientId,
+      patientName: q.patient.name,
+      avatarUrl: q.patient.avatarUrl,
+      visitType: visitTypeLabel,
+      statusDot,
+    };
+  });
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4 flex flex-col justify-between">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -91,7 +64,7 @@ export const TodayScheduleWidget: React.FC<TodayScheduleWidgetProps> = ({
       </div>
 
       <div className="divide-y divide-slate-100/70 mt-2 space-y-1">
-        {SCHEDULE_ROWS.map((row, idx) => (
+        {scheduleRows.map((row, idx) => (
           <div
             key={idx}
             onClick={() => onSelectPatient?.(row.patientId)}

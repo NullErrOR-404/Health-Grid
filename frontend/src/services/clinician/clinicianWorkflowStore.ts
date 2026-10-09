@@ -17,6 +17,8 @@ import type {
   OrderItem,
   MedicationReconciliationEntry,
   QueueItemStatus,
+  QueueItemPriority,
+  VisitType,
 } from '../../types/clinician';
 
 import {
@@ -30,7 +32,9 @@ import {
   SEED_INBOX_ITEMS,
   SEED_ORDER_SETS,
   SEED_ENCOUNTERS,
+  PATIENT_LOOKUP_MAP,
 } from './clinicianDataSeed';
+import { supabase } from '../supabaseClient';
 
 export interface AiChatMessage {
   id: string;
@@ -76,6 +80,7 @@ class ClinicianWorkflowStore {
 
   constructor() {
     this.state = this.loadInitialState();
+    this.initSupabaseSync();
   }
 
   private loadInitialState(): ClinicianStoreState {
@@ -97,6 +102,9 @@ class ClinicianWorkflowStore {
       }
     }
 
+    const firstPatient = SEED_PATIENTS[0];
+    const initialPatientId = firstPatient?.id || 'a9bd2039-a968-4986-b5d6-d5c9ffda10d5';
+
     return {
       activeTab: 'my-queue',
       clinician: SEED_CLINICIAN,
@@ -104,7 +112,7 @@ class ClinicianWorkflowStore {
       selectedFacilityId: SEED_FACILITIES[0].id,
       patients: SEED_PATIENTS,
       queue: SEED_QUEUE_ITEMS,
-      activeQueuePatientId: 'pat_priya_sharma', // Matches reference card preview
+      activeQueuePatientId: initialPatientId,
       encounters: SEED_ENCOUNTERS,
       activeEncounterId: null,
       results: SEED_RESULTS,
@@ -113,14 +121,14 @@ class ClinicianWorkflowStore {
       inbox: SEED_INBOX_ITEMS,
       orderSets: SEED_ORDER_SETS,
       globalPatientSearch: '',
-      aiDrawerOpen: true, // Shown open in reference screenshot
+      aiDrawerOpen: true,
       isAiGenerating: false,
       aiMessages: [
         {
           id: 'msg_welcome',
           sender: 'assistant',
-          text: "Good morning Dr. Mohamed! I have reviewed today's queue (12 patients). Priya Sharma is waiting in Room 101 with acute fever. Would you like a clinical brief before starting?",
-          timestamp: '09:20 AM',
+          text: `Good day ${SEED_CLINICIAN.name}! I have reviewed today's live queue (${SEED_QUEUE_ITEMS.length} patients). ${firstPatient?.name || 'Your patient'} is waiting in Room 101 with ${firstPatient?.primaryProblem || 'acute symptoms'}. Would you like a clinical brief before starting?`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ],
     };
@@ -178,6 +186,164 @@ class ClinicianWorkflowStore {
     this.notify();
   }
 
+  // Robust patient lookup supporting UUID, UHID, and legacy IDs
+  public getPatient(patientId: string): PatientEntity | undefined {
+    if (!patientId) return undefined;
+    return (
+      this.state.patients.find(
+        (p) =>
+          p.id === patientId ||
+          p.uhid === patientId ||
+          (p as any).legacyId === patientId
+      ) ||
+      PATIENT_LOOKUP_MAP.get(patientId) ||
+      this.state.patients[0]
+    );
+  }
+
+  public openChartForPatient(patientId: string) {
+    const pat = this.getPatient(patientId);
+    if (pat) {
+      this.state.activeQueuePatientId = pat.id;
+      this.state.activeTab = 'consultations';
+      this.persist();
+    }
+  }
+
+  // Live Supabase Synchronization
+  public async initSupabaseSync(): Promise<void> {
+    if (!supabase) return;
+    await this.fetchFromSupabase();
+    try {
+      supabase
+        .channel('clinician_patients_sync')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'patients' }, () => {
+          this.fetchFromSupabase();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => {
+          this.fetchFromSupabase();
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn('Realtime subscription warning:', err);
+    }
+  }
+
+  public async fetchFromSupabase(): Promise<void> {
+    try {
+      if (!supabase) return;
+      const { data: dbPatients } = await supabase
+        .from('patients')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (dbPatients && dbPatients.length > 0) {
+        const livePatients: PatientEntity[] = dbPatients.map((p: any, idx: number) => {
+          const existing = this.state.patients.find((ep) => ep.id === p.id || ep.uhid === p.health_id);
+          if (existing) {
+            return {
+              ...existing,
+              id: p.id,
+              uhid: p.health_id || existing.uhid,
+              name: p.full_name || existing.name,
+              phone: p.phone_number || existing.phone,
+              age: p.age || existing.age,
+              gender: p.gender || existing.gender,
+              bloodGroup: p.blood_group || existing.bloodGroup,
+              email: p.email || existing.email,
+              address: p.location || existing.address,
+            };
+          }
+          return {
+            id: p.id,
+            uhid: p.health_id || `HG-${1000 + idx}`,
+            abhaId: '****' + (p.health_id ? p.health_id.slice(-4) : '1000'),
+            name: p.full_name || 'Patient',
+            age: p.age || 30,
+            gender: p.gender || 'Female',
+            bloodGroup: p.blood_group || 'O+',
+            phone: p.phone_number || '+91 90000 00000',
+            email: p.email || '',
+            address: p.location || 'Chennai, India',
+            avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+            primaryProblem: p.chronic_conditions?.[0] || 'Routine Clinical Review',
+            vitals: {
+              tempF: 98.6,
+              pulseBpm: 72,
+              bpSystolic: 120,
+              bpDiastolic: 80,
+              spo2Percent: 98,
+              recordedAt: '09:00 AM',
+            },
+            allergies: [],
+            medications: [],
+            problems: [],
+            investigations: [],
+            pastVisits: [],
+            careGaps: [],
+            careTeam: [{ role: 'Primary Physician', name: this.state.clinician.name, specialty: this.state.clinician.specialty }],
+          };
+        });
+
+        this.state.patients = livePatients;
+      }
+
+      const { data: dbAppts } = await supabase
+        .from('appointments')
+        .select('*')
+        .order('appointment_time', { ascending: true });
+
+      if (dbAppts && dbAppts.length > 0) {
+        const liveQueue: PatientQueueItem[] = dbAppts
+          .filter((a: any) => !a.doctor_name || a.doctor_name.toLowerCase().includes('mohamed'))
+          .map((a: any, idx: number) => {
+            const pat = this.getPatient(a.patient_id) || this.getPatient(a.patient_health_id) || this.state.patients[0];
+            return {
+              id: `q_${a.id.slice(0, 8)}_${idx}`,
+              patientId: pat.id,
+              patient: pat,
+              appointmentId: a.appointment_id || a.id,
+              time: a.appointment_time || '09:30 AM',
+              waitingMinutes: a.status === 'Waiting' || a.status === 'Checked In' ? 10 + idx * 3 : 0,
+              status: (a.status === 'In Consultation' ? 'IN_CONSULTATION' : a.status === 'Completed' ? 'COMPLETED' : 'WAITING') as QueueItemStatus,
+              priority: ((a.reason_for_visit || '').toLowerCase().includes('emergency') ? 'EMERGENCY' : (a.notes || '').toLowerCase().includes('high k+') ? 'URGENT' : 'ROUTINE') as QueueItemPriority,
+              visitType: ((a.appointment_type || '').toLowerCase().includes('review') ? 'RESULT_REVIEW' : (a.appointment_type || '').toLowerCase().includes('follow') ? 'FOLLOW_UP' : 'NEW_PATIENT') as VisitType,
+              chiefComplaint: a.reason_for_visit || pat.primaryProblem,
+              roomNumber: 'Room 101',
+            };
+          });
+
+        if (liveQueue.length > 0) {
+          this.state.queue = liveQueue;
+        }
+      }
+
+      this.persist();
+    } catch (err) {
+      console.warn('Clinician store fetchFromSupabase error:', err);
+    }
+  }
+
+  public async deletePatient(patientId: string): Promise<boolean> {
+    try {
+      if (supabase) {
+        await supabase.from('appointments').delete().or(`patient_id.eq.${patientId},patient_health_id.eq.${patientId}`);
+        await supabase.from('user_roles').delete().eq('user_id', patientId);
+        await supabase.from('patients').delete().or(`id.eq.${patientId},health_id.eq.${patientId}`);
+      }
+      this.state.patients = this.state.patients.filter((p) => p.id !== patientId && p.uhid !== patientId);
+      this.state.queue = this.state.queue.filter((q) => q.patientId !== patientId && q.patient.uhid !== patientId);
+      if (this.state.activeQueuePatientId === patientId) {
+        this.state.activeQueuePatientId = this.state.queue[0]?.patientId || this.state.patients[0]?.id || null;
+      }
+      this.persist();
+      return true;
+    } catch (err) {
+      console.error('Failed to delete patient from clinician store:', err);
+      return false;
+    }
+  }
+
   // Queue Operations
   public selectQueuePatient(patientId: string) {
     this.state.activeQueuePatientId = patientId;
@@ -193,12 +359,12 @@ class ClinicianWorkflowStore {
 
   // Encounter & Consultation Lifecycle
   public startConsultation(patientId: string): ClinicalEncounter {
-    const patient = this.state.patients.find((p) => p.id === patientId);
+    const patient = this.getPatient(patientId);
     if (!patient) throw new Error('Patient not found');
 
     // Check if encounter already exists for today
     let encounter = this.state.encounters.find(
-      (e) => e.patientId === patientId && e.status === 'IN_PROGRESS'
+      (e) => e.patientId === patient.id && e.status === 'IN_PROGRESS'
     );
 
     if (!encounter) {
@@ -254,12 +420,6 @@ class ClinicianWorkflowStore {
     this.state.activeTab = 'consultations';
     this.persist();
     return encounter;
-  }
-
-  public openChartForPatient(patientId: string) {
-    this.state.activeQueuePatientId = patientId;
-    this.state.activeTab = 'patients';
-    this.persist();
   }
 
   public updateEncounter(encounterId: string, partial: Partial<ClinicalEncounter>) {

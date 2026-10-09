@@ -31,16 +31,16 @@ HealthGrid is synchronized across 4 high-availability Vercel production aliases:
 
 `frontend/src/App.tsx` handles synchronizing browser URLs using HTML5 `pushState` and `popstate` events:
 
-| Path | View State | Rendered Component |
-| :--- | :--- | :--- |
-| `/` or `/index.html` | `landing` | Main Landing Page (Hero, Shelves, Insights, Transparency Section) |
-| `/privacy` | `privacy` | Dedicated [[Data_Sovereignty_and_Security]] & Privacy Policy Page |
-| `/terms` | `terms` | Telemedicine clinical terms & condition disclaimers |
-| `/chat` | `chat` | Fullscreen [[DocBot_TeleClinic]] Chamber |
-| `/medicines` | `medicines` | [[Generic_Medicines_PMBJP]] Kendra Store |
-| `/maps` | `maps` | [[Hospital_Bed_Locator]] & PHC Finder |
-| `/his` | `hospital-erp` | Redirects to [[Hospital_ERP_Dashboard]] (see [[ADR-006-Decommission-Legacy-HIS-Doctor-Portal]]) |
-| `/hospital-erp` | `hospital-erp` | [[Hospital_ERP_Dashboard]] (Multi-tenant) |
+| Path                 | View State     | Rendered Component                                                                              |
+| :------------------- | :------------- | :---------------------------------------------------------------------------------------------- |
+| `/` or `/index.html` | `landing`      | Main Landing Page (Hero, Shelves, Insights, Transparency Section)                               |
+| `/privacy`           | `privacy`      | Dedicated [[Data_Sovereignty_and_Security]] & Privacy Policy Page                               |
+| `/terms`             | `terms`        | Telemedicine clinical terms & condition disclaimers                                             |
+| `/chat`              | `chat`         | Fullscreen [[DocBot_TeleClinic]] Chamber                                                        |
+| `/medicines`         | `medicines`    | [[Generic_Medicines_PMBJP]] Kendra Store                                                        |
+| `/maps`              | `maps`         | [[Hospital_Bed_Locator]] & PHC Finder                                                           |
+| `/his`               | `hospital-erp` | Redirects to [[Hospital_ERP_Dashboard]] (see [[ADR-006-Decommission-Legacy-HIS-Doctor-Portal]]) |
+| `/hospital-erp`      | `hospital-erp` | [[Hospital_ERP_Dashboard]] (Multi-tenant)                                                       |
 
 ## Related Notes
 - [[ADR-002-Vercel-SSO-Bypass]]

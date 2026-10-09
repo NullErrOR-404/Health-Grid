@@ -20,6 +20,7 @@ import {
   FileText,
   FileCheck,
   Pill,
+  Trash2,
 } from 'lucide-react';
 import {
   unifiedPatientStore,
@@ -62,6 +63,29 @@ export const PatientManagementView: React.FC<PatientManagementViewProps> = ({
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
   const [editField, setEditField] = useState<'allergies' | 'bloodGroup' | 'chronicConditions' | 'insurance' | null>(null);
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeletePatient = async (patient: UnifiedPatient) => {
+    if (window.confirm(`Are you sure you want to permanently delete patient ${patient.name} (${patient.healthId}) from Supabase and the clinical records?`)) {
+      setIsDeleting(true);
+      try {
+        const success = await unifiedPatientStore.deletePatient(patient.id);
+        if (success) {
+          triggerToast(`Patient ${patient.name} successfully deleted from database.`);
+          const remaining = unifiedPatientStore.getAllPatients();
+          if (remaining.length > 0) {
+            setSelectedPatientId(remaining[0].id);
+          }
+        } else {
+          triggerToast('Error deleting patient from database.');
+        }
+      } catch (err) {
+        triggerToast('Failed to delete patient.');
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
 
   // Filter patients based on search and active pill
   const filteredPatients = patients.filter((p) => {
@@ -438,9 +462,20 @@ export const PatientManagementView: React.FC<PatientManagementViewProps> = ({
                   </div>
                 </div>
 
-                <button className="text-slate-400 hover:text-slate-600 p-1">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePatient(selectedPatient)}
+                    disabled={isDeleting}
+                    title="Delete Patient"
+                    className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <button className="text-slate-400 hover:text-slate-600 p-1">
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* TABS HEADER */}
