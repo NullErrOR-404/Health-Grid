@@ -113,12 +113,12 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
                     item.action();
                   }
                 }}
-                className={`flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 min-h-[52px] sm:min-h-[56px] rounded-xl hover:bg-slate-50 active:bg-slate-100 active:scale-[0.98] transition-all duration-200 cursor-pointer group select-none reveal-init reveal-delay-${idx + 1} ${
+                className={`flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 min-h-13 sm:min-h-14 rounded-xl hover:bg-slate-50 active:bg-slate-100 active:scale-[0.98] transition-all duration-200 cursor-pointer group select-none reveal-init reveal-delay-${idx + 1} ${
                   idx !== 0 ? 'lg:pl-4' : ''
                 }`}
               >
                 {/* Rounded Icon Box */}
-                <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 ${item.iconBg}`}>
+                <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${item.iconBg}`}>
                   <Icon className="w-5 h-5 stroke-[2.2]" />
                 </div>
 

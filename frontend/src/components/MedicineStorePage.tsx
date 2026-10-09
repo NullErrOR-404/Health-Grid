@@ -250,7 +250,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in border border-slate-700">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
           <span className="text-sm font-medium">{toastMessage}</span>
         </div>
       )}
@@ -339,7 +339,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Capsule 1: Quality Assured */}
             <div className="flex items-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl shadow-sm">
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div className="text-xs">
@@ -350,7 +350,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
 
             {/* Capsule 2: Lower Cost */}
             <div className="flex items-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl shadow-sm">
-              <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
                 <Percent className="w-4 h-4" />
               </div>
               <div className="text-xs">
@@ -361,7 +361,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
 
             {/* Capsule 3: Government Certified */}
             <div className="flex items-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl shadow-sm">
-              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                 <CheckCircle className="w-4 h-4" />
               </div>
               <div className="text-xs">
@@ -512,7 +512,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
                   className="bg-white border border-slate-200/90 rounded-2xl p-5 hover:border-teal-500/50 hover:shadow-md transition-all duration-200 flex flex-col md:flex-row items-stretch gap-6 group"
                 >
                   {/* Left Column: Pharmaceutical Product Photo from Supabase Storage */}
-                  <div className="w-full md:w-44 h-40 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-xl overflow-hidden flex items-center justify-center p-2 relative">
+                  <div className="w-full md:w-44 h-40 shrink-0 bg-slate-50 border border-slate-100 rounded-xl overflow-hidden flex items-center justify-center p-2 relative">
                     <img
                       src={med.imageUrl}
                       alt={med.genericName}
@@ -717,7 +717,7 @@ export const MedicineStorePage: React.FC<MedicineStorePageProps> = ({
                           <img
                             src={item.medicine.imageUrl}
                             alt={item.medicine.genericName}
-                            className="w-12 h-12 object-contain bg-white rounded-lg p-1 border border-slate-200 flex-shrink-0"
+                            className="w-12 h-12 object-contain bg-white rounded-lg p-1 border border-slate-200 shrink-0"
                           />
                           <div className="flex-1 min-w-0">
                             <h4 className="text-xs font-bold text-slate-900 truncate">

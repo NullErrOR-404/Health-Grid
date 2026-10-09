@@ -222,12 +222,12 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       {/* Modal Dialog Card (Matching Records Hub ref.png) */}
-      <div className="bg-white rounded-none sm:rounded-3xl border-0 sm:border border-slate-200 shadow-2xl w-full sm:max-w-4xl max-h-[100dvh] sm:max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
+      <div className="bg-white rounded-none sm:rounded-3xl border-0 sm:border border-slate-200 shadow-2xl w-full sm:max-w-4xl max-h-dvh sm:max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
         
         {/* 1. MODAL HEADER */}
-        <div className="px-5 sm:px-7 pt-5 sm:pt-6 pb-4 border-b border-slate-100 flex items-start justify-between flex-shrink-0 bg-white">
+        <div className="px-5 sm:px-7 pt-5 sm:pt-6 pb-4 border-b border-slate-100 flex items-start justify-between shrink-0 bg-white">
           <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-200/80 text-teal-600 flex items-center justify-center flex-shrink-0 shadow-2xs mt-0.5">
+            <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-200/80 text-teal-600 flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
               <Activity className="w-5 h-5 text-teal-600" />
             </div>
             <div>
@@ -250,7 +250,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
+            className="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer shrink-0"
             title="Close"
           >
             <X className="w-5 h-5" />
@@ -262,7 +262,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
           
           {/* SECURITY ALERT BANNER */}
           <div className="p-4 rounded-2xl bg-[#F0FDF4] border border-[#DCFCE7] flex items-start gap-3.5 shadow-2xs">
-            <div className="w-9 h-9 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
               <ShieldCheck className="w-5 h-5 text-emerald-600" />
             </div>
             <div className="flex-1">
@@ -316,7 +316,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
           <form onSubmit={handleAddVital} className="p-5 sm:p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200/90 space-y-5">
             {/* Form Section Header */}
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 mt-0.5">
                 <FileText className="w-4 h-4 text-teal-600" />
               </div>
               <div className="flex-1">
@@ -601,7 +601,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
             {/* Table with Horizontal Touch Scroll on Mobile */}
             <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-2xs">
               <div className="overflow-x-auto scrollbar-thin">
-                <table className="w-full text-left text-xs border-collapse min-w-[720px]">
+                <table className="w-full text-left text-xs border-collapse min-w-180">
                   <thead>
                     <tr className="bg-slate-50/90 border-b border-slate-200 text-slate-500 font-semibold">
                       <th className="py-3 px-4 font-semibold">{lang === 'en' ? 'Date & Time' : 'தேதி & நேரம்'}</th>
@@ -623,7 +623,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
                         <td className="py-3 px-4 whitespace-nowrap">{row.spo2}</td>
                         <td className="py-3 px-4 whitespace-nowrap">{row.temp}</td>
                         <td className="py-3 px-4 whitespace-nowrap">{row.weight}</td>
-                        <td className="py-3 px-4 text-slate-500 max-w-[160px] truncate" title={row.notes}>
+                        <td className="py-3 px-4 text-slate-500 max-w-40 truncate" title={row.notes}>
                           {row.notes}
                         </td>
                         <td className="py-3 px-4 text-center relative whitespace-nowrap">
@@ -661,7 +661,7 @@ export const VitalsTelemetryModal: React.FC<VitalsTelemetryModalProps> = ({
         </div>
 
         {/* 5. MODAL FOOTER */}
-        <div className="px-5 sm:px-7 py-3.5 sm:py-4 border-t border-slate-100 flex items-center justify-end bg-slate-50/70 flex-shrink-0">
+        <div className="px-5 sm:px-7 py-3.5 sm:py-4 border-t border-slate-100 flex items-center justify-end bg-slate-50/70 shrink-0">
           <button
             type="button"
             onClick={onClose}

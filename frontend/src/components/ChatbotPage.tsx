@@ -1761,7 +1761,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
               <div className="flex justify-between py-1 border-b border-slate-50">
                 <span className="text-slate-500 font-medium">{lang === 'en' ? 'Hospital' : 'மருத்துவமனை'}</span>
-                <span className="font-bold text-slate-800 text-right max-w-[170px] truncate" title={draft.hospitalName}>
+                <span className="font-bold text-slate-800 text-right max-w-42.5 truncate" title={draft.hospitalName}>
                   {draft.hospitalName}
                 </span>
               </div>
@@ -1832,7 +1832,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const renderConfirmedBookingPass = (pass: Appointment) => {
     return (
-      <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/80 to-white border border-emerald-300 shadow-sm space-y-3.5 animate-in fade-in duration-200">
+      <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-linear-to-br from-emerald-50/90 via-teal-50/80 to-white border border-emerald-300 shadow-sm space-y-3.5 animate-in fade-in duration-200">
         <div className="flex items-center justify-between pb-2 border-b border-emerald-200/80">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
@@ -1930,7 +1930,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const renderMedicineCard = (med: MedicineItem) => {
     return (
-      <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50/90 to-teal-50/70 border border-emerald-300 shadow-sm space-y-3 animate-in fade-in duration-200">
+      <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-linear-to-br from-emerald-50/90 to-teal-50/70 border border-emerald-300 shadow-sm space-y-3 animate-in fade-in duration-200">
         <div className="flex items-center justify-between pb-2 border-b border-emerald-200/80">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-emerald-700 text-white flex items-center justify-center">
@@ -2023,7 +2023,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         : ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM'];
 
     return (
-      <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-teal-50/90 via-sky-50/60 to-white border border-teal-300 shadow-sm space-y-3.5 animate-in fade-in duration-200">
+      <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-linear-to-br from-teal-50/90 via-sky-50/60 to-white border border-teal-300 shadow-sm space-y-3.5 animate-in fade-in duration-200">
         <div className="flex items-center justify-between pb-2 border-b border-teal-200/80">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center">
@@ -2203,7 +2203,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     const currentReason = cancelReasons[card.id] || card.selectedReason || card.availableReasons[0];
 
     return (
-      <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-rose-50/90 via-amber-50/60 to-white border border-rose-300 shadow-sm space-y-3.5 animate-in fade-in duration-200">
+      <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-linear-to-br from-rose-50/90 via-amber-50/60 to-white border border-rose-300 shadow-sm space-y-3.5 animate-in fade-in duration-200">
         <div className="flex items-center justify-between pb-2 border-b border-rose-200/80">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-rose-600 text-white flex items-center justify-center">
@@ -2332,14 +2332,14 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     };
 
     return (
-      <div className="mt-3.5 overflow-hidden rounded-2xl border border-teal-200/90 bg-gradient-to-b from-white to-teal-50/40 shadow-xs transition-all hover:shadow-md animate-in fade-in duration-200">
+      <div className="mt-3.5 overflow-hidden rounded-2xl border border-teal-200/90 bg-linear-to-b from-white to-teal-50/40 shadow-xs transition-all hover:shadow-md animate-in fade-in duration-200">
         <div className="relative h-36 sm:h-44 w-full overflow-hidden bg-slate-900 group">
           <img
             src={card.imageUrl}
             alt={card.title}
             className="h-full w-full object-cover object-center opacity-90 transition-transform duration-500 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/30 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-slate-950/85 via-slate-900/30 to-transparent" />
           <div className="absolute top-2.5 left-2.5">
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-teal-600/95 text-white backdrop-blur-md shadow-xs">
               <Sparkles className="w-3 h-3 text-teal-200" />
@@ -2457,7 +2457,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     const isWayfindingOpen = expandedWayfinding[tracker.id] || false;
 
     return (
-      <div className="mt-4 rounded-2xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 border border-teal-500/40 p-4 sm:p-5 text-white shadow-xl space-y-4 animate-in fade-in duration-200">
+      <div className="mt-4 rounded-2xl bg-linear-to-br from-slate-900 via-teal-950 to-slate-900 border border-teal-500/40 p-4 sm:p-5 text-white shadow-xl space-y-4 animate-in fade-in duration-200">
         {/* Header HUD */}
         <div className="flex items-center justify-between pb-3 border-b border-teal-800/50">
           <div className="flex items-center gap-2.5">
@@ -4122,7 +4122,7 @@ ${sbar.recommendation}`;
       {/* ========================================================= */}
       <aside className={`
         fixed md:relative inset-y-0 left-0 z-50 md:z-0
-        w-72 sm:w-80 md:w-64 lg:w-72 flex-shrink-0 flex flex-col border-r bg-[#FAFCFB] border-slate-200/90
+        w-72 sm:w-80 md:w-64 lg:w-72 shrink-0 flex flex-col border-r bg-[#FAFCFB] border-slate-200/90
         transform transition-transform duration-200 ease-in-out
         ${isMobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}
       `}>
@@ -4237,13 +4237,13 @@ ${sbar.recommendation}`;
                         }`}
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <MessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-[#0A604D]' : 'text-slate-400'}`} />
+                          <MessageSquare className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#0A604D]' : 'text-slate-400'}`} />
                           <span className="truncate">{session.title}</span>
                         </div>
 
                         <div className="flex items-center gap-1">
                           {session.pinned && (
-                            <Pin className="w-3 h-3 text-teal-600 fill-teal-600 flex-shrink-0" />
+                            <Pin className="w-3 h-3 text-teal-600 fill-teal-600 shrink-0" />
                           )}
                           <button
                             type="button"
@@ -4287,7 +4287,7 @@ ${sbar.recommendation}`;
                 )}
               </div>
               <div className="text-left">
-                <div className="font-bold text-xs text-slate-900 truncate max-w-[130px]">
+                <div className="font-bold text-xs text-slate-900 truncate max-w-32.5">
                   {currentUser ? currentUser.name : (lang === 'en' ? 'Guest Patient' : 'விருந்தினர்')}
                 </div>
                 <div className="text-[10px] text-teal-600 font-medium">
@@ -4306,7 +4306,7 @@ ${sbar.recommendation}`;
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         
         {/* Top Header Bar (Matching Chatbot UI.png) */}
-        <header className="px-3 sm:px-6 py-2 sm:py-2.5 border-b flex items-center justify-between flex-shrink-0 z-20 bg-white border-slate-200/90 gap-2">
+        <header className="px-3 sm:px-6 py-2 sm:py-2.5 border-b flex items-center justify-between shrink-0 z-20 bg-white border-slate-200/90 gap-2">
           {/* Left: Mobile History Drawer Trigger + DocBot AI + Verified Badge */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
@@ -4328,7 +4328,7 @@ ${sbar.recommendation}`;
             <div className="min-w-0">
               <h2 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">DocBot AI</h2>
               <div className="hidden sm:flex items-center gap-1 text-[10px] sm:text-[11px] font-medium text-emerald-700">
-                <span className="truncate max-w-[110px] sm:max-w-none">{lang === 'en' ? 'Verified Assistant' : 'சரிபார்க்கப்பட்டவர்'}</span>
+                <span className="truncate max-w-27.5 sm:max-w-none">{lang === 'en' ? 'Verified Assistant' : 'சரிபார்க்கப்பட்டவர்'}</span>
                 <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 fill-emerald-100 shrink-0" />
               </div>
             </div>
@@ -4372,7 +4372,7 @@ ${sbar.recommendation}`;
               }
             >
               <User className={`w-3.5 h-3.5 ${activeBeneficiary ? 'text-amber-700' : 'text-teal-600'} group-hover:scale-110 transition-transform shrink-0`} />
-              <span className="font-bold truncate max-w-[85px] sm:max-w-[130px]">
+              <span className="font-bold truncate max-w-21.25 sm:max-w-32.5">
                 {activeBeneficiary
                   ? `${activeBeneficiary.relationship}: ${activeBeneficiary.name.split(' ')[0]}`
                   : (lang === 'en' ? 'Myself' : 'எனக்கு')}
@@ -4438,9 +4438,9 @@ ${sbar.recommendation}`;
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 bg-[#FAFCFB]">
           {/* Active Caregiver Consultation Mode Banner */}
           {activeBeneficiary && (
-            <div className="max-w-3xl mx-auto p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50/50 to-amber-50 border border-amber-200/90 text-amber-900 shadow-xs flex items-center justify-between gap-3 animate-in fade-in duration-200">
+            <div className="max-w-3xl mx-auto p-3 sm:p-3.5 rounded-2xl bg-linear-to-r from-amber-50 via-orange-50/50 to-amber-50 border border-amber-200/90 text-amber-900 shadow-xs flex items-center justify-between gap-3 animate-in fade-in duration-200">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-amber-200/80 text-amber-800 flex items-center justify-center font-bold text-base flex-shrink-0 shadow-2xs">
+                <div className="w-8 h-8 rounded-xl bg-amber-200/80 text-amber-800 flex items-center justify-center font-bold text-base shrink-0 shadow-2xs">
                   {activeBeneficiary.gender === 'Female' ? '👩' : '👨'}
                 </div>
                 <div className="min-w-0">
@@ -4448,7 +4448,7 @@ ${sbar.recommendation}`;
                     <span className="text-xs font-bold truncate">
                       {lang === 'en' ? 'Caregiver Mode' : 'பராமரிப்பாளர் முறை'}: {activeBeneficiary.name}
                     </span>
-                    <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.2 rounded-full font-bold border border-amber-300 flex-shrink-0">
+                    <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.2 rounded-full font-bold border border-amber-300 shrink-0">
                       {activeBeneficiary.relationship}
                     </span>
                   </div>
@@ -4461,7 +4461,7 @@ ${sbar.recommendation}`;
               <button
                 type="button"
                 onClick={() => setIsBeneficiaryModalOpen(true)}
-                className="px-2.5 py-1 rounded-xl bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold shadow-2xs transition-colors flex-shrink-0 cursor-pointer"
+                className="px-2.5 py-1 rounded-xl bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold shadow-2xs transition-colors shrink-0 cursor-pointer"
               >
                 {lang === 'en' ? 'Switch Patient' : 'நோயாளி மாற்று'}
               </button>
@@ -4470,9 +4470,9 @@ ${sbar.recommendation}`;
 
           {/* Pinned Autonomous Proactive Care-Loop Recovery Monitor */}
           {activeCareLoops.length > 0 && (
-            <div className="max-w-3xl mx-auto p-3.5 rounded-2xl bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50/50 border border-teal-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-300">
+            <div className="max-w-3xl mx-auto p-3.5 rounded-2xl bg-linear-to-r from-teal-50 via-emerald-50 to-teal-50/50 border border-teal-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-300">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+                <div className="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
                   <CalendarCheck className="w-4 h-4" />
                 </div>
                 <div>
@@ -4571,11 +4571,11 @@ ${sbar.recommendation}`;
                 >
                   {/* Avatar */}
                   {isUser ? (
-                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center shrink-0 mt-0.5">
                       <User className="w-4 h-4" />
                     </div>
                   ) : (
-                    <div className="w-8 h-8 rounded-2xl bg-teal-50 border border-teal-200/80 p-1 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+                    <div className="w-8 h-8 rounded-2xl bg-teal-50 border border-teal-200/80 p-1 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <img
                         src="/docbot_mascot.png"
                         alt="DocBot"
@@ -4794,7 +4794,7 @@ ${sbar.recommendation}`;
 
                     {/* Unique Clinical Differentiator 3: PMBJP Jan Aushadhi Generic Savings Slip */}
                     {!isUser && msg.janAushadhiSavingsCard && msg.janAushadhiSavingsCard.items.length > 0 && (
-                      <div className="mt-3.5 p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/90 to-teal-50/70 border border-emerald-200 shadow-2xs space-y-2.5 animate-in fade-in duration-200">
+                      <div className="mt-3.5 p-3.5 rounded-2xl bg-linear-to-br from-emerald-50/90 to-teal-50/70 border border-emerald-200 shadow-2xs space-y-2.5 animate-in fade-in duration-200">
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5">
                             <Pill className="w-4 h-4 text-emerald-700" />
@@ -5003,7 +5003,7 @@ ${sbar.recommendation}`;
                             : Math.round(((curIdx) / totalSteps) * 100);
 
                           return (
-                            <div className="rounded-2xl border border-teal-200/90 bg-gradient-to-b from-teal-50/60 via-white to-slate-50/80 p-3.5 sm:p-4 shadow-2xs space-y-3 transition-all duration-300">
+                            <div className="rounded-2xl border border-teal-200/90 bg-linear-to-b from-teal-50/60 via-white to-slate-50/80 p-3.5 sm:p-4 shadow-2xs space-y-3 transition-all duration-300">
                               {/* Header & Step Counter */}
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
@@ -5044,7 +5044,7 @@ ${sbar.recommendation}`;
                               {/* Animated Progress Bar */}
                               <div className="w-full bg-slate-200/80 h-1.5 rounded-full overflow-hidden">
                                 <div
-                                  className="h-full bg-gradient-to-r from-teal-500 to-[#0B7A75] transition-all duration-300 rounded-full"
+                                  className="h-full bg-linear-to-r from-teal-500 to-[#0B7A75] transition-all duration-300 rounded-full"
                                   style={{ width: `${state.isCompleted ? 100 : Math.max(progressPercent, 15)}%` }}
                                 />
                               </div>
@@ -5130,7 +5130,7 @@ ${sbar.recommendation}`;
                                           <span className="font-semibold text-slate-500">
                                             {lang === 'ta' ? st.titleTa : st.titleEn}:
                                           </span>
-                                          <span className="truncate max-w-[200px]">{ansText}</span>
+                                          <span className="truncate max-w-50">{ansText}</span>
                                         </div>
                                       );
                                     })}
@@ -5341,7 +5341,7 @@ ${sbar.recommendation}`;
           {/* Thinking State with Moving Jump Dots Alone (Per User Mandate) */}
           {isThinking && (
             <div className="flex items-start gap-3 max-w-3xl mr-auto animate-in fade-in duration-150">
-              <div className="w-8 h-8 rounded-2xl bg-teal-50 border border-teal-200/80 p-1 flex items-center justify-center flex-shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-2xl bg-teal-50 border border-teal-200/80 p-1 flex items-center justify-center shrink-0 shadow-2xs">
                 <img
                   src="/docbot_mascot.png"
                   alt="DocBot"
@@ -5590,11 +5590,11 @@ ${sbar.recommendation}`;
 
             {/* Staged Clinical Attachment Tray (MarkItDown Token-Optimized, Non-Auto-Triggering) */}
             {(stagedAttachment || attachedPhoto) && (
-              <div className="p-3 rounded-2xl bg-gradient-to-r from-teal-50/95 via-emerald-50/90 to-teal-50/95 border border-teal-200 shadow-xs animate-in fade-in slide-in-from-bottom-2 duration-200 space-y-2">
+              <div className="p-3 rounded-2xl bg-linear-to-r from-teal-50/95 via-emerald-50/90 to-teal-50/95 border border-teal-200 shadow-xs animate-in fade-in slide-in-from-bottom-2 duration-200 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5 min-w-0">
                     {stagedAttachment?.dataUrl || attachedPhoto?.dataUrl ? (
-                      <div className="w-10 h-10 rounded-xl overflow-hidden border border-teal-300 flex-shrink-0 bg-white shadow-2xs">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden border border-teal-300 shrink-0 bg-white shadow-2xs">
                         <img
                           src={stagedAttachment?.dataUrl || attachedPhoto?.dataUrl}
                           alt="Preview"
@@ -5603,7 +5603,7 @@ ${sbar.recommendation}`;
                         />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-xl bg-teal-600/10 border border-teal-300/80 flex items-center justify-center text-teal-700 flex-shrink-0 shadow-2xs">
+                      <div className="w-10 h-10 rounded-xl bg-teal-600/10 border border-teal-300/80 flex items-center justify-center text-teal-700 shrink-0 shadow-2xs">
                         {stagedAttachment?.fileType === 'lab_report' ? (
                           <Activity className="w-5 h-5" />
                         ) : (
@@ -5909,7 +5909,7 @@ ${sbar.recommendation}`;
       {/* Floating Toast Notification Alert */}
       {toastMessage && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-semibold border border-slate-700 animate-in fade-in slide-in-from-top-3 duration-200">
-          <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
           <span>{toastMessage}</span>
           <button onClick={() => setToastMessage(null)} className="ml-2 text-slate-400 hover:text-white transition-colors">
             <X className="w-3.5 h-3.5" />

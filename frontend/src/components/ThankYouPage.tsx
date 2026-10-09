@@ -24,11 +24,11 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
   }, [lang]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50/60 via-slate-50 to-white flex items-center justify-center p-4 sm:p-6 lg:p-8 text-slate-800">
+    <div className="min-h-screen bg-linear-to-b from-teal-50/60 via-slate-50 to-white flex items-center justify-center p-4 sm:p-6 lg:p-8 text-slate-800">
       <div className="max-w-xl w-full bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         
         {/* Banner with Doctor Mascot Graphic */}
-        <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-slate-900 p-8 text-center text-white relative">
+        <div className="bg-linear-to-r from-teal-700 via-teal-800 to-slate-900 p-8 text-center text-white relative">
           <div className="w-16 h-16 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mx-auto mb-4 shadow-inner">
             <CheckCircle2 className="w-9 h-9 text-emerald-400" />
           </div>
@@ -46,7 +46,7 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
         <div className="p-6 sm:p-8 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="p-3.5 rounded-2xl bg-teal-50/70 border border-teal-100 flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-teal-700 flex-shrink-0 mt-0.5" />
+              <ShieldCheck className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" />
               <div>
                 <h4 className="text-xs font-bold text-teal-950">
                   {lang === 'en' ? 'Verified Medical Guidance' : 'சரிபார்க்கப்பட்ட வழிகாட்டல்'}
@@ -64,7 +64,7 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpenAmbulance(); }}
               className="p-3.5 rounded-2xl bg-rose-50/70 hover:bg-rose-100/70 border border-rose-100 flex items-start gap-3 cursor-pointer transition-colors"
             >
-              <Phone className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" />
+              <Phone className="w-5 h-5 text-rose-700 shrink-0 mt-0.5" />
               <div>
                 <h4 className="text-xs font-bold text-rose-950 flex items-center gap-1.5">
                   <span>{lang === 'en' ? '108 Emergency Standby' : '108 அவசர ஆம்புலன்ஸ்'}</span>

@@ -88,7 +88,7 @@ export const TodayScheduleWidget: React.FC<TodayScheduleWidgetProps> = ({
                 alt={row.patientName}
                 className="w-6 h-6 rounded-full object-cover border border-slate-200"
               />
-              <span className="text-xs font-bold text-slate-900 truncate max-w-[130px]">
+              <span className="text-xs font-bold text-slate-900 truncate max-w-32.5">
                 {row.patientName}
               </span>
             </div>

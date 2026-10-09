@@ -33,7 +33,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({
       <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200/80 overflow-hidden">
         
         {/* Header Banner */}
-        <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-slate-900 px-6 sm:px-10 py-8 sm:py-10 text-white relative overflow-hidden">
+        <div className="bg-linear-to-r from-teal-700 via-teal-800 to-slate-900 px-6 sm:px-10 py-8 sm:py-10 text-white relative overflow-hidden">
           <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl pointer-events-none" />
           
           <button

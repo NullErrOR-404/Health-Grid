@@ -115,7 +115,7 @@ Official HealthGrid Portal: https://healthgrid-app.vercel.app
       <footer id="footer-section" className="relative bg-white pt-14 pb-28 md:pb-12 border-t border-slate-200/80 overflow-hidden reveal-init">
         
         {/* Decorative Mint Wave Background at Bottom Matching Footer ref.png */}
-        <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none -z-0 opacity-70">
+        <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none z-0 opacity-70">
           <svg
             viewBox="0 0 1440 280"
             fill="none"
@@ -172,21 +172,21 @@ Official HealthGrid Portal: https://healthgrid-app.vercel.app
               {/* 3 Circular Pill Badges Matching Reference */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center gap-3 text-xs font-semibold text-slate-700">
-                  <div className="w-8 h-8 rounded-full bg-teal-50 border border-teal-200/80 flex items-center justify-center text-teal-600 flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-teal-50 border border-teal-200/80 flex items-center justify-center text-teal-600 shrink-0">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <span>{lang === 'en' ? 'Trusted Information' : 'நம்பகமான தகவல்கள்'}</span>
                 </div>
 
                 <div className="flex items-center gap-3 text-xs font-semibold text-slate-700">
-                  <div className="w-8 h-8 rounded-full bg-teal-50 border border-teal-200/80 flex items-center justify-center text-teal-600 flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-teal-50 border border-teal-200/80 flex items-center justify-center text-teal-600 shrink-0">
                     <Users className="w-4 h-4" />
                   </div>
                   <span>{lang === 'en' ? 'Government Aligned' : 'அரசு வழிகாட்டுதல்'}</span>
                 </div>
 
                 <div className="flex items-center gap-3 text-xs font-semibold text-slate-700">
-                  <div className="w-8 h-8 rounded-full bg-teal-50 border border-teal-200/80 flex items-center justify-center text-teal-600 flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-teal-50 border border-teal-200/80 flex items-center justify-center text-teal-600 shrink-0">
                     <Lock className="w-4 h-4" />
                   </div>
                   <span>{lang === 'en' ? 'Secure & Private' : 'பாதுகாப்பானது & ரகசியமானது'}</span>
@@ -333,7 +333,7 @@ Official HealthGrid Portal: https://healthgrid-app.vercel.app
                     className="bg-black hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl flex items-center gap-2.5 transition-all shadow-sm flex-1 cursor-pointer text-left"
                     title={lang === 'en' ? 'Install Android PWA App' : 'ஆண்ட்ராய்டு செயலி'}
                   >
-                    <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
                       <path d="M3.6 1.8L13.8 12L3.6 22.2C3.2 21.8 3 21.1 3 20.2V3.8C3 2.9 3.2 2.2 3.6 1.8Z" fill="#2196F3" />
                       <path d="M17.2 8.6L13.8 12L3.6 1.8C4.1 1.3 4.9 1.1 5.8 1.6L17.2 8.6Z" fill="#4CAF50" />
                       <path d="M17.2 15.4L5.8 22.4C4.9 22.9 4.1 22.7 3.6 22.2L13.8 12L17.2 15.4Z" fill="#F44336" />
@@ -352,7 +352,7 @@ Official HealthGrid Portal: https://healthgrid-app.vercel.app
                     className="bg-black hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl flex items-center gap-2.5 transition-all shadow-sm flex-1 cursor-pointer text-left"
                     title={lang === 'en' ? 'Install iOS Web App' : 'ஐஓஎஸ் செயலி'}
                   >
-                    <svg className="w-5 h-5 fill-white flex-shrink-0" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 fill-white shrink-0" viewBox="0 0 24 24">
                       <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.13 16.69C20.1 16.78 19.71 18.11 18.71 19.5ZM15.22 4.54C15.89 3.73 16.34 2.61 16.22 1.5C15.25 1.54 14.07 2.15 13.38 2.96C12.77 3.67 12.23 4.81 12.38 5.9C13.46 5.98 14.56 5.35 15.22 4.54Z" />
                     </svg>
                     <div className="text-left">
@@ -404,7 +404,7 @@ Official HealthGrid Portal: https://healthgrid-app.vercel.app
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Instagram"
-                    className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:opacity-90 transition-opacity"
+                    className="w-8 h-8 rounded-full bg-linear-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:opacity-90 transition-opacity"
                   >
                     <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
@@ -559,14 +559,14 @@ Official HealthGrid Portal: https://healthgrid-app.vercel.app
 
             <div className="space-y-3 mt-5 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
               <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold text-slate-900">Android (Chrome / Edge):</span>
                   <p className="text-slate-600 mt-0.5">Tap the menu icon (⋮) in your browser top-right, then select <strong className="text-teal-700 font-semibold">"Install App"</strong> or "Add to Home screen".</p>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold text-slate-900">iPhone / iPad (Safari):</span>
                   <p className="text-slate-600 mt-0.5">Tap the Share icon (📤) at the bottom, scroll down and tap <strong className="text-teal-700 font-semibold">"Add to Home Screen"</strong>.</p>

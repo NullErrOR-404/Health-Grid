@@ -250,7 +250,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const renderMascotGraphic = (isMobile = false) => (
     <div
       className={`relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white group cursor-pointer ${
-        isMobile ? 'w-full max-w-md mx-auto aspect-[16/11]' : 'w-full aspect-[4/3] sm:aspect-auto'
+        isMobile ? 'w-full max-w-md mx-auto aspect-16/11' : 'w-full aspect-4/3 sm:aspect-auto'
       }`}
       onClick={() => onOpenVoiceChat()}
       title={lang === 'en' ? 'Click DocBot to start consultation' : 'DocBot-உடன் பேச தொடங்கு'}
@@ -373,7 +373,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               className="bg-white rounded-full p-2 pl-5 sm:pl-6 border border-slate-200/90 shadow-[0_4px_20px_rgba(15,23,42,0.06)] hover:border-teal-400 focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-50 flex items-center justify-between transition-all"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0 pr-3">
-                <Search className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                <Search className="w-5 h-5 text-slate-400 shrink-0" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -393,7 +393,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
               <button
                 type="submit"
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95 flex-shrink-0 shadow-md"
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95 shrink-0 shadow-md"
                 title={lang === 'en' ? 'Search or Consult' : 'தேடு'}
               >
                 <ArrowRight className="w-5 h-5 text-white" />
@@ -421,7 +421,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         }}
                         className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-600 group-hover:text-white transition-colors mt-0.5">
+                        <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 group-hover:bg-teal-600 group-hover:text-white transition-colors mt-0.5">
                           <ItemIcon className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -432,7 +432,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                             {lang === 'ta' ? item.subTa : item.subEn}
                           </div>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-teal-600 transform group-hover:translate-x-0.5 transition-transform flex-shrink-0 self-center" />
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-teal-600 transform group-hover:translate-x-0.5 transition-transform shrink-0 self-center" />
                       </button>
                     );
                   })}

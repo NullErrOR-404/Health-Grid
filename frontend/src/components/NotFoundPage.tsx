@@ -96,7 +96,7 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 flex flex-col justify-center">
         
         {/* Urgent Emergency Warning Ribbon if patient in acute distress */}
-        <div className="mb-8 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white rounded-2xl p-4 sm:p-5 shadow-lg shadow-red-500/10 flex flex-col sm:flex-row items-center justify-between gap-4 border border-red-400/40">
+        <div className="mb-8 bg-linear-to-r from-red-600 via-rose-600 to-amber-600 text-white rounded-2xl p-4 sm:p-5 shadow-lg shadow-red-500/10 flex flex-col sm:flex-row items-center justify-between gap-4 border border-red-400/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
               <Siren className="w-5 h-5 text-white animate-bounce" />
@@ -156,7 +156,7 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
                   <div className="absolute -inset-4 rounded-full bg-slate-100 -z-10" />
 
                   {/* SVG ECG Heartbeat Monitor Display */}
-                  <div className="w-full h-full rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 p-4 border border-slate-800 shadow-2xl flex flex-col justify-between overflow-hidden relative">
+                  <div className="w-full h-full rounded-2xl bg-linear-to-b from-slate-900 to-slate-950 p-4 border border-slate-800 shadow-2xl flex flex-col justify-between overflow-hidden relative">
                     
                     {/* Grid lines overlay */}
                     <div 

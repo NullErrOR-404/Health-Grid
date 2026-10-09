@@ -82,7 +82,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
     <div
       role="region"
       aria-label={lang === 'en' ? 'Privacy & Cookie Consent' : 'தனியுரிமை ஒப்புதல்'}
-      className="fixed bottom-6 right-6 z-40 max-w-[460px] w-[calc(100%-2rem)] sm:w-full bg-white rounded-3xl p-6 sm:p-7 shadow-[0_20px_50px_rgba(15,23,42,0.18)] border border-slate-100 animate-in fade-in slide-in-from-bottom-5 duration-300"
+      className="fixed bottom-6 right-6 z-40 max-w-115 w-[calc(100%-2rem)] sm:w-full bg-white rounded-3xl p-6 sm:p-7 shadow-[0_20px_50px_rgba(15,23,42,0.18)] border border-slate-100 animate-in fade-in slide-in-from-bottom-5 duration-300"
     >
       {!showChoices ? (
         // Standard View matching Reference Screenshot 1:1
@@ -90,7 +90,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
           {/* Header Row */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-full bg-[#E0F7F6] text-[#00897B] flex items-center justify-center flex-shrink-0 shadow-xs">
+              <div className="w-12 h-12 rounded-full bg-[#E0F7F6] text-[#00897B] flex items-center justify-center shrink-0 shadow-xs">
                 <ShieldCheck className="w-6 h-6 stroke-[2.2]" />
               </div>
               <div>
@@ -202,7 +202,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
           </div>
 
           {/* Categories List */}
-          <div className="mt-4 space-y-3 max-h-[260px] overflow-y-auto pr-1">
+          <div className="mt-4 space-y-3 max-h-65 overflow-y-auto pr-1">
             {/* Category 1: Essential (Locked) */}
             <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start justify-between gap-3">
               <div className="space-y-0.5">
@@ -221,9 +221,9 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
                     : 'மருத்துவ அமர்வுகள், பாதுகாக்கப்பட்ட சுகாதார பெட்டகம் மற்றும் அவசர சேவைகளை இயக்குகிறது.'}
                 </p>
               </div>
-              <div className="w-10 h-6 rounded-full bg-[#00897B] flex items-center justify-end px-1 opacity-90 cursor-not-allowed flex-shrink-0">
+              <div className="w-10 h-6 rounded-full bg-[#00897B] flex items-center justify-end px-1 opacity-90 cursor-not-allowed shrink-0">
                 <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 text-[#00897B] stroke-[3]" />
+                  <Check className="w-2.5 h-2.5 text-[#00897B] stroke-3" />
                 </div>
               </div>
             </div>
@@ -248,7 +248,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
               <button
                 type="button"
                 onClick={() => setAnalyticsEnabled(!analyticsEnabled)}
-                className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer flex-shrink-0 ${
+                className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer shrink-0 ${
                   analyticsEnabled ? 'bg-[#00897B] justify-end' : 'bg-slate-200 justify-start'
                 }`}
                 aria-pressed={analyticsEnabled}
@@ -277,7 +277,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
               <button
                 type="button"
                 onClick={() => setTelemetryEnabled(!telemetryEnabled)}
-                className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer flex-shrink-0 ${
+                className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer shrink-0 ${
                   telemetryEnabled ? 'bg-[#00897B] justify-end' : 'bg-slate-200 justify-start'
                 }`}
                 aria-pressed={telemetryEnabled}

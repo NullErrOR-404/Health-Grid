@@ -575,19 +575,19 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
   return (
     <div data-lenis-prevent="true" className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div data-lenis-prevent="true" className={`relative w-full h-[100dvh] sm:h-auto sm:max-h-[94vh] max-h-[100dvh] ${analysisResult && !isAnalyzing ? 'sm:max-w-6xl lg:max-w-7xl' : 'sm:max-w-5xl'} bg-[#F8FAFC] rounded-none sm:rounded-[28px] shadow-2xl border-none sm:border border-slate-200/90 flex flex-col overflow-hidden transition-all duration-300`}>
+      <div data-lenis-prevent="true" className={`relative w-full h-dvh sm:h-auto sm:max-h-[94vh] max-h-dvh ${analysisResult && !isAnalyzing ? 'sm:max-w-6xl lg:max-w-7xl' : 'sm:max-w-5xl'} bg-[#F8FAFC] rounded-none sm:rounded-[28px] shadow-2xl border-none sm:border border-slate-200/90 flex flex-col overflow-hidden transition-all duration-300`}>
         
         {/* Hidden Canvas for High-Resolution Capture */}
         <canvas ref={canvasRef} className="hidden" />
 
         {/* TOP MODAL HEADER (Dynamic: Upload mode vs Post-Scan Redesigned Header) */}
         {analysisResult && !isAnalyzing ? (
-          <div className="px-5 sm:px-8 py-4 sm:py-5 bg-white border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 flex-shrink-0">
+          <div className="px-5 sm:px-8 py-4 sm:py-5 bg-white border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shrink-0">
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={handleResetScan}
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer flex-shrink-0"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0"
                 aria-label="Back"
                 title={lang === 'en' ? 'Back to upload' : 'பின்செல்'}
               >
@@ -632,7 +632,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
             </div>
           </div>
         ) : (
-          <div className="px-6 py-5 bg-white border-b border-slate-100 flex items-center justify-between gap-4 flex-shrink-0">
+          <div className="px-6 py-5 bg-white border-b border-slate-100 flex items-center justify-between gap-4 shrink-0">
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-[#E8F5F3] flex items-center justify-center text-[#147D6F] shadow-2xs">
                 <Camera className="w-6 h-6 stroke-[1.8]" />
@@ -676,7 +676,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
           {/* ERROR ALERT BANNER */}
           {errorMsg && (
             <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-3 shadow-2xs">
-              <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <span className="font-bold">{lang === 'en' ? 'Scanning Notice: ' : 'கவனிக்க: '}</span>
                 {errorMsg}
@@ -723,7 +723,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
               <div className="lg:col-span-7 space-y-4">
                 
                 {/* Pill Tabs: [Upload or Scan] / [From Gallery] */}
-                <div className="bg-slate-100/90 p-1 rounded-xl flex items-center gap-1 w-full max-w-[340px] text-xs font-semibold border border-slate-200/70">
+                <div className="bg-slate-100/90 p-1 rounded-xl flex items-center gap-1 w-full max-w-85 text-xs font-semibold border border-slate-200/70">
                   <button
                     type="button"
                     onClick={() => {
@@ -759,7 +759,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                 {/* Camera Error Banner */}
                 {cameraError && (
                   <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                     <div className="flex-1">{cameraError}</div>
                     <button
                       type="button"
@@ -773,7 +773,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
                 {/* IN-PLACE LIVE CAMERA VIEWFINDER (When Camera is Active) */}
                 {isCameraActive && (
-                  <div className="relative rounded-[24px] overflow-hidden bg-slate-950 aspect-[4/3] sm:aspect-[16/10] border-2 border-slate-300 shadow-inner flex items-center justify-center group animate-in fade-in duration-200">
+                  <div className="relative rounded-3xl overflow-hidden bg-slate-950 aspect-4/3 sm:aspect-16/10 border-2 border-slate-300 shadow-inner flex items-center justify-center group animate-in fade-in duration-200">
                     <video
                       ref={videoRef}
                       autoPlay
@@ -848,7 +848,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                 {!isCameraActive && capturedPages.length === 0 && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-[#CCFBF1] hover:border-[#14B8A6] rounded-[24px] bg-[#F0FDFA]/30 hover:bg-[#F0FDFA]/60 p-8 sm:p-12 text-center flex flex-col items-center justify-center transition-all cursor-pointer group shadow-2xs"
+                    className="border-2 border-dashed border-[#CCFBF1] hover:border-[#14B8A6] rounded-3xl bg-[#F0FDFA]/30 hover:bg-[#F0FDFA]/60 p-8 sm:p-12 text-center flex flex-col items-center justify-center transition-all cursor-pointer group shadow-2xs"
                   >
                     {/* Reference Document Icon with Lines and Plus Badge */}
                     <div className="w-20 h-24 rounded-2xl bg-[#CCFBF1]/70 border border-[#99F6E4]/70 relative flex flex-col items-center justify-center gap-2 group-hover:scale-105 transition-transform shadow-2xs">
@@ -857,7 +857,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                       <div className="w-8 h-1.5 bg-[#0D9488]/50 rounded-full"></div>
                       
                       <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-[#0F766E] text-white flex items-center justify-center shadow-xs">
-                        <Plus className="w-4 h-4 stroke-[3]" />
+                        <Plus className="w-4 h-4 stroke-3" />
                       </div>
                     </div>
 
@@ -895,8 +895,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                     className="border-2 border-dashed border-[#CCFBF1] hover:border-[#14B8A6] rounded-2xl bg-[#F0FDFA]/50 hover:bg-[#F0FDFA]/80 p-3 sm:p-4 flex items-center justify-between gap-3 transition-all cursor-pointer group shadow-2xs"
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-[#CCFBF1] text-[#0F766E] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-                        <Plus className="w-4 h-4 stroke-[3]" />
+                      <div className="w-9 h-9 rounded-xl bg-[#CCFBF1] text-[#0F766E] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                        <Plus className="w-4 h-4 stroke-3" />
                       </div>
                       <div>
                         <div className="text-xs sm:text-sm font-bold text-slate-800 leading-tight">
@@ -958,7 +958,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                       {capturedPages.map((pageData, idx) => (
                         <div
                           key={idx}
-                          className="relative flex-shrink-0 w-16 h-20 rounded-xl overflow-hidden border border-slate-200 shadow-2xs group"
+                          className="relative shrink-0 w-16 h-20 rounded-xl overflow-hidden border border-slate-200 shadow-2xs group"
                         >
                           <img src={pageData} alt={`Page ${idx + 1}`} className="w-full h-full object-cover" />
                           <span className="absolute bottom-1 left-1 bg-slate-900/80 text-white text-[9px] font-bold px-1 rounded-sm">
@@ -980,9 +980,9 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
                 {/* PROMINENT AI ANALYSIS CARD (Always rendered front & center when 1+ pages uploaded) */}
                 {capturedPages.length > 0 && (
-                  <div className="bg-gradient-to-r from-teal-900 via-teal-800 to-cyan-950 text-white p-4 sm:p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 animate-in fade-in duration-200 border border-teal-700/80">
+                  <div className="bg-linear-to-r from-teal-900 via-teal-800 to-cyan-950 text-white p-4 sm:p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 animate-in fade-in duration-200 border border-teal-700/80">
                     <div className="flex items-center gap-3 w-full sm:w-auto">
-                      <div className="w-10 h-10 rounded-2xl bg-teal-800/80 border border-teal-600/50 flex items-center justify-center text-teal-300 flex-shrink-0 shadow-xs">
+                      <div className="w-10 h-10 rounded-2xl bg-teal-800/80 border border-teal-600/50 flex items-center justify-center text-teal-300 shrink-0 shadow-xs">
                         <FileText className="w-5 h-5" />
                       </div>
                       <div>
@@ -1015,7 +1015,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                         className="flex-2 sm:flex-initial px-5 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 active:scale-95 text-teal-950 text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
                       >
                         <span>{lang === 'en' ? `Analyze Prescription (${capturedPages.length})` : 'பரிசீலிக்க ➔'}</span>
-                        <ChevronRight className="w-4 h-4 stroke-[3]" />
+                        <ChevronRight className="w-4 h-4 stroke-3" />
                       </button>
                     </div>
                   </div>
@@ -1029,7 +1029,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                 {/* "USE LIVE CAMERA" CARD (Matches Reference Layout) */}
                 <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-[#E2E8F0]/70 flex items-center justify-center text-[#475569] flex-shrink-0">
+                    <div className="w-11 h-11 rounded-xl bg-[#E2E8F0]/70 flex items-center justify-center text-[#475569] shrink-0">
                       <Camera className="w-5 h-5 stroke-[1.8]" />
                     </div>
                     <div>
@@ -1048,7 +1048,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                       setIsCameraActive(true);
                       startCamera(cameraFacingMode);
                     }}
-                    className="px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95 flex-shrink-0"
+                    className="px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     <span>{lang === 'en' ? 'Open Camera' : 'கேமராவைத் திற'}</span>
@@ -1072,7 +1072,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                   <div className="space-y-1">
                     {/* Step 1 */}
                     <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0F766E] font-extrabold text-xs flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0F766E] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">
                         1
                       </div>
                       <p className="text-xs text-[#334155] font-medium leading-relaxed">
@@ -1086,7 +1086,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
                     {/* Step 2 */}
                     <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0F766E] font-extrabold text-xs flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0F766E] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">
                         2
                       </div>
                       <p className="text-xs text-[#334155] font-medium leading-relaxed">
@@ -1100,7 +1100,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
                     {/* Step 3 */}
                     <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0F766E] font-extrabold text-xs flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0F766E] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">
                         3
                       </div>
                       <p className="text-xs text-[#334155] font-medium leading-relaxed">
@@ -1123,19 +1123,19 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
                   <ul className="space-y-2 text-xs text-[#334155] font-medium">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-[#0D9488] flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#0D9488] shrink-0" />
                       <span>{lang === 'en' ? 'Ensure the prescription is well-lit and in focus' : 'மருந்துச் சீட்டு நல்ல வெளிச்சத்தில் தெளிவாக இருப்பதை உறுதிசெய்க'}</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-[#0D9488] flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#0D9488] shrink-0" />
                       <span>{lang === 'en' ? "Capture the full page (including doctor's details)" : 'மருத்துவர் விவரங்களுடன் முழுப் பக்கத்தையும் படம் எடுக்கவும்'}</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-[#0D9488] flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#0D9488] shrink-0" />
                       <span>{lang === 'en' ? 'Avoid shadows and glare' : 'நிழல்கள் மற்றும் பிரதிபலிப்பைத் தவிர்க்கவும்'}</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-[#0D9488] flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#0D9488] shrink-0" />
                       <span>{lang === 'en' ? 'Supports printed or handwritten prescriptions' : 'அச்சிடப்பட்ட அல்லது கையால் எழுதப்பட்ட சீட்டுகளை ஆதரிக்கும்'}</span>
                     </li>
                   </ul>
@@ -1236,7 +1236,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                   {/* Card Header: Icon + Title + Page Badge */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-[#E8F8F4] text-[#0F766E] flex items-center justify-center flex-shrink-0 shadow-2xs">
+                      <div className="w-9 h-9 rounded-xl bg-[#E8F8F4] text-[#0F766E] flex items-center justify-center shrink-0 shadow-2xs">
                         <FileText className="w-5 h-5 stroke-[1.8]" />
                       </div>
                       <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
@@ -1277,7 +1277,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                   </div>
 
                   {/* Prescription Preview Viewport */}
-                  <div className="relative w-full aspect-[4/3] sm:aspect-[1/1] max-h-[480px] bg-slate-100/70 border border-slate-200/80 rounded-2xl overflow-hidden flex items-center justify-center p-3 select-none group touch-pan-y">
+                  <div className="relative w-full aspect-4/3 sm:aspect-square max-h-120 bg-slate-100/70 border border-slate-200/80 rounded-2xl overflow-hidden flex items-center justify-center p-3 select-none group touch-pan-y">
                     {capturedPages.length > 0 ? (
                       <img
                         src={capturedPages[activePageIndex]}
@@ -1298,7 +1298,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                         {/* Clinic & Doctor Letterhead */}
                         <div className="flex items-start justify-between border-b border-[#E4DEC9] pb-3">
                           <div className="flex items-start gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-slate-800 text-[#FAF7F0] flex items-center justify-center font-serif text-sm font-bold flex-shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-slate-800 text-[#FAF7F0] flex items-center justify-center font-serif text-sm font-bold shrink-0">
                               ⚕
                             </div>
                             <div>
@@ -1351,7 +1351,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                                 <span>{med.form || 'Tab.'} {med.brandName || med.genericName} {med.dosage}</span>
                                 <span className="ml-2 text-slate-600 font-sans text-[11px]">({med.frequency})</span>
                               </div>
-                              <span className="text-[11px] text-slate-600 font-sans font-medium flex-shrink-0">
+                              <span className="text-[11px] text-slate-600 font-sans font-medium shrink-0">
                                 {med.duration || '30 days'}
                               </span>
                             </div>
@@ -1417,7 +1417,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                   {/* Card Header: Icon + Title + Edit All Button */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-[#E8F8F4] text-[#0F766E] flex items-center justify-center flex-shrink-0 shadow-2xs">
+                      <div className="w-9 h-9 rounded-xl bg-[#E8F8F4] text-[#0F766E] flex items-center justify-center shrink-0 shadow-2xs">
                         <Pill className="w-5 h-5 stroke-[1.8]" />
                       </div>
                       <div>
@@ -1459,7 +1459,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           {/* Card Top Row: Number Circle + Name + Verified Badge + Actions */}
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-start gap-3">
-                              <div className="w-7 h-7 rounded-lg bg-[#E8F8F4] text-[#0F766E] font-extrabold text-xs flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+                              <div className="w-7 h-7 rounded-lg bg-[#E8F8F4] text-[#0F766E] font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                                 {idx + 1}
                               </div>
                               <div>
@@ -1467,7 +1467,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                                   <h5 className="font-extrabold text-slate-900 text-sm sm:text-base leading-tight">
                                     {med.brandName || med.genericName}
                                   </h5>
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 fill-emerald-50 flex-shrink-0" />
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 fill-emerald-50 shrink-0" />
                                 </div>
                                 <p className="text-xs text-slate-500 font-medium mt-0.5">
                                   {med.dosage || 'Standard'} • {med.form || 'Tablet'}
@@ -1508,7 +1508,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2.5 border-t border-slate-100 text-xs">
                             {/* 1. Dose */}
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 flex-shrink-0">
+                              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 shrink-0">
                                 <Pill className="w-4 h-4" />
                               </div>
                               <div>
@@ -1525,13 +1525,13 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
                             {/* 2. Frequency */}
                             <div className="flex items-center gap-2">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                                 isNight ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
                               }`}>
                                 {isNight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                               </div>
                               <div>
-                                <div className="font-extrabold text-slate-900 text-xs leading-tight truncate max-w-[100px]" title={med.frequency}>
+                                <div className="font-extrabold text-slate-900 text-xs leading-tight truncate max-w-25" title={med.frequency}>
                                   {med.frequency || '1-0-1'}
                                 </div>
                                 <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
@@ -1542,11 +1542,11 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
                             {/* 3. When to take */}
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center flex-shrink-0">
+                              <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
                                 <Utensils className="w-4 h-4" />
                               </div>
                               <div>
-                                <div className="font-extrabold text-slate-900 text-xs leading-tight truncate max-w-[95px]" title={lang === 'ta' ? med.timingTa : med.timing}>
+                                <div className="font-extrabold text-slate-900 text-xs leading-tight truncate max-w-23.75" title={lang === 'ta' ? med.timingTa : med.timing}>
                                   {lang === 'ta' ? med.timingTa : med.timing || 'After food'}
                                 </div>
                                 <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
@@ -1557,7 +1557,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
                             {/* 4. Duration */}
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                                 <Calendar className="w-4 h-4" />
                               </div>
                               <div>
@@ -1685,7 +1685,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                               {/* Patient Context Note */}
                               {med.clinicalVerification?.patientContextNoteEn && (
                                 <div className="p-2.5 rounded-xl bg-teal-50 border border-teal-200 text-xs text-teal-900 flex items-start gap-2">
-                                  <Lightbulb className="w-3.5 h-3.5 text-teal-600 flex-shrink-0 mt-0.5" />
+                                  <Lightbulb className="w-3.5 h-3.5 text-teal-600 shrink-0 mt-0.5" />
                                   <div>
                                     <span className="font-bold">Context Advisory: </span>
                                     <span>{lang === 'ta' && med.clinicalVerification.patientContextNoteTa ? med.clinicalVerification.patientContextNoteTa : med.clinicalVerification.patientContextNoteEn}</span>
@@ -1720,8 +1720,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                 
                 {/* LEFT BOTTOM: DISCLAIMER BANNER (Matches Reference Photo Exactly) */}
                 <div className="lg:col-span-6 bg-[#E8F8F4] border border-teal-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex items-start gap-3.5 text-teal-950 shadow-2xs h-full">
-                  <div className="w-9 h-9 rounded-2xl bg-[#0F766E] text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-xs">
-                    <ShieldCheck className="w-5 h-5 stroke-[2]" />
+                  <div className="w-9 h-9 rounded-2xl bg-[#0F766E] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                    <ShieldCheck className="w-5 h-5 stroke-2" />
                   </div>
                   <div>
                     <h5 className="font-extrabold text-xs sm:text-sm text-teal-950 leading-tight">
@@ -1754,7 +1754,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
                           {isSavedToProfile ? <Check className="w-4 h-4 text-emerald-200" /> : <Bookmark className="w-4 h-4 text-teal-100" />}
                         </div>
                         <div>
@@ -1768,7 +1768,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           </div>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-teal-200 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-teal-200 group-hover:translate-x-0.5 transition-transform shrink-0" />
                     </button>
 
                     {/* Action 2: Find Medicines (White Card with Pill Icon) */}
@@ -1778,7 +1778,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                       className="bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-900 rounded-2xl p-3.5 flex items-center justify-between gap-2 shadow-2xs transition-all cursor-pointer group active:scale-95 text-left"
                     >
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-teal-50 text-[#0F766E] flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-xl bg-teal-50 text-[#0F766E] flex items-center justify-center shrink-0">
                           <Pill className="w-4 h-4" />
                         </div>
                         <div>
@@ -1790,7 +1790,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           </div>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
                     </button>
 
                     {/* Action 3: Hear Instructions (White Card with Speaker Icon) */}
@@ -1804,7 +1804,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
                           isPlayingAudio ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-700'
                         }`}>
                           {isPlayingAudio ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -1820,7 +1820,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           </div>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
                     </button>
                   </div>
 

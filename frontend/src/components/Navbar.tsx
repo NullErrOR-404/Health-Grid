@@ -168,20 +168,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           
           {/* Left: Brand Logo matching Header reference.png */}
           <div 
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none flex-shrink-0" 
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none shrink-0" 
             onClick={handleHomeClick}
           >
             <img 
               src="/Logo.png" 
               alt="HealthGrid - நலம் AI" 
-              className="h-8 sm:h-11 w-auto max-w-[130px] sm:max-w-none object-contain hover:opacity-95 transition-opacity" 
+              className="h-8 sm:h-11 w-auto max-w-32.5 sm:max-w-none object-contain hover:opacity-95 transition-opacity" 
             />
           </div>
 
           {/* Center: Desktop Navigation Links with Equal Spacing & Dynamic Sliding Underline */}
           <nav className="hidden md:flex items-center justify-center relative text-sm font-medium text-slate-700 flex-1 px-2 lg:px-4">
             <div 
-              className="grid grid-cols-5 items-center text-center w-full max-w-[500px] lg:max-w-[580px] xl:max-w-[640px] relative select-none"
+              className="grid grid-cols-5 items-center text-center w-full max-w-125 lg:max-w-145 xl:max-w-160 relative select-none"
               onMouseLeave={() => setHoveredNavIndex(null)}
             >
               
@@ -373,7 +373,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Right: Language Pill Dropdown, Notification Bell, User Profile Pill, and SOS Ambulance Button */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3 shrink-0">
             
             {/* Language Pill Dropdown: [ EN ⌵ ] matching reference */}
             <div className="relative" ref={langDropdownRef}>
@@ -456,17 +456,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* User Profile Pill & Dropdown - Responsive compact 32px avatar on mobile, 140px pill on desktop */}
-            <div className="relative w-8 h-8 sm:w-[140px] sm:h-10 flex-shrink-0" ref={userDropdownRef}>
+            <div className="relative w-8 h-8 sm:w-35 sm:h-10 shrink-0" ref={userDropdownRef}>
               {currentUser ? (
                 <>
                   <button
                     type="button"
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="w-8 h-8 sm:w-[140px] sm:h-10 flex items-center justify-center sm:justify-between p-0 sm:pl-1 sm:pr-2 rounded-full hover:bg-slate-50 text-slate-800 transition-colors cursor-pointer group border border-slate-200/60 hover:border-slate-300 flex-shrink-0"
+                    className="w-8 h-8 sm:w-35 sm:h-10 flex items-center justify-center sm:justify-between p-0 sm:pl-1 sm:pr-2 rounded-full hover:bg-slate-50 text-slate-800 transition-colors cursor-pointer group border border-slate-200/60 hover:border-slate-300 shrink-0"
                     title={currentUser.name}
                   >
                     <div className="flex items-center gap-2 min-w-0 sm:flex-1">
-                      <div className="w-8 h-8 rounded-full bg-[#00897B] text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-2xs overflow-hidden flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-[#00897B] text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-2xs overflow-hidden shrink-0">
                         {currentUser.avatarUrl ? (
                           <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                         ) : (
@@ -477,7 +477,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         {userFirstName}
                       </span>
                     </div>
-                    <ChevronDown className={`hidden sm:block w-3.5 h-3.5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`hidden sm:block w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Dropdown Card matching reference screenshot exactly */}
@@ -485,7 +485,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/90 p-3.5 z-50 animate-dropdown-flow">
                       {/* Top User Info Card */}
                       <div className="flex items-center gap-3 pb-3 mb-2 border-b border-slate-100">
-                        <div className="w-10 h-10 rounded-full bg-[#00897B] text-white flex items-center justify-center font-bold text-base flex-shrink-0 overflow-hidden">
+                        <div className="w-10 h-10 rounded-full bg-[#00897B] text-white flex items-center justify-center font-bold text-base shrink-0 overflow-hidden">
                           {currentUser.avatarUrl ? (
                             <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                           ) : (
@@ -645,10 +645,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={onOpenLogin}
-                  className="w-8 h-8 sm:w-[140px] sm:h-10 flex items-center justify-center gap-1.5 p-0 sm:px-3 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-all shadow-2xs cursor-pointer flex-shrink-0"
+                  className="w-8 h-8 sm:w-35 sm:h-10 flex items-center justify-center gap-1.5 p-0 sm:px-3 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
                   title={lang === 'en' ? 'Sign In' : 'உள்நுழைக'}
                 >
-                  <User className="w-4 h-4 text-teal-700 flex-shrink-0" />
+                  <User className="w-4 h-4 text-teal-700 shrink-0" />
                   <span className="hidden sm:inline">{lang === 'en' ? 'Sign In' : 'உள்நுழைக'}</span>
                 </button>
               )}
@@ -658,9 +658,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenAmbulance}
-              className="hidden md:flex items-center gap-1.5 sm:gap-2 bg-[#EF4444] hover:bg-[#DC2626] text-white px-3 sm:px-3.5 lg:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer select-none active:scale-95 flex-shrink-0 ml-1 sm:ml-2"
+              className="hidden md:flex items-center gap-1.5 sm:gap-2 bg-[#EF4444] hover:bg-[#DC2626] text-white px-3 sm:px-3.5 lg:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer select-none active:scale-95 shrink-0 ml-1 sm:ml-2"
             >
-              <Siren className="w-4 h-4 text-white flex-shrink-0" />
+              <Siren className="w-4 h-4 text-white shrink-0" />
               <span className="tracking-wide whitespace-nowrap">SOS Ambulance</span>
             </button>
 
@@ -668,7 +668,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center p-1 sm:p-2 text-slate-700 hover:text-slate-900 rounded-xl hover:bg-slate-100 focus:outline-none cursor-pointer flex-shrink-0"
+              className="md:hidden w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center p-1 sm:p-2 text-slate-700 hover:text-slate-900 rounded-xl hover:bg-slate-100 focus:outline-none cursor-pointer shrink-0"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
@@ -679,11 +679,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Full-Height Mobile Navigation Drawer: Aligns seamlessly below the marquee */}
         {mobileMenuOpen && (
           <div 
-            className="md:hidden fixed inset-x-0 bottom-0 top-[40px] sm:top-[42px] z-50 bg-white flex flex-col h-[calc(100dvh-40px)] sm:h-[calc(100dvh-42px)] border-t border-slate-800/80 shadow-2xl animate-in slide-in-from-top-2 duration-200"
+            className="md:hidden fixed inset-x-0 bottom-0 top-10 sm:top-10.5 z-50 bg-white flex flex-col h-[calc(100dvh-40px)] sm:h-[calc(100dvh-42px)] border-t border-slate-800/80 shadow-2xl animate-in slide-in-from-top-2 duration-200"
             data-lenis-prevent="true"
           >
             {/* Top Navigation Header: Firmly anchored right under the Marquee */}
-            <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-2xs z-20">
+            <div className="shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-2xs z-20">
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
@@ -719,9 +719,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               data-lenis-prevent="true"
             >
               {/* High-Contrast Top Emergency Card */}
-              <div className="bg-gradient-to-r from-rose-500 to-red-600 rounded-2xl p-4 text-white shadow-lg space-y-3">
+              <div className="bg-linear-to-r from-rose-500 to-red-600 rounded-2xl p-4 text-white shadow-lg space-y-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
                     <Siren className="w-5 h-5 text-white animate-pulse" />
                   </div>
                   <div>
@@ -766,7 +766,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="p-3 rounded-2xl bg-amber-50 border border-amber-200/90 text-amber-900 cursor-pointer hover:bg-amber-100/70 transition-colors flex items-center justify-between gap-3 text-xs"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping flex-shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
                   <div className="truncate">
                     <div className="font-bold text-xs">
                       {lang === 'en' ? 'Public Health Alert' : 'சுகாதார எச்சரிக்கை'}
@@ -776,7 +776,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <ChevronRight className="w-4 h-4 text-amber-600 shrink-0" />
               </div>
 
               {/* Mobile Profile / Login Card */}
@@ -790,7 +790,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-50 hover:bg-teal-100/80 border border-teal-200 transition-all text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-[#00897B] text-white font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-[#00897B] text-white font-bold flex items-center justify-center text-xs overflow-hidden shrink-0">
                         {currentUser.avatarUrl ? (
                           <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                         ) : (
@@ -937,7 +937,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-50/80 hover:bg-teal-100/80 border border-teal-200/80 text-teal-900 transition-colors text-left cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
                     <CalendarDays className="w-4 h-4" />
                   </div>
                   <div>
@@ -959,7 +959,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-50/80 hover:bg-teal-100/80 border border-teal-200/80 text-teal-900 transition-colors text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center flex-shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
                       <Stethoscope className="w-4 h-4" />
                     </div>
                     <div>
