@@ -92,7 +92,7 @@ class ClinicianWorkflowStore {
           return {
             ...parsed,
             // Always ensure seed objects are healthy
-            clinician: parsed.clinician || SEED_CLINICIAN,
+            clinician: (parsed.clinician && parsed.clinician.id === SEED_CLINICIAN.id) ? parsed.clinician : SEED_CLINICIAN,
             facilities: parsed.facilities || SEED_FACILITIES,
             orderSets: parsed.orderSets || SEED_ORDER_SETS,
           };

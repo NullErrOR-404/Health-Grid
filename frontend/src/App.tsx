@@ -159,7 +159,7 @@ export default function App() {
         setCurrentView('maps');
       } else if (pathname === '/medicines' || hash === '#medicines' || hash === '#/medicines') {
         setCurrentView('medicines');
-      } else if (pathname === '/clinician' || pathname === '/doctor' || pathname === '/my-queue' || hash === '#clinician' || hash === '#doctor' || hash === '#my-queue' || hash === '#/clinician') {
+      } else if (pathname === '/clinician' || pathname === '/clinician-portal' || pathname === '/doctor' || pathname === '/my-queue' || hash === '#clinician' || hash === '#clinician-portal' || hash === '#doctor' || hash === '#my-queue' || hash === '#/clinician' || hash === '#/clinician-portal') {
         setCurrentView('clinician-portal');
       } else if (pathname === '/his' || pathname === '/doctor-portal' || hash === '#his' || hash === '#/his' || hash === '#doctor-portal' || pathname === '/hospital-erp' || pathname === '/hospital-portal' || hash === '#hospital-erp' || hash === '#hospital-portal' || hash === '#/hospital-erp') {
         setCurrentView('hospital-erp');
@@ -296,7 +296,7 @@ export default function App() {
   const handleGlobalLoginSuccess = (user: AuthUser) => {
     setIsLoginOpen(false);
     setLoginNotice(null);
-    if (user.role === 'HEALTHCARE_PROFESSIONAL') {
+    if (user.role === 'HEALTHCARE_PROFESSIONAL' || user.role === 'DOCTOR') {
       navigateToView('clinician-portal');
       return;
     }

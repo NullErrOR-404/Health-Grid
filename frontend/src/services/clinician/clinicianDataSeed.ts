@@ -26,7 +26,7 @@ import {
 } from '../generatedPatientsData';
 
 export const SEED_CLINICIAN: ClinicianProfile = {
-  id: 'fb4867dc-b213-46b7-85a9-c0a7cd03988c', // Authentic Supabase Doctor UUID
+  id: 'cb41d3d7-cdae-4f55-b32d-ec4d78085400', // Authentic Supabase Doctor Auth UUID
   name: 'Dr. Mohamed',
   title: 'Consultant Physician',
   specialty: 'General Medicine',
@@ -36,7 +36,7 @@ export const SEED_CLINICIAN: ClinicianProfile = {
   facilityName: 'Apollo Clinic, Chennai',
   avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80',
   phone: '+91 98401 22891',
-  email: 'dr.mohamed@healthgrid.med',
+  email: 'dr.mohamed@healthgrid.in',
 };
 
 export const SEED_FACILITIES: FacilityEntity[] = [

@@ -153,12 +153,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   const displayNavIndex = hoveredNavIndex !== null ? hoveredNavIndex : activeNavIndex;
   const isHovering = hoveredNavIndex !== null;
 
+  const isDoctor = currentUser?.role === 'DOCTOR' || currentUser?.role === 'HEALTHCARE_PROFESSIONAL';
+
   const userInitial = currentUser?.name
     ? currentUser.name.charAt(0).toUpperCase()
     : 'M';
 
-  const userFirstName = currentUser?.name
-    ? currentUser.name.trim().split(/\s+/)[0]
+  const userDisplayName = currentUser?.name
+    ? currentUser.name.startsWith('Dr.') 
+      ? currentUser.name.split(/\s+/).slice(0, 2).join(' ') 
+      : currentUser.name.trim().split(/\s+/)[0]
     : 'User';
 
   return (
@@ -455,27 +459,49 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* User Profile Pill & Dropdown - Responsive compact 32px avatar on mobile, 140px pill on desktop */}
-            <div className="relative w-8 h-8 sm:w-35 sm:h-10 shrink-0" ref={userDropdownRef}>
+            {/* If doctor, show 1-click Doctor Portal shortcut */}
+            {isDoctor && (
+              <button
+                type="button"
+                onClick={() => {
+                  window.history.pushState({}, '', '/clinician');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer shrink-0"
+                title="Open Clinician Operating System"
+              >
+                <Stethoscope className="w-3.5 h-3.5" />
+                <span>Doctor Portal</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+              </button>
+            )}
+
+            {/* User Profile Pill & Dropdown */}
+            <div className="relative shrink-0" ref={userDropdownRef}>
               {currentUser ? (
                 <>
                   <button
                     type="button"
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="w-8 h-8 sm:w-35 sm:h-10 flex items-center justify-center sm:justify-between p-0 sm:pl-1 sm:pr-2 rounded-full hover:bg-slate-50 text-slate-800 transition-colors cursor-pointer group border border-slate-200/60 hover:border-slate-300 shrink-0"
+                    className="h-8 sm:h-10 px-1 sm:px-2.5 rounded-full hover:bg-slate-50 text-slate-800 transition-colors cursor-pointer group border border-slate-200/60 hover:border-slate-300 shrink-0 flex items-center gap-2"
                     title={currentUser.name}
                   >
-                    <div className="flex items-center gap-2 min-w-0 sm:flex-1">
-                      <div className="w-8 h-8 rounded-full bg-[#00897B] text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-2xs overflow-hidden shrink-0">
-                        {currentUser.avatarUrl ? (
-                          <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
-                        ) : (
-                          userInitial
-                        )}
-                      </div>
-                      <span className="hidden sm:block text-xs sm:text-[13px] font-semibold text-slate-800 truncate text-left" title={currentUser.name}>
-                        {userFirstName}
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#00897B] text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-2xs overflow-hidden shrink-0">
+                      {currentUser.avatarUrl ? (
+                        <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                      ) : (
+                        userInitial
+                      )}
+                    </div>
+                    <div className="hidden sm:flex items-center gap-1.5 max-w-36 text-left">
+                      <span className="text-xs sm:text-[13px] font-semibold text-slate-800 truncate" title={currentUser.name}>
+                        {userDisplayName}
                       </span>
+                      {isDoctor && (
+                        <span className="px-1.5 py-0.2 text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800 rounded border border-emerald-300 shrink-0">
+                          DOC
+                        </span>
+                      )}
                     </div>
                     <ChevronDown className={`hidden sm:block w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -493,11 +519,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                           )}
                         </div>
                         <div className="overflow-hidden">
-                          <div className="font-bold text-sm text-slate-900 truncate">
-                            {currentUser.name || 'Mohamed Sameen'}
+                          <div className="flex items-center gap-1.5 font-bold text-sm text-slate-900 truncate">
+                            <span>{currentUser.name || 'Mohamed Sameen'}</span>
+                            {isDoctor && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-100 text-teal-800 border border-teal-300">
+                                <Stethoscope className="w-2.5 h-2.5 text-teal-700" />
+                                DOCTOR
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-slate-400 truncate">
-                            {currentUser.email || 'sameen14mmofficial@gmail.com'}
+                            {currentUser.email || 'dr.mohamed@healthgrid.in'}
                           </div>
                         </div>
                       </div>
@@ -852,6 +884,35 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </button>
                 </div>
               </div>
+
+              {/* Doctor Workspace Quick Tile for verified clinicians */}
+              {isDoctor && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    window.history.pushState({}, '', '/clinician');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }}
+                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-teal-700 to-emerald-700 text-white shadow-md text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center shrink-0">
+                      <Stethoscope className="w-5 h-5 text-emerald-200" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold flex items-center gap-1.5">
+                        <span>{lang === 'en' ? 'Clinician Operating System' : 'மருத்துவர் பணிமனை'}</span>
+                        <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+                      </div>
+                      <div className="text-[10px] text-teal-100 font-medium">
+                        {lang === 'en' ? 'My Queue • Live Consultations' : 'நேரலை வெளிநோயாளி வரிசை'}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-emerald-200" />
+                </button>
+              )}
 
               {/* Quick Access Services Header */}
               <div className="flex items-center justify-between pb-1 border-b border-slate-100">
