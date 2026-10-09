@@ -16,15 +16,15 @@ Back to [[00_Index]]
 
 ## Current System State
 - **Git Branch**: `main`
-- **Latest Commit**: `06c1cff` (`feat(clinician): add stage 10 encounter review checklist, digital sign-off lock, context menu actions, and automated verification suite`)
+- **Latest Commit**: `26acd19` (`feat(data): end-to-end authentic clinical seeding, rbac roles, and live supabase sync`)
 - **Latest Documentation Milestone**: ADR-048 End-to-End Authentic Clinical Seeding, RBAC Roles, and Live Supabase Sync (see [[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]])
+- **Authoritative Vercel Deployment**: `https://healthgrid-mgf1v84vu-sameen14nmofficial-8826s-projects.vercel.app` (Bundle: `index-CVU0Nydm.js`)
+- **Synchronized Production Aliases**:
+  - `https://healthgrid-app.vercel.app` (200 OK • Live)
+  - `https://healthgrid-nu.vercel.app` (200 OK • Live)
+  - `https://healthgrid-live.vercel.app` (200 OK • Live)
+  - `https://healthgrid-network.vercel.app` (200 OK • Live)
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
-- **Live Aliases**:
-  - `https://healthgrid-app.vercel.app`
-  - `https://healthgrid-nu.vercel.app`
-  - `https://healthgrid-live.vercel.app`
-  - `https://healthgrid-network.vercel.app`
-  - `https://frontend-kappa-nine-29.vercel.app`
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
@@ -187,11 +187,11 @@ Back to [[00_Index]]
   - **Hardened HTTP Security Headers**: Updated `vercel.json` and Spring Security `SecurityConfig.java` with Content-Security-Policy (CSP), 2-year HSTS with preload, `X-Frame-Options: SAMEORIGIN`, `Cross-Origin-Opener-Policy: same-origin-allow-popups` (COOP), `Cross-Origin-Resource-Policy: same-origin` (CORP), `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`.
 
 ## In-Flight / Next Focus
-- [x] All 4 Vercel aliases synchronized to latest deployment hash.
-- [x] Confirmed live visibility of IPD & Bed Management, Appointments, and Emergency Department on all aliases.
+- [x] All 4 Vercel aliases synchronized to latest deployment hash `26acd19` (`healthgrid-mgf1v84vu-sameen14nmofficial-8826s-projects.vercel.app`).
+- [x] Confirmed live visibility of authentic database patients (50 sovereign ABDM UHIDs `HG-001001` - `HG-001050`), dynamic greetings, and patient deletion in ERP on all live aliases.
+- [x] Zero-loop resolution verified: Row Level Security policies active and working cleanly across anonymous and authenticated Supabase clients.
 - [x] Enterprise Zero-Trust Cybersecurity hardening completed and documented in [[ADR-036-Enterprise-Zero-Trust-Cybersecurity-and-OWASP-Hardening]].
-- [ ] Ongoing monitoring of Supabase real-time channels and edge cache invalidation.
-- [ ] Real-time updates to this Second Brain whenever new clinical features or architectural modifications ship.
+- [x] Real-time updates to this Second Brain recorded in [[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]].
 
 ## Related Notes
 - [[00_Index]]
