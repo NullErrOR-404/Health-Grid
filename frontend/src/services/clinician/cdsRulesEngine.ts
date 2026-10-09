@@ -26,6 +26,16 @@ export class ClinicalDecisionSupportEngine {
         });
 
         if (hasBetaLactam) {
+          const offendingRx = encounter.prescriptions.find((rx) => {
+            const name = rx.medicineName.toLowerCase();
+            return (
+              name.includes('amoxicillin') ||
+              name.includes('ampicillin') ||
+              name.includes('augmentin') ||
+              name.includes('penicillin')
+            );
+          });
+
           alerts.push({
             id: 'cds_alg_penicillin',
             tier: 'RED',
@@ -33,6 +43,17 @@ export class ClinicalDecisionSupportEngine {
             description: `${patient.name} has a verified SEVERE allergy to Penicillin (Reaction: Urticaria & angioedema). Prescribing a beta-lactam poses an immediate risk of anaphylaxis.`,
             recommendation: 'Discontinue beta-lactam antibiotic immediately. Consider Macrolides (Azithromycin) or Fluoroquinolones.',
             category: 'ALLERGY',
+            contraindicatedMedicineName: offendingRx?.medicineName || 'Amoxicillin',
+            alternativeMedicine: {
+              medicineName: 'Azithromycin',
+              dosage: '500 mg',
+              frequency: 'OD (Once a day)',
+              duration: '3 days',
+              instructions: 'Take 1 hour before or 2 hours after meals with water',
+              isGeneric: true,
+              janAushadhiPrice: 22.0,
+              brandedPrice: 78.0,
+            },
           });
         }
       }
@@ -63,18 +84,24 @@ export class ClinicalDecisionSupportEngine {
           ? 'Immediately HOLD Spironolactone and Enalapril. Obtain stat 12-lead ECG and administer potassium-lowering protocol.'
           : 'Monitor serum creatinine and electrolytes every 4-6 weeks.',
         category: 'INTERACTION',
+        recommendedOrder: {
+          category: 'LABORATORY',
+          name: 'STAT Serum Electrolytes (Na+, K+, Cl-)',
+          code: 'LAB-K-STAT',
+          priority: 'STAT',
+        },
       });
     }
 
     // 3. Chronic Kidney Disease & NSAID Warning
     const hasCkd = patient.problems.some((p) => p.name.toLowerCase().includes('chronic kidney') || p.code.startsWith('N18'));
     if (hasCkd && encounter) {
-      const hasNsaid = encounter.prescriptions.some((rx) => {
+      const offendingNsaid = encounter.prescriptions.find((rx) => {
         const n = rx.medicineName.toLowerCase();
         return n.includes('ibuprofen') || n.includes('diclofenac') || n.includes('naproxen') || n.includes('aceclofenac');
       });
 
-      if (hasNsaid) {
+      if (offendingNsaid) {
         alerts.push({
           id: 'cds_renal_nsaid',
           tier: 'RED',
@@ -82,6 +109,17 @@ export class ClinicalDecisionSupportEngine {
           description: `Patient has documented CKD Stage 3. Systemic NSAID therapy can precipitate acute renal decompensation.`,
           recommendation: 'Substitute with Paracetamol 650mg or topical analgesics.',
           category: 'RENAL_WARNING',
+          contraindicatedMedicineName: offendingNsaid.medicineName,
+          alternativeMedicine: {
+            medicineName: 'Paracetamol',
+            dosage: '650 mg',
+            frequency: 'TDS (Three times a day)',
+            duration: '3 days',
+            instructions: 'Take post meals as needed for pain/fever',
+            isGeneric: true,
+            janAushadhiPrice: 12.0,
+            brandedPrice: 38.0,
+          },
         });
       }
     }
@@ -98,6 +136,12 @@ export class ClinicalDecisionSupportEngine {
           description: `Last HbA1c is ${highHba1c.summary}. ADA/ICMR clinical guidelines recommend treatment intensification for diabetic patients not at target (< 7.0%).`,
           recommendation: 'Evaluate adding secondary agent (e.g. SGLT2i Empagliflozin/Dapagliflozin or DPP-4i Linagliptin).',
           category: 'CARE_GAP',
+          recommendedOrder: {
+            category: 'LABORATORY',
+            name: 'Urine Albumin-to-Creatinine Ratio (uACR)',
+            code: 'LAB-UACR',
+            priority: 'ROUTINE',
+          },
         });
       }
 
@@ -111,6 +155,12 @@ export class ClinicalDecisionSupportEngine {
           description: `Dilated fundus examination is ${eyeGap.dueText.toLowerCase()}.`,
           recommendation: 'Place an Ophthalmology referral order before closing the encounter.',
           category: 'CARE_GAP',
+          recommendedOrder: {
+            category: 'REFERRAL',
+            name: 'Ophthalmology Dilated Fundus Examination Referral',
+            code: 'REF-OPH-01',
+            priority: 'ROUTINE',
+          },
         });
       }
     }

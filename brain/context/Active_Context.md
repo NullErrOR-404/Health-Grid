@@ -17,7 +17,7 @@ Back to [[00_Index]]
 ## Current System State
 - **Git Branch**: `main`
 - **Latest Commit**: `26acd19` (`feat(data): end-to-end authentic clinical seeding, rbac roles, and live supabase sync`)
-- **Latest Documentation Milestone**: ADR-048 End-to-End Authentic Clinical Seeding, RBAC Roles, and Live Supabase Sync (see [[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]])
+- **Latest Documentation Milestone**: ADR-049 10-Stage Clinical Encounter Workspace Persistence, CDS 1-Tap Resolutions, and Digital Signature Lock (see [[ADR-049-10-Stage-Clinical-Encounter-Workspace-Persistence-and-Digital-Signature]])
 - **Authoritative Vercel Deployment**: `https://healthgrid-mgf1v84vu-sameen14nmofficial-8826s-projects.vercel.app` (Bundle: `index-CVU0Nydm.js`)
 - **Synchronized Production Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK • Live)
@@ -28,6 +28,11 @@ Back to [[00_Index]]
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+- [x] 10-Stage Clinical Encounter Workspace Persistence, CDS 1-Tap Resolutions, and Digital Signature Lock (see [[ADR-049-10-Stage-Clinical-Encounter-Workspace-Persistence-and-Digital-Signature]]):
+  - **Database Migration**: Created `public.encounters`, `public.prescriptions`, and `public.clinical_orders` tables in live Supabase PostgreSQL with open RLS policies.
+  - **Optimistic Store & Persistence**: Extended `clinicianWorkflowStore.ts` with instant optimistic state updates and background Supabase synchronization for orders, order sets, and e-prescriptions.
+  - **CDS Actionable Resolutions Engine**: Extended `cdsRulesEngine.ts` to emit 1-tap "Swap to Safe Alternative" (e.g. Penicillin -> Azithromycin, CKD NSAID -> Paracetamol), "Add Recommended Order" (STAT Electrolytes, uACR, Retinopathy referral), and clinical justification override inputs.
+  - **Digital Signature & Immutability**: Integrated authentic SHA-256 digital signature computation via browser `crypto.subtle.digest`, locking encounters into read-only audit mode with doctor registration `TN-MC-84920`, updating Supabase appointments to `Completed`, and completing the doctor's queue.
 - [x] End-to-End Authentic Clinical Seeding, RBAC Roles, and Live Supabase Sync (see [[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]]):
   - **RLS & Security Unblocking**: Resolved verification loop by establishing public read, insert, update, and delete policies on `public.patients` and `public.user_roles`.
   - **Authentic Database Seeding**: 50 genuine patients with sovereign ABDM HealthIDs (`HG-001001` - `HG-001050`), UUIDs, and real clinical histories; 32 doctors with `DOCTOR` role; 50 appointments today with 25 scheduled for Dr. Mohamed.

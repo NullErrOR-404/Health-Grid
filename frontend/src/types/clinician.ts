@@ -196,6 +196,7 @@ export type OrderCategory =
 export type OrderStatus =
   | 'DRAFT'
   | 'SIGNED'
+  | 'ORDERED'
   | 'SUBMITTED'
   | 'IN_PROCESS'
   | 'RESULTED'
@@ -337,6 +338,23 @@ export interface ClinicalDecisionAlert {
   description: string;
   recommendation: string;
   category: 'ALLERGY' | 'INTERACTION' | 'CONTRAINDICATION' | 'CARE_GAP' | 'RENAL_WARNING';
+  contraindicatedMedicineName?: string;
+  alternativeMedicine?: {
+    medicineName: string;
+    dosage: string;
+    frequency: string;
+    duration: string;
+    instructions: string;
+    isGeneric?: boolean;
+    janAushadhiPrice?: number;
+    brandedPrice?: number;
+  };
+  recommendedOrder?: {
+    category: OrderCategory;
+    name: string;
+    code: string;
+    priority: 'ROUTINE' | 'STAT' | 'URGENT';
+  };
 }
 
 export interface ClinicalEncounter {
@@ -396,4 +414,7 @@ export interface ClinicalEncounter {
   };
   signedAt?: string;
   signedBy?: string;
+  signatureHash?: string;
+  isLocked?: boolean;
+  overrideJustifications?: Record<string, string>;
 }

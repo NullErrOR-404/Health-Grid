@@ -184,6 +184,7 @@
   },
   "active": "287d32495fe46cef",
   "lastOpenFiles": [
+    "decisions/ADR-049-10-Stage-Clinical-Encounter-Workspace-Persistence-and-Digital-Signature.md",
     "decisions/ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync.md",
     "architecture/Deployment_and_Domains.md",
     "decisions/ADR-018-Top-Tier-Multimodal-Prescription-Vision-and-HTR-Cascade.md",

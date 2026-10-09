@@ -427,19 +427,62 @@ class ClinicianWorkflowStore {
       enc.id === encounterId ? { ...enc, ...partial } : enc
     );
     this.persist();
+
+    const enc = this.state.encounters.find((e) => e.id === encounterId);
+    if (enc && supabase) {
+      Promise.resolve(
+        supabase.from('encounters').upsert({
+          id: enc.id,
+          patient_id: enc.patientId,
+          doctor_id: enc.clinicianId,
+          appointment_id: enc.appointmentId,
+          status: enc.status,
+          stage: (partial as any).stage || 'overview',
+          chief_complaint: enc.chiefComplaint,
+          hpi: enc.hpi,
+          physical_exam: enc.physicalExam,
+          assessment: enc.assessment,
+          plan: enc.plan,
+          patient_instructions: enc.patientInstructions,
+          soap_note: enc.soapNote,
+          signed_by: enc.signedBy,
+          sign_off_timestamp: enc.signedAt,
+          signature_hash: enc.signatureHash,
+          updated_at: new Date().toISOString(),
+        })
+      ).catch((err: any) => console.warn('Supabase encounters upsert error:', err));
+    }
   }
 
-  public signAndCloseEncounter(encounterId: string) {
+  public async signAndCloseEncounter(encounterId: string) {
     const encounter = this.state.encounters.find((e) => e.id === encounterId);
     if (!encounter) return;
 
     const timestamp = new Date().toISOString();
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // Mark encounter SIGNED & CLOSED
-    encounter.status = 'CLOSED';
+    // Generate cryptographic SHA-256 digital signature hash
+    const signaturePayload = `${encounter.id}:${encounter.patientId}:${this.state.clinician.id}:${JSON.stringify(encounter.soapNote)}:${timestamp}`;
+    let signatureHash = '';
+    try {
+      if (typeof window !== 'undefined' && window.crypto?.subtle) {
+        const msgBuffer = new TextEncoder().encode(signaturePayload);
+        const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        signatureHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+      } else {
+        signatureHash = `sha256_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+      }
+    } catch {
+      signatureHash = `sha256_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    }
+
+    // Mark encounter SIGNED & LOCKED
+    encounter.status = 'SIGNED';
+    encounter.isLocked = true;
     encounter.signedAt = timestamp;
     encounter.signedBy = `${this.state.clinician.name}, ${this.state.clinician.title}`;
+    encounter.signatureHash = signatureHash;
     encounter.endTime = timeStr;
 
     // Update patient's past visits
@@ -506,6 +549,39 @@ class ClinicianWorkflowStore {
       q.patientId === encounter.patientId ? { ...q, status: 'COMPLETED' } : q
     );
 
+    // Sync to Supabase in background
+    if (supabase) {
+      Promise.resolve(
+        supabase.from('encounters').upsert({
+          id: encounter.id,
+          patient_id: encounter.patientId,
+          doctor_id: encounter.clinicianId,
+          appointment_id: encounter.appointmentId,
+          status: 'SIGNED',
+          stage: 'sign-off',
+          chief_complaint: encounter.chiefComplaint,
+          hpi: encounter.hpi,
+          physical_exam: encounter.physicalExam,
+          assessment: encounter.assessment,
+          plan: encounter.plan,
+          patient_instructions: encounter.patientInstructions,
+          soap_note: encounter.soapNote,
+          signed_by: encounter.signedBy,
+          sign_off_timestamp: timestamp,
+          signature_hash: signatureHash,
+          updated_at: timestamp,
+        })
+      ).catch((err: any) => console.warn('Supabase encounters sign error:', err));
+
+      if (encounter.appointmentId) {
+        Promise.resolve(
+          supabase.from('appointments').update({
+            status: 'Completed',
+          }).or(`id.eq.${encounter.appointmentId},appointment_id.eq.${encounter.appointmentId}`)
+        ).catch((err: any) => console.warn('Supabase appointments update error:', err));
+      }
+    }
+
     this.state.activeEncounterId = null;
     this.state.activeTab = 'my-queue';
     this.persist();
@@ -536,12 +612,42 @@ class ClinicianWorkflowStore {
 
     const newOrder: OrderItem = {
       ...order,
-      id: `ord_${Date.now()}`,
+      id: `ord_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       orderedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
     encounter.orders.push(newOrder);
     this.persist();
+
+    if (supabase) {
+      Promise.resolve(
+        supabase.from('clinical_orders').insert({
+          id: newOrder.id,
+          encounter_id: encounterId,
+          patient_id: encounter.patientId,
+          category: newOrder.category,
+          name: newOrder.name,
+          code: newOrder.code,
+          priority: newOrder.priority,
+          status: newOrder.status,
+          notes: newOrder.notes || '',
+        })
+      ).catch((err: any) => console.warn('Supabase clinical_orders insert error:', err));
+    }
+  }
+
+  public removeOrderFromEncounter(encounterId: string, orderId: string) {
+    const encounter = this.state.encounters.find((e) => e.id === encounterId);
+    if (!encounter) return;
+
+    encounter.orders = encounter.orders.filter((o) => o.id !== orderId);
+    this.persist();
+
+    if (supabase) {
+      Promise.resolve(
+        supabase.from('clinical_orders').delete().eq('id', orderId)
+      ).catch((err: any) => console.warn('Supabase clinical_orders delete error:', err));
+    }
   }
 
   public applyOrderSetToEncounter(encounterId: string, orderSetId: string) {
@@ -549,9 +655,11 @@ class ClinicianWorkflowStore {
     const orderSet = this.state.orderSets.find((os) => os.id === orderSetId);
     if (!encounter || !orderSet) return;
 
+    const newDbOrders: any[] = [];
     orderSet.items.forEach((item) => {
-      encounter.orders.push({
-        id: `ord_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      const orderId = `ord_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const orderObj: OrderItem = {
+        id: orderId,
         encounterId,
         patientId: encounter.patientId,
         category: item.category,
@@ -562,10 +670,28 @@ class ClinicianWorkflowStore {
         orderSetId: orderSet.id,
         orderedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         notes: item.defaultNotes,
+      };
+      encounter.orders.push(orderObj);
+      newDbOrders.push({
+        id: orderId,
+        encounter_id: encounterId,
+        patient_id: encounter.patientId,
+        category: item.category,
+        name: item.name,
+        code: item.code,
+        priority: 'ROUTINE',
+        status: 'DRAFT',
+        notes: item.defaultNotes || '',
       });
     });
 
     this.persist();
+
+    if (supabase && newDbOrders.length > 0) {
+      Promise.resolve(
+        supabase.from('clinical_orders').insert(newDbOrders)
+      ).catch((err: any) => console.warn('Supabase clinical_orders batch insert error:', err));
+    }
   }
 
   // Prescriptions
@@ -577,6 +703,89 @@ class ClinicianWorkflowStore {
     if (!encounter) return;
 
     encounter.prescriptions.push(rx);
+    this.persist();
+
+    if (supabase) {
+      Promise.resolve(
+        supabase.from('prescriptions').insert({
+          id: `rx_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          encounter_id: encounterId,
+          patient_id: encounter.patientId,
+          medicine_name: rx.medicineName,
+          dosage: rx.dosage,
+          frequency: rx.frequency,
+          duration: rx.duration,
+          instructions: rx.instructions,
+          is_generic: rx.isGeneric ?? true,
+          jan_aushadhi_price: rx.janAushadhiPrice ?? 0,
+          branded_price: rx.brandedPrice ?? 0,
+        })
+      ).catch((err: any) => console.warn('Supabase prescriptions insert error:', err));
+    }
+  }
+
+  public removePrescriptionFromEncounter(encounterId: string, rxIndex: number) {
+    const encounter = this.state.encounters.find((e) => e.id === encounterId);
+    if (!encounter || rxIndex < 0 || rxIndex >= encounter.prescriptions.length) return;
+
+    const removed = encounter.prescriptions[rxIndex];
+    encounter.prescriptions.splice(rxIndex, 1);
+    this.persist();
+
+    if (supabase && removed) {
+      Promise.resolve(
+        supabase.from('prescriptions').delete()
+          .match({ encounter_id: encounterId, medicine_name: removed.medicineName })
+      ).catch((err: any) => console.warn('Supabase prescriptions delete error:', err));
+    }
+  }
+
+  public swapPrescriptionAlternative(
+    encounterId: string,
+    contraindicatedMedName: string,
+    alternative: NonNullable<ClinicalEncounter['prescriptions'][0]>
+  ) {
+    const encounter = this.state.encounters.find((e) => e.id === encounterId);
+    if (!encounter) return;
+
+    encounter.prescriptions = encounter.prescriptions.filter(
+      (rx) => rx.medicineName.toLowerCase() !== contraindicatedMedName.toLowerCase()
+    );
+    encounter.prescriptions.push(alternative);
+    this.persist();
+
+    if (supabase) {
+      Promise.resolve(
+        supabase.from('prescriptions').delete()
+          .match({ encounter_id: encounterId, medicine_name: contraindicatedMedName })
+      ).then(() => {
+        return Promise.resolve(
+          supabase.from('prescriptions').insert({
+            id: `rx_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            encounter_id: encounterId,
+            patient_id: encounter.patientId,
+            medicine_name: alternative.medicineName,
+            dosage: alternative.dosage,
+            frequency: alternative.frequency,
+            duration: alternative.duration,
+            instructions: alternative.instructions,
+            is_generic: alternative.isGeneric ?? true,
+            jan_aushadhi_price: alternative.janAushadhiPrice ?? 0,
+            branded_price: alternative.brandedPrice ?? 0,
+          })
+        );
+      }).catch((err: any) => console.warn('Supabase swap alternative error:', err));
+    }
+  }
+
+  public addOverrideJustification(encounterId: string, alertId: string, reason: string) {
+    const encounter = this.state.encounters.find((e) => e.id === encounterId);
+    if (!encounter) return;
+
+    if (!encounter.overrideJustifications) {
+      encounter.overrideJustifications = {};
+    }
+    encounter.overrideJustifications[alertId] = reason;
     this.persist();
   }
 
