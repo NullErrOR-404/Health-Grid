@@ -17,7 +17,7 @@ Back to [[00_Index]]
 ## Current System State
 
 - **Git Branch**: `main`
-- **Latest Commit**: `291d756` (`feat(clinician): 10-stage encounter workspace persistence, cds 1-tap resolutions, and digital signature lock (ADR-049)`)
+- **Latest Commit**: `216bf38` (`style(ui): modernize class syntax to canonical tailwind v4 standards`)
 - **Latest Documentation Milestone**: ADR-049 10-Stage Clinical Encounter Workspace Persistence, CDS 1-Tap Resolutions, and Digital Signature Lock (see [[ADR-049-10-Stage-Clinical-Encounter-Workspace-Persistence-and-Digital-Signature]])
 - **Authoritative Vercel Deployment**: `https://frontend-1d9rsj3io-sameen14nmofficial-8826s-projects.vercel.app` (Bundle: `index-7Te-cDaN.js`)
 - **Synchronized Production Aliases**:
