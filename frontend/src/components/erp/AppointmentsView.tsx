@@ -633,11 +633,12 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                   paginatedAppointments.map((apt) => {
                     const isSelected = selectedAppointment?.id === apt.id;
                     const isChecked = selectedIds.has(apt.id);
-                    const initials = apt.patient_name
+                    const initials = (apt.patient_name || 'Patient')
                       .split(' ')
+                      .filter(Boolean)
                       .map((n) => n[0])
                       .join('')
-                      .slice(0, 2);
+                      .slice(0, 2) || 'PT';
 
                     return (
                       <tr
@@ -687,7 +688,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                                 {apt.patient_name}
                               </div>
                               <div className="text-[11px] text-slate-400 mt-0.5">
-                                UHID: {apt.patient_health_id} · {apt.patient_age} / {apt.patient_gender[0]}
+                                UHID: {apt.patient_health_id || 'N/A'} · {apt.patient_age ?? '--'} / {apt.patient_gender ? apt.patient_gender[0] : 'U'}
                               </div>
                             </div>
                           </div>
@@ -915,11 +916,12 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                   />
                 ) : (
                   <div className="w-12 h-12 rounded-full bg-teal-100 text-teal-800 font-black text-sm flex items-center justify-center shadow-xs">
-                    {selectedAppointment.patient_name
+                    {(selectedAppointment.patient_name || 'Patient')
                       .split(' ')
+                      .filter(Boolean)
                       .map((n) => n[0])
                       .join('')
-                      .slice(0, 2)}
+                      .slice(0, 2) || 'PT'}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
@@ -930,7 +932,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                     UHID: {selectedAppointment.patient_health_id}
                   </div>
                   <div className="text-xs text-slate-500 mt-0.5">
-                    Age: {selectedAppointment.patient_age} | {selectedAppointment.patient_gender}
+                    Age: {selectedAppointment.patient_age ?? '--'} | {selectedAppointment.patient_gender || 'Not specified'}
                   </div>
                   <div className="text-xs font-medium text-slate-600 mt-0.5">
                     {selectedAppointment.patient_phone}

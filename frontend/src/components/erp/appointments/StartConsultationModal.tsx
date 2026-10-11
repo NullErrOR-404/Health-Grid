@@ -96,12 +96,12 @@ export const StartConsultationModal: React.FC<StartConsultationModalProps> = ({
           <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">
-                {appointment.patient_name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                {(appointment.patient_name || 'Patient').split(' ').filter(Boolean).map((n) => n[0]).join('').slice(0, 2) || 'PT'}
               </div>
               <div>
                 <div className="font-bold text-slate-900 text-sm">{appointment.patient_name}</div>
                 <div className="text-[11px] text-slate-500">
-                  UHID: {appointment.patient_health_id} · {appointment.patient_age}y / {appointment.patient_gender}
+                  UHID: {appointment.patient_health_id || 'N/A'} · {appointment.patient_age ?? '--'}y / {appointment.patient_gender || 'U'}
                 </div>
               </div>
             </div>

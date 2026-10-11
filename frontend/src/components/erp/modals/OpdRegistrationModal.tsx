@@ -91,7 +91,7 @@ export const OpdRegistrationModal: React.FC<OpdRegistrationModalProps> = ({
             >
               {filteredPatients.map((p: UnifiedPatient) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} ({p.healthId}) • {p.phone} • {p.age}/{p.gender[0]}
+                  {p.name} ({p.healthId}) • {p.phone} • {p.age ?? '--'}/{p.gender ? p.gender[0] : 'U'}
                 </option>
               ))}
             </select>

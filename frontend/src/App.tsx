@@ -14,6 +14,7 @@ import { authService, type AuthUser } from './services/authService';
 import { useScrollReveal } from './hooks/useScrollReveal';
 import type { GuideArticle } from './components/HealthGuideModal';
 import type { HospitalEntity } from './data/hospitalsList';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import './App.css';
 
 // Lazy-loaded Views (Code-splitting secondary routes)
@@ -713,24 +714,28 @@ export default function App() {
   // Render Dedicated Hospital ERP Operations Workspace (Matching ERP Overview.png)
   if (currentView === 'hospital-erp') {
     return (
-      <Suspense fallback={<ViewLoadingFallback />}>
-        <HospitalErpDashboard
-          initialHospital={activeErpHospital}
-          adminName={activeErpAdmin}
-          onExit={() => navigateToView('landing')}
-        />
-      </Suspense>
+      <ErrorBoundary fallbackTitle="Hospital ERP Recovery Shield" onReset={() => setCurrentView('hospital-erp')}>
+        <Suspense fallback={<ViewLoadingFallback />}>
+          <HospitalErpDashboard
+            initialHospital={activeErpHospital}
+            adminName={activeErpAdmin}
+            onExit={() => navigateToView('landing')}
+          />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
   // Render Dedicated Clinician Operating System & Workstation (Matching My queue Reference.png)
   if (currentView === 'clinician-portal') {
     return (
-      <Suspense fallback={<ViewLoadingFallback />}>
-        <ClinicianPortalLayout
-          onExitPortal={() => navigateToView('landing')}
-        />
-      </Suspense>
+      <ErrorBoundary fallbackTitle="Clinician Operating System Recovery Shield" onReset={() => setCurrentView('clinician-portal')}>
+        <Suspense fallback={<ViewLoadingFallback />}>
+          <ClinicianPortalLayout
+            onExitPortal={() => navigateToView('landing')}
+          />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 

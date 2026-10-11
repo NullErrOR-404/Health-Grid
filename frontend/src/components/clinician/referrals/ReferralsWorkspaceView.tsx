@@ -298,7 +298,7 @@ export const ReferralsWorkspaceView: React.FC<ReferralsWorkspaceViewProps> = ({
                 >
                   {storeState.patients.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} (UHID: {p.uhid}) - {p.age}y {p.gender[0]}
+                      {p.name} (UHID: {p.uhid}) - {p.age}y {p.gender ? p.gender[0] : 'U'}
                     </option>
                   ))}
                 </select>

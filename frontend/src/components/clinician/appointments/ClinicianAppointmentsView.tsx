@@ -167,7 +167,7 @@ export const ClinicianAppointmentsView: React.FC<ClinicianAppointmentsViewProps>
       patientName: pat.name,
       patientAvatar: pat.avatarUrl,
       uhid: pat.uhid,
-      ageGender: `${pat.age}y ${pat.gender[0]}`,
+      ageGender: `${pat.age}y ${pat.gender ? pat.gender[0] : 'U'}`,
       time: newTime,
       durationMinutes: 20,
       visitType: newVisitType,
@@ -452,7 +452,7 @@ export const ClinicianAppointmentsView: React.FC<ClinicianAppointmentsViewProps>
                 >
                   {storeState.patients.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} (UHID: {p.uhid}) - {p.age}y {p.gender[0]}
+                      {p.name} (UHID: {p.uhid}) - {p.age}y {p.gender ? p.gender[0] : 'U'}
                     </option>
                   ))}
                 </select>

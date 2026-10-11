@@ -74,7 +74,7 @@ export const PatientManagementView: React.FC<PatientManagementViewProps> = ({
           triggerToast(`Patient ${patient.name} successfully deleted from database.`);
           const remaining = unifiedPatientStore.getAllPatients();
           if (remaining.length > 0) {
-            setSelectedPatientId(remaining[0].id);
+            setSelectedPatientId(remaining[0]?.id || '');
           }
         } else {
           triggerToast('Error deleting patient from database.');
@@ -115,12 +115,13 @@ export const PatientManagementView: React.FC<PatientManagementViewProps> = ({
     patients.find((p) => p.id === selectedPatientId) || patients[0];
 
   const getInitials = (name: string) => {
-    return name
+    return (name || 'Patient')
       .split(' ')
+      .filter(Boolean)
       .map((n) => n[0])
       .join('')
       .substring(0, 2)
-      .toUpperCase();
+      .toUpperCase() || 'PT';
   };
 
   const getStatusBadge = (status: string) => {
@@ -377,7 +378,7 @@ export const PatientManagementView: React.FC<PatientManagementViewProps> = ({
                         {patient.healthId}
                       </td>
                       <td className="py-3.5 px-3 text-slate-600">
-                        {patient.age} / {patient.gender[0]}
+                        {patient.age ?? '--'} / {patient.gender ? patient.gender[0] : 'U'}
                       </td>
                       <td className="py-3.5 px-3">
                         <div className="font-semibold text-slate-800">{patient.lastVisit.date}</div>

@@ -232,7 +232,7 @@ export const ConsultationsLandingView: React.FC<ConsultationsLandingViewProps> =
                           <div className="font-semibold text-slate-900 flex items-center gap-2">
                             <span>{enc.patient.name}</span>
                             <span className="text-[10px] font-normal text-slate-400">
-                              {enc.patient.age}y {enc.patient.gender[0]}
+                              {enc.patient.age}y {enc.patient.gender ? enc.patient.gender[0] : 'U'}
                             </span>
                           </div>
                           <div className="text-[11px] text-slate-500 font-mono">
