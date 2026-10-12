@@ -19,7 +19,7 @@ Back to [[00_Index]]
 - **Git Branch**: `main`
 - **Latest Commit**: `99a3e4c` (`feat(security): enterprise zero-trust hardening, serverless AI gateways, RLS isolation, 2FA, and backup verification`)
 - **Latest Documentation Milestone**: ADR-051 Enterprise Zero-Trust Cybersecurity Hardening, Serverless Gateways & Verifiable Backups ([[ADR-051-Enterprise-Zero-Trust-Cybersecurity-Hardening]])
-- **Authoritative Vercel Deployment**: `https://healthgrid-9jdr0c7e4-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_FiJ1zovW5AAGayxEZaKLDyQegWq1`, Bundle: `index-eA-Cu4U1.js`)
+- **Authoritative Vercel Deployment**: `https://healthgrid-5og0r381s-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_2czdUKBLmpcG9UD6riYR8Kcs3LDo`, Bundle: `index-eA-Cu4U1.js`)
 - **Synchronized Production Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK • Live • Bundle: `index-eA-Cu4U1.js`)
   - `https://healthgrid-nu.vercel.app` (200 OK • Live • Bundle: `index-eA-Cu4U1.js`)
