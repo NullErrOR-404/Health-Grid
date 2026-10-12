@@ -657,7 +657,33 @@ Return ONLY valid JSON matching this schema:
   "allergyWarnings": []
 }`;
 
-    // 1. Tier 1: Multimodal Vision with Google Gemini 3.8 / 3.5 Flash
+    // 0. Zero-Trust Primary Gateway: Serverless /api/ai/ocr (Zero API keys in client)
+    if (imagesData.length > 0) {
+      try {
+        const ocrRes = await fetch('/api/ai/ocr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageBase64: imagesData[0].base64,
+            patientAllergies: knownAllergies,
+          }),
+          signal: AbortSignal.timeout(18000),
+        });
+
+        if (ocrRes.ok) {
+          const ocrData = await ocrRes.json();
+          if (ocrData.data) {
+            return this.parseAndEnrichResult(JSON.stringify(ocrData.data), imagesData.length);
+          } else if (ocrData.raw) {
+            return this.parseAndEnrichResult(ocrData.raw, imagesData.length);
+          }
+        }
+      } catch (ocrErr) {
+        // Fallback to client if in local dev
+      }
+    }
+
+    // 1. Tier 1: Multimodal Vision with Google Gemini 3.8 / 3.5 Flash (Local dev fallback)
     if (this.geminiKey && imagesData.length > 0) {
       const imageParts = imagesData.map((img) => ({
         inlineData: {

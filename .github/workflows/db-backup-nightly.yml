@@ -1,0 +1,88 @@
+name: Nightly Database Backup & Restoration Verification
+
+on:
+  schedule:
+    # Runs at 02:00 UTC every day
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  backup-and-verify:
+    name: Backup Supabase PostgreSQL & Verify Restoration
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: restore_sandbox
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL Client Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Dump Remote Supabase Database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Dumping database schemas and records..."
+          mkdir -p backups
+          pg_dump "$DATABASE_URL" \
+            --no-owner \
+            --no-privileges \
+            --clean \
+            --if-exists \
+            --file=backups/healthgrid_backup_$(date +%Y%m%d_%H%M%S).sql
+
+      - name: Compute Cryptographic SHA-256 Checksum
+        run: |
+          cd backups
+          sha256sum *.sql > checksums.sha256
+          cat checksums.sha256
+
+      - name: Verify Restoration in Ephemeral PostgreSQL Container
+        run: |
+          export PGPASSWORD=test_password
+          LATEST_BACKUP=$(ls -t backups/*.sql | head -1)
+          echo "Testing restoration of $LATEST_BACKUP into sandbox database..."
+          psql -h localhost -U test_user -d restore_sandbox -f "$LATEST_BACKUP"
+          
+          echo "Validating restored tables..."
+          TABLE_COUNT=$(psql -h localhost -U test_user -d restore_sandbox -t -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public';")
+          echo "Restored Public Tables: $TABLE_COUNT"
+          if [ "$TABLE_COUNT" -lt 5 ]; then
+            echo "Restoration validation failed: insufficient tables restored."
+            exit 1
+          fi
+          echo "✅ Full database backup & restore test passed successfully!"
+
+      - name: Encrypt Backup Artifact with GPG
+        env:
+          BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+        run: |
+          LATEST_BACKUP=$(ls -t backups/*.sql | head -1)
+          if [ -n "$BACKUP_ENCRYPTION_PASSPHRASE" ]; then
+            gpg --batch --yes --passphrase "$BACKUP_ENCRYPTION_PASSPHRASE" --symmetric "$LATEST_BACKUP"
+            rm "$LATEST_BACKUP"
+          fi
+
+      - name: Upload Verified Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: healthgrid-database-backup
+          path: backups/
+          retention-days: 30

@@ -102,6 +102,7 @@ import {
 import { markItDownService } from '../services/markItDownService';
 import { NlpBookingParser } from '../services/nlpBookingParser';
 import { unifiedPatientStore } from '../services/unifiedPatientStore';
+import { securitySanitizer } from '../services/securitySanitizer';
 
 export interface StagedClinicalAttachment {
   file: File;
@@ -2714,12 +2715,13 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     speechEngine.speak(question, lang === 'ta' ? 'ta' : 'en');
   };
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      setToastMessage(lang === 'en' ? 'Image exceeds 10MB limit' : 'படம் 10MB அளவை தாண்டியுள்ளது');
+    const check = await securitySanitizer.validateFileUpload(file, 10 * 1024 * 1024);
+    if (!check.valid) {
+      setToastMessage(check.error || 'Image validation failed');
       e.target.value = '';
       return;
     }
@@ -3750,8 +3752,9 @@ ${sbar.recommendation}`;
       return;
     }
 
-    if (file.size > 15 * 1024 * 1024) {
-      setToastMessage(lang === 'en' ? 'Document exceeds 15MB limit' : 'ஆவணம் 15MB அளவை தாண்டியுள்ளது');
+    const check = await securitySanitizer.validateFileUpload(file, 10 * 1024 * 1024);
+    if (!check.valid) {
+      setToastMessage(check.error || 'File validation failed');
       e.target.value = '';
       return;
     }

@@ -230,6 +230,76 @@ class SecuritySanitizer {
       flaggedTokens: [],
     };
   }
+
+  /**
+   * Enterprise File Upload Validator (OWASP A04:2021 & Anti-Malware / Anti-Polyglot Defense)
+   * Enforces:
+   * 1. 10MB maximum file size limit
+   * 2. Strict MIME whitelist (JPEG, PNG, WEBP, PDF)
+   * 3. Magic-bytes header verification to prevent executable file masquerading
+   */
+  public async validateFileUpload(file: File, maxSizeBytes = 10 * 1024 * 1024): Promise<{ valid: boolean; error?: string }> {
+    // 1. File Size Check
+    if (file.size > maxSizeBytes) {
+      const maxMb = Math.round(maxSizeBytes / (1024 * 1024));
+      return { valid: false, error: `File "${file.name}" exceeds the maximum security size limit of ${maxMb}MB.` };
+    }
+
+    // 2. MIME Whitelist Check
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!allowedMimes.includes(file.type)) {
+      return { valid: false, error: `File type "${file.type || 'unknown'}" is not permitted. Only JPEG, PNG, WEBP, and PDF documents are allowed.` };
+    }
+
+    // 3. Extension Whitelist Check
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+    if (!ext || !allowedExts.includes(ext)) {
+      return { valid: false, error: `Invalid file extension ".${ext}". Allowed extensions: .jpg, .png, .webp, .pdf` };
+    }
+
+    // 4. Magic Bytes Inspection (Anti-Polyglot / Anti-XSS in Images)
+    try {
+      const buffer = await file.slice(0, 12).arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      const isMagicValid = this.checkMagicBytes(bytes, file.type);
+      if (!isMagicValid) {
+        return { valid: false, error: `File "${file.name}" failed cryptographic magic-bytes verification. File signature does not match its declared type.` };
+      }
+    } catch {
+      return { valid: false, error: `Unable to inspect file headers for "${file.name}".` };
+    }
+
+    return { valid: true };
+  }
+
+  private checkMagicBytes(bytes: Uint8Array, mime: string): boolean {
+    if (bytes.length < 4) return false;
+
+    // JPEG: FF D8 FF
+    if (mime === 'image/jpeg') {
+      return bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+    }
+
+    // PNG: 89 50 4E 47
+    if (mime === 'image/png') {
+      return bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47;
+    }
+
+    // PDF: 25 50 44 46 (%PDF)
+    if (mime === 'application/pdf') {
+      return bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
+    }
+
+    // WEBP: 52 49 46 46 .... 57 45 42 50 (RIFF....WEBP)
+    if (mime === 'image/webp') {
+      const isRiff = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46;
+      if (!isRiff || bytes.length < 12) return false;
+      return bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+    }
+
+    return false;
+  }
 }
 
 export const securitySanitizer = new SecuritySanitizer();

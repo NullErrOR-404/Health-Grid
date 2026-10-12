@@ -43,6 +43,7 @@ import { prescriptionAiService, type PrescriptionAnalysisResult, type ScannedMed
 import { speechEngine } from '../services/speechService';
 import { supabase } from '../services/supabaseClient';
 import { medicineStoreService } from '../services/medicineStoreService';
+import { securitySanitizer } from '../services/securitySanitizer';
 import { authService, generateImmutableHealthId } from '../services/authService';
 
 interface PrescriptionModalProps {
@@ -339,12 +340,27 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     setCapturedPages(updated);
   };
 
-  // Handle uploaded files
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle uploaded files with enterprise security checks
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const readPromises: Promise<string>[] = Array.from(files).map((file) => {
+    if (files.length > 5) {
+      setErrorMsg(lang === 'en' ? 'Maximum 5 files can be uploaded simultaneously.' : 'ஒரே நேரத்தில் அதிகபட்சம் 5 கோப்புகளை மட்டுமே பதிவேற்ற முடியும்.');
+      return;
+    }
+
+    const validFiles: File[] = [];
+    for (const file of Array.from(files)) {
+      const check = await securitySanitizer.validateFileUpload(file, 10 * 1024 * 1024);
+      if (!check.valid) {
+        setErrorMsg(check.error || 'File validation failed.');
+        return;
+      }
+      validFiles.push(file);
+    }
+
+    const readPromises: Promise<string>[] = validFiles.map((file) => {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -355,6 +371,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     Promise.all(readPromises).then((dataUrls) => {
       const updated = [...capturedPages, ...dataUrls];
       setCapturedPages(updated);
+      setErrorMsg(null);
     });
   };
 

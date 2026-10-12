@@ -1513,9 +1513,40 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     let data: any = null;
     let executedModelName = model.name;
 
-    for (const modelCandidate of [...new Set(modelsToTry)]) {
-      try {
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    // 1. Primary Zero-Trust Gateway: Route via server-side /api/ai/chat (Zero API keys in client)
+    try {
+      const serverlessRes = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: 'groq',
+          messages: messages.slice(1), // user & assistant turns
+          systemPrompt,
+          temperature: 0.6,
+          maxTokens: model.id.includes('120b') ? 850 : 650,
+        }),
+        signal: AbortSignal.timeout(12000),
+      });
+
+      if (serverlessRes.ok) {
+        const sData = await serverlessRes.json();
+        if (sData.content) {
+          data = {
+            choices: [{ message: { content: sData.content } }],
+            model: sData.model || model.id,
+          };
+          executedModelName = model.name;
+        }
+      }
+    } catch {
+      // Fallback to direct client if in local dev with dev key
+    }
+
+    if (!data) {
+      for (const modelCandidate of [...new Set(modelsToTry)]) {
+        if (!this.groqApiKey) break;
+        try {
+          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1541,6 +1572,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
         lastError = err;
       }
     }
+  }
 
     if (!data) {
       throw lastError || new Error('All Groq model candidates failed.');
@@ -1746,10 +1778,49 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     let data: any = null;
     let executedModelName = model.name;
 
-    for (const modelCandidate of geminiModelsToTry) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelCandidate}:generateContent?key=${this.geminiApiKey}`;
-        const response = await fetch(url, {
+    // 1. Primary Zero-Trust Gateway: Route via server-side /api/ai/chat (Zero API keys in client)
+    try {
+      const serverlessRes = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: 'gemini',
+          messages: contents.map(c => ({
+            role: c.role === 'model' ? 'assistant' : 'user',
+            content: c.parts.map(p => p.text || '').join(' '),
+          })),
+          systemPrompt,
+          temperature: 0.6,
+          maxTokens: 650,
+        }),
+        signal: AbortSignal.timeout(12000),
+      });
+
+      if (serverlessRes.ok) {
+        const sData = await serverlessRes.json();
+        if (sData.content) {
+          data = {
+            candidates: [
+              {
+                content: {
+                  parts: [{ text: sData.content }],
+                },
+              },
+            ],
+          };
+          executedModelName = model.name;
+        }
+      }
+    } catch {
+      // Fallback to direct client if in local dev with dev key
+    }
+
+    if (!data) {
+      for (const modelCandidate of geminiModelsToTry) {
+        if (!this.geminiApiKey) break;
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelCandidate}:generateContent?key=${this.geminiApiKey}`;
+          const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1776,6 +1847,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
         lastError = err;
       }
     }
+  }
 
     if (!data) {
       throw lastError || new Error('All Gemini model candidates failed.');

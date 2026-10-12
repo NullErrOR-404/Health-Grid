@@ -164,10 +164,43 @@ OUTPUT STRICT JSON ONLY:
       let data: any = null;
       let lastErr: Error | null = null;
 
-      for (const modelId of modelsToTry) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${this.geminiKey}`;
-          const response = await fetch(url, {
+      // 1. Primary Zero-Trust Gateway: Route via serverless /api/ai/vision (No API keys exposed in frontend)
+      try {
+        const serverlessRes = await fetch('/api/ai/vision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageBase64: frameBase64,
+            prompt,
+            mimeType: 'image/jpeg',
+          }),
+          signal: AbortSignal.timeout(15000),
+        });
+
+        if (serverlessRes.ok) {
+          const sData = await serverlessRes.json();
+          if (sData.analysis) {
+            data = {
+              candidates: [
+                {
+                  content: {
+                    parts: [{ text: sData.analysis }],
+                  },
+                },
+              ],
+            };
+          }
+        }
+      } catch (gateErr: any) {
+        lastErr = gateErr;
+      }
+
+      if (!data) {
+        for (const modelId of modelsToTry) {
+          if (!this.geminiKey) break;
+          try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${this.geminiKey}`;
+            const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -204,6 +237,7 @@ OUTPUT STRICT JSON ONLY:
           lastErr = err;
         }
       }
+    }
 
       if (!data) {
         console.warn('All Gemini Vision model candidates unavailable, providing clinical inspection baseline:', lastErr);

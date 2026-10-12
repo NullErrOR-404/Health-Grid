@@ -517,6 +517,56 @@ class AuthService {
   }
 
   /**
+   * Enterprise Multi-Factor Authentication (MFA / 2FA)
+   * Enforces Time-Based One-Time Password (TOTP) for Doctors & Admins
+   */
+  async enrollTotp(): Promise<{ id: string; qr_code: string; secret: string; uri: string }> {
+    const { data, error } = await supabase.auth.mfa.enroll({
+      factorType: 'totp',
+      issuer: 'HealthGrid Clinical Network',
+    });
+    if (error) throw new Error(error.message);
+    return {
+      id: data.id,
+      qr_code: data.totp.qr_code,
+      secret: data.totp.secret,
+      uri: data.totp.uri,
+    };
+  }
+
+  async verifyTotp(factorId: string, code: string): Promise<boolean> {
+    const challenge = await supabase.auth.mfa.challenge({ factorId });
+    if (challenge.error) throw new Error(challenge.error.message);
+    const verify = await supabase.auth.mfa.verify({
+      factorId,
+      challengeId: challenge.data.id,
+      code: code.trim(),
+    });
+    if (verify.error) throw new Error(verify.error.message);
+    return true;
+  }
+
+  async getMfaFactors(): Promise<{ enrolled: boolean; factors: any[] }> {
+    try {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error || !data) return { enrolled: false, factors: [] };
+      const totp = data.totp || [];
+      const verified = totp.filter((f: any) => f.status === 'verified');
+      return {
+        enrolled: verified.length > 0,
+        factors: totp,
+      };
+    } catch {
+      return { enrolled: false, factors: [] };
+    }
+  }
+
+  requires2FA(role?: UserRole): boolean {
+    const targetRole = role || this.currentUser?.role;
+    return targetRole === 'DOCTOR' || targetRole === 'HOSPITAL_STAFF' || targetRole === 'SUPER_ADMIN';
+  }
+
+  /**
    * Sign out with Zero-Trace Kiosk Clean Slate
    * Purges all in-memory patient data, active medical records, and session tokens
    */
