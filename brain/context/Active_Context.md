@@ -17,14 +17,15 @@ Back to [[00_Index]]
 ## Current System State
 
 - **Git Branch**: `main`
-- **Latest Commit**: `216bf38` (`style(ui): modernize class syntax to canonical tailwind v4 standards`)
-- **Latest Documentation Milestone**: ADR-049 10-Stage Clinical Encounter Workspace Persistence, CDS 1-Tap Resolutions, and Digital Signature Lock (see [[ADR-049-10-Stage-Clinical-Encounter-Workspace-Persistence-and-Digital-Signature]])
-- **Authoritative Vercel Deployment**: `https://frontend-1d9rsj3io-sameen14nmofficial-8826s-projects.vercel.app` (Bundle: `index-7Te-cDaN.js`)
+- **Latest Commit**: `99a3e4c` (`feat(security): enterprise zero-trust hardening, serverless AI gateways, RLS isolation, 2FA, and backup verification`)
+- **Latest Documentation Milestone**: ADR-051 Enterprise Zero-Trust Cybersecurity Hardening, Serverless Gateways & Verifiable Backups ([[ADR-051-Enterprise-Zero-Trust-Cybersecurity-Hardening]])
+- **Authoritative Vercel Deployment**: `https://healthgrid-9jdr0c7e4-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_FiJ1zovW5AAGayxEZaKLDyQegWq1`, Bundle: `index-eA-Cu4U1.js`)
 - **Synchronized Production Aliases**:
-  - `https://healthgrid-app.vercel.app` (200 OK • Live)
-  - `https://healthgrid-nu.vercel.app` (200 OK • Live)
-  - `https://healthgrid-live.vercel.app` (200 OK • Live)
-  - `https://healthgrid-network.vercel.app` (200 OK • Live)
+  - `https://healthgrid-app.vercel.app` (200 OK • Live • Bundle: `index-eA-Cu4U1.js`)
+  - `https://healthgrid-nu.vercel.app` (200 OK • Live • Bundle: `index-eA-Cu4U1.js`)
+  - `https://healthgrid-live.vercel.app` (200 OK • Live • Bundle: `index-eA-Cu4U1.js`)
+  - `https://healthgrid-network.vercel.app` (200 OK • Live • Bundle: `index-eA-Cu4U1.js`)
+- **Active Edge Serverless Gateways**: `/api/ai/chat`, `/api/ai/vision`, `/api/ai/ocr`, `/api/webhooks/verify`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
