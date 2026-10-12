@@ -30,6 +30,23 @@ Back to [[00_Index]]
 
 ## Recent Completed Tasks
 
+- [x] Strict Role-Based Access Control (RBAC), Route Guards & Multi-Persona Userspace Isolation ([[ADR-050-Strict-RBAC-Route-Guards-and-Userspace-Isolation]]):
+  - **Zero UI Leakage**: Eliminated unconditional Clinician Portal and Hospital ERP links from `Navbar.tsx` (desktop user profile dropdown, "More Services" menu, and mobile navigation drawer). Personal accounts signed in via Gmail or citizen phone numbers now only see personal healthcare features.
+  - **Immediate 403 Security Interceptor**: Built `AccessDeniedModal.tsx` over a frosted security shield with zero sensitive patient or hospital DOM mounted. Clearly states DPDP Act 2023 / Clinical Establishment Act compliance, displays required role badge vs current role pill, and provides 1-tap "Switch / Login with Authorized Account" and "Return to Citizen Home".
+  - **Multi-Persona Session Isolation**: Added `HospitalAuthSession` in `authService.ts` and automated session purging: signing into a Personal/Citizen account automatically clears any lingering hospital ERP admin session, preventing multi-tenant credential bleeding.
+  - **App-Level Route & Hash Gating**: Added strict URL guards in `App.tsx` (`syncRoute`) for `/clinician`, `/doctor`, `/my-queue`, `/hospital-erp`, `/his`, and `#` hash equivalents. Directly intercepts unauthenticated visitors and unauthorized roles.
+  - **Automated Verification**: End-to-end browser subagent verified immediate 403 blocking on direct navigation to `/clinician` and `/hospital-erp`, 0 background DOM leakage, and full hide in navigation menus. Build passes cleanly (`tsc -b && vite build` in 2.97s).
+
+- [x] tt-a1i/archify Skill Integration & Interactive HealthGrid System Architecture Diagram:
+  - **Tooling Installation**: Successfully installed and pinned `tt-a1i/archify` (v3.0.1) across both global (`C:\Users\mhdsamxn\.gemini\config\skills\archify\`) and workspace (`c:\HealthGrid\.agents\skills\archify\`) skill repositories, verified executable CLI at `archify.mjs`.
+  - **Comprehensive Multi-Tier Architecture Spec**: Created specification candidate at `.archify/architecture-healthgrid-system-20261012-194900/candidate.json` mapping 14 critical subsystems across 4 functional tiers:
+    - *Presentation Layer*: Citizens/Patients PWA, Clinician Operating System (`ClinicianPortalLayout.tsx`), Hospital ERP Cockpit (`HospitalErpDashboard.tsx`).
+    - *Clinical AI & Formulary*: Fine-tuned Clinical Llama-3.1-8B serverless inference (`aiService.ts`), PMBJP Jan Aushadhi generic drug pricing engine (`medicineStoreService.ts`).
+    - *Core Enterprise & Sovereign Data*: Supabase Auth DPDP Act 2023 RBAC (`authService.ts`), Java 21 LTS Spring Boot Core with Project Loom virtual threads, Supabase PostgreSQL with RLS policies, Sovereign Patient Health Vault (`healthMemoryService.ts`).
+    - *National & Emergency Network*: Ayushman Bharat Digital Mission (ABDM) HealthID protocol, 108 Emergency Casualty CAD/GPS ambulance dispatch.
+  - **Automated Headless Chrome Browser Verification**: Validated under `--quality showcase` through Archify's 4-gate pipeline (`validate`, `deliver`, `check`, and headless Chrome `browser-check` at 1440x900, 1600x1000, 1920x1080 viewports) with 0 diagnostics.
+  - **Interactive Deliverable Generated**: Self-contained, zero-dependency interactive HTML diagram viewer at `.archify/architecture-healthgrid-system-20261012-194900/healthgrid-system-architecture.html` featuring dark/light mode toggle, JetBrains Mono typography, interactive node inspection, and vector SVG export.
+
 - [x] Hospital ERP Blank Screen Resolution & Defensive Error Boundary Shield:
   - **Root Cause Diagnosis**: Resolved `Uncaught TypeError: Cannot read properties of null (reading '0')` in `HospitalErpDashboard`. When `Dr. Mohamed`'s profile was created, it synced into `public.patients` with `gender: null`. On ERP launch, default `Patient Management` tab evaluated `{patient.age} / {patient.gender[0]}`, which threw an unhandled TypeError inside `Array.map` and unmounted the entire DOM tree.
   - **Universal Defensive Null-Safety**: Added safe fallback defaults across `PatientManagementView.tsx`, `AppointmentsView.tsx`, `OpdRegistrationModal.tsx`, `StartConsultationModal.tsx`, `ReferralsWorkspaceView.tsx`, `ConsultationsLandingView.tsx`, `ClinicianAppointmentsView.tsx`, and `unifiedPatientStore.ts`.

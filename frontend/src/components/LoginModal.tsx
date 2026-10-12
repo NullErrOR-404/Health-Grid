@@ -160,11 +160,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         validation.hospital?.adminName ||
         (identifier.includes('@') ? identifier.split('@')[0] : identifier);
 
-      setHospitalAuthSession({
+      const sessionData = {
         hospital: validation.hospital || selectedHospital,
         token: generatedToken,
         adminName: adminDisplayName,
-      });
+        timestamp: Date.now(),
+      };
+
+      authService.setHospitalSession(sessionData);
+      setHospitalAuthSession(sessionData);
     }, 600);
   };
 

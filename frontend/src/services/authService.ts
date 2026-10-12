@@ -8,6 +8,7 @@ import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { rateLimiter } from './rateLimiter';
 import { sessionSecurityManager } from './sessionSecurityManager';
+import type { HospitalEntity } from '../data/hospitalsList';
 
 export type UserRole =
   | 'PERSONAL'
@@ -91,7 +92,15 @@ export const purgeAllTestArtifacts = () => {
 // Immediately purge test artifacts on module evaluation
 purgeAllTestArtifacts();
 
+export interface HospitalAuthSession {
+  hospital: HospitalEntity;
+  token: string;
+  adminName: string;
+  timestamp: number;
+}
+
 const STORAGE_KEY = 'healthgrid_auth_user';
+const HOSPITAL_STORAGE_KEY = 'healthgrid_hospital_session';
 
 class AuthService {
   private currentUser: AuthUser | null = null;
@@ -152,6 +161,10 @@ class AuthService {
       // Strip raw bearer token from localStorage to prevent XSS credential theft (OWASP ASVS Level 3)
       const safeStorageUser = { ...user, token: undefined };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(safeStorageUser));
+      // Strict userspace isolation: if logging in as Personal / Citizen, purge any stale Hospital Admin token
+      if (user.role === 'PERSONAL' || user.role === 'CITIZEN') {
+        this.clearHospitalSession();
+      }
     } else {
       localStorage.removeItem(STORAGE_KEY);
       sessionSecurityManager.terminateSession('USER_LOGOUT');
@@ -518,12 +531,69 @@ class AuthService {
       console.warn('Sign out error:', err);
     }
     this.saveToStorage(null);
+    this.clearHospitalSession();
     rateLimiter.reset();
     try {
       sessionStorage.clear();
       localStorage.removeItem('healthgrid_chat_sessions');
       localStorage.removeItem('healthgrid_ai_usage');
     } catch {}
+  }
+
+  /**
+   * Hospital Enterprise Session Management
+   */
+  getHospitalSession(): HospitalAuthSession | null {
+    try {
+      const stored = localStorage.getItem(HOSPITAL_STORAGE_KEY);
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      if (parsed && parsed.token && parsed.hospital) {
+        return parsed as HospitalAuthSession;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  setHospitalSession(session: HospitalAuthSession): void {
+    try {
+      localStorage.setItem(HOSPITAL_STORAGE_KEY, JSON.stringify(session));
+      this.notifyListeners();
+    } catch (e) {
+      console.warn('Could not save hospital session:', e);
+    }
+  }
+
+  clearHospitalSession(): void {
+    try {
+      localStorage.removeItem(HOSPITAL_STORAGE_KEY);
+      this.notifyListeners();
+    } catch {}
+  }
+
+  /**
+   * Universal Role-Based Access Control (RBAC) Validators
+   */
+  isDoctor(user?: AuthUser | null): boolean {
+    const target = user !== undefined ? user : this.currentUser;
+    return Boolean(target && (target.role === 'DOCTOR' || target.role === 'HEALTHCARE_PROFESSIONAL'));
+  }
+
+  isHospitalStaff(user?: AuthUser | null): boolean {
+    const target = user !== undefined ? user : this.currentUser;
+    const hasRole = Boolean(target && (target.role === 'HOSPITAL_STAFF' || target.role === 'SUPER_ADMIN'));
+    const hasHospitalSession = Boolean(this.getHospitalSession());
+    return hasRole || hasHospitalSession;
+  }
+
+  canAccessClinicianPortal(user?: AuthUser | null): boolean {
+    return this.isDoctor(user);
+  }
+
+  canAccessHospitalErp(user?: AuthUser | null): boolean {
+    return this.isHospitalStaff(user);
   }
 }
 

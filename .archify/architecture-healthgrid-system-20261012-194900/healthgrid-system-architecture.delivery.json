@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "8e2b2ccf-fc5c-4299-bd7e-1fc6c0d19dcd",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\HealthGrid\\.archify\\architecture-healthgrid-system-20261012-194900\\candidate.json",
+  "output": "C:\\HealthGrid\\.archify\\architecture-healthgrid-system-20261012-194900\\healthgrid-system-architecture.html",
+  "specification": {
+    "sha256": "5ba898eda3c53c48dbaaea4d713a763b18dc3c18f7270a1c094a3ad2276abc3f",
+    "bytes": 8357
+  },
+  "artifact": {
+    "sha256": "2f88036ffa50074558f883f8fa09ba949586fa76972c01a61f4d9205a8a25037",
+    "bytes": 781467
+  }
+}

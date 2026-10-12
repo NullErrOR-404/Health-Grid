@@ -20,6 +20,7 @@ import {
   ArrowLeft,
   Users,
   CalendarDays,
+  Building2,
 } from 'lucide-react';
 import type { Language } from '../types';
 import { authService, type AuthUser } from '../services/authService';
@@ -153,7 +154,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const displayNavIndex = hoveredNavIndex !== null ? hoveredNavIndex : activeNavIndex;
   const isHovering = hoveredNavIndex !== null;
 
-  const isDoctor = currentUser?.role === 'DOCTOR' || currentUser?.role === 'HEALTHCARE_PROFESSIONAL';
+  const isDoctor = authService.isDoctor(currentUser);
+  const isHospitalStaff = authService.isHospitalStaff(currentUser);
 
   const userInitial = currentUser?.name
     ? currentUser.name.charAt(0).toUpperCase()
@@ -325,18 +327,34 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <span>{lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை (டோக்கன்)'}</span>
                       </button>
                     )}
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setMoreDropdownOpen(false);
-                        window.history.pushState({}, '', '/clinician');
-                        window.dispatchEvent(new PopStateEvent('popstate'));
-                      }} 
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-teal-700 bg-teal-50/60 hover:bg-teal-100/70 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <Stethoscope className="w-4 h-4 text-teal-700" />
-                      <span>{lang === 'en' ? 'Clinician Portal (My Queue)' : 'மருத்துவர் பணிமனை (வரிசை)'}</span>
-                    </button>
+                    {isDoctor && (
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setMoreDropdownOpen(false);
+                          window.history.pushState({}, '', '/clinician');
+                          window.dispatchEvent(new PopStateEvent('popstate'));
+                        }} 
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-teal-700 bg-teal-50/60 hover:bg-teal-100/70 rounded-xl transition-colors cursor-pointer"
+                      >
+                        <Stethoscope className="w-4 h-4 text-teal-700" />
+                        <span>{lang === 'en' ? 'Clinician Portal (My Queue)' : 'மருத்துவர் பணிமனை (வரிசை)'}</span>
+                      </button>
+                    )}
+                    {isHospitalStaff && (
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setMoreDropdownOpen(false);
+                          window.history.pushState({}, '', '/hospital-erp');
+                          window.dispatchEvent(new PopStateEvent('popstate'));
+                        }} 
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-blue-700 bg-blue-50/60 hover:bg-blue-100/70 rounded-xl transition-colors cursor-pointer"
+                      >
+                        <Building2 className="w-4 h-4 text-blue-700" />
+                        <span>{lang === 'en' ? 'Hospital ERP Cockpit' : 'மருத்துவமனை ஈஆர்பி'}</span>
+                      </button>
+                    )}
                     <div className="border-t border-slate-100 my-1"></div>
                     <div className="px-3 py-1 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
                       {lang === 'en' ? 'Emergency 24x7' : 'அவசர உதவி'}
@@ -527,9 +545,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                                 DOCTOR
                               </span>
                             )}
+                            {isHospitalStaff && !isDoctor && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-800 border border-blue-300">
+                                <Building2 className="w-2.5 h-2.5 text-blue-700" />
+                                HOSPITAL
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-slate-400 truncate">
-                            {currentUser.email || 'dr.mohamed@healthgrid.in'}
+                            {currentUser.email || (isDoctor ? 'dr.mohamed@healthgrid.in' : 'user@healthgrid.in')}
                           </div>
                         </div>
                       </div>
@@ -553,19 +577,37 @@ export const Navbar: React.FC<NavbarProps> = ({
                           <span>{lang === 'en' ? 'View Profile' : 'சுயவிவரம் காண்க'}</span>
                         </button>
 
-                        {/* Clinician Workstation / My Queue */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUserDropdownOpen(false);
-                            window.history.pushState({}, '', '/clinician');
-                            window.dispatchEvent(new PopStateEvent('popstate'));
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-teal-800 bg-teal-50/70 hover:bg-teal-100 font-semibold text-xs transition-colors cursor-pointer text-left border border-teal-200/80"
-                        >
-                          <Stethoscope className="w-4 h-4 text-teal-600" />
-                          <span>{lang === 'en' ? 'Clinician Portal (My Queue)' : 'மருத்துவர் பணிமனை'}</span>
-                        </button>
+                        {/* Clinician Workstation / My Queue - STRICTLY GATED FOR VERIFIED DOCTORS */}
+                        {isDoctor && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              window.history.pushState({}, '', '/clinician');
+                              window.dispatchEvent(new PopStateEvent('popstate'));
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-teal-800 bg-teal-50/70 hover:bg-teal-100 font-semibold text-xs transition-colors cursor-pointer text-left border border-teal-200/80"
+                          >
+                            <Stethoscope className="w-4 h-4 text-teal-600" />
+                            <span>{lang === 'en' ? 'Clinician Portal (My Queue)' : 'மருத்துவர் பணிமனை'}</span>
+                          </button>
+                        )}
+
+                        {/* Hospital ERP Cockpit - STRICTLY GATED FOR HOSPITAL STAFF */}
+                        {isHospitalStaff && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUserDropdownOpen(false);
+                              window.history.pushState({}, '', '/hospital-erp');
+                              window.dispatchEvent(new PopStateEvent('popstate'));
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-blue-800 bg-blue-50/70 hover:bg-blue-100 font-semibold text-xs transition-colors cursor-pointer text-left border border-blue-200/80"
+                          >
+                            <Building2 className="w-4 h-4 text-blue-600" />
+                            <span>{lang === 'en' ? 'Hospital ERP Cockpit' : 'மருத்துவமனை ஈஆர்பி'}</span>
+                          </button>
+                        )}
 
                         {/* Family & Beneficiaries */}
                         <button
@@ -911,6 +953,35 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-emerald-200" />
+                </button>
+              )}
+
+              {/* Hospital ERP Quick Tile for verified hospital staff */}
+              {isHospitalStaff && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    window.history.pushState({}, '', '/hospital-erp');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }}
+                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow-md text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center shrink-0">
+                      <Building2 className="w-5 h-5 text-blue-200" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold flex items-center gap-1.5">
+                        <span>{lang === 'en' ? 'Hospital ERP Cockpit' : 'மருத்துவமனை ஈஆர்பி'}</span>
+                        <span className="w-2 h-2 rounded-full bg-blue-300 animate-pulse" />
+                      </div>
+                      <div className="text-[10px] text-blue-100 font-medium">
+                        {lang === 'en' ? 'OPD / IPD • Emergency Census' : 'முழு மருத்துவமனை செயல்பாடுகள்'}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-blue-200" />
                 </button>
               )}
 

@@ -1,0 +1,298 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "HealthGrid System Architecture",
+    "output": ".archify/architecture-healthgrid-system-20261012-194900/healthgrid-system-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/NullErrOR-404/Health-Grid.git",
+      "revision": "4fb4a9f561552c6ea5d12b1f6ba236c1295f0031"
+    }
+  },
+  "components": [
+    {
+      "id": "citizens",
+      "type": "external",
+      "label": "Citizens & Patients",
+      "sublabel": "Web PWA / Mobile",
+      "pos": [60, 80],
+      "size": [160, 60]
+    },
+    {
+      "id": "clinicians",
+      "type": "external",
+      "label": "Doctors & Clinicians",
+      "sublabel": "Consultant Physician",
+      "pos": [520, 80],
+      "size": [160, 60]
+    },
+    {
+      "id": "hospital_staff",
+      "type": "external",
+      "label": "Hospital Operations",
+      "sublabel": "Admin / Casualty Desk",
+      "pos": [770, 80],
+      "size": [160, 60]
+    },
+    {
+      "id": "docbot_agent",
+      "type": "frontend",
+      "label": "DocBot AI Assistant",
+      "sublabel": "Triage & Tele-Clinic",
+      "pos": [60, 240],
+      "size": [160, 64],
+      "sources": [
+        { "path": "frontend/src/components/ChatbotPage.tsx", "line": 20, "end_line": 60, "label": "DocBot Triage UI" }
+      ]
+    },
+    {
+      "id": "clinician_os",
+      "type": "frontend",
+      "label": "Clinician Operating System",
+      "sublabel": "My Queue & CDS Engine",
+      "pos": [520, 240],
+      "size": [170, 64],
+      "sources": [
+        { "path": "frontend/src/components/clinician/ClinicianPortalLayout.tsx", "line": 30, "end_line": 70, "label": "Clinician Workstation" }
+      ]
+    },
+    {
+      "id": "hospital_erp",
+      "type": "frontend",
+      "label": "Hospital ERP Cockpit",
+      "sublabel": "OPD / IPD / ER Suite",
+      "pos": [770, 240],
+      "size": [170, 64],
+      "sources": [
+        { "path": "frontend/src/components/erp/HospitalErpDashboard.tsx", "line": 60, "end_line": 105, "label": "Hospital ERP Dashboard" }
+      ]
+    },
+    {
+      "id": "hf_clinical_model",
+      "type": "backend",
+      "label": "Clinical Llama-3.1-8B",
+      "sublabel": "HF Serverless Inference",
+      "pos": [270, 380],
+      "size": [170, 64],
+      "sources": [
+        { "path": "frontend/src/services/aiService.ts", "line": 50, "end_line": 95, "label": "Clinical AI Bridge" }
+      ]
+    },
+    {
+      "id": "supabase_auth",
+      "type": "security",
+      "label": "Supabase Auth & Roles",
+      "sublabel": "JWT & RBAC Gate",
+      "tag": "DPDP 2023",
+      "pos": [520, 400],
+      "size": [170, 64],
+      "sources": [
+        { "path": "frontend/src/services/authService.ts", "line": 12, "end_line": 50, "label": "Auth & Role Manager" }
+      ]
+    },
+    {
+      "id": "spring_boot_core",
+      "type": "backend",
+      "label": "Spring Boot Core",
+      "sublabel": "Java 21 Virtual Threads",
+      "pos": [770, 400],
+      "size": [170, 68],
+      "tag": "Project Loom"
+    },
+    {
+      "id": "patient_vault",
+      "type": "database",
+      "label": "Patient Health Vault",
+      "sublabel": "Encrypted Telemetry",
+      "pos": [60, 560],
+      "size": [160, 64],
+      "sources": [
+        { "path": "frontend/src/services/healthMemoryService.ts", "line": 20, "end_line": 60, "label": "Longitudinal Vault" }
+      ]
+    },
+    {
+      "id": "pmbjp_formulary",
+      "type": "cloud",
+      "label": "PMBJP Formulary",
+      "sublabel": "Jan Aushadhi Pricing",
+      "pos": [270, 560],
+      "size": [170, 64],
+      "sources": [
+        { "path": "frontend/src/services/medicineStoreService.ts", "line": 30, "end_line": 80, "label": "Generic Pricing Engine" }
+      ]
+    },
+    {
+      "id": "postgres_db",
+      "type": "database",
+      "label": "Supabase PostgreSQL",
+      "sublabel": "Encounters, Rx & Beds",
+      "tag": "RLS Enforced",
+      "pos": [520, 560],
+      "size": [170, 68]
+    },
+    {
+      "id": "abdm_network",
+      "type": "external",
+      "label": "ABDM National Network",
+      "sublabel": "Ayushman Bharat ID",
+      "pos": [60, 740],
+      "size": [160, 64]
+    },
+    {
+      "id": "casualty_dispatch",
+      "type": "external",
+      "label": "108 Emergency Casualty",
+      "sublabel": "Ambulance CAD & GPS",
+      "pos": [770, 740],
+      "size": [170, 64]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "React 19 + Vite Presentation Layer",
+      "wraps": ["docbot_agent", "clinician_os", "hospital_erp"]
+    },
+    {
+      "kind": "region",
+      "label": "Clinical AI & Formulary Services",
+      "wraps": ["hf_clinical_model", "pmbjp_formulary"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Core Enterprise & Sovereign Data Layer",
+      "wraps": ["supabase_auth", "spring_boot_core", "postgres_db"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "citizens-docbot",
+      "from": "citizens",
+      "to": "docbot_agent",
+      "label": "Triage & Tele-Clinic",
+      "variant": "emphasis"
+    },
+    {
+      "id": "clinicians-cos",
+      "from": "clinicians",
+      "to": "clinician_os",
+      "label": "My Queue & Encounters",
+      "variant": "emphasis"
+    },
+    {
+      "id": "staff-erp",
+      "from": "hospital_staff",
+      "to": "hospital_erp",
+      "label": "Hospital Operations",
+      "variant": "emphasis"
+    },
+    {
+      "id": "docbot-auth",
+      "from": "docbot_agent",
+      "to": "supabase_auth",
+      "label": "JWT Session",
+      "variant": "security"
+    },
+    {
+      "id": "cos-spring",
+      "from": "clinician_os",
+      "to": "spring_boot_core",
+      "label": "REST / CDS Orders"
+    },
+    {
+      "id": "erp-spring",
+      "from": "hospital_erp",
+      "to": "spring_boot_core",
+      "label": "STOMP WebSockets"
+    },
+    {
+      "id": "docbot-hf",
+      "from": "docbot_agent",
+      "to": "hf_clinical_model",
+      "label": "Inference API"
+    },
+    {
+      "id": "docbot-vault",
+      "from": "docbot_agent",
+      "to": "patient_vault",
+      "label": "Vitals Sync"
+    },
+    {
+      "id": "spring-postgres",
+      "from": "spring_boot_core",
+      "to": "postgres_db",
+      "label": "JDBC Pool"
+    },
+    {
+      "id": "auth-postgres",
+      "from": "supabase_auth",
+      "to": "postgres_db",
+      "label": "RLS Policies",
+      "variant": "security"
+    },
+    {
+      "id": "cos-postgres",
+      "from": "clinician_os",
+      "to": "postgres_db",
+      "label": "Live Encounters"
+    },
+    {
+      "id": "docbot-pmbjp",
+      "from": "docbot_agent",
+      "to": "pmbjp_formulary",
+      "label": "Formulary Lookup"
+    },
+    {
+      "id": "vault-abdm",
+      "from": "patient_vault",
+      "to": "abdm_network",
+      "label": "HealthID Protocol"
+    },
+    {
+      "id": "spring-casualty",
+      "from": "spring_boot_core",
+      "to": "casualty_dispatch",
+      "label": "108 SOS Dispatch",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Frontend Presentation",
+      "items": [
+        "React 19 + Vite SPA with Lenis smooth scrolling and hardware acceleration",
+        "Mobile-first PWA with biometrics, camera scanning, and offline vault caching",
+        "10-stage Clinical Encounter workspace with digital signature verification"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Backend Microservices",
+      "items": [
+        "Java 21 LTS Spring Boot core with Project Loom lightweight virtual threads",
+        "STOMP WebSockets for sub-second live casualty and bed telemetry",
+        "Supabase Auth with role-based isolation (Citizen, Doctor, Hospital Staff)"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Clinical AI Architecture",
+      "items": [
+        "Fine-tuned clinical Llama-3.1-8B hosted on Hugging Face Serverless API",
+        "Autonomous complexity arbiter routing acute cases to high-reasoning models",
+        "Groq Whisper Large-v3-Turbo for vernacular Indic & Tanglish recognition"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Health Grid & National Integration",
+      "items": [
+        "Ayushman Bharat Digital Mission (ABDM) sovereign HealthID generation",
+        "PMBJP Jan Aushadhi generic formulary computing 50% to 90% savings",
+        "Emergency casualty integration with 108 GPS dispatch and SBAR handovers"
+      ]
+    }
+  ]
+}

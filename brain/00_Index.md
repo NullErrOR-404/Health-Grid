@@ -111,6 +111,7 @@ graph TD
 ## 🏛️ 2. Architecture & Infrastructure
 
 - [[Tech_Stack]]: Modern React 19, Vite 8, Tailwind CSS, TypeScript, Lenis Smooth Scroll, Lucide.
+- **Interactive System Architecture Diagram**: High-fidelity multi-tier diagram generated via `tt-a1i/archify` ([`healthgrid-system-architecture.html`](file:///c:/HealthGrid/.archify/architecture-healthgrid-system-20261012-194900/healthgrid-system-architecture.html)) covering frontend presentations, clinical AI, enterprise microservices, and ABDM/108 integrations.
 - [[Deployment_and_Domains]]: 4 Vercel production aliases, automated deployment pipeline, zero SSO bypass configuration.
 - [[Multi_Tenant_State_Engine]]: LocalStorage-driven isolated hospital workspace state engine (`healthgrid_erp_userspace_${hospitalCode}`).
 - [[Data_Sovereignty_and_Security]]: DPDP Act 2023 compliance, client-side zero-disk clinical triage, HIPAA/DISHA standards.
@@ -187,6 +188,7 @@ graph TD
 - [[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]]: Enterprise-grade Clinician Portal architecture matching visual reference (`My queue Reference.png`) and modern EHR depth (Epic, Oracle Health, athenaOne) with minimal premium UX, reactive Pub/Sub store, 10-stage clinical encounters, CDS rules engine, longitudinal patient charts, and embedded HealthGrid AI assistant.
 - [[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]]: End-to-end authentic clinical database seeding (50 real patients, sovereign ABDM UHIDs, 50 appointments), RBAC roles schema (`public.user_roles`), open RLS security policies, live-first Supabase bidirectional sync, dynamic greetings/dates, and zero-hardcoded mock users across Clinician and ERP workspaces.
 - [[ADR-049-10-Stage-Clinical-Encounter-Workspace-Persistence-and-Digital-Signature]]: 10-Stage Clinical Encounter Workspace persistence with first-class `public.encounters`, `public.prescriptions`, and `public.clinical_orders` PostgreSQL tables, optimistic UI with background sync, CDS 1-tap actionable resolutions, and verifiable SHA-256 digital signature locking with appointment lifecycle progression.
+- [[ADR-050-Strict-RBAC-Route-Guards-and-Userspace-Isolation]]: Strict Role-Based Access Control (RBAC), multi-persona route guards (`syncRoute`), and zero UI leakage (Navbar profile dropdown and menus). Direct navigation to `/clinician` and `/hospital-erp` by unauthorized accounts or unauthenticated guests triggers a dedicated 403 Access Denied security modal with DPDP Act 2023 clearance badges and zero DOM leakage.
 
 ---
 

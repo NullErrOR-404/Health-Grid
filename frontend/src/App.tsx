@@ -15,6 +15,7 @@ import { useScrollReveal } from './hooks/useScrollReveal';
 import type { GuideArticle } from './components/HealthGuideModal';
 import type { HospitalEntity } from './data/hospitalsList';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { AccessDeniedModal, type RestrictedPortalType } from './components/common/AccessDeniedModal';
 import './App.css';
 
 // Lazy-loaded Views (Code-splitting secondary routes)
@@ -83,6 +84,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [activeErpHospital, setActiveErpHospital] = useState<HospitalEntity | undefined>(undefined);
   const [activeErpAdmin, setActiveErpAdmin] = useState<string>('Admin Ravi');
+  const [accessDeniedPortal, setAccessDeniedPortal] = useState<RestrictedPortalType | null>(null);
 
   // Modals state
   const [isAmbulanceOpen, setIsAmbulanceOpen] = useState(false);
@@ -109,7 +111,8 @@ export default function App() {
     isHandoverOpen ||
     isLoginOpen ||
     isPatientIntakeOpen ||
-    selectedGuide
+    selectedGuide ||
+    accessDeniedPortal !== null
   );
 
   // Initialize Lenis Smooth Scroll & idle route prefetching on application mount
@@ -147,27 +150,53 @@ export default function App() {
       const hash = window.location.hash.toLowerCase();
 
       if (pathname === '/privacy' || hash === '#privacy' || hash === '#/privacy') {
+        setAccessDeniedPortal(null);
         setCurrentView('privacy');
       } else if (pathname === '/terms' || hash === '#terms' || hash === '#/terms') {
+        setAccessDeniedPortal(null);
         setCurrentView('terms');
       } else if (pathname === '/thank-you' || hash === '#thank-you' || hash === '#/thank-you') {
+        setAccessDeniedPortal(null);
         setCurrentView('thank-you');
       } else if (pathname === '/chat' || hash === '#chat' || hash === '#/chat') {
+        setAccessDeniedPortal(null);
         setCurrentView('chat');
       } else if (pathname === '/profile' || hash === '#profile' || hash === '#/profile') {
-        setCurrentView('profile');
+        setAccessDeniedPortal(null);
+        if (!authService.getCurrentUser()) {
+          setCurrentView('landing');
+          requireAuth(() => {
+            setCurrentView('profile');
+          }, lang === 'en' ? 'Patient Medical Vault' : 'மருத்துவ ஏடு');
+        } else {
+          setCurrentView('profile');
+        }
       } else if (pathname === '/maps' || hash === '#maps' || hash === '#/maps') {
+        setAccessDeniedPortal(null);
         setCurrentView('maps');
       } else if (pathname === '/medicines' || hash === '#medicines' || hash === '#/medicines') {
+        setAccessDeniedPortal(null);
         setCurrentView('medicines');
       } else if (pathname === '/clinician' || pathname === '/clinician-portal' || pathname === '/doctor' || pathname === '/my-queue' || hash === '#clinician' || hash === '#clinician-portal' || hash === '#doctor' || hash === '#my-queue' || hash === '#/clinician' || hash === '#/clinician-portal') {
-        setCurrentView('clinician-portal');
+        if (authService.canAccessClinicianPortal()) {
+          setAccessDeniedPortal(null);
+          setCurrentView('clinician-portal');
+        } else {
+          setAccessDeniedPortal('CLINICIAN');
+        }
       } else if (pathname === '/his' || pathname === '/doctor-portal' || hash === '#his' || hash === '#/his' || hash === '#doctor-portal' || pathname === '/hospital-erp' || pathname === '/hospital-portal' || hash === '#hospital-erp' || hash === '#hospital-portal' || hash === '#/hospital-erp') {
-        setCurrentView('hospital-erp');
+        if (authService.canAccessHospitalErp()) {
+          setAccessDeniedPortal(null);
+          setCurrentView('hospital-erp');
+        } else {
+          setAccessDeniedPortal('HOSPITAL_ERP');
+        }
       } else if (hash === '#prescription' || hash === '#/prescription' || hash === '#scan-prescription') {
+        setAccessDeniedPortal(null);
         setCurrentView('landing');
         setIsPrescriptionOpen(true);
       } else if (pathname === '/' || pathname === '/index.html' || pathname === '') {
+        setAccessDeniedPortal(null);
         // If there is an unknown anchor hash like #unknown
         if (hash && !['', '#', '#/', '#landing', '#home', '#prescription', '#/prescription', '#scan-prescription'].includes(hash) && !hash.startsWith('#section-') && !hash.startsWith('#guide-')) {
           setCurrentView('not-found');
@@ -175,6 +204,7 @@ export default function App() {
           setCurrentView('landing');
         }
       } else {
+        setAccessDeniedPortal(null);
         // Any unknown path like /random, /admin, /test, /404, etc.
         setCurrentView('not-found');
       }
@@ -187,7 +217,24 @@ export default function App() {
       window.removeEventListener('popstate', syncRoute);
       window.removeEventListener('hashchange', syncRoute);
     };
-  }, []);
+  }, [lang]);
+
+  // Listen for real-time auth changes to re-evaluate route permissions dynamically
+  useEffect(() => {
+    return authService.subscribe((user) => {
+      if (accessDeniedPortal === 'CLINICIAN' && authService.canAccessClinicianPortal(user)) {
+        setAccessDeniedPortal(null);
+        setCurrentView('clinician-portal');
+      } else if (accessDeniedPortal === 'HOSPITAL_ERP' && authService.canAccessHospitalErp(user)) {
+        setAccessDeniedPortal(null);
+        setCurrentView('hospital-erp');
+      } else if (currentView === 'clinician-portal' && !authService.canAccessClinicianPortal(user)) {
+        setAccessDeniedPortal('CLINICIAN');
+      } else if (currentView === 'hospital-erp' && !authService.canAccessHospitalErp(user)) {
+        setAccessDeniedPortal('HOSPITAL_ERP');
+      }
+    });
+  }, [accessDeniedPortal, currentView]);
 
   // Dynamic SEO Meta Title & Meta Description per Page Route
   useEffect(() => {
@@ -297,18 +344,43 @@ export default function App() {
   const handleGlobalLoginSuccess = (user: AuthUser) => {
     setIsLoginOpen(false);
     setLoginNotice(null);
+    setAccessDeniedPortal(null);
     if (user.role === 'HEALTHCARE_PROFESSIONAL' || user.role === 'DOCTOR') {
       navigateToView('clinician-portal');
+      return;
+    }
+    if (user.role === 'HOSPITAL_STAFF' || user.role === 'SUPER_ADMIN') {
+      navigateToView('hospital-erp');
       return;
     }
     if (pendingAuthActionRef.current) {
       const act = pendingAuthActionRef.current;
       pendingAuthActionRef.current = null;
       setTimeout(() => act(), 100);
+    } else {
+      navigateToView('landing');
     }
   };
 
   const navigateToView = (view: AppView) => {
+    if (view === 'clinician-portal') {
+      if (!authService.canAccessClinicianPortal()) {
+        setAccessDeniedPortal('CLINICIAN');
+        if (window.location.pathname !== '/clinician') {
+          window.history.pushState({}, '', '/clinician');
+        }
+        return;
+      }
+    } else if (view === 'hospital-erp') {
+      if (!authService.canAccessHospitalErp()) {
+        setAccessDeniedPortal('HOSPITAL_ERP');
+        if (window.location.pathname !== '/hospital-erp') {
+          window.history.pushState({}, '', '/hospital-erp');
+        }
+        return;
+      }
+    }
+    setAccessDeniedPortal(null);
     setCurrentView(view);
     const path = view === 'landing' ? '/' : view === 'not-found' ? '/404' : `/${view}`;
     if (window.location.pathname !== path) {
@@ -328,6 +400,93 @@ export default function App() {
     // Direct click to chat: allow interactive preview
     navigateToView('chat');
   };
+
+  // Render High-Security Frosted Screen when Route is Blocked by RBAC (Zero clinical DOM mounted)
+  if (accessDeniedPortal !== null) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col justify-between selection:bg-rose-500 selection:text-white relative overflow-hidden font-sans">
+        {/* Ambient Dark Grid & Security Aura */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-25 pointer-events-none" />
+
+        {/* Minimal Kiosk Security Header */}
+        <header className="relative z-10 w-full border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
+            <div
+              className="flex items-center gap-2 cursor-pointer select-none"
+              onClick={() => {
+                setAccessDeniedPortal(null);
+                navigateToView('landing');
+              }}
+            >
+              <img
+                src="/Logo.png"
+                alt="HealthGrid"
+                className="h-8 sm:h-10 w-auto brightness-0 invert opacity-90"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setAccessDeniedPortal(null);
+                navigateToView('landing');
+              }}
+              className="px-4 py-2 rounded-xl border border-slate-700/80 hover:border-slate-600 bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition-all cursor-pointer shadow-xs"
+            >
+              {lang === 'en' ? 'Exit to Public Portal' : 'முகப்புக்குச் செல்'}
+            </button>
+          </div>
+        </header>
+
+        {/* Center: Compact Access Denied Security Modal */}
+        <main className="flex-1 flex items-center justify-center p-4 relative z-10">
+          <AccessDeniedModal
+            isOpen={true}
+            portalType={accessDeniedPortal}
+            currentUser={authService.getCurrentUser()}
+            lang={lang}
+            onClose={() => {
+              setAccessDeniedPortal(null);
+              navigateToView('landing');
+            }}
+            onOpenLogin={() => {
+              setAccessDeniedPortal(null);
+              navigateToView('landing');
+              setIsLoginOpen(true);
+            }}
+          />
+        </main>
+
+        {/* Security Footer Notice */}
+        <footer className="relative z-10 py-4 text-center text-xs text-slate-500 border-t border-slate-800/80">
+          <span>HealthGrid Sovereign Network • DPDP Act 2023 &amp; HIPAA RBAC Active • Session Protected</span>
+        </footer>
+
+        {/* Login Modal on Demand */}
+        {isLoginOpen && (
+          <Suspense fallback={null}>
+            <LoginModal
+              isOpen={isLoginOpen}
+              onClose={() => {
+                setIsLoginOpen(false);
+                setLoginNotice(null);
+                pendingAuthActionRef.current = null;
+              }}
+              lang={lang}
+              contextNotice={loginNotice}
+              onSuccess={handleGlobalLoginSuccess}
+              onNavigateHospitalErp={(hospital, adminName) => {
+                setActiveErpHospital(hospital);
+                setActiveErpAdmin(adminName);
+                setAccessDeniedPortal(null);
+                navigateToView('hospital-erp');
+              }}
+            />
+          </Suspense>
+        )}
+      </div>
+    );
+  }
 
   // Render Full-Screen Chatbot Page matching Chatbot UI.png with Persistent Top Header
   if (currentView === 'chat') {
@@ -453,14 +612,12 @@ export default function App() {
               }}
               lang={lang}
               contextNotice={loginNotice}
-              onSuccess={() => {
-                setIsLoginOpen(false);
-                setLoginNotice(null);
-                if (pendingAuthActionRef.current) {
-                  const action = pendingAuthActionRef.current;
-                  pendingAuthActionRef.current = null;
-                  action();
-                }
+              onSuccess={handleGlobalLoginSuccess}
+              onNavigateHospitalErp={(hospital, adminName) => {
+                setActiveErpHospital(hospital);
+                setActiveErpAdmin(adminName);
+                setAccessDeniedPortal(null);
+                navigateToView('hospital-erp');
               }}
             />
           </Suspense>
@@ -702,6 +859,7 @@ export default function App() {
               onNavigateHospitalErp={(hospital, adminName) => {
                 setActiveErpHospital(hospital);
                 setActiveErpAdmin(adminName);
+                setAccessDeniedPortal(null);
                 navigateToView('hospital-erp');
               }}
             />
@@ -713,12 +871,17 @@ export default function App() {
 
   // Render Dedicated Hospital ERP Operations Workspace (Matching ERP Overview.png)
   if (currentView === 'hospital-erp') {
+    if (!authService.canAccessHospitalErp()) {
+      setAccessDeniedPortal('HOSPITAL_ERP');
+      return null;
+    }
+    const savedHospSession = authService.getHospitalSession();
     return (
       <ErrorBoundary fallbackTitle="Hospital ERP Recovery Shield" onReset={() => setCurrentView('hospital-erp')}>
         <Suspense fallback={<ViewLoadingFallback />}>
           <HospitalErpDashboard
-            initialHospital={activeErpHospital}
-            adminName={activeErpAdmin}
+            initialHospital={activeErpHospital || savedHospSession?.hospital}
+            adminName={activeErpAdmin || savedHospSession?.adminName || 'Admin Ravi'}
             onExit={() => navigateToView('landing')}
           />
         </Suspense>
@@ -728,6 +891,10 @@ export default function App() {
 
   // Render Dedicated Clinician Operating System & Workstation (Matching My queue Reference.png)
   if (currentView === 'clinician-portal') {
+    if (!authService.canAccessClinicianPortal()) {
+      setAccessDeniedPortal('CLINICIAN');
+      return null;
+    }
     return (
       <ErrorBoundary fallbackTitle="Clinician Operating System Recovery Shield" onReset={() => setCurrentView('clinician-portal')}>
         <Suspense fallback={<ViewLoadingFallback />}>
@@ -841,6 +1008,7 @@ export default function App() {
               onNavigateHospitalErp={(hospital, adminName) => {
                 setActiveErpHospital(hospital);
                 setActiveErpAdmin(adminName);
+                setAccessDeniedPortal(null);
                 navigateToView('hospital-erp');
               }}
             />
@@ -1048,6 +1216,7 @@ export default function App() {
             onNavigateHospitalErp={(hospital, adminName) => {
               setActiveErpHospital(hospital);
               setActiveErpAdmin(adminName);
+              setAccessDeniedPortal(null);
               navigateToView('hospital-erp');
             }}
           />
