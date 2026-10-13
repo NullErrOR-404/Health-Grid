@@ -7,15 +7,24 @@ import {
   Sparkles,
   Plus,
   ShieldCheck,
+  ShieldAlert,
   Trash2,
   KeyRound,
   FileCheck2,
+  Building2,
+  X,
 } from 'lucide-react';
 import type {
   OrderCategory,
 } from '../../../types/clinician';
 import { clinicianStore } from '../../../services/clinician/clinicianWorkflowStore';
 import { ClinicalDecisionSupportEngine } from '../../../services/clinician/cdsRulesEngine';
+import { medicationSafetyService } from '../../../services/medicationSafetyService';
+import type {
+  ReconciledMedicationItem,
+  MedicationConflictAlert,
+  ClinicianOverrideRecord,
+} from '../../../types/medicationSafety';
 
 interface ClinicalEncounterWorkspaceProps {
   encounterId: string;
@@ -82,6 +91,80 @@ export const ClinicalEncounterWorkspace: React.FC<ClinicalEncounterWorkspaceProp
 
   // CDS Evaluation
   const cdsAlerts = ClinicalDecisionSupportEngine.evaluatePatientAlerts(patient, encounter);
+
+  // Cross-Specialist Polypharmacy State & Collision Radar
+  const [showOverrideModal, setShowOverrideModal] = useState<boolean>(false);
+  const [selectedConflictForOverride, setSelectedConflictForOverride] = useState<MedicationConflictAlert | null>(null);
+  const [overrideRationale, setOverrideRationale] = useState<ClinicianOverrideRecord['rationaleCategory']>('BENEFIT_OUTWEIGHS_RISK');
+  const [overrideClinicalJustification, setOverrideClinicalJustification] = useState('');
+  const [overrideMonitoringPlan, setOverrideMonitoringPlan] = useState('');
+  const [overriddenConflictIds, setOverriddenConflictIds] = useState<Set<string>>(new Set());
+
+  // Load external medications & run cross-encounter collision radar
+  const externalMeds = medicationSafetyService.getPatientMedicationCabinet(patient.id);
+
+  // Map current encounter prescriptions into transient reconciled items
+  const encounterReconciledItems: ReconciledMedicationItem[] = encounter.prescriptions.map((rx, idx) => ({
+    id: `enc_rx_${idx}_${rx.medicineName}`,
+    brandName: rx.medicineName,
+    normalizedSalts: [
+      {
+        saltName: medicationSafetyService.normalizeDrugNameToSalt(rx.medicineName) || rx.medicineName,
+        strength: rx.dosage,
+      },
+    ],
+    dosageForm: 'Tablet',
+    dosage: rx.dosage,
+    frequency: rx.frequency,
+    timing: rx.instructions,
+    provenance: {
+      doctorName: 'Dr. Mohamed (This Encounter)',
+      facilityName: 'HealthGrid OPD Clinic',
+      prescriptionDate: new Date().toISOString().split('T')[0],
+      sourceType: 'CLINICIAN_ORDER',
+    },
+    status: 'ACTIVE',
+    patientReportedStatus: 'STILL_TAKING',
+  }));
+
+  const allMedsForSafety = [...externalMeds, ...encounterReconciledItems];
+  const polypharmacyEval = medicationSafetyService.evaluatePolypharmacySafety(allMedsForSafety, {
+    knownAllergies: patient.allergies ? patient.allergies.map((a) => a.allergen) : [],
+    patientAge: typeof patient.age === 'number' ? patient.age : 52,
+  });
+
+  // Active conflicts that involve this encounter's newly prescribed medications
+  const encounterActiveCollisions = polypharmacyEval.conflicts.filter(
+    (c) =>
+      !overriddenConflictIds.has(c.id) &&
+      (c.medicationA.prescriber.includes('This Encounter') ||
+        c.medicationB?.prescriber.includes('This Encounter'))
+  );
+
+  const handleOpenOverrideModal = (conflict: MedicationConflictAlert) => {
+    setSelectedConflictForOverride(conflict);
+    setOverrideRationale('BENEFIT_OUTWEIGHS_RISK');
+    setOverrideClinicalJustification('Short-term monitored therapy with gastroprotection / close vitals check.');
+    setOverrideMonitoringPlan('Monitor for GI symptoms, serum creatinine, and repeat encounter review SOS.');
+    setShowOverrideModal(true);
+  };
+
+  const handleConfirmOverride = async () => {
+    if (!selectedConflictForOverride) return;
+    await medicationSafetyService.recordClinicianOverride(
+      selectedConflictForOverride.id,
+      'DOC-MOHAMED-TN',
+      'Dr. Mohamed, MD',
+      'TMC-84920-IND',
+      overrideRationale,
+      overrideClinicalJustification,
+      overrideMonitoringPlan
+    );
+    setOverriddenConflictIds((prev) => new Set([...prev, selectedConflictForOverride.id]));
+    setShowOverrideModal(false);
+    setActionSuccessNotice(`Clinical override recorded with SHA-256 seal for alert: ${selectedConflictForOverride.titleEn}`);
+    setTimeout(() => setActionSuccessNotice(null), 5000);
+  };
 
   const handleAddPrescription = (e: React.FormEvent) => {
     e.preventDefault();
@@ -755,10 +838,107 @@ export const ClinicalEncounterWorkspace: React.FC<ClinicalEncounterWorkspaceProp
           {/* STAGE 7: PRESCRIPTION & MED REC */}
           {activeStage === 'prescription' && (
             <div className="space-y-5">
+              {/* CROSS-SPECIALIST COLLISION RADAR ALERTS */}
+              {encounterActiveCollisions.length > 0 && (
+                <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span className="text-xs font-black uppercase tracking-wider text-rose-800">
+                        Cross-Specialist Collision Alert ({encounterActiveCollisions.length})
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">
+                      Action Required
+                    </span>
+                  </div>
+
+                  {encounterActiveCollisions.map((collision) => (
+                    <div key={collision.id} className="p-3 bg-white/90 rounded-xl border border-rose-200/80 space-y-2 text-xs">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="font-extrabold text-slate-900">{collision.titleEn}</div>
+                          <div className="text-slate-600 mt-0.5 leading-relaxed">
+                            {collision.mechanismEn}
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-rose-600 text-white shrink-0">
+                          {collision.severity}
+                        </span>
+                      </div>
+
+                      <div className="p-2 bg-slate-50 rounded-lg text-[11px] text-slate-600 flex items-center justify-between gap-2">
+                        <div>
+                          <strong>Prescribed in Encounter:</strong> {collision.medicationA.brandName} vs{' '}
+                          <strong>Prior External:</strong> {collision.medicationB?.brandName} ({collision.medicationB?.prescriber})
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenOverrideModal(collision)}
+                            className="min-h-[32px] px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg font-bold text-[10px] flex items-center gap-1 transition-colors"
+                          >
+                            <ShieldCheck className="w-3 h-3 text-amber-700" />
+                            <span>Document Override</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* PRIOR & EXTERNAL MEDICATIONS (OTHER CLINICS/SPECIALISTS) */}
+              <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-teal-700 shrink-0" />
+                    <span className="text-xs font-bold text-slate-900">
+                      Cross-Specialist Medication History ({externalMeds.length} Active Records)
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">From Scanned Records & External Clinics</span>
+                </div>
+
+                <div className="divide-y divide-slate-200/60 border border-slate-200/80 rounded-xl overflow-hidden bg-white text-xs">
+                  {externalMeds.map((extMed) => (
+                    <div key={extMed.id} className="p-3 flex items-center justify-between gap-3 hover:bg-slate-50/50 transition-colors">
+                      <div>
+                        <div className="font-extrabold text-slate-900 flex items-center gap-2">
+                          <span>{extMed.brandName}</span>
+                          <span className="text-[10px] font-semibold text-slate-500">
+                            ({extMed.normalizedSalts.map((s) => `${s.saltName} ${s.strength}`).join(', ')})
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2">
+                          <span>{extMed.provenance.doctorName}</span>
+                          <span>•</span>
+                          <span>{extMed.provenance.facilityName}</span>
+                          <span>•</span>
+                          <span>{extMed.dosage} ({extMed.frequency})</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            extMed.patientReportedStatus === 'STILL_TAKING'
+                              ? 'bg-teal-50 text-teal-800 border border-teal-200'
+                              : 'bg-slate-100 text-slate-600 line-through'
+                          }`}
+                        >
+                          {extMed.patientReportedStatus ? `Patient: ${extMed.patientReportedStatus.replace(/_/g, ' ')}` : 'Active'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Add Prescription Form (hidden if locked) */}
               {!isLocked && (
                 <form onSubmit={handleAddPrescription} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
-                  <div className="text-xs font-bold text-slate-900">Prescribe Medication</div>
+                  <div className="text-xs font-bold text-slate-900">Prescribe Medication (This Encounter)</div>
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
                     <input
@@ -1287,6 +1467,106 @@ export const ClinicalEncounterWorkspace: React.FC<ClinicalEncounterWorkspaceProp
                     <Lock className="w-3.5 h-3.5" />
                     <span>Sign & Close Encounter 🔒</span>
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* CLINICIAN OVERRIDE MODAL FOR CROSS-SPECIALIST COLLISION */}
+          {showOverrideModal && selectedConflictForOverride && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+              <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+                <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-extrabold text-slate-900">
+                        Document Clinical Override
+                      </h3>
+                      <p className="text-[11px] text-slate-500">
+                        Audited override with SHA-256 digital signature
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowOverrideModal(false)}
+                    className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="p-5 space-y-4 text-xs">
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+                    <div className="font-bold text-amber-900">{selectedConflictForOverride.titleEn}</div>
+                    <div className="text-[11px] text-amber-800">{selectedConflictForOverride.mechanismEn}</div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Clinical Rationale Category *
+                    </label>
+                    <select
+                      value={overrideRationale}
+                      onChange={(e) => setOverrideRationale(e.target.value as any)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-teal-500 text-xs"
+                    >
+                      <option value="BENEFIT_OUTWEIGHS_RISK">Benefit Outweighs Risk (Monitored)</option>
+                      <option value="SHORT_TERM_REGIMEN">Short-Term Acute Regimen (&lt; 5 days)</option>
+                      <option value="PATIENT_TOLERATING_WELL">Patient Tolerating Well (Chronic Stable)</option>
+                      <option value="MONITORING_PROTOCOL_ACTIVE">Active Laboratory / Vitals Monitoring in Place</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Documented Clinical Justification *
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={overrideClinicalJustification}
+                      onChange={(e) => setOverrideClinicalJustification(e.target.value)}
+                      placeholder="e.g. Co-prescribing PPI Pantoprazole 40mg for mucosal protection; course restricted to 3 days."
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-teal-500 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Surveillance / Patient Safety Plan *
+                    </label>
+                    <input
+                      type="text"
+                      value={overrideMonitoringPlan}
+                      onChange={(e) => setOverrideMonitoringPlan(e.target.value)}
+                      placeholder="e.g. Instructed patient on red flag GI bleed symptoms; serum creatinine follow-up in 14 days."
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-teal-500 text-xs"
+                    />
+                  </div>
+
+                  <div className="text-[10px] text-slate-400 flex items-center gap-1.5 pt-1">
+                    <KeyRound className="w-3.5 h-3.5 text-teal-600" />
+                    <span>Signing as Dr. Mohamed (TMC-84920-IND). Will be logged into audit trail.</span>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowOverrideModal(false)}
+                      className="px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-bold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmOverride}
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-xs flex items-center gap-1.5 transition-colors"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Sign & Confirm Override</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

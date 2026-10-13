@@ -21,6 +21,7 @@ import {
   Users,
   CalendarDays,
   Building2,
+  ShieldAlert,
 } from 'lucide-react';
 import type { Language } from '../types';
 import { authService, type AuthUser } from '../services/authService';
@@ -316,6 +317,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <FileText className="w-4 h-4 text-blue-600" />
                       <span>{lang === 'en' ? 'Scan Prescription' : 'சீட்டு ஸ்கேன்'}</span>
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => { 
+                        setMoreDropdownOpen(false);
+                        window.history.pushState({}, '', '/cabinet');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                      }} 
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <ShieldAlert className="w-4 h-4 text-emerald-600" />
+                      <span>{lang === 'en' ? 'Medication Cabinet & Shield' : 'மருந்து கவசம் & பெட்டி'}</span>
                     </button>
                     {onOpenPatientIntake && (
                       <button 
@@ -1053,6 +1066,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-xs font-semibold text-center">{lang === 'en' ? 'Baby Shots' : 'தடுப்பூசி'}</span>
                 </button>
               </div>
+
+              {/* Medication Cabinet & Safety Shield Quick Tile */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  window.history.pushState({}, '', '/cabinet');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-teal-50 to-emerald-50 hover:bg-teal-100/80 border border-teal-200/80 text-teal-900 transition-colors text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
+                    <ShieldAlert className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold">{lang === 'en' ? 'Medication Cabinet & Safety Shield' : 'மருந்து கவசம் & பெட்டி'}</div>
+                    <div className="text-[10px] text-teal-700 font-medium">{lang === 'en' ? 'Cross-doctor conflict radar & drug safety' : 'மருத்துவர் முரண்பாடு ரேடார் & பாதுகாப்பு'}</div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-teal-500" />
+              </button>
 
               {/* My Hospital Appointments Quick Tile */}
               <button

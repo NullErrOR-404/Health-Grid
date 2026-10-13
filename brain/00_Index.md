@@ -90,6 +90,10 @@ graph TD
     DEC --> ADR47[[ADR-047-HealthGrid-Clinician-Operating-System-and-Clinical-Workflow-Architecture]]
     DEC --> ADR48[[ADR-048-End-to-End-Authentic-Clinical-Seeding-and-Live-Supabase-Sync]]
     DEC --> ADR49[[ADR-049-10-Stage-Clinical-Encounter-Workspace-Persistence-and-Digital-Signature]]
+    DEC --> ADR50[[ADR-050-Strict-RBAC-Route-Guards-and-Userspace-Isolation]]
+    DEC --> ADR51[[ADR-051-Enterprise-Zero-Trust-Cybersecurity-Hardening]]
+    DEC --> ADR52[[ADR-052-Collapsible-Clinical-Canvas-Deep-Research-and-Ambient-Scribe]]
+    DEC --> ADR53[[ADR-053-Multi-Doctor-Polypharmacy-and-Cross-Prescription-Conflict-Shield]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
     MOD --> CLIN[[Clinician_Portal_Operating_System]]
@@ -191,6 +195,7 @@ graph TD
 - [[ADR-050-Strict-RBAC-Route-Guards-and-Userspace-Isolation]]: Strict Role-Based Access Control (RBAC), multi-persona route guards (`syncRoute`), and zero UI leakage (Navbar profile dropdown and menus). Direct navigation to `/clinician` and `/hospital-erp` by unauthorized accounts or unauthenticated guests triggers a dedicated 403 Access Denied security modal with DPDP Act 2023 clearance badges and zero DOM leakage.
 - [[ADR-051-Enterprise-Zero-Trust-Cybersecurity-Hardening]]: Comprehensive enterprise cybersecurity overhaul: Zero-Trust Serverless AI Gateways (`/api/ai/*`) eliminating client-side API keys, database RLS hardening binding records to `auth.uid()`, file upload magic-byte verification, RFC 6238 TOTP 2FA for administrators and clinicians, HMAC-SHA256 webhook signatures, and automated nightly database backups with 100% verified restore testing.
 - [[ADR-052-Collapsible-Clinical-Canvas-Deep-Research-and-Ambient-Scribe]]: Collapsible Dynamic Clinical Canvas & Generative Health Artifacts (Claude Artifacts style workspace), Autonomous Deep Clinical Research Engine with GRADE certainty evaluation and Indian (ICMR/IP) vs International (WHO/KDIGO) guideline arbitration, and Duplex Voice Tele-Clinic with Ambient Clinical Scribe (Gemini Live / Advanced Voice style) featuring DPDP Act 2023 patient consent notification, dual-channel speaker diarization, and SHA-256 digital signature locking.
+- [[ADR-053-Multi-Doctor-Polypharmacy-and-Cross-Prescription-Conflict-Shield]]: Multi-Doctor Polypharmacy & Cross-Prescription Conflict Shield (360° Omnipresent Safety Engine) cross-analyzing prescriptions across disparate hospital networks to detect silent duplicate molecules (brand masking), contraindicated drug-drug collisions (Blood Thinner + NSAID, ACEi + NSAID, Statin + Macrolide), cumulative organ burden indexes, dual-persona reconciliation (patient-reported taking status with immutable prescriber provenance), SBAR Doctor Discussion Briefs, and audited clinician override modal with SHA-256 digital signatures.
 
 ---
 

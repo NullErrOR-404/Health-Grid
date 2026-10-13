@@ -28,6 +28,7 @@ const ThankYouPage = lazy(() => import('./components/ThankYouPage').then(m => ({
 const MedicineStorePage = lazy(() => import('./components/MedicineStorePage').then(m => ({ default: m.MedicineStorePage })));
 const HospitalErpDashboard = lazy(() => import('./components/erp/HospitalErpDashboard').then(m => ({ default: m.HospitalErpDashboard })));
 const ClinicianPortalLayout = lazy(() => import('./components/clinician/ClinicianPortalLayout').then(m => ({ default: m.ClinicianPortalLayout })));
+const MedicationCabinetWorkspace = lazy(() => import('./components/MedicationCabinetWorkspace').then(m => ({ default: m.MedicationCabinetWorkspace })));
 
 // Lazy-loaded On-Demand Modals
 const AmbulanceModal = lazy(() => import('./components/AmbulanceModal').then(m => ({ default: m.AmbulanceModal })));
@@ -46,6 +47,7 @@ export const prefetchRouteChunks = {
   profile: () => import('./components/ProfilePage'),
   maps: () => import('./components/FindCareNearYou'),
   medicines: () => import('./components/MedicineStorePage'),
+  cabinet: () => import('./components/MedicationCabinetWorkspace'),
   'hospital-erp': () => import('./components/erp/HospitalErpDashboard'),
   'clinician-portal': () => import('./components/clinician/ClinicianPortalLayout'),
   privacy: () => import('./components/PrivacyPolicyPage'),
@@ -77,7 +79,7 @@ const ViewLoadingFallback = () => (
   </div>
 );
 
-export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'hospital-erp' | 'clinician-portal';
+export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'hospital-erp' | 'clinician-portal' | 'cabinet';
 
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -177,6 +179,9 @@ export default function App() {
       } else if (pathname === '/medicines' || hash === '#medicines' || hash === '#/medicines') {
         setAccessDeniedPortal(null);
         setCurrentView('medicines');
+      } else if (pathname === '/cabinet' || pathname === '/medications' || hash === '#cabinet' || hash === '#/cabinet' || hash === '#medications') {
+        setAccessDeniedPortal(null);
+        setCurrentView('cabinet');
       } else if (pathname === '/clinician' || pathname === '/clinician-portal' || pathname === '/doctor' || pathname === '/my-queue' || hash === '#clinician' || hash === '#clinician-portal' || hash === '#doctor' || hash === '#my-queue' || hash === '#/clinician' || hash === '#/clinician-portal') {
         if (authService.canAccessClinicianPortal()) {
           setAccessDeniedPortal(null);
@@ -269,6 +274,10 @@ export default function App() {
       case 'medicines':
         title = lang === 'en' ? 'PMBJP Cheap Generic Medicines & Kendra Store | HealthGrid' : 'மலிவு விலை மக்கள் மருந்தகம் & பொது மருந்துகள் | HealthGrid';
         desc = lang === 'en' ? 'Order authentic Indian Pharmacopoeia PMBJP generic chronic medicines at up to 89% savings with doorstep delivery and Kendra store pickup.' : 'அரசு மக்கள் மருந்தக விலையில் 89% வரை குறைந்த விலையில் அத்தியாவசிய மருந்துகளை வீட்டிலேயே அல்லது அருகிலுள்ள மருந்தகத்தில் பெறலாம்.';
+        break;
+      case 'cabinet':
+        title = lang === 'en' ? 'Unified Medication Cabinet & Multi-Doctor Safety Shield | HealthGrid' : 'ஒருங்கிணைந்த மருந்து கவசம் & பாதுகாப்பு பெட்டி | HealthGrid';
+        desc = lang === 'en' ? 'Cross-reconcile prescriptions from multiple doctors to prevent duplicate active salts, dangerous drug collisions, and organ toxicity.' : 'வெவ்வேறு மருத்துவர்களின் மருந்து பரிந்துரைகளுக்கிடையே உள்ள முரண்பாடுகளை கண்டறிந்து தடுக்கும் பாதுகாப்பு கவசம்.';
         break;
       case 'hospital-erp':
         title = 'HealthGrid Hospital ERP | Autonomous Multi-Tenant Healthcare Operations';
@@ -865,6 +874,71 @@ export default function App() {
             />
           </Suspense>
         )}
+      </div>
+    );
+  }
+
+  // Render Unified Medication Cabinet & Multi-Doctor Safety Shield (/cabinet)
+  if (currentView === 'cabinet') {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500 selection:text-white">
+        <header className="sticky top-0 z-40 w-full">
+          <GovAlertMarquee
+            lang={lang}
+            onOpenMaps={() => navigateToView('maps')}
+            onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+          />
+          <Navbar
+            lang={lang}
+            setLang={setLang}
+            activeView="medicines"
+            onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+            onOpenVoiceChat={() => navigateToView('chat')}
+            onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+            onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+            onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
+            onOpenLogin={() => setIsLoginOpen(true)}
+            onNavigateProfile={() => requireAuth(() => navigateToView('profile'), lang === 'en' ? 'Patient Profile' : 'சுயவிவரப் பக்கம்')}
+            onNavigateHome={() => navigateToView('landing')}
+            onNavigateMedicines={() => navigateToView('medicines')}
+            onNavigateHealthRecords={() => {
+              requireAuth(() => {
+                navigateToView('profile');
+              }, lang === 'en' ? 'Health Records' : 'மருத்துவ ஏடுகள்');
+            }}
+            onNavigateSettings={() => {
+              requireAuth(() => {
+                navigateToView('profile');
+              }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
+            }}
+            onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
+          />
+        </header>
+
+        <main className="flex-1 w-full">
+          <Suspense fallback={<ViewLoadingFallback />}>
+            <MedicationCabinetWorkspace
+              patientId={authService.getCurrentUser()?.id || 'default_citizen'}
+              patientName={authService.getCurrentUser()?.name || (lang === 'en' ? 'Mohamed S.' : 'முகமது எஸ்.')}
+              onOpenPrescriptionScanner={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+              onOpenTeleClinic={() => navigateToView('chat')}
+              onClose={() => navigateToView('landing')}
+            />
+          </Suspense>
+        </main>
+
+        <Footer
+          lang={lang}
+          setLang={setLang}
+          onOpenVoiceChat={() => navigateToView('chat')}
+          onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+          onOpenPrescription={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
+          onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
+          onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
+          onOpenPrivacy={() => navigateToView('privacy')}
+          onOpenTerms={() => navigateToView('terms')}
+          onNavigateMedicines={() => navigateToView('medicines')}
+        />
       </div>
     );
   }

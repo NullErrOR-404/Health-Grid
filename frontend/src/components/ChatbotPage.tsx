@@ -61,6 +61,8 @@ import {
   Radio
 } from 'lucide-react';
 import type { Language } from '../types';
+import { medicationSafetyService } from '../services/medicationSafetyService';
+import type { PolypharmacySafetyEvaluation } from '../types/medicationSafety';
 import { speechEngine, TanglishNormalizer } from '../services/speechService';
 import {
   agiService,
@@ -248,6 +250,7 @@ export interface ChatMessage {
   // Dynamic Clinical Canvas Artifact & Deep Research Progress
   clinicalArtifact?: ClinicalArtifact | null;
   deepResearchProgress?: DeepResearchProgressStep[];
+  polypharmacyAlert?: PolypharmacySafetyEvaluation | null;
 }
 
 export interface ChatSession {
@@ -2026,6 +2029,77 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           >
             <MapPin className="w-3.5 h-3.5 text-teal-600" />
             <span>{lang === 'en' ? 'Locate Kendra' : 'மையத்தைக் காண்க'}</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderPolypharmacyAlertCard = (alertEval: PolypharmacySafetyEvaluation) => {
+    const isCritical = alertEval.safetyTier === 'ACTION_REQUIRED_HIGH_RISK';
+    return (
+      <div className={`mt-4 p-4 sm:p-5 rounded-2xl border shadow-sm space-y-3 animate-in fade-in duration-200 ${
+        isCritical ? 'bg-rose-50/90 border-rose-300' : 'bg-amber-50/90 border-amber-300'
+      }`}>
+        <div className="flex items-center justify-between pb-2 border-b border-rose-200/70">
+          <div className="flex items-center gap-2">
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-white ${
+              isCritical ? 'bg-rose-600' : 'bg-amber-600'
+            }`}>
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-900 leading-tight">
+                {lang === 'en' ? 'Cross-Prescription Conflict Alert' : 'மருந்து முரண்பாடு எச்சரிக்கை'}
+              </div>
+              <div className="text-[10px] text-slate-600">
+                {alertEval.totalActiveMolecules} Molecules across {alertEval.uniquePrescribingDoctorsCount} Clinicians
+              </div>
+            </div>
+          </div>
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
+            isCritical ? 'bg-rose-600 text-white' : 'bg-amber-600 text-white'
+          }`}>
+            Safety: {alertEval.overallRiskScore}/100
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-700 leading-relaxed font-medium">
+          {lang === 'ta' ? alertEval.plainLanguageSummaryTa : alertEval.plainLanguageSummaryEn}
+        </p>
+
+        {alertEval.conflicts.slice(0, 2).map((c) => (
+          <div key={c.id} className="p-2.5 bg-white/90 rounded-xl border border-rose-200 text-xs space-y-1">
+            <div className="font-extrabold text-slate-900 flex items-center justify-between">
+              <span>{c.titleEn}</span>
+              <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-bold">
+                {c.severity}
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-600">
+              {c.medicationA.brandName} ({c.medicationA.prescriber}) vs {c.medicationB ? `${c.medicationB.brandName} (${c.medicationB.prescriber})` : 'Context'}
+            </div>
+          </div>
+        ))}
+
+        <div className="pt-1 flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveArtifact({
+                id: `art_poly_${Date.now()}`,
+                type: 'POLYPHARMACY_CONFLICT',
+                title: 'Polypharmacy Collision & Safety Shield',
+                badge: 'ICMR Grounded',
+                createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                data: alertEval,
+              });
+              setIsCanvasOpen(true);
+            }}
+            className="px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+          >
+            <ShieldAlert className="w-3.5 h-3.5" />
+            <span>{lang === 'en' ? 'Open Conflict Radar Canvas' : 'முரண்பாட்டு வரைபடம்'}</span>
           </button>
         </div>
       </div>
@@ -4799,6 +4873,9 @@ ${sbar.recommendation}`;
                     {/* In-Chat Jan Aushadhi Medicine Card (ChatUi ref) */}
                     {!isUser && msg.matchedMedicineCard && renderMedicineCard(msg.matchedMedicineCard)}
 
+                    {/* Multi-Doctor Polypharmacy Conflict Alert Card */}
+                    {!isUser && msg.polypharmacyAlert && renderPolypharmacyAlertCard(msg.polypharmacyAlert)}
+
                     {/* Autonomous Visual Site Reference Card (ChatUi ref) */}
                     {!isUser && msg.visualNavCard && renderVisualNavCard(msg.visualNavCard)}
 
@@ -5929,6 +6006,31 @@ ${sbar.recommendation}`;
               >
                 <Radio className="w-3.5 h-3.5 animate-pulse text-white" />
                 <span>{lang === 'en' ? 'Duplex Voice & Scribe' : 'நேரடி மருத்துவ ஒலி & குறிப்பேடு'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const meds = medicationSafetyService.getPatientMedicationCabinet('default_citizen');
+                  const evalRes = medicationSafetyService.evaluatePolypharmacySafety(meds, {
+                    knownAllergies: ['Penicillin'],
+                    patientAge: 52,
+                    estimatedGfr: 68,
+                  });
+                  setActiveArtifact({
+                    id: `art_poly_${Date.now()}`,
+                    type: 'POLYPHARMACY_CONFLICT',
+                    title: 'Multi-Doctor Polypharmacy Conflict Shield',
+                    badge: 'ICMR Grounded',
+                    createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    data: evalRes,
+                  });
+                  setIsCanvasOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-900 font-bold whitespace-nowrap transition-colors cursor-pointer shrink-0 shadow-2xs"
+              >
+                <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                <span>{lang === 'en' ? 'Polypharmacy Shield' : 'மருந்து முரண்பாட்டு கவசம்'}</span>
               </button>
 
               <button

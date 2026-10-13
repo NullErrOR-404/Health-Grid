@@ -10,13 +10,16 @@
  * 6. DIET_PLAN: Culturally tailored medical nutrition therapy
  */
 
+import type { PolypharmacySafetyEvaluation } from './medicationSafety';
+
 export type ClinicalArtifactType =
   | 'MEDICATION_PLAN'
   | 'ANATOMICAL_BODY_MAP'
   | 'DEEP_RESEARCH'
   | 'SOAP_NOTE'
   | 'LAB_TRENDS'
-  | 'DIET_PLAN';
+  | 'DIET_PLAN'
+  | 'POLYPHARMACY_CONFLICT';
 
 export interface MedicationScheduleItem {
   id: string;
@@ -237,7 +240,8 @@ export interface ClinicalArtifact {
     | DeepResearchReportData
     | SoapNoteData
     | LabTrendsData
-    | DietPlanData;
+    | DietPlanData
+    | PolypharmacySafetyEvaluation;
   isEditable?: boolean;
   isSigned?: boolean;
   requiresConfirmation?: boolean;

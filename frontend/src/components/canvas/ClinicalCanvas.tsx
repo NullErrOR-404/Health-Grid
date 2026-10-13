@@ -10,7 +10,8 @@ import {
   Pill,
   Apple,
   Search,
-  Stethoscope
+  Stethoscope,
+  ShieldAlert
 } from 'lucide-react';
 import { type ClinicalArtifact, type ClinicalArtifactType } from '../../types/canvas';
 import { MedicationScheduleArtifact } from './MedicationScheduleArtifact';
@@ -19,6 +20,7 @@ import { DeepResearchReportArtifact } from './DeepResearchReportArtifact';
 import { SoapNoteArtifact } from './SoapNoteArtifact';
 import { LabTrendChartArtifact } from './LabTrendChartArtifact';
 import { PatientDietEducationArtifact } from './PatientDietEducationArtifact';
+import { PolypharmacyShieldArtifact } from './PolypharmacyShieldArtifact';
 
 interface ClinicalCanvasProps {
   isOpen: boolean;
@@ -61,6 +63,8 @@ export const ClinicalCanvas: React.FC<ClinicalCanvasProps> = ({
         return Activity;
       case 'DIET_PLAN':
         return Apple;
+      case 'POLYPHARMACY_CONFLICT':
+        return ShieldAlert;
       default:
         return FileText;
     }
@@ -217,6 +221,13 @@ export const ClinicalCanvas: React.FC<ClinicalCanvasProps> = ({
 
         {activeArtifact.type === 'DIET_PLAN' && (
           <PatientDietEducationArtifact
+            data={activeArtifact.data as any}
+            onSendToChat={onSendToChat}
+          />
+        )}
+
+        {activeArtifact.type === 'POLYPHARMACY_CONFLICT' && (
+          <PolypharmacyShieldArtifact
             data={activeArtifact.data as any}
             onSendToChat={onSendToChat}
           />
