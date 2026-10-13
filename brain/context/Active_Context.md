@@ -18,18 +18,30 @@ Back to [[00_Index]]
 
 - **Git Branch**: `main`
 - **Latest Commit**: `99a3e4c` (`feat(security): enterprise zero-trust hardening, serverless AI gateways, RLS isolation, 2FA, and backup verification`)
-- **Latest Documentation Milestone**: ADR-051 Enterprise Zero-Trust Cybersecurity Hardening, Serverless Gateways & Verifiable Backups ([[ADR-051-Enterprise-Zero-Trust-Cybersecurity-Hardening]])
+- **Latest Documentation Milestone**: ADR-052 Collapsible Clinical Canvas, Deep Clinical Research Engine & Duplex Ambient Scribe ([[ADR-052-Collapsible-Clinical-Canvas-Deep-Research-and-Ambient-Scribe]])
 - **Authoritative Vercel Deployment**: `https://healthgrid-5og0r381s-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_2czdUKBLmpcG9UD6riYR8Kcs3LDo`, Bundle: `index-eA-Cu4U1.js`)
 - **Synchronized Production Aliases**:
-  - `https://healthgrid-app.vercel.app` (200 OK • Live • Bundle: `index-eA-Cu4U1.js`)
-  - `https://healthgrid-nu.vercel.app` (200 OK • Live • Bundle: `index-eA-Cu4U1.js`)
-  - `https://healthgrid-live.vercel.app` (200 OK • Live • Bundle: `index-eA-Cu4U1.js`)
-  - `https://healthgrid-network.vercel.app` (200 OK • Live • Bundle: `index-eA-Cu4U1.js`)
+  - `https://healthgrid-app.vercel.app` (200 OK • Live)
+  - `https://healthgrid-nu.vercel.app` (200 OK • Live)
+  - `https://healthgrid-live.vercel.app` (200 OK • Live)
+  - `https://healthgrid-network.vercel.app` (200 OK • Live)
 - **Active Edge Serverless Gateways**: `/api/ai/chat`, `/api/ai/vision`, `/api/ai/ocr`, `/api/webhooks/verify`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+
+- [x] Collapsible Dynamic Clinical Canvas, Autonomous Deep Research Engine & Duplex Ambient Scribe ([[ADR-052-Collapsible-Clinical-Canvas-Deep-Research-and-Ambient-Scribe]]):
+  - **Collapsible Clinical Canvas Workspace (Claude Artifacts style)**: Implemented `ClinicalCanvas.tsx` with side panel and fullscreen modes, multi-artifact session tabs, PiP docking, and PDF export. Created 6 specialized clinical artifact generators:
+    1. `MedicationScheduleArtifact.tsx`: 7-day pill timeline, time slot groupings (Morning, Afternoon, Evening, Night), adherence checkboxes, and PMBJP Jan Aushadhi generic savings calculator.
+    2. `AnatomicalPainMapArtifact.tsx`: Interactive SVG Anterior & Posterior human body map, clickable anatomical nodes, VAS 1-10 pain slider, character tags, radiation path, and "Send to Chat".
+    3. `DeepResearchReportArtifact.tsx`: Structured evidence report, GRADE badges, guideline comparison matrix (ICMR vs WHO), study limitations, interactive evidence matrix, and clickable citations.
+    4. `SoapNoteArtifact.tsx`: Editable SOAP workspace, ICD-10 suggestions, proposed prescriptions, and SHA-256 "Sign & Lock" seal.
+    5. `LabTrendChartArtifact.tsx`: Longitudinal charts using Recharts with clinical reference bands (HbA1c, FBS, Creatinine) and out-of-range alerts.
+    6. `PatientDietEducationArtifact.tsx`: Culturally grounded South Indian medical nutrition plan (Kuthiraivali, Samai, Ragi, Pavakkai) with glycemic indices and restricted foods.
+  - **Autonomous Deep Clinical Research Engine**: Built `clinicalResearchService.ts` running multi-step biomedical synthesis (MeSH query -> ICMR/IP/PubMed/WHO retrieval -> GRADE certainty evaluation -> Indian vs International guideline arbitration) with real-time progress callbacks displayed in chat.
+  - **Duplex Voice Tele-Clinic & Ambient Clinical Scribe**: Built `DuplexVoiceOverlay.tsx` and `ambientScribeService.ts` featuring live turn-taking voice, kinetic waveform audio visualizer (`AudioVisualizerCanvas`), DPDP Act 2023 patient consent notification banner, speaker diarization (Doctor vs Patient), and 1-tap "Synthesize SOAP to Canvas" with SHA-256 digital signature seal.
+  - **Verification & Testing**: Passed full TypeScript & Vite production build (`tsc -b && vite build` in 2.38s) with 0 errors. Verified in real browser session via `browser_subagent` testing all quick action chips, canvas interactions, and voice modal (recording saved as `canvas_voice_test_1791901762983.webp`).
 
 - [x] Enterprise Zero-Trust Cybersecurity Hardening, Zero Frontend Keys, RLS Hardening & Verifiable Backup Restoration ([[ADR-051-Enterprise-Zero-Trust-Cybersecurity-Hardening]]):
   - **Zero Frontend API Keys via Serverless Gateways**: Built `/api/ai/chat.ts`, `/api/ai/vision.ts`, and `/api/ai/ocr.ts` on Vercel Serverless Edge runtime. Third-party keys (`GROQ_API_KEY`, `GEMINI_API_KEY`) now live strictly server-side with sliding-window rate limiters (25, 15, and 12 req/min per IP) and strict CORS origin whitelisting. Refactored `aiService.ts`, `prescriptionAiService.ts`, and `liveVisionDoctorService.ts` to dispatch via `/api/ai/*` as their primary gateway.

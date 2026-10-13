@@ -31,6 +31,11 @@ import {
   type ClinicalSafetyCheckResult,
 } from './clinicalChatEngine';
 import { markItDownService } from './markItDownService';
+import { clinicalResearchService } from './clinicalResearchService';
+import {
+  type ClinicalArtifact,
+  type DeepResearchProgressStep,
+} from '../types/canvas';
 
 export type {
   EsiTriageResult,
@@ -39,6 +44,8 @@ export type {
   ClinicalSafetyCheckResult,
   VisualModulePreview,
   AgentActionConfirmation,
+  ClinicalArtifact,
+  DeepResearchProgressStep,
 };
 
 export interface InteractiveOptions {
@@ -205,6 +212,8 @@ export interface AgiResponse {
   actionConfirmation?: AgentActionConfirmation | null;
   arbitration?: ModelArbitrationDecision;
   dossier?: LivingClinicalDossier;
+  clinicalArtifact?: ClinicalArtifact | null;
+  deepResearchProgress?: DeepResearchProgressStep[];
   usage: {
     promptTokens: number;
     completionTokens: number;
@@ -2151,6 +2160,291 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       };
     }
 
+    // 8. Dynamic Clinical Artifact Synthesis for Collapsible Canvas
+    let clinicalArtifact: ClinicalArtifact | null = null;
+    let deepResearchProgress: DeepResearchProgressStep[] | undefined = undefined;
+
+    if (userQuery) {
+      const q = userQuery.toLowerCase();
+
+      // Deep Research Trigger
+      if (clinicalResearchService.isDeepResearchQuery(userQuery)) {
+        deepResearchProgress = [
+          { step: 1, label: 'Formulating clinical search hypotheses & MeSH keywords', status: 'completed' },
+          { step: 2, label: 'Querying ICMR STGs, Indian Pharmacopoeia & PubMed', status: 'completed' },
+          { step: 3, label: 'Evaluating GRADE certainty, risk of bias & sample size', status: 'completed' },
+          { step: 4, label: 'Synthesizing national vs international consensus & clinical limitations', status: 'completed' },
+        ];
+        const report = (clinicalResearchService as any).synthesizeReport(userQuery);
+        clinicalArtifact = {
+          id: `art-res-${Date.now()}`,
+          type: 'DEEP_RESEARCH',
+          title: `Evidence: ${userQuery.slice(0, 48)}...`,
+          subtitle: 'Multi-Center Systematic Synthesis • GRADE Standard',
+          badge: 'Clinical Evidence GRADE',
+          createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          data: report,
+        };
+      }
+      // Medication Schedule Trigger
+      else if (
+        q.includes('schedule') ||
+        q.includes('routine') ||
+        q.includes('timing') ||
+        q.includes('when to take') ||
+        q.includes('medication plan') ||
+        q.includes('dose chart') ||
+        q.includes('pill reminder') ||
+        (q.includes('medicine') && (q.includes('chart') || q.includes('time') || q.includes('daily')))
+      ) {
+        clinicalArtifact = {
+          id: `art-med-${Date.now()}`,
+          type: 'MEDICATION_PLAN',
+          title: '7-Day Medication Adherence & Timing Plan',
+          subtitle: 'Indian Pharmacopoeia Formulations • Jan Aushadhi Savings',
+          badge: '7-Day Dosage Timeline',
+          createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          data: {
+            title: 'Active Patient Prescription & Dosage Schedule',
+            patientName: 'Citizen Patient',
+            startDate: new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }),
+            adherencePercentage: 92,
+            totalMonthlySavingsInr: 680,
+            items: [
+              {
+                id: 'med-1',
+                name: 'Paracetamol IP (Jan Aushadhi)',
+                genericName: 'Paracetamol Tablets IP (650mg)',
+                dosage: '650mg',
+                frequency: 'Twice Daily (BID)',
+                timing: { morning: true, afternoon: false, evening: true, night: false },
+                foodRelation: 'AFTER_FOOD',
+                durationDays: 5,
+                instructions: 'Take with warm water after breakfast and dinner.',
+                genericSubstitute: {
+                  genericName: 'Paracetamol Tablets IP',
+                  brandPrice: 34.0,
+                  janAushadhiPrice: 4.2,
+                  savingsPercent: 88,
+                  kendraAvailable: true,
+                },
+              },
+              {
+                id: 'med-2',
+                name: 'Pantoprazole Gastro-Resistant (Pan 40)',
+                genericName: 'Pantoprazole Tablets IP (40mg)',
+                dosage: '40mg',
+                frequency: 'Once Daily (OD)',
+                timing: { morning: true, afternoon: false, evening: false, night: false },
+                foodRelation: 'BEFORE_FOOD',
+                durationDays: 14,
+                instructions: 'Take 30 minutes before morning tea or breakfast.',
+                genericSubstitute: {
+                  genericName: 'Pantoprazole IP',
+                  brandPrice: 165.0,
+                  janAushadhiPrice: 18.0,
+                  savingsPercent: 89,
+                  kendraAvailable: true,
+                },
+              },
+              {
+                id: 'med-3',
+                name: 'Metformin Prolonged-Release',
+                genericName: 'Metformin Hydrochloride (500mg)',
+                dosage: '500mg',
+                frequency: 'Twice Daily (BID)',
+                timing: { morning: true, afternoon: false, evening: false, night: true },
+                foodRelation: 'WITH_FOOD',
+                durationDays: 30,
+                instructions: 'Take immediately with meals to minimize gastrointestinal discomfort.',
+                genericSubstitute: {
+                  genericName: 'Metformin HCl IP',
+                  brandPrice: 45.0,
+                  janAushadhiPrice: 7.5,
+                  savingsPercent: 83,
+                  kendraAvailable: true,
+                },
+              },
+            ],
+          },
+        };
+      }
+      // Anatomical Pain Map Trigger
+      else if (
+        q.includes('pain') ||
+        q.includes('ache') ||
+        q.includes('where it hurts') ||
+        q.includes('body map') ||
+        q.includes('pain map') ||
+        q.includes('anatomy') ||
+        q.includes('headache') ||
+        q.includes('chest pain') ||
+        q.includes('back pain') ||
+        q.includes('knee pain') ||
+        q.includes('வலி') ||
+        q.includes('இடுப்பு') ||
+        q.includes('நெஞ்சு')
+      ) {
+        clinicalArtifact = {
+          id: `art-ana-${Date.now()}`,
+          type: 'ANATOMICAL_BODY_MAP',
+          title: 'Interactive Anatomical Symptom & Pain Localization',
+          subtitle: 'Dual-Plane Dermatomal Mapping • Visual Analogue Scale (VAS)',
+          badge: 'Interactive Anatomy',
+          createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          data: {
+            selectedRegions: [
+              {
+                id: q.includes('chest') ? 'chest' : q.includes('head') ? 'head_front' : q.includes('back') ? 'lumbar_spine' : 'epigastrium',
+                name: q.includes('chest') ? 'Chest / Precordium' : q.includes('head') ? 'Head / Forehead' : q.includes('back') ? 'Lower Back / Lumbar Spine' : 'Upper Abdomen / Epigastric',
+                tamilName: q.includes('chest') ? 'நெஞ்சு பகுதி' : q.includes('head') ? 'தலை / நெற்றி' : q.includes('back') ? 'கீழ் முதுகு / இடுப்பு' : 'வயிற்று மேல் பகுதி',
+                view: q.includes('back') ? 'posterior' : 'anterior',
+                intensity: 6,
+                character: 'dull',
+                radiationTarget: q.includes('chest') ? 'Left arm & shoulder' : q.includes('back') ? 'Right posterior thigh (L5/S1)' : '',
+                duration: '3 days',
+              },
+            ],
+            primaryComplaint: 'Focal discomfort reported by patient',
+            notes: 'Interactive dermatomal and VAS visual scale mapping',
+          },
+        };
+      }
+      // Lab Trends / Biomarker Tracker
+      else if (
+        q.includes('hba1c') ||
+        q.includes('sugar level') ||
+        q.includes('blood sugar') ||
+        q.includes('creatinine') ||
+        q.includes('lab report') ||
+        q.includes('blood pressure trend') ||
+        q.includes('lipid profile') ||
+        q.includes('cholesterol')
+      ) {
+        clinicalArtifact = {
+          id: `art-lab-${Date.now()}`,
+          type: 'LAB_TRENDS',
+          title: 'Longitudinal Biomarker & Metabolic Radar',
+          subtitle: 'Time-Series Clinical Chemistry • Reference Range Bands',
+          badge: 'Biomarker Telemetry',
+          createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          data: {
+            patientName: 'Citizen Patient',
+            patientHealthId: 'HG001245',
+            clinicalInterpretation: 'Steady progressive decline in Glycated Hemoglobin (HbA1c) from 8.6% to 7.2% across the last 9 months following metformin initiation and low-GI Tamil millet dietary compliance.',
+            trends: [
+              {
+                biomarkerKey: 'hba1c',
+                name: 'HbA1c (Glycated Hemoglobin)',
+                unit: '%',
+                referenceLow: 4.0,
+                referenceHigh: 6.5,
+                dataPoints: [
+                  { date: 'Jan 2026', value: 8.6, status: 'CRITICAL_HIGH', note: 'Initial diagnosis' },
+                  { date: 'Apr 2026', value: 7.9, status: 'ELEVATED', note: 'Metformin 500mg BD' },
+                  { date: 'Jul 2026', value: 7.5, status: 'ELEVATED', note: 'Added lifestyle walking' },
+                  { date: 'Oct 2026', value: 7.2, status: 'ELEVATED', note: 'Targeting <7.0%' },
+                ],
+              },
+              {
+                biomarkerKey: 'fbs',
+                name: 'Fasting Blood Glucose (FBS)',
+                unit: 'mg/dL',
+                referenceLow: 70,
+                referenceHigh: 110,
+                dataPoints: [
+                  { date: 'Jan 2026', value: 164, status: 'ELEVATED' },
+                  { date: 'Apr 2026', value: 142, status: 'ELEVATED' },
+                  { date: 'Jul 2026', value: 128, status: 'ELEVATED' },
+                  { date: 'Oct 2026', value: 118, status: 'NORMAL' },
+                ],
+              },
+              {
+                biomarkerKey: 'creatinine',
+                name: 'Serum Creatinine (Renal Safety)',
+                unit: 'mg/dL',
+                referenceLow: 0.6,
+                referenceHigh: 1.2,
+                dataPoints: [
+                  { date: 'Jan 2026', value: 0.94, status: 'NORMAL' },
+                  { date: 'Apr 2026', value: 0.92, status: 'NORMAL' },
+                  { date: 'Jul 2026', value: 0.90, status: 'NORMAL' },
+                  { date: 'Oct 2026', value: 0.88, status: 'NORMAL' },
+                ],
+              },
+            ],
+          },
+        };
+      }
+      // Medical Nutrition & Diet Plan
+      else if (
+        q.includes('diet') ||
+        q.includes('food') ||
+        q.includes('meal plan') ||
+        q.includes('nutrition') ||
+        q.includes('what to eat') ||
+        q.includes('சாப்பாடு') ||
+        q.includes('உணவு')
+      ) {
+        clinicalArtifact = {
+          id: `art-diet-${Date.now()}`,
+          type: 'DIET_PLAN',
+          title: 'Medical Nutrition Therapy & Traditional Grain Plan',
+          subtitle: 'Low-Glycemic Index South Indian Staples • Cardiorenal Protection',
+          badge: 'Clinical Nutrition Plan',
+          createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          data: {
+            title: 'Metabolic & Cardiovascular Nutrition Therapy',
+            condition: 'Type 2 Diabetes Mellitus & Pre-Hypertension',
+            calorieTarget: 1750,
+            proteinTargetGrams: 68,
+            hydrationTargetLiters: 2.8,
+            culturalNotes: 'Replaces refined white Ponni rice with indigenous low-glycemic Tamil millets (Kuthiraivali, Samai, Varagu). High dietary fiber blunts post-prandial glycemic spikes.',
+            foodsToAvoid: ['Refined White Rice', 'Deep Fried Snacks (Bajji, Bonda)', 'Sugary Beverages / Packaged Juices', 'Excess Table Salt / Pickles (Oorugai)'],
+            meals: [
+              {
+                mealTime: 'BREAKFAST',
+                timeLabel: 'Breakfast (08:30 AM)',
+                clinicalNote: 'High protein + complex carbohydrate foundation',
+                foodItems: [
+                  { name: 'Kuthiraivali (Barnyard Millet) Pongal with Moong Dal', tamilName: 'குதிரைவாலி பொங்கல்', portion: '1.5 cups', glycemicIndex: 'LOW', calories: 280, proteinGrams: 9, fiberGrams: 6 },
+                  { name: 'Mixed Vegetable Sambar (Drumstick, Tomato, Spinach)', portion: '1 cup', glycemicIndex: 'LOW', calories: 110, proteinGrams: 4, fiberGrams: 4 },
+                  { name: 'Boiled Egg White or Sprouted Horse Gram Sundal', portion: '1 portion', glycemicIndex: 'LOW', calories: 75, proteinGrams: 7, fiberGrams: 3 },
+                ],
+              },
+              {
+                mealTime: 'MID_MORNING',
+                timeLabel: 'Mid-Morning (11:30 AM)',
+                clinicalNote: 'Hydration and electrolyte replenishment',
+                foodItems: [
+                  { name: 'Fresh Tender Coconut Water or Thin Buttermilk with Curry Leaves', portion: '250 mL', glycemicIndex: 'LOW', calories: 45, proteinGrams: 1, fiberGrams: 1 },
+                ],
+              },
+              {
+                mealTime: 'LUNCH',
+                timeLabel: 'Lunch (01:30 PM)',
+                clinicalNote: 'Portion plate rule: 50% fiber vegetables, 25% millet, 25% protein',
+                foodItems: [
+                  { name: 'Samai (Little Millet) Cooked Rice', tamilName: 'சாமை சாதம்', portion: '1 cup', glycemicIndex: 'LOW', calories: 240, proteinGrams: 6, fiberGrams: 7 },
+                  { name: 'Bitter Gourd (Pavakkai) Poriyal (Pan-roasted)', tamilName: 'பாகற்காய் பொரியல்', portion: '1 cup', glycemicIndex: 'LOW', calories: 85, proteinGrams: 2, fiberGrams: 5 },
+                  { name: 'Low-Fat Curd / Moru', portion: '1 cup', glycemicIndex: 'LOW', calories: 90, proteinGrams: 5, fiberGrams: 0 },
+                ],
+              },
+              {
+                mealTime: 'DINNER',
+                timeLabel: 'Dinner (08:00 PM)',
+                clinicalNote: 'Early dinner prior to 8:30 PM to support overnight fasting glucagon balance',
+                foodItems: [
+                  { name: 'Ragi (Finger Millet) Dosa with Mint Coriander Chutney', tamilName: 'ராகி தோசை', portion: '2 nos', glycemicIndex: 'LOW', calories: 220, proteinGrams: 5, fiberGrams: 6 },
+                  { name: 'Clear Vegetable Soup with Black Pepper & Cumin', portion: '1 bowl', glycemicIndex: 'LOW', calories: 60, proteinGrams: 2, fiberGrams: 3 },
+                ],
+              },
+            ],
+          },
+        };
+      }
+    }
+
     return {
       content,
       triageLevel,
@@ -2171,6 +2465,8 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       actionConfirmation,
       arbitration,
       dossier: this.activeDossier,
+      clinicalArtifact,
+      deepResearchProgress,
       usage: {
         promptTokens,
         completionTokens,

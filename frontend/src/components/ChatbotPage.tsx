@@ -103,6 +103,13 @@ import { markItDownService } from '../services/markItDownService';
 import { NlpBookingParser } from '../services/nlpBookingParser';
 import { unifiedPatientStore } from '../services/unifiedPatientStore';
 import { securitySanitizer } from '../services/securitySanitizer';
+import { ClinicalCanvas } from './canvas/ClinicalCanvas';
+import { DuplexVoiceOverlay } from './voice/DuplexVoiceOverlay';
+import {
+  type ClinicalArtifact,
+  type DeepResearchProgressStep,
+  type SoapNoteData,
+} from '../types/canvas';
 
 export interface StagedClinicalAttachment {
   file: File;
@@ -238,6 +245,9 @@ export interface ChatMessage {
   // Autonomous Cross-Website Navigator & Action Confirmation
   visualNavCard?: VisualModulePreview | null;
   actionConfirmation?: AgentActionConfirmation | null;
+  // Dynamic Clinical Canvas Artifact & Deep Research Progress
+  clinicalArtifact?: ClinicalArtifact | null;
+  deepResearchProgress?: DeepResearchProgressStep[];
 }
 
 export interface ChatSession {
@@ -513,6 +523,22 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   const photoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewLightboxUrl, setPreviewLightboxUrl] = useState<string | null>(null);
+
+  // Dynamic Clinical Canvas & Duplex Voice State
+  const [activeArtifact, setActiveArtifact] = useState<ClinicalArtifact | null>(null);
+  const [isCanvasOpen, setIsCanvasOpen] = useState(false);
+  const [isCanvasFullScreen, setIsCanvasFullScreen] = useState(false);
+  const [allArtifacts, setAllArtifacts] = useState<ClinicalArtifact[]>([]);
+  const [isDuplexVoiceOpen, setIsDuplexVoiceOpen] = useState(false);
+
+  const openArtifactInCanvas = (artifact: ClinicalArtifact) => {
+    setActiveArtifact(artifact);
+    setAllArtifacts((prev) => {
+      const exists = prev.some((a) => a.id === artifact.id);
+      return exists ? prev : [artifact, ...prev];
+    });
+    setIsCanvasOpen(true);
+  };
 
   // Active In-Chat Appointment Automation State (ChatUi ref)
   const [activeAppointmentDraft, setActiveAppointmentDraft] = useState<{
@@ -2454,6 +2480,79 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     );
   };
 
+  const renderClinicalArtifactCard = (artifact: ClinicalArtifact) => {
+    const isCurrentlyActiveInCanvas = isCanvasOpen && activeArtifact?.id === artifact.id;
+
+    return (
+      <div className="mt-3 p-4 rounded-2xl border border-teal-200/90 bg-gradient-to-r from-teal-50/90 via-sky-50/70 to-white shadow-xs animate-in fade-in transition-all">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+              <Sparkles className="w-4 h-4 text-teal-700" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-teal-800 bg-teal-100/70 px-2 py-0.5 rounded-md border border-teal-200">
+                  {artifact.badge}
+                </span>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  {artifact.createdAt}
+                </span>
+              </div>
+              <h4 className="text-sm font-bold text-slate-900 mt-0.5">
+                {artifact.title}
+              </h4>
+              {artifact.subtitle && (
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {artifact.subtitle}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => openArtifactInCanvas(artifact)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs shrink-0 cursor-pointer ${
+              isCurrentlyActiveInCanvas
+                ? 'bg-teal-700 text-white'
+                : 'bg-teal-600 hover:bg-teal-700 text-white hover:scale-102'
+            }`}
+          >
+            <span>{isCurrentlyActiveInCanvas ? 'Viewing in Canvas' : 'Open in Canvas ↗'}</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderDeepResearchProgress = (steps: DeepResearchProgressStep[]) => {
+    return (
+      <div className="mt-3 p-3.5 rounded-2xl border border-indigo-200 bg-indigo-50/70 shadow-xs animate-in fade-in space-y-2">
+        <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 uppercase tracking-wider">
+          <Search className="w-3.5 h-3.5 text-indigo-600 animate-spin" />
+          <span>Autonomous Clinical Research Pipeline</span>
+        </div>
+        <div className="space-y-1.5 text-xs">
+          {steps.map((st) => (
+            <div key={st.step} className="flex items-center gap-2">
+              {st.status === 'completed' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : st.status === 'running' ? (
+                <div className="w-4 h-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin shrink-0" />
+              ) : (
+                <div className="w-4 h-4 rounded-full border border-slate-300 shrink-0" />
+              )}
+              <span className={st.status === 'completed' ? 'text-slate-700 font-medium' : st.status === 'running' ? 'text-indigo-900 font-bold' : 'text-slate-400'}>
+                {st.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderLiveQueueTracker = (tracker: LiveQueueTrackerData, msgId?: string) => {
     const isWayfindingOpen = expandedWayfinding[tracker.id] || false;
 
@@ -3672,6 +3771,8 @@ ${sbar.recommendation}`;
         liveQueueTracker: generatedQueueTracker,
         visualNavCard: response.visualNavCard,
         actionConfirmation: response.actionConfirmation,
+        clinicalArtifact: response.clinicalArtifact,
+        deepResearchProgress: response.deepResearchProgress,
         usageMeta: {
           latencyMs: response.usage.latencyMs,
           totalTokens: response.usage.totalTokens,
@@ -3690,6 +3791,11 @@ ${sbar.recommendation}`;
           return s;
         })
       );
+
+      // Auto-open interactive clinical canvas if an artifact was generated
+      if (response.clinicalArtifact) {
+        openArtifactInCanvas(response.clinicalArtifact);
+      }
 
       // Persist AI response to Supabase
       if (isSupabaseSession) {
@@ -4698,6 +4804,12 @@ ${sbar.recommendation}`;
 
                     {/* Sensitive Mutation Permission Confirmation Card (Two-Tier Model) */}
                     {!isUser && msg.actionConfirmation && renderActionConfirmationCard(msg.actionConfirmation, msg.id)}
+
+                    {/* Autonomous Clinical Deep Research Progress Card */}
+                    {!isUser && msg.deepResearchProgress && renderDeepResearchProgress(msg.deepResearchProgress)}
+
+                    {/* Interactive Generative Clinical Artifact Card */}
+                    {!isUser && msg.clinicalArtifact && renderClinicalArtifactCard(msg.clinicalArtifact)}
 
                     {/* Unique Clinical Differentiator 1: Live ESI Triage Radar & Casualty HUD */}
                     {!isUser && msg.esiTriage && (
@@ -5809,6 +5921,50 @@ ${sbar.recommendation}`;
                 <Stethoscope className="w-3.5 h-3.5 text-teal-600" />
                 <span>{lang === 'en' ? 'Talk to Doctor' : 'மருத்துவரிடம் பேசு'}</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setIsDuplexVoiceOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold whitespace-nowrap transition-transform active:scale-95 cursor-pointer shrink-0 shadow-xs"
+              >
+                <Radio className="w-3.5 h-3.5 animate-pulse text-white" />
+                <span>{lang === 'en' ? 'Duplex Voice & Scribe' : 'நேரடி மருத்துவ ஒலி & குறிப்பேடு'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setInputText(lang === 'en' ? 'Conduct deep clinical research comparing Empagliflozin vs Dapagliflozin in Chronic Kidney Disease' : 'சிறுநீரக நோயில் Empagliflozin vs Dapagliflozin ஒப்பீட்டு ஆழமான மருத்துவ ஆராய்ச்சி');
+                  chatInputRef.current?.focus();
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 shadow-2xs"
+              >
+                <Search className="w-3.5 h-3.5 text-indigo-600" />
+                <span>{lang === 'en' ? 'Deep Research' : 'ஆழமான ஆராய்ச்சி'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setInputText(lang === 'en' ? 'Show interactive anatomical pain map for lower back pain radiating to right leg' : 'வலது காலுக்கு பரவும் கீழ் முதுகு வலிக்கான உடற்கூறு வரைபடம்');
+                  chatInputRef.current?.focus();
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-900 font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 shadow-2xs"
+              >
+                <Activity className="w-3.5 h-3.5 text-rose-600" />
+                <span>{lang === 'en' ? 'Anatomical Pain Map' : 'உடற்கூறு வரைபடம்'}</span>
+              </button>
+
+              {allArtifacts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setIsCanvasOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-100 hover:bg-teal-200 border border-teal-300 text-teal-950 font-bold whitespace-nowrap transition-colors cursor-pointer shrink-0 shadow-2xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-teal-700" />
+                  <span>{lang === 'en' ? `Canvas (${allArtifacts.length})` : `கேப்வாஸ் (${allArtifacts.length})`}</span>
+                </button>
+              )}
             </div>
 
             {/* Mobile / Tablet Floating Appointment Summary Bar */}
@@ -6010,6 +6166,51 @@ ${sbar.recommendation}`;
         isOpen={Boolean(printingAppointment)}
         appointment={printingAppointment}
         onClose={() => setPrintingAppointment(null)}
+      />
+
+      {/* Dynamic Clinical Canvas Workspace (Expandable Right-side / Fullscreen Panel) */}
+      <ClinicalCanvas
+        isOpen={isCanvasOpen}
+        onClose={() => setIsCanvasOpen(false)}
+        activeArtifact={activeArtifact}
+        artifactsList={allArtifacts}
+        onSelectArtifact={(artifact) => setActiveArtifact(artifact)}
+        onUpdateArtifact={(updated) => {
+          setActiveArtifact(updated);
+          setAllArtifacts((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+        }}
+        onSendToChat={(text) => {
+          setInputText(text);
+          chatInputRef.current?.focus();
+        }}
+        isFullScreen={isCanvasFullScreen}
+        onToggleFullScreen={() => setIsCanvasFullScreen((prev) => !prev)}
+      />
+
+      {/* Real-time Duplex Voice Tele-Clinic & Ambient Clinical Scribe Overlay */}
+      <DuplexVoiceOverlay
+        isOpen={isDuplexVoiceOpen}
+        onClose={() => setIsDuplexVoiceOpen(false)}
+        lang={lang}
+        patientName={activeBeneficiary?.name || authService.getUser()?.name || 'Sovereign Patient'}
+        patientHealthId={authService.getUser()?.healthId || 'HG-TN-2026-PAT'}
+        onSoapGenerated={(soap: SoapNoteData) => {
+          const artifact: ClinicalArtifact = {
+            id: `artifact-soap-${Date.now()}`,
+            type: 'SOAP_NOTE',
+            title: `Ambient Consultation Scribe - ${soap.patientName}`,
+            subtitle: `Generated from Live Tele-Clinic Audio Diarization`,
+            badge: 'Live Scribe',
+            data: soap,
+            createdAt: 'Just now',
+            requiresConfirmation: true,
+          };
+          openArtifactInCanvas(artifact);
+        }}
+        onOpenAmbulance={() => {
+          if (onOpenAmbulance) onOpenAmbulance();
+          else window.open('tel:108', '_self');
+        }}
       />
 
     </div>
