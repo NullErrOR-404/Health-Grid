@@ -19,12 +19,12 @@ Back to [[00_Index]]
 - **Git Branch**: `main`
 - **Latest Commit**: `99a3e4c` (`feat(security): enterprise zero-trust hardening, serverless AI gateways, RLS isolation, 2FA, and backup verification`)
 - **Latest Documentation Milestone**: ADR-054 Comprehensive RBAC Persona Gating, Zero-Trace Data Isolation, and Frontend Abstraction Architecture ([[ADR-054-Comprehensive-RBAC-Persona-Gating-and-Zero-Trace-Data-Isolation]])
-- **Authoritative Vercel Deployment**: `https://healthgrid-5og0r381s-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_2czdUKBLmpcG9UD6riYR8Kcs3LDo`, Bundle: `index-eA-Cu4U1.js`)
+- **Authoritative Vercel Deployment**: `https://healthgrid-ekycbskao-sameen14nmofficial-8826s-projects.vercel.app` (Serving Bundle: `index-Dykgwxhl.js` • Built from commit `6d4b855`)
 - **Synchronized Production Aliases**:
-  - `https://healthgrid-app.vercel.app` (200 OK • Live)
-  - `https://healthgrid-nu.vercel.app` (200 OK • Live)
-  - `https://healthgrid-live.vercel.app` (200 OK • Live)
-  - `https://healthgrid-network.vercel.app` (200 OK • Live)
+  - `https://healthgrid-app.vercel.app` (200 OK • Live • `index-Dykgwxhl.js`)
+  - `https://healthgrid-nu.vercel.app` (200 OK • Live • `index-Dykgwxhl.js`)
+  - `https://healthgrid-live.vercel.app` (200 OK • Live • `index-Dykgwxhl.js`)
+  - `https://healthgrid-network.vercel.app` (200 OK • Live • `index-Dykgwxhl.js`)
 - **Active Edge Serverless Gateways**: `/api/ai/chat`, `/api/ai/vision`, `/api/ai/ocr`, `/api/webhooks/verify`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
