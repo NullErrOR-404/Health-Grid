@@ -161,15 +161,37 @@ class AuthService {
       // Strip raw bearer token from localStorage to prevent XSS credential theft (OWASP ASVS Level 3)
       const safeStorageUser = { ...user, token: undefined };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(safeStorageUser));
-      // Strict userspace isolation: if logging in as Personal / Citizen, purge any stale Hospital Admin token
+      // Strict userspace isolation: if logging in as Personal / Citizen, purge any stale Hospital Admin or Clinician tokens
       if (user.role === 'PERSONAL' || user.role === 'CITIZEN') {
         this.clearHospitalSession();
+        this.clearClinicianCaches();
       }
     } else {
       localStorage.removeItem(STORAGE_KEY);
+      this.clearClinicianCaches();
+      this.clearHospitalSession();
       sessionSecurityManager.terminateSession('USER_LOGOUT');
     }
     this.notifyListeners();
+  }
+
+  /**
+   * Purges all local caches associated with Clinician workspaces to prevent cross-account leakage
+   */
+  public clearClinicianCaches(): void {
+    try {
+      localStorage.removeItem('healthgrid_clinician_store_v1');
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('healthgrid_clinician_store_') || key.startsWith('healthgrid_erp_userspace_'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+    } catch (e) {
+      console.warn('Could not clear clinician caches:', e);
+    }
   }
 
   private async initSupabaseListener() {
@@ -327,29 +349,11 @@ class AuthService {
   }
 
   getUser(): AuthUser | null {
-    return this.currentUser || {
-      id: 'usr-patient-1245',
-      name: 'Sameer Ahmed',
-      email: 'sameer.ahmed@healthgrid.tn.gov.in',
-      phone: '+91 98765 43210',
-      role: 'PERSONAL',
-      healthId: 'HG001245',
-      age: 20,
-      bloodGroup: 'B+',
-    };
+    return this.currentUser;
   }
 
   getCurrentUser(): AuthUser | null {
-    return this.currentUser || {
-      id: 'usr-patient-1245',
-      name: 'Sameer Ahmed',
-      email: 'sameer.ahmed@healthgrid.tn.gov.in',
-      phone: '+91 98765 43210',
-      role: 'PERSONAL',
-      healthId: 'HG001245',
-      age: 20,
-      bloodGroup: 'B+',
-    };
+    return this.currentUser;
   }
 
   isAuthenticated(): boolean {
@@ -472,13 +476,19 @@ class AuthService {
       ? data.identifier.trim()
       : `${data.identifier.trim()}@healthgrid.in`;
 
+    // Statutory clinical safeguard: Public self-registration only issues CITIZEN / PERSONAL accounts.
+    // Doctor clearance requires verified state medical council credentials (TMC/NMC) or hospital administration provisioning.
+    const effectiveRole: UserRole = (data.role === 'DOCTOR' || data.role === 'HEALTHCARE_PROFESSIONAL' || data.role === 'SUPER_ADMIN')
+      ? 'CITIZEN'
+      : (data.role || 'CITIZEN');
+
     const { data: authData, error } = await supabase.auth.signUp({
       email,
       password: data.password,
       options: {
         data: {
           full_name: data.fullName,
-          role: data.role,
+          role: effectiveRole,
           dob: data.dob,
           age: data.age,
           blood_group: data.bloodGroup,
@@ -506,7 +516,7 @@ class AuthService {
       id: authData.user.id,
       name: data.fullName,
       email,
-      role: data.role,
+      role: effectiveRole,
       dob: data.dob,
       age: data.age,
       bloodGroup: data.bloodGroup,
@@ -582,11 +592,21 @@ class AuthService {
     }
     this.saveToStorage(null);
     this.clearHospitalSession();
+    this.clearClinicianCaches();
     rateLimiter.reset();
     try {
       sessionStorage.clear();
       localStorage.removeItem('healthgrid_chat_sessions');
       localStorage.removeItem('healthgrid_ai_usage');
+      // Purge any user-specific medication cabinets
+      const cabinetKeys: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('healthgrid_medication_cabinet_')) {
+          cabinetKeys.push(k);
+        }
+      }
+      cabinetKeys.forEach((k) => localStorage.removeItem(k));
     } catch {}
   }
 

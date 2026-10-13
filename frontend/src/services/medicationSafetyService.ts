@@ -19,6 +19,7 @@ import type {
   PatientTakingStatus,
   ClinicianOverrideRecord,
 } from '../types/medicationSafety';
+import { authService } from './authService';
 
 // ==============================================================================
 // 1. NORMALIZED PHARMACOLOGY ONTOLOGY & BRAND MAPPINGS
@@ -750,9 +751,10 @@ class MedicationSafetyService {
   /**
    * Retrieves or initializes the patient's unified medication cabinet.
    */
-  public getPatientMedicationCabinet(patientId: string = 'default_citizen'): ReconciledMedicationItem[] {
+  public getPatientMedicationCabinet(patientId?: string): ReconciledMedicationItem[] {
+    const activeId = patientId && patientId.trim() ? patientId : (authService.getCurrentUser()?.id || 'guest_citizen');
     try {
-      const stored = localStorage.getItem(`${STORAGE_PREFIX}${patientId}`);
+      const stored = localStorage.getItem(`${STORAGE_PREFIX}${activeId}`);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -764,7 +766,7 @@ class MedicationSafetyService {
     }
 
     // Initialize with authentic seed case
-    this.savePatientMedicationCabinet(patientId, DEFAULT_MULTI_DOCTOR_CABINET_SEED);
+    this.savePatientMedicationCabinet(activeId, DEFAULT_MULTI_DOCTOR_CABINET_SEED);
     return DEFAULT_MULTI_DOCTOR_CABINET_SEED;
   }
 
@@ -772,8 +774,9 @@ class MedicationSafetyService {
    * Saves patient's medication cabinet.
    */
   public savePatientMedicationCabinet(patientId: string, cabinet: ReconciledMedicationItem[]): void {
+    const activeId = patientId && patientId.trim() ? patientId : (authService.getCurrentUser()?.id || 'guest_citizen');
     try {
-      localStorage.setItem(`${STORAGE_PREFIX}${patientId}`, JSON.stringify(cabinet));
+      localStorage.setItem(`${STORAGE_PREFIX}${activeId}`, JSON.stringify(cabinet));
     } catch (e) {
       console.warn('[MedicationSafetyService] Failed to persist cabinet:', e);
     }

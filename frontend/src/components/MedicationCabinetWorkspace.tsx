@@ -23,6 +23,7 @@ import {
 import {
   medicationSafetyService,
 } from '../services/medicationSafetyService';
+import { authService } from '../services/authService';
 import type {
   ReconciledMedicationItem,
   PolypharmacySafetyEvaluation,
@@ -38,12 +39,16 @@ interface MedicationCabinetWorkspaceProps {
 }
 
 export const MedicationCabinetWorkspace: React.FC<MedicationCabinetWorkspaceProps> = ({
-  patientId = 'default_citizen',
-  patientName = 'Mohamed S.',
+  patientId,
+  patientName,
   onOpenPrescriptionScanner,
   onOpenTeleClinic,
   onClose,
 }) => {
+  const currentAuth = authService.getCurrentUser();
+  const effectivePatientId = patientId || currentAuth?.id || 'guest_citizen';
+  const effectivePatientName = patientName || currentAuth?.name || 'Citizen Patient';
+
   const [cabinet, setCabinet] = useState<ReconciledMedicationItem[]>([]);
   const [evaluation, setEvaluation] = useState<PolypharmacySafetyEvaluation | null>(null);
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'NEEDS_REVIEW' | 'STOPPED'>('ALL');
@@ -61,7 +66,7 @@ export const MedicationCabinetWorkspace: React.FC<MedicationCabinetWorkspaceProp
 
   // Load cabinet and evaluate safety
   const loadAndEvaluate = () => {
-    const meds = medicationSafetyService.getPatientMedicationCabinet(patientId);
+    const meds = medicationSafetyService.getPatientMedicationCabinet(effectivePatientId);
     setCabinet(meds);
     const evalResult = medicationSafetyService.evaluatePolypharmacySafety(meds, {
       knownAllergies: ['Penicillin'],
@@ -74,11 +79,11 @@ export const MedicationCabinetWorkspace: React.FC<MedicationCabinetWorkspaceProp
 
   useEffect(() => {
     loadAndEvaluate();
-  }, [patientId]);
+  }, [effectivePatientId]);
 
   // Handle patient reporting taking status
   const handleUpdateStatus = (medId: string, newStatus: PatientTakingStatus) => {
-    const updated = medicationSafetyService.updatePatientReportedStatus(patientId, medId, newStatus);
+    const updated = medicationSafetyService.updatePatientReportedStatus(effectivePatientId, medId, newStatus);
     setCabinet(updated);
     const evalResult = medicationSafetyService.evaluatePolypharmacySafety(updated, {
       knownAllergies: ['Penicillin'],
@@ -119,7 +124,7 @@ export const MedicationCabinetWorkspace: React.FC<MedicationCabinetWorkspaceProp
       lastPatientReportedAt: new Date().toISOString(),
     };
 
-    const updated = medicationSafetyService.addOrReconcileMedication(patientId, newItem);
+    const updated = medicationSafetyService.addOrReconcileMedication(effectivePatientId, newItem);
     setCabinet(updated);
     const evalResult = medicationSafetyService.evaluatePolypharmacySafety(updated);
     setEvaluation(evalResult);
@@ -156,8 +161,8 @@ export const MedicationCabinetWorkspace: React.FC<MedicationCabinetWorkspaceProp
   // Doctor discussion note text
   const doctorDiscussionText = useMemo(() => {
     if (!evaluation) return '';
-    return medicationSafetyService.generateDoctorDiscussionSummary(evaluation, patientName);
-  }, [evaluation, patientName]);
+    return medicationSafetyService.generateDoctorDiscussionSummary(evaluation, effectivePatientName);
+  }, [evaluation, effectivePatientName]);
 
   const handleCopySummary = () => {
     navigator.clipboard.writeText(doctorDiscussionText);
@@ -250,7 +255,7 @@ export const MedicationCabinetWorkspace: React.FC<MedicationCabinetWorkspaceProp
               </div>
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                  Patient: {patientName}
+                  Patient: {effectivePatientName}
                 </h2>
                 {evaluation?.safetyTier === 'ACTION_REQUIRED_HIGH_RISK' && (
                   <span className="px-3 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full text-xs font-extrabold flex items-center gap-1.5 animate-pulse">

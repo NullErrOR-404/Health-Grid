@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { type SoapNoteData } from '../../types/canvas';
 import { ambientScribeService } from '../../services/ambientScribeService';
+import { authService } from '../../services/authService';
 
 interface SoapNoteArtifactProps {
   data: SoapNoteData;
@@ -21,10 +22,11 @@ export const SoapNoteArtifact: React.FC<SoapNoteArtifactProps> = ({
   onUpdate,
   onSendToChat,
 }) => {
+  const isDoctor = authService.isDoctor();
   const [note, setNote] = useState<SoapNoteData>(data);
   const [isSigning, setIsSigning] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [editMode, setEditMode] = useState(!data.isSigned);
+  const [editMode, setEditMode] = useState(!data.isSigned && isDoctor);
 
   const handleSign = async () => {
     setIsSigning(true);
@@ -83,7 +85,7 @@ export const SoapNoteArtifact: React.FC<SoapNoteArtifactProps> = ({
             {copied ? 'Copied' : 'Copy'}
           </button>
 
-          {!note.isSigned && (
+          {!note.isSigned && isDoctor && (
             <button
               onClick={handleSign}
               disabled={isSigning}
@@ -92,6 +94,12 @@ export const SoapNoteArtifact: React.FC<SoapNoteArtifactProps> = ({
               <Lock className="w-3.5 h-3.5" />
               {isSigning ? 'Hashing & Locking...' : 'Sign & Lock 🔒'}
             </button>
+          )}
+
+          {!note.isSigned && !isDoctor && (
+            <span className="px-2.5 py-1 text-[11px] font-semibold text-slate-500 bg-slate-100 rounded-lg border border-slate-200">
+              Physician Signature Pending
+            </span>
           )}
         </div>
       </div>

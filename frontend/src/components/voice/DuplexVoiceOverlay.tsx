@@ -16,6 +16,7 @@ import {
   type ScribeTranscriptTurn
 } from '../../services/ambientScribeService';
 import { type SoapNoteData } from '../../types/canvas';
+import { authService } from '../../services/authService';
 
 interface DuplexVoiceOverlayProps {
   isOpen: boolean;
@@ -32,10 +33,11 @@ export const DuplexVoiceOverlay: React.FC<DuplexVoiceOverlayProps> = ({
   onClose,
   lang,
   patientName = 'Citizen Patient',
-  patientHealthId = 'HG001245',
+  patientHealthId = 'HG-PATIENT',
   onSoapGenerated,
   onOpenAmbulance: _onOpenAmbulance,
 }) => {
+  const isDoctor = authService.isDoctor();
   const [isListening, setIsListening] = useState(false);
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [isScribeActive, setIsScribeActive] = useState(false);
@@ -281,7 +283,9 @@ export const DuplexVoiceOverlay: React.FC<DuplexVoiceOverlayProps> = ({
                 className="px-3.5 py-2 text-xs font-bold rounded-xl bg-teal-600 hover:bg-teal-500 text-white transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
               >
                 <FileText className="w-3.5 h-3.5" />
-                {isGeneratingSoap ? 'Drafting SOAP...' : 'Synthesize SOAP to Canvas ↗'}
+                {isGeneratingSoap
+                  ? (isDoctor ? 'Drafting SOAP Note...' : 'Generating Summary...')
+                  : (isDoctor ? 'Synthesize SOAP to Canvas ↗' : 'Save Summary to Canvas ↗')}
               </button>
             )}
           </div>

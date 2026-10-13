@@ -35,6 +35,7 @@ import {
   PATIENT_LOOKUP_MAP,
 } from './clinicianDataSeed';
 import { supabase } from '../supabaseClient';
+import { authService } from '../authService';
 
 export interface AiChatMessage {
   id: string;
@@ -72,8 +73,6 @@ export interface ClinicianStoreState {
   isAiGenerating: boolean;
 }
 
-const STORAGE_KEY = 'healthgrid_clinician_store_v1';
-
 class ClinicianWorkflowStore {
   private state: ClinicianStoreState;
   private listeners: Set<() => void> = new Set();
@@ -83,10 +82,15 @@ class ClinicianWorkflowStore {
     this.initSupabaseSync();
   }
 
+  private getStorageKey(): string {
+    const user = authService.getCurrentUser();
+    return `healthgrid_clinician_store_${user?.id || 'v1'}`;
+  }
+
   private loadInitialState(): ClinicianStoreState {
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && authService.isDoctor()) {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        const saved = localStorage.getItem(this.getStorageKey());
         if (saved) {
           const parsed = JSON.parse(saved);
           return {
@@ -135,9 +139,9 @@ class ClinicianWorkflowStore {
   }
 
   private persist() {
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && authService.isDoctor()) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+        localStorage.setItem(this.getStorageKey(), JSON.stringify(this.state));
       } catch {
         // ignore
       }

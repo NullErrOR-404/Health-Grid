@@ -85,7 +85,7 @@ export default function App() {
   const [lang, setLang] = useState<Language>('en');
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [activeErpHospital, setActiveErpHospital] = useState<HospitalEntity | undefined>(undefined);
-  const [activeErpAdmin, setActiveErpAdmin] = useState<string>('Admin Ravi');
+  const [activeErpAdmin, setActiveErpAdmin] = useState<string>('');
   const [accessDeniedPortal, setAccessDeniedPortal] = useState<RestrictedPortalType | null>(null);
 
   // Modals state
@@ -918,8 +918,8 @@ export default function App() {
         <main className="flex-1 w-full">
           <Suspense fallback={<ViewLoadingFallback />}>
             <MedicationCabinetWorkspace
-              patientId={authService.getCurrentUser()?.id || 'default_citizen'}
-              patientName={authService.getCurrentUser()?.name || (lang === 'en' ? 'Mohamed S.' : 'முகமது எஸ்.')}
+              patientId={authService.getCurrentUser()?.id || 'guest_citizen'}
+              patientName={authService.getCurrentUser()?.name || (lang === 'en' ? 'Citizen Patient' : 'நோயாளி')}
               onOpenPrescriptionScanner={() => requireAuth(() => setIsPrescriptionOpen(true), lang === 'en' ? 'Prescription Scanner' : 'மருந்துச் சீட்டு ஸ்கேனர்')}
               onOpenTeleClinic={() => navigateToView('chat')}
               onClose={() => navigateToView('landing')}
@@ -955,7 +955,7 @@ export default function App() {
         <Suspense fallback={<ViewLoadingFallback />}>
           <HospitalErpDashboard
             initialHospital={activeErpHospital || savedHospSession?.hospital}
-            adminName={activeErpAdmin || savedHospSession?.adminName || 'Admin Ravi'}
+            adminName={activeErpAdmin || savedHospSession?.adminName || activeErpHospital?.adminName || 'Hospital Administrator'}
             onExit={() => navigateToView('landing')}
           />
         </Suspense>

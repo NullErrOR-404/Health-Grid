@@ -18,7 +18,7 @@ Back to [[00_Index]]
 
 - **Git Branch**: `main`
 - **Latest Commit**: `99a3e4c` (`feat(security): enterprise zero-trust hardening, serverless AI gateways, RLS isolation, 2FA, and backup verification`)
-- **Latest Documentation Milestone**: ADR-053 Multi-Doctor Polypharmacy & Cross-Prescription Conflict Shield ([[ADR-053-Multi-Doctor-Polypharmacy-and-Cross-Prescription-Conflict-Shield]])
+- **Latest Documentation Milestone**: ADR-054 Comprehensive RBAC Persona Gating, Zero-Trace Data Isolation, and Frontend Abstraction Architecture ([[ADR-054-Comprehensive-RBAC-Persona-Gating-and-Zero-Trace-Data-Isolation]])
 - **Authoritative Vercel Deployment**: `https://healthgrid-5og0r381s-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_2czdUKBLmpcG9UD6riYR8Kcs3LDo`, Bundle: `index-eA-Cu4U1.js`)
 - **Synchronized Production Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK • Live)
@@ -30,6 +30,16 @@ Back to [[00_Index]]
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+
+- [x] Comprehensive RBAC Persona Gating, Zero-Trace Data Isolation, and Frontend Abstraction Architecture ([[ADR-054-Comprehensive-RBAC-Persona-Gating-and-Zero-Trace-Data-Isolation]]):
+  - **Elimination of Mock Fallbacks (`authService.ts`)**: Removed fallback `{ id: 'usr-patient-1245', name: 'Sameer Ahmed', ... }` in `getUser()` and `getCurrentUser()`. Unauthenticated users now strictly return `null`, restoring genuine guest states and active route guards.
+  - **Statutory Role Clamping on Public Registration (`authService.ts`)**: Public self-registration forced to `effectiveRole = 'CITIZEN'`. Elevation to `DOCTOR` requires statutory verification (TMC/NMC registration number).
+  - **Zero-Remnant Session Cleansing (`clearClinicianCaches`)**: Purges `healthgrid_clinician_store_*` across all cached user scopes, hospital session tokens, and patient-specific medication cabinets upon logout or role switch.
+  - **Navigation Persona Isolation & Sanitization (`Navbar.tsx`)**: Removed hardcoded fallback `dr.mohamed@healthgrid.in` and `Mohamed Sameen`. Hidden Clinician Portal and Hospital ERP navigation links completely for Citizens and Unauthenticated Guests.
+  - **Zero-DOM 403 Security Interceptor Shield (`ProtectedRoute.tsx`, `AccessDeniedModal.tsx`)**: Direct URL hits to `/clinician` or `/hospital-erp` by unauthorized accounts immediately trigger the 403 modal displaying required DPDP Act clearance badges with zero clinical or ERP DOM mounted.
+  - **Persona-Segmented Clinical Canvas (`SoapNoteArtifact.tsx`, `DuplexVoiceOverlay.tsx`)**: Gated SOAP section editing and `Sign & Lock 🔒` digital signature generator strictly to clinicians (`authService.isDoctor()`). Non-doctors receive clean, patient-friendly read-only consultation summaries.
+  - **Dynamic Multi-User Storage Scoping (`clinicianWorkflowStore.ts`, `medicationSafetyService.ts`)**: Scoped clinician workflow store per user (`healthgrid_clinician_store_${userId}`) with doctor-only persistence, and scoped patient medication cabinets dynamically by authenticated patient ID.
+  - **Verification & Testing**: TypeScript build passed with 0 errors across 2,667 modules in 2.58s (`tsc -b && vite build`). Verified in autonomous browser subagent testing: route interception, zero DOM leak, clean citizen navbar, and sanitized `/cabinet` workspace. Recording: `rbac_isolation_verify_1791908835221.webp`.
 
 - [x] Multi-Doctor Polypharmacy & Cross-Prescription Conflict Shield (360° Omnipresent Safety Engine) ([[ADR-053-Multi-Doctor-Polypharmacy-and-Cross-Prescription-Conflict-Shield]]):
   - **Deterministic Pharmacology Engine (`medicationSafetyService.ts`)**: Normalized 200+ Indian brand names to active INN salts and strengths. ICMR STG and National Formulary of India grounded collision rules matrix catching lethal duplicate molecules (brand masking), contraindicated drug pairs (Blood Thinner + NSAID, ACEi + NSAID, Statin + Macrolide), cumulative organ burdens (Nephrotoxic, Hepatotoxic, Bleeding, QTc Prolongation), and patient context modifiers (allergies, eGFR).

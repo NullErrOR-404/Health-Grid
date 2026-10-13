@@ -549,26 +549,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                             userInitial
                           )}
                         </div>
-                        <div className="overflow-hidden">
-                          <div className="flex items-center gap-1.5 font-bold text-sm text-slate-900 truncate">
-                            <span>{currentUser.name || 'Mohamed Sameen'}</span>
-                            {isDoctor && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-100 text-teal-800 border border-teal-300">
-                                <Stethoscope className="w-2.5 h-2.5 text-teal-700" />
-                                DOCTOR
-                              </span>
-                            )}
-                            {isHospitalStaff && !isDoctor && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-800 border border-blue-300">
-                                <Building2 className="w-2.5 h-2.5 text-blue-700" />
-                                HOSPITAL
-                              </span>
-                            )}
+                          <div className="overflow-hidden">
+                            <div className="flex items-center gap-1.5 font-bold text-sm text-slate-900 truncate">
+                              <span>{currentUser.name || (lang === 'en' ? 'User' : 'பயனர்')}</span>
+                              {isDoctor && (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-100 text-teal-800 border border-teal-300">
+                                  <Stethoscope className="w-2.5 h-2.5 text-teal-700" />
+                                  DOCTOR
+                                </span>
+                              )}
+                              {isHospitalStaff && !isDoctor && (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-800 border border-blue-300">
+                                  <Building2 className="w-2.5 h-2.5 text-blue-700" />
+                                  HOSPITAL
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-400 truncate">
+                              {currentUser.email || currentUser.phone || currentUser.healthId || (lang === 'en' ? 'Verified Account' : 'உறுதிப்படுத்தப்பட்ட கணக்கு')}
+                            </div>
                           </div>
-                          <div className="text-xs text-slate-400 truncate">
-                            {currentUser.email || (isDoctor ? 'dr.mohamed@healthgrid.in' : 'user@healthgrid.in')}
-                          </div>
-                        </div>
                       </div>
 
                       {/* Menu Items */}

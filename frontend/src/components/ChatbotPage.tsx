@@ -84,7 +84,7 @@ import { type LiveConsultationSummary } from '../services/liveVisionDoctorServic
 import { medicalRecordService } from '../services/medicalRecordService';
 import { healthMemoryService } from '../services/healthMemoryService';
 import { supabase } from '../services/supabaseClient';
-import { authService, type AuthUser } from '../services/authService';
+import { authService, type AuthUser, generateImmutableHealthId } from '../services/authService';
 import { appointmentService, type Appointment } from '../services/appointmentService';
 import { doctorOpdService } from '../services/doctorOpdService';
 import { medicineStoreService, type MedicineItem, INITIAL_CACHE_CATALOG } from '../services/medicineStoreService';
@@ -955,20 +955,11 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const handleConfirmAppointment = async () => {
     try {
-      const currentAuth = authService.getCurrentUser() || {
-        id: 'usr-patient-1245',
-        name: 'Sameer Ahmed',
-        email: 'sameer@example.com',
-        phone: '+91 98765 43210',
-        role: 'PERSONAL' as const,
-        healthId: 'HG001245',
-        age: 20,
-        bloodGroup: 'B+',
-      };
+      const currentAuth = authService.getCurrentUser();
 
       const patientName = activeAppointmentDraft.patientType === 'family' && activeAppointmentDraft.beneficiaryName
         ? activeAppointmentDraft.beneficiaryName
-        : currentAuth.name || 'Patient';
+        : currentAuth?.name || (lang === 'en' ? 'Outpatient Citizen' : 'வெளிநோயாளி');
       
       const doctorName = activeAppointmentDraft.selectedDoctor?.name || 'Dr. Mohamed';
       const dept = activeAppointmentDraft.department || 'General Medicine';
@@ -978,8 +969,8 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
       const newAppt = await appointmentService.createAppointment({
         patient_name: patientName,
-        patient_phone: currentAuth.phone || '+91 98765 43210',
-        patient_health_id: currentAuth.healthId || 'HG001245',
+        patient_phone: currentAuth?.phone || '',
+        patient_health_id: currentAuth?.healthId || generateImmutableHealthId(),
         doctor_name: doctorName,
         department: dept,
         appointment_date: date,
@@ -6294,8 +6285,8 @@ ${sbar.recommendation}`;
         isOpen={isDuplexVoiceOpen}
         onClose={() => setIsDuplexVoiceOpen(false)}
         lang={lang}
-        patientName={activeBeneficiary?.name || authService.getUser()?.name || 'Sovereign Patient'}
-        patientHealthId={authService.getUser()?.healthId || 'HG-TN-2026-PAT'}
+        patientName={activeBeneficiary?.name || authService.getCurrentUser()?.name || (lang === 'en' ? 'Sovereign Patient' : 'நோயாளி')}
+        patientHealthId={authService.getCurrentUser()?.healthId || 'HG-TN-2026-PAT'}
         onSoapGenerated={(soap: SoapNoteData) => {
           const artifact: ClinicalArtifact = {
             id: `artifact-soap-${Date.now()}`,
