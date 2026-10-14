@@ -17,12 +17,12 @@ Back to [[00_Index]]
 ## Current System State
 
 - **Git Branch**: `main`
-- **Latest Commit**: `460ccb4` (`feat(voice): universal humane neural voice cascade, complete eradication of browser TTS, edge tts gateway, and UI abstraction (ADR-056)`)
+- **Latest Commit**: `77f3a7c` (`feat(erp): real authenticated patient onboarding, sovereign health id desk lookup, otp walk-in registration, and hospital inbox alerts (ADR-057)`)
 - **Latest Documentation Milestone**: ADR-057 Real Authenticated Patient Onboarding, Sovereign Health ID Desk Lookup, and Hospital Inbox Alerts ([[ADR-057-Real-User-Health-ID-and-Hospital-ERP-Onboarding]])
-- **Authoritative Vercel Deployment**: `https://healthgrid-fnhuyekjm-sameen14nmofficial-8826s-projects.vercel.app` (Serving Bundle: `index-vCAXcOwy.js` • Built from commit `460ccb4`)
+- **Authoritative Vercel Deployment**: `https://healthgrid-cp8iz6jkr-sameen14nmofficial-8826s-projects.vercel.app` (Serving Bundle: `index-BckH34zj.js` • Built from commit `77f3a7c`)
 - **Synchronized Production Aliases**:
+  - `https://healthgrid-nu.vercel.app` (200 OK • Live • `index-BckH34zj.js`)
   - `https://healthgrid-app.vercel.app` (200 OK • Live)
-  - `https://healthgrid-nu.vercel.app` (200 OK • Live)
   - `https://healthgrid-live.vercel.app` (200 OK • Live)
   - `https://healthgrid-network.vercel.app` (200 OK • Live)
 - **Active Edge Serverless Gateways**: `/api/ai/chat`, `/api/ai/vision`, `/api/ai/ocr`, `/api/ai/tts`, `/api/webhooks/verify`
