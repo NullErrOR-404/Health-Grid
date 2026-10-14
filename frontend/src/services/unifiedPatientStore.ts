@@ -4,14 +4,14 @@
  * 
  * Synchronizes Patient Management, OPD Queue, Hospital ERP KPIs,
  * Doctor Telemedicine, and Citizen Personal Health Vaults in real time with Supabase.
+ * STRICT LIVE-FIRST: Zero mock/seeded accounts allowed.
  */
 
 import { healthMemoryService } from './healthMemoryService';
 import { supabase } from './supabaseClient';
+import { generateImmutableHealthId } from './authService';
+import { hospitalAlertsService } from './hospitalAlertsService';
 import {
-  AUTHENTIC_PATIENTS_50,
-  AUTHENTIC_APPOINTMENTS_TODAY,
-  type DatabasePatientRecord,
   type DatabaseAppointmentRecord,
 } from './generatedPatientsData';
 
@@ -39,23 +39,28 @@ export interface PrescriptionItem {
   dosage: string;
   freq: string;
   duration: string;
-  instructions: string;
+  timing?: string;
+  instructions?: string;
 }
 
 export interface BillItem {
-  desc: string;
+  id?: string;
+  desc?: string;
+  description?: string;
+  category?: 'Consultation' | 'Pharmacy' | 'Diagnostics' | 'Procedures' | 'Room' | string;
   amount: number;
+  quantity?: number;
 }
 
 export interface PatientBill {
   billNo: string;
   amount: number;
-  status: 'Paid' | 'Pending';
+  status: 'Paid' | 'Pending' | 'Claim Processing';
   createdAt: string;
   items: BillItem[];
 }
 
-export interface PatientVisitRecord {
+export interface PatientVisit {
   id: string;
   visitId: string;
   date: string;
@@ -64,20 +69,20 @@ export interface PatientVisitRecord {
   doctor: string;
   type: string;
   status: 'Checked In' | 'Waiting' | 'In Consultation' | 'Completed' | 'Cancelled';
-  diagnosis?: string;
   notes?: string;
+  diagnosis?: string;
   prescriptions?: PrescriptionItem[];
   bill?: PatientBill;
 }
 
 export interface UnifiedPatient {
   id: string;
-  healthId: string; // UHID / Sovereign ABDM HealthID (e.g. HG-001001)
+  healthId: string;
   name: string;
   phone: string;
+  email?: string;
   age: number;
-  gender: 'Male' | 'Female' | 'Other';
-  avatar?: string;
+  gender: string;
   bloodGroup: string;
   allergies: string[];
   chronicConditions: string[];
@@ -87,26 +92,30 @@ export interface UnifiedPatient {
     department: string;
     doctor: string;
   };
-  nextVisit?: string | null;
-  status: 'Checked In' | 'Follow-up' | 'Consultation' | 'Waiting' | 'In Consultation' | 'Completed';
-  vitalsHistory: PatientVitalsRecord[];
-  visitsHistory: PatientVisitRecord[];
-  todayVisit?: PatientVisitRecord;
+  nextVisit: {
+    date: string;
+    department: string;
+    doctor: string;
+  } | null;
+  status: 'Checked In' | 'In Consultation' | 'Waiting' | 'Completed' | 'Follow-up' | 'Admitted';
   reportsCount: number;
   documentsCount: number;
   registeredDate: string;
-  role?: string;
+  role: string;
+  todayVisit?: PatientVisit;
+  vitalsHistory: PatientVitalsRecord[];
+  visitsHistory: PatientVisit[];
 }
 
 export interface OpdQueueItem {
   token: number;
-  tokenDisplay: string; // '01', '02', etc.
+  tokenDisplay: string;
   patientId: string;
   patientName: string;
-  uhid: string; // Patient HealthID
+  uhid: string;
   phone: string;
   age: number;
-  gender: 'M' | 'F' | 'Other';
+  gender: string;
   department: string;
   doctor: string;
   status: 'Checked In' | 'Waiting' | 'In Consultation' | 'Completed' | 'Cancelled';
@@ -114,7 +123,7 @@ export interface OpdQueueItem {
   waitingTimeMinutes: number;
   visitType: string;
   visitNumber: string;
-  avatar?: string;
+  triagePriority?: 'P1' | 'P2' | 'P3';
 }
 
 export interface HospitalErpStats {
@@ -129,28 +138,29 @@ export interface HospitalErpStats {
   avgWaitTimeMinutes: number;
 }
 
-const STORAGE_KEY = 'healthgrid_unified_patients_v2';
-const OPD_QUEUE_KEY = 'healthgrid_opd_queue_v2';
+const STORAGE_KEY = 'healthgrid_unified_patients';
+const OPD_QUEUE_KEY = 'healthgrid_opd_queue';
 
 export const mapDatabasePatientToUnified = (
-  pat: DatabasePatientRecord,
+  pat: any,
   appts: DatabaseAppointmentRecord[] = []
 ): UnifiedPatient => {
   const patientAppts = appts.filter(
     (a) => a.patient_id === pat.id || a.patient_health_id === pat.health_id
   );
   const todayAppt =
-    patientAppts.find((a) => a.appointment_date === '2026-10-09' || a.appointment_date === 'Today') ||
+    patientAppts.find((a) => a.appointment_date === 'Today' || a.appointment_date === new Date().toISOString().split('T')[0]) ||
     patientAppts[0];
 
   return {
     id: pat.id,
     healthId: pat.health_id,
-    name: pat.full_name,
-    phone: pat.phone_number,
-    age: pat.age ?? 35,
+    name: pat.full_name || 'Patient',
+    phone: pat.phone_number || '',
+    email: pat.email || undefined,
+    age: pat.age ?? 30,
     gender: pat.gender || 'Unknown',
-    bloodGroup: pat.blood_group || 'B+',
+    bloodGroup: pat.blood_group || 'O+',
     allergies:
       pat.known_allergies && pat.known_allergies.length > 0
         ? pat.known_allergies
@@ -165,15 +175,15 @@ export const mapDatabasePatientToUnified = (
       status: 'Active',
     },
     lastVisit: {
-      date: todayAppt ? todayAppt.appointment_date : '08 Oct 2026',
+      date: todayAppt ? todayAppt.appointment_date : 'Today',
       department: todayAppt ? todayAppt.department : 'General Medicine',
       doctor: todayAppt ? todayAppt.doctor_name : 'Dr. Mohamed',
     },
     nextVisit: null,
     status: todayAppt ? (todayAppt.status as any) : 'Checked In',
-    reportsCount: Math.floor(Math.random() * 3) + 1,
-    documentsCount: Math.floor(Math.random() * 2) + 1,
-    registeredDate: pat.created_at ? new Date(pat.created_at).toLocaleDateString('en-GB') : '01 Oct 2026',
+    reportsCount: 0,
+    documentsCount: 0,
+    registeredDate: pat.created_at ? new Date(pat.created_at).toLocaleDateString('en-GB') : 'Today',
     role: pat.role || 'CITIZEN',
     todayVisit: todayAppt
       ? {
@@ -215,11 +225,8 @@ export const mapDatabaseAppointmentsToQueue = (
   }));
 };
 
-const INITIAL_PATIENTS: UnifiedPatient[] = AUTHENTIC_PATIENTS_50.map((pat) =>
-  mapDatabasePatientToUnified(pat, AUTHENTIC_APPOINTMENTS_TODAY)
-);
-
-const INITIAL_OPD_QUEUE: OpdQueueItem[] = mapDatabaseAppointmentsToQueue(AUTHENTIC_APPOINTMENTS_TODAY);
+const INITIAL_PATIENTS: UnifiedPatient[] = [];
+const INITIAL_OPD_QUEUE: OpdQueueItem[] = [];
 
 type StoreSubscriber = () => void;
 
@@ -251,9 +258,26 @@ class UnifiedPatientStore {
     }
     try {
       const pRaw = localStorage.getItem(STORAGE_KEY);
-      this.patients = pRaw ? JSON.parse(pRaw) : INITIAL_PATIENTS;
+      const loaded: UnifiedPatient[] = pRaw ? JSON.parse(pRaw) : [];
+      // Cleanse any legacy mock patients (HG-001... or @healthgrid.in mock accounts)
+      const cleaned = loaded.filter((p) => {
+        const isMock =
+          (p.healthId && p.healthId.startsWith('HG-001')) ||
+          p.name === 'Priya Sharma' ||
+          p.name === 'Ravi Kumar' ||
+          p.name === 'Ananya Iyer';
+        return !isMock;
+      });
+      this.patients = cleaned;
+
       const qRaw = localStorage.getItem(OPD_QUEUE_KEY);
-      this.opdQueue = qRaw ? JSON.parse(qRaw) : INITIAL_OPD_QUEUE;
+      const loadedQueue: OpdQueueItem[] = qRaw ? JSON.parse(qRaw) : [];
+      const cleanedQueue = loadedQueue.filter((q) => !q.uhid?.startsWith('HG-001'));
+      this.opdQueue = cleanedQueue;
+
+      if (cleaned.length !== loaded.length || cleanedQueue.length !== loadedQueue.length) {
+        this.saveState();
+      }
     } catch {
       this.patients = INITIAL_PATIENTS;
       this.opdQueue = INITIAL_OPD_QUEUE;
@@ -315,7 +339,7 @@ class UnifiedPatientStore {
       const { data: dbPatients, error: pErr } = await supabase
         .from('patients')
         .select('*')
-        .order('health_id', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (pErr) {
         console.warn('Supabase fetch patients warning:', pErr.message);
@@ -328,26 +352,34 @@ class UnifiedPatientStore {
         .select('*')
         .order('appointment_time', { ascending: true });
 
-      if (dbPatients && dbPatients.length > 0) {
-        const mappedPatients = dbPatients.map((pat: any) =>
+      if (dbPatients) {
+        // Strictly filter out any mock patients
+        const realPatients = dbPatients.filter((pat: any) => {
+          const isMock =
+            (pat.health_id && pat.health_id.startsWith('HG-001')) ||
+            (pat.email && pat.email.endsWith('@healthgrid.in') && pat.email !== 'dr.mohamed@healthgrid.in');
+          return !isMock;
+        });
+
+        const mappedPatients = realPatients.map((pat: any) =>
           mapDatabasePatientToUnified(pat, (dbAppts as any) || [])
         );
         this.patients = mappedPatients;
 
-        if (dbAppts && dbAppts.length > 0) {
-          this.opdQueue = mapDatabaseAppointmentsToQueue(dbAppts as any);
+        if (dbAppts) {
+          const realAppts = dbAppts.filter((a: any) => !a.patient_health_id?.startsWith('HG-001'));
+          this.opdQueue = mapDatabaseAppointmentsToQueue(realAppts as any);
         }
 
         this.saveState();
       }
-
-      this.isSyncing = false;
-      return this.patients;
     } catch (err) {
-      console.warn('Exception during fetchFromSupabase:', err);
+      console.error('Supabase fetch exception:', err);
+    } finally {
       this.isSyncing = false;
-      return this.patients;
     }
+
+    return this.patients;
   }
 
   // --- READERS ---
@@ -363,6 +395,53 @@ class UnifiedPatientStore {
   public getPatientByHealthId(healthId: string): UnifiedPatient | undefined {
     const clean = healthId.trim().toUpperCase();
     return this.patients.find((p) => p.healthId.toUpperCase() === clean);
+  }
+
+  /**
+   * Real-time Lookup by HealthGrid ID against Supabase database.
+   * If patient is not in local memory, queries Supabase public.patients in real time.
+   */
+  public async lookupPatientByHealthId(healthId: string): Promise<UnifiedPatient | null> {
+    const clean = healthId.trim().toUpperCase();
+    if (!clean) return null;
+
+    // 1. Check in memory first
+    const existing = this.patients.find((p) => p.healthId.toUpperCase() === clean);
+    if (existing) return existing;
+
+    // 2. Query Supabase public.patients
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('*')
+        .ilike('health_id', clean)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Error querying patient by Health ID:', error.message);
+        return null;
+      }
+
+      if (data) {
+        // Query their appointments
+        const { data: dbAppts } = await supabase
+          .from('appointments')
+          .select('*')
+          .or(`patient_id.eq.${data.id},patient_health_id.eq.${data.health_id}`)
+          .order('appointment_time', { ascending: false });
+
+        const unified = mapDatabasePatientToUnified(data, (dbAppts as any) || []);
+        if (!this.patients.some((p) => p.id === unified.id)) {
+          this.patients.unshift(unified);
+          this.saveState();
+        }
+        return unified;
+      }
+    } catch (err) {
+      console.error('Exception looking up patient by Health ID:', err);
+    }
+
+    return null;
   }
 
   public getOpdQueue(): OpdQueueItem[] {
@@ -381,13 +460,13 @@ class UnifiedPatientStore {
     return {
       totalPatients: this.patients.length,
       todayVisits: this.opdQueue.length,
-      newPatientsToday: this.patients.filter((p) => p.registeredDate === 'Today').length || 4,
-      activeFollowUps: this.patients.filter((p) => p.status === 'Follow-up').length || 12,
+      newPatientsToday: this.patients.filter((p) => p.registeredDate === 'Today').length,
+      activeFollowUps: this.patients.filter((p) => p.status === 'Follow-up').length,
       totalOpdToday: this.opdQueue.length,
       currentlyWaiting: waitingCount,
       inConsultation: inConsultationCount,
       completedToday: completedQueueCount,
-      avgWaitTimeMinutes: 18,
+      avgWaitTimeMinutes: this.opdQueue.length > 0 ? 15 : 0,
     };
   }
 
@@ -395,14 +474,16 @@ class UnifiedPatientStore {
 
   /**
    * Register a new patient in the hospital system
-   * Generates genuine dynamic UUID and sovereign ABDM HealthID automatically,
+   * Generates genuine dynamic UUID and sovereign ABDM HealthID automatically (HG-XXXXXXX),
    * saving to Supabase `patients` and `user_roles` with role 'CITIZEN'.
+   * Triggers an alert in the hospital inbox.
    */
   public registerNewPatient(patientData: {
     name: string;
     phone: string;
     age: number;
     gender: 'Male' | 'Female' | 'Other';
+    email?: string;
     bloodGroup?: string;
     allergies?: string[];
     chronicConditions?: string[];
@@ -412,17 +493,17 @@ class UnifiedPatientStore {
     initialDoctor?: string;
   }): UnifiedPatient {
     const newId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `pat-${Date.now()}`;
-    const count = this.patients.length + 1;
-    const newHealthId = `HG-${String(1000 + count).padStart(6, '0')}`;
+    const newHealthId = generateImmutableHealthId(newId);
 
     const newPatient: UnifiedPatient = {
       id: newId,
       healthId: newHealthId,
       name: patientData.name.trim(),
       phone: patientData.phone.trim(),
+      email: patientData.email?.trim() || undefined,
       age: patientData.age,
       gender: patientData.gender,
-      bloodGroup: patientData.bloodGroup || 'B+',
+      bloodGroup: patientData.bloodGroup || 'O+',
       allergies:
         patientData.allergies && patientData.allergies.length > 0
           ? patientData.allergies
@@ -449,39 +530,44 @@ class UnifiedPatientStore {
       role: 'CITIZEN',
       vitalsHistory: [],
       visitsHistory: [],
-      todayVisit: {
+    };
+
+    if (patientData.initialDepartment) {
+      newPatient.todayVisit = {
         id: `v-today-${newId}`,
         visitId: `OPD-${String(this.opdQueue.length + 1).padStart(3, '0')}`,
         date: 'Today',
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        department: patientData.initialDepartment || 'General Medicine',
+        department: patientData.initialDepartment,
         doctor: patientData.initialDoctor || 'Dr. Mohamed',
         type: 'General OPD',
         status: 'Checked In',
-      },
-    };
+      };
+    }
 
     this.patients.unshift(newPatient);
 
-    const nextToken = this.opdQueue.length + 1;
-    const queueItem: OpdQueueItem = {
-      token: nextToken,
-      tokenDisplay: String(nextToken).padStart(2, '0'),
-      patientId: newPatient.id,
-      patientName: newPatient.name,
-      uhid: newPatient.healthId,
-      phone: newPatient.phone,
-      age: newPatient.age,
-      gender: newPatient.gender === 'Female' ? 'F' : 'M',
-      department: patientData.initialDepartment || 'General Medicine',
-      doctor: patientData.initialDoctor || 'Dr. Mohamed',
-      status: 'Checked In',
-      checkInTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      waitingTimeMinutes: 5,
-      visitType: 'General OPD',
-      visitNumber: newPatient.todayVisit?.visitId || `OPD-${String(nextToken).padStart(3, '0')}`,
-    };
-    this.opdQueue.push(queueItem);
+    if (patientData.initialDepartment) {
+      const nextToken = this.opdQueue.length + 1;
+      const queueItem: OpdQueueItem = {
+        token: nextToken,
+        tokenDisplay: String(nextToken).padStart(2, '0'),
+        patientId: newPatient.id,
+        patientName: newPatient.name,
+        uhid: newPatient.healthId,
+        phone: newPatient.phone,
+        age: newPatient.age,
+        gender: newPatient.gender === 'Female' ? 'F' : 'M',
+        department: patientData.initialDepartment,
+        doctor: patientData.initialDoctor || 'Dr. Mohamed',
+        status: 'Checked In',
+        checkInTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        waitingTimeMinutes: 5,
+        visitType: 'General OPD',
+        visitNumber: newPatient.todayVisit?.visitId || `OPD-${String(nextToken).padStart(3, '0')}`,
+      };
+      this.opdQueue.push(queueItem);
+    }
 
     this.saveState();
 
@@ -493,6 +579,7 @@ class UnifiedPatientStore {
         health_id: newHealthId,
         full_name: newPatient.name,
         phone_number: newPatient.phone,
+        email: newPatient.email || null,
         age: newPatient.age,
         gender: newPatient.gender,
         blood_group: newPatient.bloodGroup,
@@ -514,6 +601,14 @@ class UnifiedPatientStore {
         full_name: newPatient.name,
       })
       .then();
+
+    // Trigger alert in hospital notification inbox
+    hospitalAlertsService.addAlert({
+      type: 'REGISTRATION',
+      patientName: newPatient.name,
+      healthId: newPatient.healthId,
+      message: `${newPatient.name} registered as a new user with Health ID ${newPatient.healthId}`,
+    });
 
     return newPatient;
   }
@@ -583,6 +678,7 @@ class UnifiedPatientStore {
 
   /**
    * Register an existing patient into today's OPD Queue
+   * Dispatches alert to hospital notification inbox.
    */
   public addExistingPatientToOpd(
     patientId: string,
@@ -629,6 +725,40 @@ class UnifiedPatientStore {
 
     this.opdQueue.push(queueItem);
     this.saveState();
+
+    // Async persist appointment to Supabase
+    supabase
+      .from('appointments')
+      .insert({
+        appointment_id: visitId,
+        patient_id: patient.id,
+        patient_health_id: patient.healthId,
+        patient_name: patient.name,
+        patient_phone: patient.phone,
+        patient_age: patient.age,
+        patient_gender: patient.gender,
+        department,
+        doctor_name: doctor,
+        appointment_date: new Date().toISOString().split('T')[0],
+        appointment_time: timeStr,
+        appointment_type: visitType,
+        status: 'Checked In',
+        checked_in_at: new Date().toISOString(),
+        source: 'Hospital Desk',
+        reason_for_visit: visitType,
+      })
+      .then(({ error }) => {
+        if (error) console.warn('Could not insert appointment in Supabase:', error);
+      });
+
+    // Alert in hospital inbox
+    hospitalAlertsService.addAlert({
+      type: 'CHECK_IN',
+      patientName: patient.name,
+      healthId: patient.healthId,
+      message: `${patient.name} (${patient.healthId}) checked into ${department} (Token #${nextToken})`,
+    });
+
     return queueItem;
   }
 

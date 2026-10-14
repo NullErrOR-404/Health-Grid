@@ -18,18 +18,27 @@ Back to [[00_Index]]
 
 - **Git Branch**: `main`
 - **Latest Commit**: `460ccb4` (`feat(voice): universal humane neural voice cascade, complete eradication of browser TTS, edge tts gateway, and UI abstraction (ADR-056)`)
-- **Latest Documentation Milestone**: ADR-056 Universal Humane Neural Voice & Zero-Robot TTS Architecture ([[ADR-056-Universal-Humane-Neural-Voice-and-Zero-Robot-TTS-Architecture]])
+- **Latest Documentation Milestone**: ADR-057 Real Authenticated Patient Onboarding, Sovereign Health ID Desk Lookup, and Hospital Inbox Alerts ([[ADR-057-Real-User-Health-ID-and-Hospital-ERP-Onboarding]])
 - **Authoritative Vercel Deployment**: `https://healthgrid-fnhuyekjm-sameen14nmofficial-8826s-projects.vercel.app` (Serving Bundle: `index-vCAXcOwy.js` • Built from commit `460ccb4`)
 - **Synchronized Production Aliases**:
-  - `https://healthgrid-app.vercel.app` (200 OK • Live • `index-vCAXcOwy.js`)
-  - `https://healthgrid-nu.vercel.app` (200 OK • Live • `index-vCAXcOwy.js`)
-  - `https://healthgrid-live.vercel.app` (200 OK • Live • `index-vCAXcOwy.js`)
-  - `https://healthgrid-network.vercel.app` (200 OK • Live • `index-vCAXcOwy.js`)
+  - `https://healthgrid-app.vercel.app` (200 OK • Live)
+  - `https://healthgrid-nu.vercel.app` (200 OK • Live)
+  - `https://healthgrid-live.vercel.app` (200 OK • Live)
+  - `https://healthgrid-network.vercel.app` (200 OK • Live)
 - **Active Edge Serverless Gateways**: `/api/ai/chat`, `/api/ai/vision`, `/api/ai/ocr`, `/api/ai/tts`, `/api/webhooks/verify`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+
+- [x] Real Authenticated Patient Onboarding, Sovereign Health ID Desk Lookup, and Hospital Inbox Alerts ([[ADR-057-Real-User-Health-ID-and-Hospital-ERP-Onboarding]]):
+  - **Complete Mock Data Purge (`scripts/purge_mock_data.js`)**: Executed PostgreSQL sanitization script, dropping 49 mock seeded patients (`HG-001001` - `HG-001050`) and cascading records across `patients`, `appointments`, `encounters`, `prescriptions`, `clinical_orders`, `ipd_admissions`, and `emergency_cases`. Preserved authentic accounts: `Mohamed Sameen S` (`HG-PP27BNQ`), `Moneshdaran S` (`HG-64XBAAG`), and `Dr. Mohamed` (`HG-VL4M5MK`).
+  - **Frontend Zero-Mock Architecture (`unifiedPatientStore.ts`)**: Eradicated `AUTHENTIC_PATIENTS_50` and `AUTHENTIC_APPOINTMENTS_TODAY`. Set initial state arrays to empty `[]`. Added automated `localStorage` sanitizer in `loadState()` that purges legacy mock keys.
+  - **Reception Sovereign Health ID Lookup (`OpdRegistrationModal.tsx`, `unifiedPatientStore.ts`)**: Built real-time citizen lookup by sovereign HealthGrid ID (`HG-XXXXXXX`) or mobile number against Supabase, presenting verified demographics, vitals, allergies, and 1-tap OPD queue admission.
+  - **3-Step Walk-In Patient Onboarding (`WalkInModal.tsx`)**: Decoupled account creation from doctor/department routing. Reception collects Name, Mobile, Age, and Gender; dispatches a 6-digit SMS OTP; verifies it (with 1-tap quick fill); and provisions a genuine sovereign Health ID in Supabase with instant copy and OPD token issue.
+  - **Google OAuth Email Claiming (`authService.ts`)**: Added `claimPatientProfileByEmail` so citizens who registered as walk-ins automatically link their sovereign Health ID and hospital charts upon signing in with their Google account.
+  - **Real-Time Hospital Notification Inbox (`hospitalAlertsService.ts`, `HospitalErpDashboard.tsx`)**: Abstracted developer badges ("Live Supabase Sync", "Real Authenticated Cue") behind the scenes. Integrated a real-time Notification Inbox under the ERP header Bell icon displaying timestamped patient registration and OPD check-in events.
+  - **Verification**: `npm run build` passed cleanly across 2,668 modules in 5.08s.
 
 - [x] Universal Humane Neural Voice & Zero-Robot TTS Architecture ([[ADR-056-Universal-Humane-Neural-Voice-and-Zero-Robot-TTS-Architecture]]):
   - **Eradication of Browser TTS (`speechService.ts`)**: Completely removed `SpeechSynthesisUtterance`, `window.speechSynthesis`, and `speakWithBrowserFallback`. The platform strictly never emits mechanical robotic speech.

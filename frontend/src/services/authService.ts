@@ -217,12 +217,26 @@ class AuthService {
 
   private async syncUserFromSupabase(sbUser: SupabaseUser) {
     try {
-      // Fetch latest profile from public.patients
-      const { data: profile } = await supabase
+      // Fetch latest profile from public.patients by id or email
+      let profile: any = null;
+      const { data: directProfile } = await supabase
         .from('patients')
         .select('*')
         .eq('id', sbUser.id)
-        .single();
+        .maybeSingle();
+
+      if (directProfile) {
+        profile = directProfile;
+      } else if (sbUser.email) {
+        const { data: emailProfile } = await supabase
+          .from('patients')
+          .select('*')
+          .ilike('email', sbUser.email)
+          .maybeSingle();
+        if (emailProfile) {
+          profile = emailProfile;
+        }
+      }
 
       const meta = sbUser.user_metadata || {};
       const existingHealthId = profile?.health_id;

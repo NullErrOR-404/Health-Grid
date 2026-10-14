@@ -44,17 +44,21 @@ export const PatientManagementView: React.FC<PatientManagementViewProps> = ({
   );
   const [stats, setStats] = useState(() => unifiedPatientStore.getStats());
 
+  const [selectedPatientId, setSelectedPatientId] = useState<string>(
+    patients[0]?.id || ''
+  );
+
   useEffect(() => {
     const unsub = unifiedPatientStore.subscribe(() => {
-      setPatients(unifiedPatientStore.getAllPatients());
+      const all = unifiedPatientStore.getAllPatients();
+      setPatients(all);
       setStats(unifiedPatientStore.getStats());
+      if (all.length > 0 && (!selectedPatientId || !all.some((p) => p.id === selectedPatientId))) {
+        setSelectedPatientId(all[0].id);
+      }
     });
     return unsub;
-  }, []);
-
-  const [selectedPatientId, setSelectedPatientId] = useState<string>(
-    patients[0]?.id || 'pat-1245'
-  );
+  }, [selectedPatientId]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilterPill, setActiveFilterPill] = useState<'all' | 'today' | 'new' | 'followups'>('all');
   const [selectedRightTab, setSelectedRightTab] = useState<'Overview' | 'Visits' | 'Prescriptions' | 'Reports' | 'Documents'>('Overview');
@@ -385,7 +389,7 @@ export const PatientManagementView: React.FC<PatientManagementViewProps> = ({
                         <div className="text-[10px] text-slate-500">{patient.lastVisit.department}</div>
                       </td>
                       <td className="py-3.5 px-3 text-slate-600">
-                        {patient.nextVisit || '—'}
+                        {patient.nextVisit ? (typeof patient.nextVisit === 'object' ? (patient.nextVisit as any).date : patient.nextVisit) : '—'}
                       </td>
                       <td className="py-3.5 px-3">
                         {getStatusBadge(patient.status)}
@@ -398,6 +402,17 @@ export const PatientManagementView: React.FC<PatientManagementViewProps> = ({
                     </tr>
                   );
                 })}
+                {filteredPatients.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-slate-500">
+                      <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                      <div className="font-bold text-slate-700">No Patients in Directory</div>
+                      <div className="text-xs text-slate-400 mt-1">
+                        Register a walk-in patient or check in an authentic citizen using their HealthGrid ID.
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -800,6 +815,17 @@ export const PatientManagementView: React.FC<PatientManagementViewProps> = ({
                 <span>Create Appointment</span>
               </button>
             </div>
+          </div>
+        )}
+        {!selectedPatient && (
+          <div className="xl:col-span-4 flex flex-col items-center justify-center bg-white rounded-2xl border border-slate-200/80 p-8 text-center text-slate-400 min-h-[400px]">
+            <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mb-3">
+              <Users className="w-7 h-7" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-800">No Patient Selected</h4>
+            <p className="text-xs text-slate-500 max-w-xs mt-1 leading-relaxed">
+              Select an authentic citizen from the directory or click &quot;Add Patient&quot; above to register a new walk-in account.
+            </p>
           </div>
         )}
       </div>

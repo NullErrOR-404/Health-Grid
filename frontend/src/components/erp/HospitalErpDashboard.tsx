@@ -34,6 +34,8 @@ import {
   CheckCircle2,
   Sparkles,
   Menu,
+  Inbox,
+  UserPlus,
 } from 'lucide-react';
 import { type HospitalEntity, getHospitalsList } from '../../data/hospitalsList';
 import {
@@ -51,6 +53,9 @@ import { EmergencyView } from './EmergencyView';
 import { DoctorsOpdView } from './DoctorsOpdView';
 import { ReportsAnalyticsView } from './ReportsAnalyticsView';
 import { lenisService } from '../../services/lenisService';
+import { WalkInModal } from './modals/WalkInModal';
+import { OpdRegistrationModal } from './modals/OpdRegistrationModal';
+import { hospitalAlertsService, type HospitalAlert } from '../../services/hospitalAlertsService';
 
 interface HospitalErpDashboardProps {
   initialHospital?: HospitalEntity;
@@ -123,6 +128,36 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
   const [qaPatientAge, setQaPatientAge] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Hospital Real-Time Notification Inbox State
+  const [isAlertsInboxOpen, setIsAlertsInboxOpen] = useState(false);
+  const [alerts, setAlerts] = useState<HospitalAlert[]>(() => hospitalAlertsService.getAlerts());
+  const [unreadAlertsCount, setUnreadAlertsCount] = useState<number>(() => hospitalAlertsService.getUnreadCount());
+
+  // Direct Walk-In & OPD Modals from Top Action Bar
+  const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+  const [isOpdModalOpen, setIsOpdModalOpen] = useState(false);
+
+  useEffect(() => {
+    hospitalAlertsService.setHospitalCode(currentHospital.code);
+    const unsub = hospitalAlertsService.subscribe(() => {
+      setAlerts(hospitalAlertsService.getAlerts());
+      setUnreadAlertsCount(hospitalAlertsService.getUnreadCount());
+    });
+
+    const handleAlertReceived = (e: any) => {
+      const alt = e.detail;
+      if (alt?.patientName) {
+        triggerToast(`Alert: ${alt.message}`);
+      }
+    };
+    window.addEventListener('healthgrid_hospital_alert_received', handleAlertReceived);
+
+    return () => {
+      unsub();
+      window.removeEventListener('healthgrid_hospital_alert_received', handleAlertReceived);
+    };
+  }, [currentHospital.code]);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
@@ -238,17 +273,109 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
             <span>Mon, 29 Sep 2025 | 10:24 AM</span>
           </div>
 
-          {/* Notifications */}
-          <button
-            onClick={() => triggerToast('1 new emergency alert: Trauma triage in casualty.')}
-            className="relative w-9 h-9 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors"
-            title="Notifications"
-          >
-            <Bell className="w-4 h-4" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
-              1
-            </span>
-          </button>
+          {/* Real-time Hospital Notification Inbox */}
+          <div className="relative">
+            <button
+              onClick={() => setIsAlertsInboxOpen(!isAlertsInboxOpen)}
+              className={`relative w-9 h-9 rounded-xl border flex items-center justify-center transition-colors ${
+                isAlertsInboxOpen
+                  ? 'bg-teal-50 border-teal-300 text-teal-700'
+                  : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+              }`}
+              title="Hospital Alerts Inbox"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadAlertsCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white rounded-full text-[9px] font-black flex items-center justify-center shadow-xs">
+                  {unreadAlertsCount > 9 ? '9+' : unreadAlertsCount}
+                </span>
+              )}
+            </button>
+
+            {isAlertsInboxOpen && (
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="p-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                  <div className="flex items-center gap-2">
+                    <Inbox className="w-4 h-4 text-teal-600" />
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">Hospital Inbox</h4>
+                    {unreadAlertsCount > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800">
+                        {unreadAlertsCount} new
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {unreadAlertsCount > 0 && (
+                      <button
+                        onClick={() => hospitalAlertsService.markAllAsRead()}
+                        className="text-[10px] font-bold text-teal-600 hover:text-teal-800"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setIsAlertsInboxOpen(false)}
+                      className="text-slate-400 hover:text-slate-600 p-0.5 rounded"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+                  {alerts.length === 0 ? (
+                    <div className="p-6 text-center text-slate-400 text-xs">
+                      No hospital alerts yet.
+                    </div>
+                  ) : (
+                    alerts.map((alt) => (
+                      <div
+                        key={alt.id}
+                        onClick={() => hospitalAlertsService.markAsRead(alt.id)}
+                        className={`p-3 flex items-start gap-3 hover:bg-slate-50 cursor-pointer transition-colors ${
+                          !alt.read ? 'bg-teal-50/40' : ''
+                        }`}
+                      >
+                        <div
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                            alt.type === 'REGISTRATION'
+                              ? 'bg-teal-100 text-teal-700'
+                              : alt.type === 'CHECK_IN'
+                              ? 'bg-sky-100 text-sky-700'
+                              : 'bg-rose-100 text-rose-700'
+                          }`}
+                        >
+                          {alt.type === 'REGISTRATION' ? (
+                            <UserPlus className="w-3.5 h-3.5" />
+                          ) : alt.type === 'CHECK_IN' ? (
+                            <UserCheck className="w-3.5 h-3.5" />
+                          ) : (
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-xs font-black text-slate-900 truncate">
+                              {alt.patientName}
+                            </span>
+                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                              {alt.time}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-600 leading-snug mt-0.5">
+                            {alt.message}
+                          </p>
+                        </div>
+                        {!alt.read && (
+                          <span className="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0 mt-2" />
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Dr. Mohamed / Hospital Switcher Profile Chip */}
           <div className="relative">
@@ -555,7 +682,7 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
 
               {/* Action Buttons */}
               <button
-                onClick={() => setQuickActionModal('register')}
+                onClick={() => setIsWalkInModalOpen(true)}
                 className="flex items-center gap-1.5 px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-teal-600/20 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -563,11 +690,11 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
               </button>
 
               <button
-                onClick={() => setQuickActionModal('appointment')}
+                onClick={() => setIsOpdModalOpen(true)}
                 className="flex items-center gap-1.5 px-3.5 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-xs font-bold shadow-sm shadow-sky-600/20 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Book Appointment</span>
+                <span>Check In / Token</span>
               </button>
 
               <button
@@ -1225,6 +1352,33 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Real-time Walk-in Registration Modal */}
+      <WalkInModal
+        isOpen={isWalkInModalOpen}
+        onClose={() => setIsWalkInModalOpen(false)}
+        onRegistered={(queueItem) => {
+          setSelectedOpdPatientId(queueItem.patientId);
+          setActiveMenu('OPD Management');
+          triggerToast(`Walk-in Token #${queueItem.tokenDisplay} issued for ${queueItem.patientName}`);
+        }}
+        onPatientCreated={(patient) => {
+          setSelectedOpdPatientId(patient.id);
+          triggerToast(`New citizen account registered: ${patient.name} (${patient.healthId})`);
+        }}
+      />
+
+      {/* Real-time OPD Check-in & Health ID Lookup Modal */}
+      <OpdRegistrationModal
+        isOpen={isOpdModalOpen}
+        onClose={() => setIsOpdModalOpen(false)}
+        onRegistered={(queueItem) => {
+          setSelectedOpdPatientId(queueItem.patientId);
+          setActiveMenu('OPD Management');
+          triggerToast(`OPD Token #${queueItem.tokenDisplay} allocated for ${queueItem.patientName}`);
+        }}
+        onOpenWalkInRegistration={() => setIsWalkInModalOpen(true)}
+      />
     </div>
   );
 };

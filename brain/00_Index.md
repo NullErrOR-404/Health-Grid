@@ -96,6 +96,8 @@ graph TD
     DEC --> ADR53[[ADR-053-Multi-Doctor-Polypharmacy-and-Cross-Prescription-Conflict-Shield]]
     DEC --> ADR54[[ADR-054-Comprehensive-RBAC-Persona-Gating-and-Zero-Trace-Data-Isolation]]
     DEC --> ADR55[[ADR-055-Situational-AI-Quick-Actions-and-Pure-Zero-Fallback-Architecture]]
+    DEC --> ADR56[[ADR-056-Universal-Humane-Neural-Voice-and-Zero-Robot-TTS-Architecture]]
+    DEC --> ADR57[[ADR-057-Real-User-Health-ID-and-Hospital-ERP-Onboarding]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
     MOD --> CLIN[[Clinician_Portal_Operating_System]]
@@ -201,6 +203,7 @@ graph TD
 - [[ADR-054-Comprehensive-RBAC-Persona-Gating-and-Zero-Trace-Data-Isolation]]: Comprehensive RBAC persona gating and zero-trace data isolation across Citizens, Clinicians, and Hospital Administrators. Elimination of inadvertent mock fallbacks (`Sameer Ahmed`, `dr.mohamed`), zero DOM mounting on unauthorized visits via 403 Security Interceptor Shield (`AccessDeniedModal`), dynamic user-scoped storage keying (`healthgrid_clinician_store_${id}`, user cabinets), statutory role clamping on public registration, and doctor-only gating on clinical SOAP note digital signing.
 - [[ADR-055-Situational-AI-Quick-Actions-and-Pure-Zero-Fallback-Architecture]]: Situational AI Quick Actions and Pure Zero-Fallback Architecture. Replaced unsolicited choosing options on every turn with strict situational gating (branching clinical history questions, explicit patient requests, acute emergencies). Eliminated hardcoded fallback options generator, suppressed follow-up chips during casual chat, eradicated all emojis from option buttons, and enforced clean Lucide SVG icon design across Web and Mobile.
 - [[ADR-056-Universal-Humane-Neural-Voice-and-Zero-Robot-TTS-Architecture]]: Universal Humane Neural Voice and Zero-Robot TTS Architecture. Completely eliminated robotic browser speech synthesis (`SpeechSynthesisUtterance`), established the Multi-Agent Universal Neural Voice Cascade (Gemini 3.8 Flash TTS primary with voice `Aoede` + Serverless Edge Gateway `/api/ai/tts` + Sarvam Bulbul V3 for vernacular Tamil), enforced a silent fallback policy on failure/offline, abstracted all engine selectors and persona UI from the patient screen ("User Should Only Hear Audio"), and upgraded the Mobile client to stream the same humane voice using `expo-audio`.
+- [[ADR-057-Real-User-Health-ID-and-Hospital-ERP-Onboarding]]: Real Authenticated Patient Onboarding, Sovereign Health ID Desk Lookup, and Hospital Inbox Alerts. Completely purged all mock seeded patient accounts from PostgreSQL and frontend stores. Enabled reception desk lookup by sovereign HealthGrid ID (`HG-XXXXXXX`), streamlined walk-in patient onboarding with SMS OTP verification, automated account linking on subsequent Google OAuth sign-in, and abstracted technical badges behind an unobtrusive real-time Hospital Notification Inbox.
 
 ---
 

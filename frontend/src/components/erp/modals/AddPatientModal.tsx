@@ -29,14 +29,14 @@ export const AddPatientModal: React.FC<AddPatientModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSearchHealthId = () => {
+  const handleSearchHealthId = async () => {
     if (!existingHealthId.trim()) return;
-    const found = unifiedPatientStore.getPatientByHealthId(existingHealthId.trim());
+    const found = await unifiedPatientStore.lookupPatientByHealthId(existingHealthId.trim());
     if (found) {
       setName(found.name);
       setPhone(found.phone);
       setAge(String(found.age));
-      setGender(found.gender);
+      setGender(found.gender as any);
       setBloodGroup(found.bloodGroup);
       setAllergies(found.allergies.join(', '));
       setChronicConditions(found.chronicConditions.join(', '));

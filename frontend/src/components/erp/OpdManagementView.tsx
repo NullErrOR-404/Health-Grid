@@ -485,6 +485,17 @@ export const OpdManagementView: React.FC<OpdManagementViewProps> = ({
                     </tr>
                   );
                 })}
+                {filteredQueue.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-slate-500">
+                      <UserCheck className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                      <div className="font-bold text-slate-700">No Patients in OPD Queue</div>
+                      <div className="text-xs text-slate-400 mt-1">
+                        Click &quot;New OPD Registration&quot; to admit a patient by HealthGrid ID or issue a walk-in token.
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -746,6 +757,17 @@ export const OpdManagementView: React.FC<OpdManagementViewProps> = ({
             </div>
           </div>
         )}
+        {!selectedQueueItem && (
+          <div className="xl:col-span-4 flex flex-col items-center justify-center bg-white rounded-2xl border border-slate-200/80 p-8 text-center text-slate-400 min-h-[400px]">
+            <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mb-3">
+              <UserCheck className="w-7 h-7" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-800">No Patient in Consultation</h4>
+            <p className="text-xs text-slate-500 max-w-xs mt-1 leading-relaxed">
+              Admit an authentic citizen using their HealthGrid ID or click &quot;Walk-in Token&quot; to begin consultation queueing.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* MODALS */}
@@ -756,6 +778,7 @@ export const OpdManagementView: React.FC<OpdManagementViewProps> = ({
           setSelectedToken(newItem.token);
           triggerToast(`Registered OPD token #${newItem.tokenDisplay} for ${newItem.patientName}`);
         }}
+        onOpenWalkInRegistration={() => setIsWalkInOpen(true)}
       />
 
       <WalkInModal
