@@ -20,12 +20,14 @@ import {
   ArrowLeft,
   Users,
   CalendarDays,
+  Calendar,
   Building2,
   ShieldAlert,
 } from 'lucide-react';
 import type { Language } from '../types';
 import { authService, type AuthUser } from '../services/authService';
 import { lenisService } from '../services/lenisService';
+import { CitizenBookAppointmentModal } from './CitizenBookAppointmentModal';
 
 export interface NavbarProps {
   lang: Language;
@@ -69,6 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [hoveredNavIndex, setHoveredNavIndex] = useState<number | null>(null);
+  const [isBookAppointmentOpen, setIsBookAppointmentOpen] = useState(false);
 
   const langDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
@@ -329,6 +332,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <ShieldAlert className="w-4 h-4 text-emerald-600" />
                       <span>{lang === 'en' ? 'Medication Cabinet & Shield' : 'மருந்து கவசம் & பெட்டி'}</span>
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => { setIsBookAppointmentOpen(true); setMoreDropdownOpen(false); }} 
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-teal-800 bg-teal-50/70 hover:bg-teal-100 rounded-xl transition-colors cursor-pointer font-bold border border-teal-200/60"
+                    >
+                      <Calendar className="w-4 h-4 text-teal-600" />
+                      <span>{lang === 'en' ? 'Book Hospital OPD Slot' : 'மருத்துவமனை சந்திப்பு முன்பதிவு'}</span>
                     </button>
                     {onOpenPatientIntake && (
                       <button 
@@ -684,6 +695,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                         >
                           <CalendarDays className="w-4 h-4 text-teal-600" />
                           <span>{lang === 'en' ? 'My Appointments' : 'என் சந்திப்புகள்'}</span>
+                        </button>
+
+                        {/* Direct Hospital Appointment Booking */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            setIsBookAppointmentOpen(true);
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-teal-800 bg-teal-50/70 hover:bg-teal-100/90 rounded-xl text-xs font-bold transition-colors cursor-pointer text-left border border-teal-200/80"
+                        >
+                          <Calendar className="w-4 h-4 text-teal-600" />
+                          <span>{lang === 'en' ? 'Book Hospital OPD Slot' : 'மருத்துவமனை முன்பதிவு'}</span>
                         </button>
 
                         {/* Settings */}
@@ -1187,6 +1211,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
       </header>
+
+      <CitizenBookAppointmentModal
+        isOpen={isBookAppointmentOpen}
+        onClose={() => setIsBookAppointmentOpen(false)}
+        defaultHospital="Government Medical College & Hospital (GMCH)"
+        defaultDoctor="Dr. Mohamed"
+        defaultDepartment="General Medicine"
+      />
     </>
   );
 };

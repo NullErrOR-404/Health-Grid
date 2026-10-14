@@ -68,7 +68,12 @@ const CLINICAL_VOCAB_WEIGHTS: Record<string, string[]> = {
   pediatrics_child: ['baby', 'child', 'infant', 'toddler', 'pediatric', 'குழந்தை', 'பாப்பா', 'sponging', 'hydration', 'syrup', 'drops'],
   pregnancy_safety: ['pregnant', 'pregnancy', 'lactation', 'breastfeeding', 'trimester', 'fetal', 'கர்ப்பம்', 'தாய்'],
   allergies_safety: ['allergy', 'penicillin', 'nsaid', 'ibuprofen', 'brufen', 'combiflam', 'contraindication', 'hives', 'rash', 'anaphylaxis', 'ஒவ்வாமை'],
-  wellness_diet: ['weight', 'diet', 'bmi', 'exercise', 'water', 'ors', 'salt', 'hydration', 'nutrition', 'உடல் எடை', 'உணவு']
+  wellness_diet: ['weight', 'diet', 'bmi', 'exercise', 'water', 'ors', 'salt', 'hydration', 'nutrition', 'உடல் எடை', 'உணவு'],
+  doctor_consultation: [
+    'doctor', 'dr', 'mohamed', 'consultation', 'diagnosed', 'diagnosis', 'prescription', 'prescribed', 'opd', 'visit',
+    'medicines', 'dosage', 'morning', 'afternoon', 'night', 'tablets', 'findings', 'advice', 'lifestyle', 'schedule',
+    'டாக்டர்', 'மருத்துவர்', 'மருந்துச்சீட்டு', 'பரிசோதனை', 'விளக்கம்', 'மாத்திரை'
+  ]
 };
 
 class VectorRagService {
@@ -380,9 +385,9 @@ class VectorRagService {
       id: `live-${r.id}`,
       source: 'PATIENT_VAULT',
       title: `${r.title} (${r.date})`,
-      content: `Patient Medical Record #${idx + 1} (Date: ${r.date}, Type: ${r.documentType}): ${r.title}. Facility/Doctor: ${r.hospitalName || r.doctorName || 'Attending Physician'}. Diagnoses: ${r.diagnoses.join(', ') || 'Routine'}. Lab Findings: ${r.labFindings ? r.labFindings.map(l => `${l.testName}: ${l.value} (${l.status})`).join('; ') : 'None'}. Active Medications: ${r.activeMedications.map(m => `${m.name} ${m.dosage}`).join(', ') || 'None'}. Confirmed Allergies: ${r.knownAllergies.join(', ') || 'None'}. Summary: ${r.summaryNotes || 'Verified record'}.`,
+      content: `Patient Medical Record #${idx + 1} (Date: ${r.date}, Type: ${r.documentType}): ${r.title}. Facility/Doctor: ${r.hospitalName || r.doctorName || 'Attending Physician'}. Diagnoses: ${r.diagnoses.join(', ') || 'Routine'}. Lab Findings: ${r.labFindings ? r.labFindings.map(l => `${l.testName}: ${l.value} (${l.status})`).join('; ') : 'None'}. Active Medications: ${r.activeMedications.map(m => `${m.name} ${m.dosage || ''} ${m.frequency || ''} ${m.purpose || ''}`).join(', ') || 'None'}. Confirmed Allergies: ${r.knownAllergies.join(', ') || 'None'}. Summary: ${r.summaryNotes || 'Verified record'}.`,
       metadata: r,
-      embedding: this.generateEmbedding(`${r.title} ${r.date} ${r.diagnoses.join(' ')} ${r.labFindings ? r.labFindings.map(l => l.testName).join(' ') : ''} ${r.knownAllergies.join(' ')}`),
+      embedding: this.generateEmbedding(`${r.title} ${r.date} ${r.doctorName || ''} ${r.hospitalName || ''} ${r.documentType} doctor consultation prescription ${r.diagnoses.join(' ')} ${r.activeMedications.map(m => `${m.name} ${m.dosage || ''} ${m.frequency || ''}`).join(' ')} ${r.summaryNotes || ''} ${r.labFindings ? r.labFindings.map(l => l.testName).join(' ') : ''} ${r.knownAllergies.join(' ')}`),
     }));
 
     // 2.5 Master Chronological Health Timeline Synthesis
@@ -507,6 +512,91 @@ class VectorRagService {
       totalGenericCost: totalGeneric,
       totalSavingsAmount: totalSavings,
       overallSavingsPercentage: overallPct,
+    };
+  }
+
+  /**
+   * Retrieves and formats the patient's latest signed doctor consultation and prescription
+   * from the sovereign Health Vault for plain-language RAG explanation.
+   */
+  public getLatestDoctorConsultation(doctorNameHint?: string): {
+    record: MedicalRecord;
+    doctorName: string;
+    hospitalName: string;
+    date: string;
+    primaryDiagnosis: string;
+    summaryNotes: string;
+    lifestyleAdvice: string;
+    knownAllergies: string[];
+    medications: Array<{
+      name: string;
+      dosage: string;
+      frequency: string;
+      timing: string;
+      purpose: string;
+      genericPrice: number;
+      brandPrice: number;
+    }>;
+  } | null {
+    const records = medicalRecordService.getChronologicalRecords(false); // latest first
+    const consultation = records.find(r => {
+      const isPrescriptionType = r.documentType === 'PRESCRIPTION' || r.documentType === 'DISCHARGE_SUMMARY';
+      const hasDoctor = Boolean(r.doctorName);
+      const isConsultationTitle = (r.title || '').toLowerCase().includes('consultation') || (r.title || '').toLowerCase().includes('prescription');
+      if (doctorNameHint) {
+        const matchesHint = (r.doctorName || '').toLowerCase().includes(doctorNameHint.toLowerCase());
+        return matchesHint && (isPrescriptionType || isConsultationTitle);
+      }
+      return isPrescriptionType || (hasDoctor && isConsultationTitle);
+    }) || records[0];
+
+    if (!consultation) return null;
+
+    const primaryDiagnosis = consultation.diagnoses?.[0] || 'Clinical Evaluation';
+    const doctorName = consultation.doctorName || 'Dr. Mohamed';
+    const hospitalName = consultation.hospitalName || 'Government Medical College & Hospital (GMCH)';
+    const summaryNotes = consultation.summaryNotes || '';
+
+    let lifestyleAdvice = 'Ensure adequate rest, hydrate with clean boiled water, and maintain a balanced, low-irritant diet.';
+    const adviceMatch = summaryNotes.match(/(?:Dietary & Lifestyle Advice|Lifestyle Advice|Advice):\s*([^.\n]+(?:\.[^.\n]+)?)/i);
+    if (adviceMatch && adviceMatch[1]) {
+      lifestyleAdvice = adviceMatch[1].trim();
+    }
+
+    const medications = (consultation.activeMedications || []).map(m => {
+      let timing = 'Twice Daily (Morning & Night, after meals)';
+      const freq = (m.frequency || m.dosage || '').toLowerCase();
+      if (freq.includes('1-0-0') || freq.includes('morning') || freq.includes('od') || freq.includes('once')) {
+        timing = 'Once Daily (Morning, after breakfast)';
+      } else if (freq.includes('0-0-1') || freq.includes('bedtime') || freq.includes('night')) {
+        timing = 'Once Daily (Night, after dinner)';
+      } else if (freq.includes('1-1-1') || freq.includes('tid') || freq.includes('tds') || freq.includes('thrice')) {
+        timing = 'Three Times Daily (Morning, Noon, Night, after meals)';
+      } else if (freq.includes('1-0-1') || freq.includes('bid') || freq.includes('bd') || freq.includes('twice')) {
+        timing = 'Twice Daily (Morning & Night, after meals)';
+      }
+
+      return {
+        name: m.name,
+        dosage: m.dosage || 'Standard dose',
+        frequency: m.frequency || 'As directed',
+        timing,
+        purpose: m.purpose || `Prescribed by ${doctorName} for ${primaryDiagnosis}`,
+        genericPrice: m.genericPrice || 12,
+        brandPrice: m.brandPrice || 65,
+      };
+    });
+
+    return {
+      record: consultation,
+      doctorName,
+      hospitalName,
+      date: consultation.date,
+      primaryDiagnosis,
+      summaryNotes,
+      lifestyleAdvice,
+      knownAllergies: consultation.knownAllergies || [],
+      medications,
     };
   }
 }

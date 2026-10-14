@@ -370,7 +370,7 @@ class DoctorOpdService {
   public getConsultationRooms(): ConsultationRoomInfo[] {
     const liveAppointments = appointmentService.getAppointments();
     const activeConsultations = liveAppointments.filter(
-      (a) => a.status === 'In Consultation' || a.status === 'Checked In'
+      (a) => a.status === 'In Consultation'
     );
 
     if (this.doctors.length === 0) {
@@ -394,8 +394,11 @@ class DoctorOpdService {
 
     return this.doctors.map((doc, idx) => {
       const roomNumber = doc.opd_room || `Room ${101 + idx}`;
+      const docClean = doc.name.toLowerCase().replace('dr.', '').trim();
       const activeAppt = activeConsultations.find(
-        (a) => a.doctor_name === doc.name || a.doctor_id === doc.id
+        (a) =>
+          a.doctor_id === doc.id ||
+          (a.doctor_name && a.doctor_name.toLowerCase().includes(docClean))
       );
 
       return {

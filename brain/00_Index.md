@@ -99,6 +99,7 @@ graph TD
     DEC --> ADR56[[ADR-056-Universal-Humane-Neural-Voice-and-Zero-Robot-TTS-Architecture]]
     DEC --> ADR57[[ADR-057-Real-User-Health-ID-and-Hospital-ERP-Onboarding]]
     DEC --> ADR58[[ADR-058-Universal-Cloud-Dynamic-State-and-Zero-Mock-Eradication]]
+    DEC --> ADR59[[ADR-059-Unified-Cross-System-OPD-Workflow-AI-Jist-and-Patient-RAG]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
     MOD --> CLIN[[Clinician_Portal_Operating_System]]
@@ -206,6 +207,7 @@ graph TD
 - [[ADR-056-Universal-Humane-Neural-Voice-and-Zero-Robot-TTS-Architecture]]: Universal Humane Neural Voice and Zero-Robot TTS Architecture. Completely eliminated robotic browser speech synthesis (`SpeechSynthesisUtterance`), established the Multi-Agent Universal Neural Voice Cascade (Gemini 3.8 Flash TTS primary with voice `Aoede` + Serverless Edge Gateway `/api/ai/tts` + Sarvam Bulbul V3 for vernacular Tamil), enforced a silent fallback policy on failure/offline, abstracted all engine selectors and persona UI from the patient screen ("User Should Only Hear Audio"), and upgraded the Mobile client to stream the same humane voice using `expo-audio`.
 - [[ADR-057-Real-User-Health-ID-and-Hospital-ERP-Onboarding]]: Real Authenticated Patient Onboarding, Sovereign Health ID Desk Lookup, and Hospital Inbox Alerts. Completely purged all mock seeded patient accounts from PostgreSQL and frontend stores. Enabled reception desk lookup by sovereign HealthGrid ID (`HG-XXXXXXX`), streamlined walk-in patient onboarding with SMS OTP verification, automated account linking on subsequent Google OAuth sign-in, and abstracted technical badges behind an unobtrusive real-time Hospital Notification Inbox.
 - [[ADR-058-Universal-Cloud-Dynamic-State-and-Zero-Mock-Eradication]]: Universal Cloud Dynamic State and Zero-Mock Eradication across all hospital and clinician workflows. Complete purge of synthetic mock appointments (186 rows), admissions (10 rows), emergency casualties (33 rows), and occupant names on beds from Supabase PostgreSQL. Elimination of static frontend baseline arrays (`INITIAL_BASELINE_APPOINTMENTS`, `INITIAL_DOCTORS`, `SEED_PATIENTS`, `SEED_QUEUE_ITEMS`, `GMCH_SEED`, `CITYCARE_SEED`, `INITIAL_BEDS`, `generatedPatientsData.ts`). Implementation of pure dynamic calculations and clean zero-state empty UI across the entire platform.
+- [[ADR-059-Unified-Cross-System-OPD-Workflow-AI-Jist-and-Patient-RAG]]: Unified Cross-System OPD Workflow, Pre-Consultation AI Jist & Patient RAG Explainer. Complete execution flow linking Citizen Direct OPD Booking (hospital, doctor, slot selection with verified digital pass), Hospital ERP e-chart retrieval, Pre-Consultation AI clinical briefing and Penicillin allergy safety shield, dynamic multi-system state progression (`Scheduled` -> `In Consultation` [Room 101 `Occupied`] -> `Completed` [Room 101 `Available`]), doctor consultation with Jan Aushadhi formulary prescriptions cryptographically dispatched to sovereign HealthGrid accounts, and citizen DocBot bilingual (English/Tamil) RAG explainer with morning/noon/night medication timetables.
 
 ---
 

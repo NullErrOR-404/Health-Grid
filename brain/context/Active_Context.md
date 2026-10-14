@@ -17,8 +17,8 @@ Back to [[00_Index]]
 ## Current System State
 
 - **Git Branch**: `main`
-- **Latest Commit**: `HEAD` (feat(erp): universal cloud dynamic state and zero-mock eradication across all modules - ADR-058)
-- **Latest Documentation Milestone**: ADR-058 Universal Cloud Dynamic State and Zero-Mock Eradication ([[ADR-058-Universal-Cloud-Dynamic-State-and-Zero-Mock-Eradication]])
+- **Latest Commit**: `HEAD` (feat(workflow): unified cross-system OPD execution flow, pre-consultation AI jist, and patient RAG explainer - ADR-059)
+- **Latest Documentation Milestone**: ADR-059 Unified Cross-System OPD Workflow, Pre-Consultation AI Jist & Patient RAG Explainer ([[ADR-059-Unified-Cross-System-OPD-Workflow-AI-Jist-and-Patient-RAG]])
 - **Authoritative Vercel Deployment**: `https://healthgrid-cp8iz6jkr-sameen14nmofficial-8826s-projects.vercel.app`
 - **Synchronized Production Aliases**:
   - `https://healthgrid-nu.vercel.app` (200 OK • Live)
@@ -30,6 +30,14 @@ Back to [[00_Index]]
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+
+- [x] Unified Cross-System OPD Workflow, Pre-Consultation AI Jist & Patient RAG Explainer ([[ADR-059-Unified-Cross-System-OPD-Workflow-AI-Jist-and-Patient-RAG]]):
+  - **Citizen Direct OPD Booking (`CitizenBookAppointmentModal.tsx`)**: Full citizen booking modal allowing patient (`Mohamed Sameen S` / `HG-PP27BNQ`) to select facility (`Government Medical College & Hospital - HG-H002`), doctor (`Dr. Mohamed`), department (`General Medicine`), date, time slot (`10:00 AM`), and chief complaint. Emits instant verified digital OPD pass with token, QR code, and sovereign Health ID.
+  - **Hospital E-Chart & Pre-Consultation AI Jist (`preConsultationAiService.ts`)**: Dynamically fetches patient's longitudinal e-chart and synthesizes a 60-second clinical elevator summary, urgent Penicillin allergy alert (recommending Azithromycin/macrolides safe alternatives), high-yield diagnostic questions for the doctor, and focused physical exam checklist before examination starts.
+  - **Dynamic Multi-System State Progression**: Synchronized status transitions across hospital ERP, doctor queues, and citizen apps: `Scheduled` -> `In Consultation` (Room 101 becomes `Occupied`) -> `Completed` (Room 101 returns to `Available`).
+  - **Doctor Consultation Workspace & Sovereign HealthGrid Dispatch (`ClinicalConsultationModal.tsx`)**: 3-tab clinician workspace with AI Jist, patient e-chart, and exam/prescription builder. Enables logging exam notes, primary diagnosis (`Acute Bronchitis & Wheeze Exacerbation`), Jan Aushadhi generic formulary prescriptions, and lifestyle instructions. Computes SHA-256 digital signature and cryptographically dispatches records to Supabase (`public.encounters`, `public.prescriptions`), `medicalRecordService`, and `healthMemoryService`.
+  - **Citizen AI Chatbot (DocBot) Bilingual RAG Explainer (`aiService.ts`, `vectorRagService.ts`)**: Autonomous RAG explainer querying the signed consultation record in the patient's sovereign vault. Delivers warm, plain-language explanations of the diagnosis, daily medication schedule (Morning, Noon, Night breakdown), lifestyle care plan, and Penicillin safety check in both English and vernacular Tamil.
+  - **End-to-End Database Verification (`scripts/verify_opd_workflow_e2e.js`)**: Executed 5-gate end-to-end verification across Supabase PostgreSQL with 100% success (0 mock dependencies). Production build passed cleanly (`tsc -b && vite build` in 2.63s).
 
 - [x] Universal Cloud Dynamic State and Zero-Mock Eradication ([[ADR-058-Universal-Cloud-Dynamic-State-and-Zero-Mock-Eradication]]):
   - **Complete Cloud Database Sanitization (`scripts/sanitize_cloud_db.js`)**: Purged 186 mock appointments, 10 mock admissions, and 33 synthetic emergency casualties from Supabase PostgreSQL. Reset all 26 beds in `public.ipd_beds` to `status = 'Available'` and scrubbed mock occupant names. Preserved authentic accounts (`Dr. Mohamed`, `Mohamed Sameen S`, `Moneshdaran S`, 33 real facility doctors, 5 hospital wards).

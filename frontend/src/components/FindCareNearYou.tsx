@@ -17,13 +17,15 @@ import {
   Sparkles,
   Siren,
   CheckCircle2,
-  ArrowUpDown
+  ArrowUpDown,
+  Calendar
 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Language } from '../types';
 import { FacilityListSkeleton } from './SkeletonLoader';
 import { CustomSelect } from './CustomSelect';
+import { CitizenBookAppointmentModal } from './CitizenBookAppointmentModal';
 
 export type FacilityType = 'all' | 'hospital' | 'pharmacy' | 'clinic';
 
@@ -295,6 +297,7 @@ export const FindCareNearYou: React.FC<FindCareNearYouProps> = ({
   const [isLocating, setIsLocating] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<PlaceItem | null>(PLACES_DATA[0]);
   const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list');
+  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
 
   // Leaflet map refs
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -964,7 +967,18 @@ export const FindCareNearYou: React.FC<FindCareNearYouProps> = ({
                   </div>
 
                   {/* Action Buttons: Get Directions & View Details */}
-                  <div className="flex items-center gap-2.5 mt-3 pt-2 border-t border-slate-100">
+                  <div className="flex flex-wrap items-center gap-2.5 mt-3 pt-2 border-t border-slate-100">
+                    {selectedPlace.type === 'hospital' && (
+                      <button
+                        type="button"
+                        onClick={() => setIsBookModalOpen(true)}
+                        className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-black py-2 px-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-teal-600/20 cursor-pointer"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>{lang === 'en' ? 'Book OPD Appointment' : 'OPD முன்பதிவு செய்'}</span>
+                      </button>
+                    )}
+
                     <a
                       href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.lat},${selectedPlace.lng}`}
                       target="_blank"
@@ -989,6 +1003,14 @@ export const FindCareNearYou: React.FC<FindCareNearYouProps> = ({
           )}
         </div>
       </div>
+
+      <CitizenBookAppointmentModal
+        isOpen={isBookModalOpen}
+        onClose={() => setIsBookModalOpen(false)}
+        defaultHospital={selectedPlace?.nameEn || 'Government Medical College & Hospital (GMCH)'}
+        defaultDoctor="Dr. Mohamed"
+        defaultDepartment="General Medicine"
+      />
     </div>
   );
 };

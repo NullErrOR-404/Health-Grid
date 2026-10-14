@@ -30,6 +30,7 @@ import { EditDoctorModal } from './doctors/EditDoctorModal';
 import { DoctorProfileDrawer } from './doctors/DoctorProfileDrawer';
 import { WeeklyScheduleModal } from './doctors/WeeklyScheduleModal';
 import { ConsultationRoomsModal } from './doctors/ConsultationRoomsModal';
+import { ClinicalConsultationModal } from './modals/ClinicalConsultationModal';
 
 interface DoctorsOpdViewProps {
   triggerToast: (msg: string) => void;
@@ -82,6 +83,8 @@ export const DoctorsOpdView: React.FC<DoctorsOpdViewProps> = ({
   const [isRoomsModalOpen, setIsRoomsModalOpen] = useState(false);
   const [doctorToEdit, setDoctorToEdit] = useState<DoctorRecord | null>(null);
   const [actionMenuDoctorId, setActionMenuDoctorId] = useState<string | null>(null);
+  const [consultationTargetAppt, setConsultationTargetAppt] = useState<any | null>(null);
+  const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
 
   // Subscribe to real-time doctor updates
   useEffect(() => {
@@ -868,7 +871,7 @@ export const DoctorsOpdView: React.FC<DoctorsOpdViewProps> = ({
                               </div>
                             </div>
 
-                            <div className="text-right">
+                            <div className="text-right flex flex-col items-end">
                               <div className="text-[10px] font-mono text-slate-500 mb-0.5">
                                 {pat.appointment_time}
                               </div>
@@ -877,7 +880,7 @@ export const DoctorsOpdView: React.FC<DoctorsOpdViewProps> = ({
                                   pat.status === 'Completed'
                                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                     : pat.status === 'In Consultation'
-                                    ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                                    ? 'bg-sky-50 text-sky-700 border border-sky-200 animate-pulse'
                                     : pat.status === 'Waiting'
                                     ? 'bg-amber-50 text-amber-700 border border-amber-200'
                                     : 'bg-slate-100 text-slate-600'
@@ -885,6 +888,17 @@ export const DoctorsOpdView: React.FC<DoctorsOpdViewProps> = ({
                               >
                                 {pat.status}
                               </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setConsultationTargetAppt(pat);
+                                  setIsConsultationModalOpen(true);
+                                }}
+                                className="mt-1 px-2.5 py-0.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold text-[10px] flex items-center gap-1 shadow-xs"
+                              >
+                                <Stethoscope className="w-2.5 h-2.5" />
+                                <span>{pat.status === 'In Consultation' ? 'Open Desk' : 'Consult (AI Jist)'}</span>
+                              </button>
                             </div>
                           </div>
                         ))
@@ -923,17 +937,30 @@ export const DoctorsOpdView: React.FC<DoctorsOpdViewProps> = ({
                                 </div>
                               </div>
                             </div>
-                            <span
-                              className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                                pat.status === 'Completed'
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : pat.status === 'In Consultation'
-                                  ? 'bg-sky-100 text-sky-800'
-                                  : 'bg-amber-100 text-amber-800'
-                              }`}
-                            >
-                              {pat.status}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                  pat.status === 'Completed'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : pat.status === 'In Consultation'
+                                    ? 'bg-sky-100 text-sky-800 animate-pulse'
+                                    : 'bg-amber-100 text-amber-800'
+                                }`}
+                              >
+                                {pat.status}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setConsultationTargetAppt(pat);
+                                  setIsConsultationModalOpen(true);
+                                }}
+                                className="px-2 py-1 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold text-[10px] flex items-center gap-1 shadow-xs"
+                              >
+                                <Stethoscope className="w-2.5 h-2.5" />
+                                <span>{pat.status === 'In Consultation' ? 'Desk' : 'Consult'}</span>
+                              </button>
+                            </div>
                           </div>
                         ))
                       )}
@@ -1068,6 +1095,26 @@ export const DoctorsOpdView: React.FC<DoctorsOpdViewProps> = ({
         isOpen={isRoomsModalOpen}
         onClose={() => setIsRoomsModalOpen(false)}
         triggerToast={triggerToast}
+      />
+
+      <ClinicalConsultationModal
+        isOpen={isConsultationModalOpen}
+        onClose={() => {
+          setIsConsultationModalOpen(false);
+          setConsultationTargetAppt(null);
+        }}
+        appointmentId={consultationTargetAppt?.id || consultationTargetAppt?.appointment_id}
+        patientId={consultationTargetAppt?.patient_id}
+        patientName={consultationTargetAppt?.patient_name || 'Patient'}
+        patientHealthId={consultationTargetAppt?.patient_health_id || 'HG-PP27BNQ'}
+        department={consultationTargetAppt?.department || selectedDoctor.department}
+        doctorName={selectedDoctor.name}
+        initialStatus={consultationTargetAppt?.status || 'Scheduled'}
+        chiefComplaint={consultationTargetAppt?.reason_for_visit}
+        onSuccess={(msg) => triggerToast(msg)}
+        onCompleted={() => {
+          setDoctors(doctorOpdService.getDoctors());
+        }}
       />
     </div>
   );
