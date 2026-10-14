@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Send, Volume2, ShieldCheck, HeartPulse, Sparkles, AlertCircle } from 'lucide-react-native';
-import * as Speech from 'expo-speech';
+import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
 import { askDocBot, MobileChatMessage } from '../services/mobileAiService';
 import { setJsonSecure, getJsonSecure, SECURE_KEYS } from '../services/secureStorageService';
 
@@ -77,13 +77,60 @@ export default function ChatScreen({ onNavigate }: { onNavigate?: (tab: string) 
     }
   };
 
-  const speakText = (text: string) => {
-    Speech.stop();
-    Speech.speak(text, {
-      language: 'en-IN',
-      pitch: 1.0,
-      rate: 1.05,
-    });
+  const activeAudioPlayerRef = useRef<AudioPlayer | null>(null);
+
+  useEffect(() => {
+    return () => {
+      // Clean up audio player on unmount
+      if (activeAudioPlayerRef.current) {
+        try {
+          activeAudioPlayerRef.current.pause();
+          activeAudioPlayerRef.current.release();
+        } catch (e) {
+          // Ignored
+        }
+        activeAudioPlayerRef.current = null;
+      }
+    };
+  }, []);
+
+  const speakText = async (text: string) => {
+    // Barge-in: immediately stop previous playback
+    if (activeAudioPlayerRef.current) {
+      try {
+        activeAudioPlayerRef.current.pause();
+        activeAudioPlayerRef.current.release();
+      } catch (e) {
+        // Ignored
+      }
+      activeAudioPlayerRef.current = null;
+    }
+
+    // Clean text of markdown and citations
+    const clean = text
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/[*_#`~>]/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/^[•*\-\d.]+\s+/gm, '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!clean) return;
+
+    // Detect language: Tamil or English
+    const isTamil = /[\u0B80-\u0BFF]/.test(clean) || clean.toLowerCase().includes('vanakkam');
+    const lang = isTamil ? 'ta' : 'en';
+
+    try {
+      const audioUrl = `https://healthgrid-app.vercel.app/api/ai/tts?text=${encodeURIComponent(clean.slice(0, 500))}&lang=${lang}`;
+      const player = createAudioPlayer(audioUrl);
+      activeAudioPlayerRef.current = player;
+      player.play();
+    } catch (err: any) {
+      // Zero-Robot Silent Fallback: never synthesize robotic speech on failure
+      console.warn('[MobileSpeech] Neural voice playback failed, silent fallback applied:', err.message);
+    }
   };
 
   return (

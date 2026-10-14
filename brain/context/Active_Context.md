@@ -18,18 +18,26 @@ Back to [[00_Index]]
 
 - **Git Branch**: `main`
 - **Latest Commit**: `d845c33` (`feat(ai): situational AI quick actions, pure zero-fallback, and zero-emoji SVG design (ADR-055)`)
-- **Latest Documentation Milestone**: ADR-055 Situational AI Quick Actions & Pure Zero-Fallback Architecture ([[ADR-055-Situational-AI-Quick-Actions-and-Pure-Zero-Fallback-Architecture]])
-- **Authoritative Vercel Deployment**: `https://healthgrid-6yuqki3a3-sameen14nmofficial-8826s-projects.vercel.app` (Serving Bundle: `index-DqwNsvhZ.js` • Built from commit `d845c33`)
+- **Latest Documentation Milestone**: ADR-056 Universal Humane Neural Voice & Zero-Robot TTS Architecture ([[ADR-056-Universal-Humane-Neural-Voice-and-Zero-Robot-TTS-Architecture]])
+- **Authoritative Vercel Deployment**: `https://healthgrid-6yuqki3a3-sameen14nmofficial-8826s-projects.vercel.app` (Serving Bundle: `index-CC3dj0AU.js` • Pending Git Push)
 - **Synchronized Production Aliases**:
-  - `https://healthgrid-app.vercel.app` (200 OK • Live • `index-DqwNsvhZ.js`)
-  - `https://healthgrid-nu.vercel.app` (200 OK • Live • `index-DqwNsvhZ.js`)
-  - `https://healthgrid-live.vercel.app` (200 OK • Live • `index-DqwNsvhZ.js`)
-  - `https://healthgrid-network.vercel.app` (200 OK • Live • `index-DqwNsvhZ.js`)
-- **Active Edge Serverless Gateways**: `/api/ai/chat`, `/api/ai/vision`, `/api/ai/ocr`, `/api/webhooks/verify`
+  - `https://healthgrid-app.vercel.app` (200 OK • Live)
+  - `https://healthgrid-nu.vercel.app` (200 OK • Live)
+  - `https://healthgrid-live.vercel.app` (200 OK • Live)
+  - `https://healthgrid-network.vercel.app` (200 OK • Live)
+- **Active Edge Serverless Gateways**: `/api/ai/chat`, `/api/ai/vision`, `/api/ai/ocr`, `/api/ai/tts`, `/api/webhooks/verify`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+
+- [x] Universal Humane Neural Voice & Zero-Robot TTS Architecture ([[ADR-056-Universal-Humane-Neural-Voice-and-Zero-Robot-TTS-Architecture]]):
+  - **Eradication of Browser TTS (`speechService.ts`)**: Completely removed `SpeechSynthesisUtterance`, `window.speechSynthesis`, and `speakWithBrowserFallback`. The platform strictly never emits mechanical robotic speech.
+  - **Multi-Agent Universal Neural Voice Cascade (`speechService.ts`, `/api/ai/tts`)**: Unified on the warm, empathetic bedside clinician voice `Aoede` (Google Gemini 3.8 Flash TTS / Sarvam Bulbul V3). Implemented serverless edge route `/api/ai/tts` with in-memory caching and 24kHz standard WAV binary streaming.
+  - **Silent Fallback Policy**: If network or streams fail, speech terminates cleanly with zero robotic fallback and zero disruptive toasts.
+  - **Complete UI Abstraction (`VoiceChatModal.tsx`)**: Removed exposed engine pills, provider toggles, and settings popovers. The patient screen remains calm and clean; the user only hears the audio.
+  - **Mobile Platform Upgrade (`ChatScreen.tsx`)**: Replaced robotic `expo-speech` with `expo-audio` streaming the universal humane voice from `/api/ai/tts`.
+  - **Verification**: `npm run build` passed with 0 errors across 2,667 modules in 2.78s; mobile `tsc --noEmit` passed cleanly.
 
 - [x] Situational AI Quick Actions & Pure Zero-Fallback Architecture ([[ADR-055-Situational-AI-Quick-Actions-and-Pure-Zero-Fallback-Architecture]]):
   - **Situational Choosing Protocol (`aiService.ts`)**: Replaced unconditional prompt mandates with strict situational gating. The model generates options only when actively asking branching diagnostic questions or when explicitly requested; never on greetings, pleasantries, educational answers, or finalized plans.

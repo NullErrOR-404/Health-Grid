@@ -97,7 +97,7 @@ export class TanglishNormalizer {
 }
 
 export type SpeechState = 'idle' | 'listening' | 'processing' | 'speaking' | 'error';
-export type VoiceEngineType = 'gemini-live' | 'sarvam-ai' | 'browser-tts';
+export type VoiceEngineType = 'gemini-live' | 'sarvam-ai';
 export type ClinicalVoicePersona = 'routine' | 'urgent';
 
 export interface VoiceSettings {
@@ -109,7 +109,7 @@ export interface VoiceSettings {
 }
 
 const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
-  engine: 'browser-tts',
+  engine: 'gemini-live',
   persona: 'routine',
   sarvamApiKey: '',
   speedRate: 1.1,
@@ -550,8 +550,8 @@ export class SpeechEngine {
 
   /**
    * Main Speak Entrypoint:
-   * Uses Sentence-by-Sentence Streaming with Gemini Live Audio or Sarvam AI,
-   * falling back seamlessly to browser speech synthesis if offline or error.
+   * Uses Sentence-by-Sentence Streaming with Universal Humane Voice Agents (Gemini Live Audio / Edge TTS),
+   * strictly adhering to the Zero-Robot Policy (inbuilt browser TTS is completely eliminated).
    */
   public speak(
     text: string,
@@ -569,15 +569,6 @@ export class SpeechEngine {
     this.currentSpeedRate = speedRate || 1.1;
     this.onSpeakingStart = onStart;
     this.onSpeakingEnd = onEnd;
-
-    // Automatically infer persona behind the scenes based on clinical urgency
-    this.voiceSettings.persona = inferClinicalPersona(text);
-
-    // Zero-lag fast path: default to instant native browser speech synthesis unless Sarvam API key is active
-    if (this.voiceSettings.engine === 'browser-tts' || !this.voiceSettings.sarvamApiKey) {
-      this.speakWithBrowserFallback(text, lang, this.currentSpeedRate, onStart, onEnd);
-      return;
-    }
 
     // Split into sentences for sub-second streaming
     const sentences = this.voiceSettings.streamingQueue ? splitIntoSentences(text) : [text];
@@ -599,26 +590,7 @@ export class SpeechEngine {
     const signal = this.abortController?.signal;
 
     try {
-      let audioBlob: Blob;
-
-      if (this.voiceSettings.engine === 'sarvam-ai' && this.voiceSettings.sarvamApiKey) {
-        audioBlob = await this.fetchSarvamAudio(
-          currentSentence,
-          this.currentLang,
-          this.voiceSettings.persona,
-          this.currentSpeedRate,
-          this.voiceSettings.sarvamApiKey,
-          signal!
-        );
-      } else {
-        // Default to Google Gemini Live Audio
-        audioBlob = await this.fetchGeminiAudio(
-          currentSentence,
-          this.currentLang,
-          this.voiceSettings.persona,
-          signal!
-        );
-      }
+      const audioBlob = await this.fetchUniversalAudio(currentSentence, this.currentLang, signal!);
 
       if (!this.isSpeaking || signal?.aborted) return;
 
@@ -634,18 +606,68 @@ export class SpeechEngine {
         // Barge-in interrupted
         return;
       }
-      console.warn('AI Voice model error, falling back to browser speech synthesis:', err);
-      // Fallback remainder of queue to browser TTS
-      const remainingText = [currentSentence, ...this.sentenceQueue].join(' ');
+      console.warn('[SpeechEngine] Humane voice stream unavailable, applying silent fallback:', err.message);
+      // Zero-Robot Silent Fallback: terminate without robotic speech synthesis
       this.sentenceQueue = [];
-      this.speakWithBrowserFallback(
-        remainingText,
-        this.currentLang,
+      this.finishSpeaking();
+    }
+  }
+
+  private async fetchUniversalAudio(
+    text: string,
+    lang: 'ta' | 'en',
+    signal: AbortSignal
+  ): Promise<Blob> {
+    const clean = cleanTextForSpeech(text);
+    if (!clean) throw new Error('Empty speech text');
+
+    // Tier 1: Platform Serverless Edge Route (/api/ai/tts)
+    try {
+      const edgeRes = await fetch('/api/ai/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'audio/wav',
+        },
+        signal,
+        body: JSON.stringify({ text: clean, lang }),
+      });
+
+      if (edgeRes.ok) {
+        const blob = await edgeRes.blob();
+        if (blob && blob.size > 200) {
+          return blob;
+        }
+      }
+    } catch (e: any) {
+      if (e.name === 'AbortError') throw e;
+      // Local dev standalone or edge route fallback
+    }
+
+    // Tier 2: Direct Client Gemini 3.8 Flash TTS
+    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || '';
+    if (apiKey) {
+      try {
+        return await this.fetchGeminiAudio(clean, lang, this.voiceSettings.persona, signal);
+      } catch (e: any) {
+        if (e.name === 'AbortError') throw e;
+        console.warn('[SpeechEngine] Direct Gemini audio fallback error:', e.message);
+      }
+    }
+
+    // Tier 3: Direct Client Sarvam AI (Tamil vernacular)
+    if (this.voiceSettings.engine === 'sarvam-ai' && this.voiceSettings.sarvamApiKey) {
+      return await this.fetchSarvamAudio(
+        clean,
+        lang,
+        this.voiceSettings.persona,
         this.currentSpeedRate,
-        undefined,
-        () => this.finishSpeaking()
+        this.voiceSettings.sarvamApiKey,
+        signal
       );
     }
+
+    throw new Error('All humane voice providers exhausted. Silent fallback triggered.');
   }
 
   private playAudioBlob(blob: Blob): Promise<void> {
@@ -700,8 +722,8 @@ export class SpeechEngine {
       return this.audioCache.get(cacheKey)!;
     }
 
-    // Voice mapping: Aoede for warm supportive cadence, Charon for calm clinical triage cadence
-    const voiceName = persona === 'routine' ? 'Aoede' : 'Charon';
+    // Universal humane clinical voice: Aoede
+    const voiceName = 'Aoede';
 
     const ttsCandidateModels = [
       'gemini-3.8-flash-tts',
@@ -860,69 +882,12 @@ export class SpeechEngine {
       this.currentBlobUrl = null;
     }
 
-    // Stop native browser synthesis if active
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-
     this.finishSpeaking();
   }
 
   private finishSpeaking(): void {
     this.isSpeaking = false;
     this.onSpeakingEnd?.();
-  }
-
-  private speakWithBrowserFallback(
-    text: string,
-    lang: 'ta' | 'en',
-    speedRate: number = 1.1,
-    onStart?: () => void,
-    onEnd?: () => void
-  ): void {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      onEnd?.();
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    // Clean markdown, links, bullets, and symbols so voice sounds smooth and natural
-    const clean = cleanTextForSpeech(text);
-    if (!clean) {
-      onEnd?.();
-      return;
-    }
-
-    const persona = this.voiceSettings.persona || inferClinicalPersona(text);
-    const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
-    utterance.rate = speedRate || 1.1;
-    utterance.pitch = persona === 'urgent' ? 0.95 : 1.05;
-
-    const voices = window.speechSynthesis.getVoices();
-    const targetLangCode = lang === 'ta' ? 'ta' : 'en';
-    const bestVoice = voices.find(
-      (v) => v.lang.toLowerCase().startsWith(targetLangCode) || v.name.toLowerCase().includes(targetLangCode)
-    );
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    }
-
-    utterance.onstart = () => {
-      this.isSpeaking = true;
-      onStart?.();
-    };
-    utterance.onend = () => {
-      this.isSpeaking = false;
-      onEnd?.();
-    };
-    utterance.onerror = () => {
-      this.isSpeaking = false;
-      onEnd?.();
-    };
-
-    window.speechSynthesis.speak(utterance);
   }
 }
 
