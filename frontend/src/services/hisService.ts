@@ -148,134 +148,29 @@ const BEDS_STORAGE_KEY = 'healthgrid_his_beds_v1';
 const LABS_STORAGE_KEY = 'healthgrid_his_labs_v1';
 const CURRENT_PATIENT_TOKEN_KEY = 'healthgrid_current_patient_token_v1';
 
-// Seed Initial Inpatient Beds
+// Seed Initial Inpatient Beds - Clean Sanitize Baseline
 const INITIAL_BEDS: InpatientBed[] = [
-  { bedId: 'b-1', bedCode: 'ICU-01', ward: 'ICU', status: 'OCCUPIED', patientId: 'HG-PAT-1082', patientName: 'M. Arumugam', age: 64, gender: 'Male', admittedAt: '2026-10-01 14:30', primaryDiagnosis: 'Acute STEMI - Post Thrombolysis', attendingDoctor: 'Dr. R. Meenakshi, MD (Cardiology)', oxygenSupportRequired: true },
-  { bedId: 'b-2', bedCode: 'ICU-02', ward: 'ICU', status: 'OCCUPIED', patientId: 'HG-PAT-1094', patientName: 'K. Selvi', age: 48, gender: 'Female', admittedAt: '2026-10-01 22:15', primaryDiagnosis: 'Severe Dengue Shock Syndrome with Thrombocytopenia', attendingDoctor: 'Dr. V. Rajesh, MD', oxygenSupportRequired: true },
+  { bedId: 'b-1', bedCode: 'ICU-01', ward: 'ICU', status: 'AVAILABLE', oxygenSupportRequired: true },
+  { bedId: 'b-2', bedCode: 'ICU-02', ward: 'ICU', status: 'AVAILABLE', oxygenSupportRequired: true },
   { bedId: 'b-3', bedCode: 'ICU-03', ward: 'ICU', status: 'AVAILABLE', oxygenSupportRequired: true },
   { bedId: 'b-4', bedCode: 'ICU-04', ward: 'ICU', status: 'AVAILABLE', oxygenSupportRequired: true },
 
-  { bedId: 'b-5', bedCode: 'CAS-01', ward: 'EMERGENCY_CASUALTY', status: 'OCCUPIED', patientId: 'HG-PAT-1102', patientName: 'S. Vignesh', age: 29, gender: 'Male', admittedAt: '2026-10-02 08:20', primaryDiagnosis: 'Road Traffic Injury - Right Femur Fracture', attendingDoctor: 'Dr. A. Joseph, MS (Ortho)' },
+  { bedId: 'b-5', bedCode: 'CAS-01', ward: 'EMERGENCY_CASUALTY', status: 'AVAILABLE' },
   { bedId: 'b-6', bedCode: 'CAS-02', ward: 'EMERGENCY_CASUALTY', status: 'AVAILABLE' },
-  { bedId: 'b-7', bedCode: 'CAS-03', ward: 'EMERGENCY_CASUALTY', status: 'CLEANING' },
+  { bedId: 'b-7', bedCode: 'CAS-03', ward: 'EMERGENCY_CASUALTY', status: 'AVAILABLE' },
   { bedId: 'b-8', bedCode: 'CAS-04', ward: 'EMERGENCY_CASUALTY', status: 'AVAILABLE' },
 
-  { bedId: 'b-9', bedCode: 'O2-01', ward: 'OXYGEN_WARD', status: 'OCCUPIED', patientId: 'HG-PAT-1045', patientName: 'P. Lakshmi', age: 72, gender: 'Female', admittedAt: '2026-09-30 11:00', primaryDiagnosis: 'COPD Exacerbation with Hypoxia', attendingDoctor: 'Dr. S. Karthik, MD (Pulmonology)', oxygenSupportRequired: true },
+  { bedId: 'b-9', bedCode: 'O2-01', ward: 'OXYGEN_WARD', status: 'AVAILABLE', oxygenSupportRequired: true },
   { bedId: 'b-10', bedCode: 'O2-02', ward: 'OXYGEN_WARD', status: 'AVAILABLE', oxygenSupportRequired: true },
   { bedId: 'b-11', bedCode: 'O2-03', ward: 'OXYGEN_WARD', status: 'AVAILABLE', oxygenSupportRequired: true },
   { bedId: 'b-12', bedCode: 'O2-04', ward: 'OXYGEN_WARD', status: 'AVAILABLE', oxygenSupportRequired: true },
 
-  { bedId: 'b-13', bedCode: 'GEN-01', ward: 'GENERAL_WARD', status: 'OCCUPIED', patientId: 'HG-PAT-1011', patientName: 'T. Murugan', age: 52, gender: 'Male', admittedAt: '2026-10-01 09:00', primaryDiagnosis: 'Acute Gastroenteritis with Moderate Dehydration', attendingDoctor: 'Dr. N. Priyadarshini, MBBS' },
-  { bedId: 'b-14', bedCode: 'GEN-02', ward: 'GENERAL_WARD', status: 'OCCUPIED', patientId: 'HG-PAT-1014', patientName: 'D. Anitha', age: 34, gender: 'Female', admittedAt: '2026-10-01 16:40', primaryDiagnosis: 'Post-Appendectomy Day 1 Recovery', attendingDoctor: 'Dr. A. Joseph, MS' },
+  { bedId: 'b-13', bedCode: 'GEN-01', ward: 'GENERAL_WARD', status: 'AVAILABLE' },
+  { bedId: 'b-14', bedCode: 'GEN-02', ward: 'GENERAL_WARD', status: 'AVAILABLE' },
   { bedId: 'b-15', bedCode: 'GEN-03', ward: 'GENERAL_WARD', status: 'AVAILABLE' },
   { bedId: 'b-16', bedCode: 'GEN-04', ward: 'GENERAL_WARD', status: 'AVAILABLE' },
   { bedId: 'b-17', bedCode: 'GEN-05', ward: 'GENERAL_WARD', status: 'AVAILABLE' },
   { bedId: 'b-18', bedCode: 'GEN-06', ward: 'GENERAL_WARD', status: 'AVAILABLE' },
-];
-
-// Seed Initial Lab Orders
-const INITIAL_LABS: LabOrderItem[] = [
-  { orderId: 'LAB-901', patientId: 'HG-PAT-1082', patientName: 'M. Arumugam', testName: 'Cardiac Troponin-I (High Sensitivity)', specimenType: 'Venous Blood', priority: 'STAT', orderedBy: 'Dr. R. Meenakshi', orderedAt: '2026-10-02 09:15', status: 'COMPLETED', resultValue: '1.42 ng/mL (High)', referenceRange: '< 0.04 ng/mL', isAbnormal: true },
-  { orderId: 'LAB-902', patientId: 'HG-PAT-1094', patientName: 'K. Selvi', testName: 'Complete Blood Count (CBC) + Platelet Count', specimenType: 'EDTA Whole Blood', priority: 'STAT', orderedBy: 'Dr. V. Rajesh', orderedAt: '2026-10-02 10:00', status: 'COMPLETED', resultValue: 'Platelets: 42,000 /uL (Critically Low)', referenceRange: '150,000 - 450,000 /uL', isAbnormal: true },
-  { orderId: 'LAB-903', patientId: 'HG-PAT-1045', patientName: 'P. Lakshmi', testName: 'Arterial Blood Gas (ABG) Analysis', specimenType: 'Arterial Blood', priority: 'URGENT', orderedBy: 'Dr. S. Karthik', orderedAt: '2026-10-02 10:30', status: 'IN_ANALYSIS' },
-  { orderId: 'LAB-904', patientId: 'HG-PAT-1011', patientName: 'T. Murugan', testName: 'Serum Electrolytes (Na+, K+, Cl-)', specimenType: 'Serum', priority: 'ROUTINE', orderedBy: 'Dr. N. Priyadarshini', orderedAt: '2026-10-02 10:45', status: 'ORDERED' },
-];
-
-// Seed Initial Waiting Tokens
-const INITIAL_TOKENS: PatientToken[] = [
-  {
-    tokenId: 'TK-101',
-    tokenNumber: 101,
-    patientId: 'HG-PAT-3281',
-    patientName: 'R. Soundararajan',
-    age: 58,
-    gender: 'Male',
-    bloodGroup: 'B Positive',
-    phone: '+91 94440 10801',
-    chiefComplaint: 'Substernal chest tightness radiating to left shoulder and cold sweating for 45 minutes.',
-    onsetTimeline: 'Started this morning around 9:45 AM while climbing stairs.',
-    conditionProgression: 'Tightness worsening; feels like a heavy weight on the chest.',
-    painScale: 9,
-    associatedSymptoms: ['Cold sweating', 'Nausea', 'Left arm numbness'],
-    triageUrgency: 'RED',
-    status: 'WAITING',
-    createdAt: '2026-10-02 10:32',
-    healthGridCv: {
-      patientId: 'HG-PAT-3281',
-      fullName: 'R. Soundararajan',
-      age: 58,
-      gender: 'Male',
-      bloodGroup: 'B Positive',
-      contactPhone: '+91 94440 10801',
-      abhaId: '32-8192-4019-9218',
-      chronicConditions: ['Type 2 Diabetes Mellitus (8 yrs)', 'Hypertension (5 yrs)', 'Dyslipidemia'],
-      allergies: ['Penicillin (Hives/Anaphylactoid)', 'Sulfa Drugs'],
-      currentMedications: ['Metformin 500mg BD', 'Telmisartan 40mg OD', 'Atorvastatin 10mg HS'],
-      lastVitals: { bp: '158/96 mmHg', heartRate: 104, spo2: 95, tempF: '98.6°F', recordedAt: '10:30 AM' }
-    }
-  },
-  {
-    tokenId: 'TK-102',
-    tokenNumber: 102,
-    patientId: 'HG-PAT-4519',
-    patientName: 'A. Bhuvaneshwari',
-    age: 32,
-    gender: 'Female',
-    bloodGroup: 'O Positive',
-    phone: '+91 94440 98765',
-    chiefComplaint: 'High grade fever with severe retro-orbital eye pain and joint aches for 4 days.',
-    onsetTimeline: 'Began 4 days ago with sudden chills and body ache.',
-    conditionProgression: 'Persistent fever spikes up to 103°F; noticing petechial red spots on forearms today.',
-    painScale: 7,
-    associatedSymptoms: ['Retro-orbital headache', 'Severe backache (break-bone fever)', 'Loss of appetite'],
-    triageUrgency: 'AMBER',
-    status: 'WAITING',
-    createdAt: '2026-10-02 10:45',
-    healthGridCv: {
-      patientId: 'HG-PAT-4519',
-      fullName: 'A. Bhuvaneshwari',
-      age: 32,
-      gender: 'Female',
-      bloodGroup: 'O Positive',
-      contactPhone: '+91 94440 98765',
-      abhaId: '14-5192-3847-1092',
-      chronicConditions: ['Mild Asthma (Exercise-induced)'],
-      allergies: ['No Known Drug Allergies (NKDA)'],
-      currentMedications: ['Salbutamol Inhaler PRN'],
-      lastVitals: { bp: '110/74 mmHg', heartRate: 88, spo2: 98, tempF: '102.8°F', recordedAt: '10:40 AM' }
-    }
-  },
-  {
-    tokenId: 'TK-103',
-    tokenNumber: 103,
-    patientId: 'HG-PAT-2983',
-    patientName: 'K. Manikandan',
-    age: 41,
-    gender: 'Male',
-    bloodGroup: 'A Positive',
-    phone: '+91 97890 11223',
-    chiefComplaint: 'Watery diarrhea 5 times since morning with mild abdominal cramps.',
-    onsetTimeline: 'Started early morning after eating street food yesterday evening.',
-    conditionProgression: 'Frequent loose motions; no blood in stool; feels thirsty and weak.',
-    painScale: 5,
-    associatedSymptoms: ['Mild nausea', 'Dry mouth', 'Abdominal cramping'],
-    triageUrgency: 'GREEN',
-    status: 'WAITING',
-    createdAt: '2026-10-02 11:05',
-    healthGridCv: {
-      patientId: 'HG-PAT-2983',
-      fullName: 'K. Manikandan',
-      age: 41,
-      gender: 'Male',
-      bloodGroup: 'A Positive',
-      contactPhone: '+91 97890 11223',
-      abhaId: '29-8301-9923-4512',
-      chronicConditions: ['None reported'],
-      allergies: ['NSAIDs / Ibuprofen (Gastritis flare)'],
-      currentMedications: ['None regular'],
-      lastVitals: { bp: '118/76 mmHg', heartRate: 82, spo2: 99, tempF: '99.1°F', recordedAt: '11:00 AM' }
-    }
-  }
 ];
 
 class HisService {
@@ -292,21 +187,47 @@ class HisService {
   private hydrateFromStorage() {
     try {
       const storedTokens = localStorage.getItem(TOKENS_STORAGE_KEY);
-      this.tokens = storedTokens ? JSON.parse(storedTokens) : INITIAL_TOKENS;
+      const parsedTokens: PatientToken[] = storedTokens ? JSON.parse(storedTokens) : [];
+      // Cleanse legacy mock tokens
+      this.tokens = parsedTokens.filter(
+        (t) =>
+          !t.tokenId?.startsWith('TK-10') ||
+          !['R. Soundararajan', 'A. Bhuvaneshwari', 'K. Manikandan'].includes(t.patientName)
+      );
 
       const storedEncounters = localStorage.getItem(ENCOUNTERS_STORAGE_KEY);
       this.encounters = storedEncounters ? JSON.parse(storedEncounters) : [];
 
       const storedBeds = localStorage.getItem(BEDS_STORAGE_KEY);
-      this.beds = storedBeds ? JSON.parse(storedBeds) : INITIAL_BEDS;
+      const parsedBeds: InpatientBed[] = storedBeds ? JSON.parse(storedBeds) : INITIAL_BEDS;
+      // Sanitize legacy mock occupant names
+      this.beds = parsedBeds.map((b) => {
+        if (
+          b.patientName &&
+          ['M. Arumugam', 'K. Selvi', 'S. Vignesh', 'P. Lakshmi', 'T. Murugan', 'D. Anitha'].includes(
+            b.patientName
+          )
+        ) {
+          return {
+            bedId: b.bedId,
+            bedCode: b.bedCode,
+            ward: b.ward,
+            status: 'AVAILABLE' as const,
+            oxygenSupportRequired: b.oxygenSupportRequired,
+          };
+        }
+        return b;
+      });
 
       const storedLabs = localStorage.getItem(LABS_STORAGE_KEY);
-      this.labs = storedLabs ? JSON.parse(storedLabs) : INITIAL_LABS;
+      const parsedLabs: LabOrderItem[] = storedLabs ? JSON.parse(storedLabs) : [];
+      this.labs = parsedLabs.filter((l) => !l.orderId?.startsWith('LAB-90'));
+      this.persistAndNotify();
     } catch {
-      this.tokens = INITIAL_TOKENS;
+      this.tokens = [];
       this.encounters = [];
       this.beds = INITIAL_BEDS;
-      this.labs = INITIAL_LABS;
+      this.labs = [];
     }
   }
 

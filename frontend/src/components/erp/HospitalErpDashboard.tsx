@@ -833,40 +833,48 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-bold text-slate-900">Today&apos;s Appointments</h2>
                 <button
-                  onClick={() => triggerToast('Viewing all 42 registered appointments')}
+                  onClick={() => triggerToast(`Viewing all ${userspace.appointments.length} registered appointments`)}
                   className="text-xs font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1"
                 >
-                  View All →
+                  View All ({userspace.appointments.length}) →
                 </button>
               </div>
 
               <div className="space-y-3">
-                {userspace.appointments.map((appt) => (
-                  <div
-                    key={appt.id}
-                    className="p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50/70 transition-colors flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-[11px] font-mono font-medium text-slate-400 w-16">
-                        {appt.time}
-                      </span>
-                      <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center">
-                        {appt.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">{appt.name}</div>
-                        <div className="text-[10px] text-slate-500">
-                          {appt.dept} • <span className="font-medium text-slate-700">{appt.doctor}</span>
+                {userspace.appointments.length === 0 ? (
+                  <div className="py-8 text-center text-slate-400">
+                    <CalendarDays className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    <p className="text-xs font-semibold text-slate-600">No scheduled appointments today</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Appointments will appear here when scheduled by patients or triage</p>
+                  </div>
+                ) : (
+                  userspace.appointments.map((appt) => (
+                    <div
+                      key={appt.id}
+                      className="p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50/70 transition-colors flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-[11px] font-mono font-medium text-slate-400 w-16">
+                          {appt.time}
+                        </span>
+                        <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center">
+                          {appt.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">{appt.name}</div>
+                          <div className="text-[10px] text-slate-500">
+                            {appt.dept} • <span className="font-medium text-slate-700">{appt.doctor}</span>
+                          </div>
                         </div>
                       </div>
+                      <span
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${appt.statusColor}`}
+                      >
+                        {appt.status}
+                      </span>
                     </div>
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${appt.statusColor}`}
-                    >
-                      {appt.status}
-                    </span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -1128,25 +1136,35 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {userspace.admissions.map((row) => (
-                      <tr key={row.id} className="hover:bg-slate-50/50">
-                        <td className="py-2.5 font-bold text-slate-900">{row.name}</td>
-                        <td className="py-2.5 text-slate-500 font-mono text-[11px]">{row.age}</td>
-                        <td className="py-2.5 text-slate-600">{row.dept}</td>
-                        <td className="py-2.5 text-slate-400 font-mono text-[11px]">{row.time}</td>
-                        <td className="py-2.5 text-right">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              row.status === 'In OT'
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-emerald-100 text-emerald-700'
-                            }`}
-                          >
-                            {row.status}
-                          </span>
+                    {userspace.admissions.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-slate-400">
+                          <Bed className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                          <p className="text-xs font-semibold text-slate-600">No inpatient admissions today</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Active IPD admissions and bed allocations will display here</p>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      userspace.admissions.map((row) => (
+                        <tr key={row.id} className="hover:bg-slate-50/50">
+                          <td className="py-2.5 font-bold text-slate-900">{row.name}</td>
+                          <td className="py-2.5 text-slate-500 font-mono text-[11px]">{row.age}</td>
+                          <td className="py-2.5 text-slate-600">{row.dept}</td>
+                          <td className="py-2.5 text-slate-400 font-mono text-[11px]">{row.time}</td>
+                          <td className="py-2.5 text-right">
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                row.status === 'In OT'
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-emerald-100 text-emerald-700'
+                              }`}
+                            >
+                              {row.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

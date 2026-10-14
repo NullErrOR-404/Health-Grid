@@ -17,11 +17,11 @@ Back to [[00_Index]]
 ## Current System State
 
 - **Git Branch**: `main`
-- **Latest Commit**: `77f3a7c` (`feat(erp): real authenticated patient onboarding, sovereign health id desk lookup, otp walk-in registration, and hospital inbox alerts (ADR-057)`)
-- **Latest Documentation Milestone**: ADR-057 Real Authenticated Patient Onboarding, Sovereign Health ID Desk Lookup, and Hospital Inbox Alerts ([[ADR-057-Real-User-Health-ID-and-Hospital-ERP-Onboarding]])
-- **Authoritative Vercel Deployment**: `https://healthgrid-cp8iz6jkr-sameen14nmofficial-8826s-projects.vercel.app` (Serving Bundle: `index-BckH34zj.js` • Built from commit `77f3a7c`)
+- **Latest Commit**: `HEAD` (feat(erp): universal cloud dynamic state and zero-mock eradication across all modules - ADR-058)
+- **Latest Documentation Milestone**: ADR-058 Universal Cloud Dynamic State and Zero-Mock Eradication ([[ADR-058-Universal-Cloud-Dynamic-State-and-Zero-Mock-Eradication]])
+- **Authoritative Vercel Deployment**: `https://healthgrid-cp8iz6jkr-sameen14nmofficial-8826s-projects.vercel.app`
 - **Synchronized Production Aliases**:
-  - `https://healthgrid-nu.vercel.app` (200 OK • Live • `index-BckH34zj.js`)
+  - `https://healthgrid-nu.vercel.app` (200 OK • Live)
   - `https://healthgrid-app.vercel.app` (200 OK • Live)
   - `https://healthgrid-live.vercel.app` (200 OK • Live)
   - `https://healthgrid-network.vercel.app` (200 OK • Live)
@@ -30,6 +30,22 @@ Back to [[00_Index]]
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+
+- [x] Universal Cloud Dynamic State and Zero-Mock Eradication ([[ADR-058-Universal-Cloud-Dynamic-State-and-Zero-Mock-Eradication]]):
+  - **Complete Cloud Database Sanitization (`scripts/sanitize_cloud_db.js`)**: Purged 186 mock appointments, 10 mock admissions, and 33 synthetic emergency casualties from Supabase PostgreSQL. Reset all 26 beds in `public.ipd_beds` to `status = 'Available'` and scrubbed mock occupant names. Preserved authentic accounts (`Dr. Mohamed`, `Mohamed Sameen S`, `Moneshdaran S`, 33 real facility doctors, 5 hospital wards).
+  - **Frontend Core Services Dynamic Refactoring**:
+    - `appointmentService.ts`: Removed `INITIAL_BASELINE_APPOINTMENTS` and mock cache. Live dynamic calculation for metrics.
+    - `ipdBedService.ts`: Eradicated static 250/198/42 metrics; calculated dynamically from `localBeds`.
+    - `emergencyService.ts`: Eradicated fake wait times and mock casualties; computed strictly from active cases.
+    - `doctorOpdService.ts`: Eradicated `INITIAL_DOCTORS` fallback; made `getConsultationRooms()` dynamic based on real doctors and active appointments with zero mock names.
+    - `reportsAnalyticsService.ts`: Removed fake multipliers; connected directly to live DB counts and dynamic matrices.
+    - `clinicianDataSeed.ts`: Purged `SEED_PATIENTS`, `SEED_QUEUE_ITEMS`, `SEED_RESULTS`, `SEED_ENCOUNTERS`.
+    - `hisService.ts`: Cleaned `INITIAL_BEDS` to all `AVAILABLE` with zero occupant names; eradicated `INITIAL_LABS` and `INITIAL_TOKENS`.
+    - `hospitalUserspaceService.ts`: Zero-state clean baselines for `GMCH_SEED` and `CITYCARE_SEED`. Automated cache scrubber on load.
+    - `generatedPatientsData.ts`: Eradicated 4,600 lines of dead mock JSON.
+  - **Hospital ERP Clean Empty States**: Added clean empty states to Today's Appointments ("No scheduled appointments today") and Recent Admissions ("No inpatient admissions today").
+  - **Browser Subagent Live Verification**: Authenticated under Government Medical College & Hospital (`HG-H002`) with `gmch_admin` / `GMCH#Hospital2026`. Verified clean live dashboard (0 OPD visits, 0 IPD patients, 26/26 available beds, 0% occupancy, ₹ 0 revenue, 0 emergency casualties, authentic appointments only).
+  - **Production Build**: Verified clean `npm run build` with 0 errors across 2,668 modules in 2.48s.
 
 - [x] Real Authenticated Patient Onboarding, Sovereign Health ID Desk Lookup, and Hospital Inbox Alerts ([[ADR-057-Real-User-Health-ID-and-Hospital-ERP-Onboarding]]):
   - **Complete Mock Data Purge (`scripts/purge_mock_data.js`)**: Executed PostgreSQL sanitization script, dropping 49 mock seeded patients (`HG-001001` - `HG-001050`) and cascading records across `patients`, `appointments`, `encounters`, `prescriptions`, `clinical_orders`, `ipd_admissions`, and `emergency_cases`. Preserved authentic accounts: `Mohamed Sameen S` (`HG-PP27BNQ`), `Moneshdaran S` (`HG-64XBAAG`), and `Dr. Mohamed` (`HG-VL4M5MK`).

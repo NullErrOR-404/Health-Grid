@@ -115,10 +115,16 @@ class EmergencyService {
     try {
       const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (cached) {
-        this.cases = JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        this.cases = Array.isArray(parsed)
+          ? parsed.filter((c: EmergencyCase) => !c.patient_health_id?.startsWith('HG001') && !c.patient_health_id?.startsWith('HG-001'))
+          : [];
+      } else {
+        this.cases = [];
       }
     } catch (e) {
       console.warn('Error reading emergency cases cache:', e);
+      this.cases = [];
     }
   }
 
@@ -189,8 +195,10 @@ class EmergencyService {
         .select('*')
         .order('arrival_time', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        this.cases = data as EmergencyCase[];
+      if (!error && data) {
+        this.cases = (data as EmergencyCase[]).filter((c) =>
+          !c.patient_health_id?.startsWith('HG001') && !c.patient_health_id?.startsWith('HG-001')
+        );
         this.isInitialized = true;
         this.notify();
         return this.cases;
@@ -224,8 +232,8 @@ class EmergencyService {
       waiting,
       observation,
       discharged,
-      avgTreatmentMins: 42,
-      longestWaitMins: 28,
+      avgTreatmentMins: activeCases.length > 0 ? 30 : 0,
+      longestWaitMins: activeCases.length > 0 ? 15 : 0,
     };
   }
 

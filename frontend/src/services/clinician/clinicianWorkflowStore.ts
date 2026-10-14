@@ -106,8 +106,7 @@ class ClinicianWorkflowStore {
       }
     }
 
-    const firstPatient = SEED_PATIENTS[0];
-    const initialPatientId = firstPatient?.id || 'a9bd2039-a968-4986-b5d6-d5c9ffda10d5';
+    const initialPatientId = null;
 
     return {
       activeTab: 'my-queue',
@@ -131,7 +130,7 @@ class ClinicianWorkflowStore {
         {
           id: 'msg_welcome',
           sender: 'assistant',
-          text: `Good day ${SEED_CLINICIAN.name}! I have reviewed today's live queue (${SEED_QUEUE_ITEMS.length} patients). ${firstPatient?.name || 'Your patient'} is waiting in Room 101 with ${firstPatient?.primaryProblem || 'acute symptoms'}. Would you like a clinical brief before starting?`,
+          text: `Good day ${SEED_CLINICIAN.name}! I am connected to the live Supabase clinical network for ${SEED_FACILITIES[0].name}. Ready to assist with clinical documentation, order sets, and pharmacovigilance checks.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ],

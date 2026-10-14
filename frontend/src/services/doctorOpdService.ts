@@ -62,160 +62,7 @@ export interface ConsultationRoomInfo {
   timeSlot?: string;
 }
 
-export const INITIAL_DOCTORS: DoctorRecord[] = [
-  {
-    id: 'doc-001',
-    doctor_code: 'DOC001',
-    name: 'Dr. Mohamed',
-    department: 'General Medicine',
-    specialization: 'Internal Medicine & Chronic Care',
-    designation: 'Senior Consultant Physician',
-    qualification: 'MBBS, MD (General Medicine)',
-    opd_days: 'Mon - Fri',
-    opd_room: 'Room 101',
-    total_slots: 30,
-    booked_slots: 18,
-    status: 'In OPD',
-    reg_no: 'TMC-64120',
-    experience_years: 12,
-    avatar_url: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200',
-    schedule: [],
-    is_available: true,
-  },
-  {
-    id: 'doc-002',
-    doctor_code: 'DOC002',
-    name: 'Dr. Revathi',
-    department: 'General Medicine',
-    specialization: 'Preventive Cardiology & Internal Medicine',
-    designation: 'Consultant Physician',
-    qualification: 'MBBS, MD',
-    opd_days: 'Mon - Sat',
-    opd_room: 'Room 201',
-    total_slots: 25,
-    booked_slots: 14,
-    status: 'In OPD',
-    reg_no: 'TMC-78912',
-    experience_years: 8,
-    avatar_url: 'https://images.unsplash.com/photo-1594824813583-7740e53a3eb2?auto=format&fit=crop&q=80&w=200',
-    schedule: [],
-    is_available: true,
-  },
-  {
-    id: 'doc-003',
-    doctor_code: 'DOC003',
-    name: 'Dr. Arjun',
-    department: 'General Medicine',
-    specialization: 'Adult Primary Care & Geriatric Health',
-    designation: 'Consultant Physician',
-    qualification: 'MBBS, DNB',
-    opd_days: 'Mon - Fri',
-    opd_room: 'Room 105',
-    total_slots: 25,
-    booked_slots: 10,
-    status: 'Available',
-    reg_no: 'TMC-81234',
-    experience_years: 10,
-    avatar_url: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200',
-    schedule: [],
-    is_available: true,
-  },
-  {
-    id: 'doc-004',
-    doctor_code: 'DOC004',
-    name: 'Dr. Karthik',
-    department: 'Orthopaedics',
-    specialization: 'Joint Replacement & Sports Medicine',
-    designation: 'Senior Orthopaedic Surgeon',
-    qualification: 'MBBS, MS (Ortho)',
-    opd_days: 'Tue, Thu, Sat',
-    opd_room: 'Room 204',
-    total_slots: 20,
-    booked_slots: 12,
-    status: 'In OPD',
-    reg_no: 'TMC-55421',
-    experience_years: 11,
-    avatar_url: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=200',
-    schedule: [],
-    is_available: true,
-  },
-  {
-    id: 'doc-005',
-    doctor_code: 'DOC005',
-    name: 'Dr. Nivetha',
-    department: 'Dermatology',
-    specialization: 'Clinical Dermatology & Cosmetology',
-    designation: 'Consultant Dermatologist',
-    qualification: 'MBBS, MD (DVL)',
-    opd_days: 'Mon, Wed, Fri',
-    opd_room: 'Room 108',
-    total_slots: 20,
-    booked_slots: 9,
-    status: 'Available',
-    reg_no: 'TMC-92341',
-    experience_years: 7,
-    avatar_url: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200',
-    schedule: [],
-    is_available: true,
-  },
-  {
-    id: 'doc-006',
-    doctor_code: 'DOC006',
-    name: 'Dr. Meenakshi',
-    department: 'Paediatrics',
-    specialization: 'Neonatal & Child Health',
-    designation: 'Chief Pediatrician',
-    qualification: 'MBBS, MD (Paed), DCH',
-    opd_days: 'Mon - Sat',
-    opd_room: 'Room 112',
-    total_slots: 35,
-    booked_slots: 22,
-    status: 'In OPD',
-    reg_no: 'TMC-43219',
-    experience_years: 14,
-    avatar_url: 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&q=80&w=200',
-    schedule: [],
-    is_available: true,
-  },
-  {
-    id: 'doc-007',
-    doctor_code: 'DOC007',
-    name: 'Dr. Priya',
-    department: 'Gynaecology',
-    specialization: 'Obstetrics & Women Health',
-    designation: 'Consultant Obstetrician',
-    qualification: 'MBBS, MS (OBG)',
-    opd_days: 'Mon - Fri',
-    opd_room: 'Room 302',
-    total_slots: 25,
-    booked_slots: 15,
-    status: 'Available',
-    reg_no: 'TMC-88123',
-    experience_years: 9,
-    avatar_url: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=200',
-    schedule: [],
-    is_available: true,
-  },
-  {
-    id: 'doc-008',
-    doctor_code: 'DOC008',
-    name: 'Dr. Suresh',
-    department: 'General Surgery',
-    specialization: 'Laparoscopic & Minimally Invasive Surgery',
-    designation: 'Senior Surgeon',
-    qualification: 'MBBS, MS (Gen Surg), FIAGES',
-    opd_days: 'Mon, Wed, Fri',
-    opd_room: 'Room 118',
-    total_slots: 20,
-    booked_slots: 11,
-    status: 'In OPD',
-    reg_no: 'TMC-31245',
-    experience_years: 15,
-    avatar_url: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200',
-    schedule: [],
-    is_available: true,
-  }
-];
+export const INITIAL_DOCTORS: DoctorRecord[] = [];
 
 const LOCAL_STORAGE_KEY = 'healthgrid_doctors_cache_v1';
 
@@ -351,17 +198,16 @@ class DoctorOpdService {
     const onLeave = this.doctors.filter((d) => d.status === 'On Leave').length;
     const available = this.doctors.filter((d) => d.status === 'Available').length;
 
-    // Total consultations across appointments for today
     const appts = appointmentService.getAppointments();
-    const consultationsCount = appts.length > 0 ? Math.max(186, appts.length) : 186;
+    const consultationsCount = appts.length;
 
     return {
-      totalDoctors: total > 0 ? total : 24,
-      currentlyInOpd: inOpd > 0 ? inOpd : 12,
+      totalDoctors: total,
+      currentlyInOpd: inOpd,
       totalOpdConsultations: consultationsCount,
-      avgConsultationTime: 12, // 12 mins clinical benchmark
-      onLeave: onLeave > 0 ? onLeave : 2,
-      available: available > 0 ? available : 10,
+      avgConsultationTime: total > 0 ? 12 : 0,
+      onLeave,
+      available,
     };
   }
 
@@ -519,31 +365,49 @@ class DoctorOpdService {
   }
 
   /**
-   * Rooms allocation listing computed from active doctors and their schedules
+   * Rooms allocation listing dynamically computed from live doctors and their appointments
    */
   public getConsultationRooms(): ConsultationRoomInfo[] {
-    const roomMap: Record<string, ConsultationRoomInfo> = {
-      'Room 101': { room: 'Room 101', department: 'General Medicine', doctorName: 'Dr. Mohamed', status: 'Occupied', currentPatient: 'Lakshmi Priya', timeSlot: '09:00 AM - 01:00 PM' },
-      'Room 102': { room: 'Room 102', department: 'General Medicine', doctorName: 'Dr. Mohamed', status: 'Available', timeSlot: '04:00 PM - 06:00 PM' },
-      'Room 104': { room: 'Room 104', department: 'Geriatrics', doctorName: 'Dr. Geetha', status: 'Occupied', currentPatient: 'M. Kannan', timeSlot: '10:00 AM - 02:00 PM' },
-      'Room 105': { room: 'Room 105', department: 'Diabetology', doctorName: 'Dr. Arjun', status: 'Available', timeSlot: '09:30 AM - 01:30 PM' },
-      'Room 108': { room: 'Room 108', department: 'Dermatology', doctorName: 'Dr. Nivetha', status: 'Occupied', currentPatient: 'Vignesh S', timeSlot: '10:00 AM - 02:00 PM' },
-      'Room 112': { room: 'Room 112', department: 'Paediatrics', doctorName: 'Dr. Meenakshi', status: 'Occupied', currentPatient: 'Baby Aadhya', timeSlot: '09:00 AM - 01:00 PM' },
-      'Room 115': { room: 'Room 115', department: 'Psychiatry', doctorName: 'Dr. Shalini', status: 'Available', timeSlot: '11:00 AM - 03:00 PM' },
-      'Room 118': { room: 'Room 118', department: 'General Surgery', doctorName: 'Dr. Suresh', status: 'Occupied', currentPatient: 'Deepak Verma', timeSlot: '09:00 AM - 01:00 PM' },
-      'Room 122': { room: 'Room 122', department: 'Ophthalmology', doctorName: 'Dr. Preethi', status: 'Available', timeSlot: '09:00 AM - 01:00 PM' },
-      'Room 201': { room: 'Room 201', department: 'Cardiology', doctorName: 'Dr. Revathi', status: 'Occupied', currentPatient: 'S. Jayaraman', timeSlot: '10:00 AM - 02:00 PM' },
-      'Room 204': { room: 'Room 204', department: 'Orthopaedics', doctorName: 'Dr. Karthik', status: 'Maintenance', timeSlot: 'Doctor on Leave' },
-      'Room 208': { room: 'Room 208', department: 'ENT', doctorName: 'Dr. Srinivasan', status: 'Occupied', currentPatient: 'Pooja Nair', timeSlot: '10:00 AM - 02:00 PM' },
-      'Room 210': { room: 'Room 210', department: 'Pulmonology', doctorName: 'Dr. Vignesh', status: 'Occupied', currentPatient: 'Anil Joshi', timeSlot: '09:00 AM - 01:00 PM' },
-      'Room 214': { room: 'Room 214', department: 'Nephrology', doctorName: 'Dr. Dinesh', status: 'Occupied', currentPatient: 'Suresh Babu', timeSlot: '10:00 AM - 02:00 PM' },
-      'Room 215': { room: 'Room 215', department: 'Urology', doctorName: 'Dr. Sanjay', status: 'Available', timeSlot: '09:00 AM - 01:00 PM' },
-      'Room 302': { room: 'Room 302', department: 'Gynaecology', doctorName: 'Dr. Priya', status: 'Occupied', currentPatient: 'Radhika S', timeSlot: '09:00 AM - 01:00 PM' },
-      'Room 305': { room: 'Room 305', department: 'Neurology', doctorName: 'Dr. Ananya', status: 'Available', timeSlot: '10:00 AM - 02:00 PM' },
-      'Casualty ER': { room: 'Casualty ER', department: 'Emergency Medicine', doctorName: 'Dr. Bala Murugan', status: 'Occupied', currentPatient: 'Triage Red Trauma', timeSlot: '24/7 STAT' },
-    };
+    const liveAppointments = appointmentService.getAppointments();
+    const activeConsultations = liveAppointments.filter(
+      (a) => a.status === 'In Consultation' || a.status === 'Checked In'
+    );
 
-    return Object.values(roomMap);
+    if (this.doctors.length === 0) {
+      return [
+        {
+          room: 'Room 101',
+          department: 'General Medicine',
+          doctorName: 'Dr. Mohamed',
+          status: 'Available',
+          timeSlot: '09:00 AM - 01:00 PM',
+        },
+        {
+          room: 'Casualty ER',
+          department: 'Emergency Medicine',
+          doctorName: 'Dr. Bala Murugan',
+          status: 'Available',
+          timeSlot: '24/7 STAT',
+        },
+      ];
+    }
+
+    return this.doctors.map((doc, idx) => {
+      const roomNumber = doc.opd_room || `Room ${101 + idx}`;
+      const activeAppt = activeConsultations.find(
+        (a) => a.doctor_name === doc.name || a.doctor_id === doc.id
+      );
+
+      return {
+        room: roomNumber,
+        department: doc.department,
+        doctorId: doc.id,
+        doctorName: doc.name,
+        status: activeAppt ? ('Occupied' as const) : doc.status === 'On Leave' ? ('Maintenance' as const) : ('Available' as const),
+        currentPatient: activeAppt?.patient_name,
+        timeSlot: doc.schedule?.[0]?.slots?.[0]?.time || '09:00 AM - 01:00 PM',
+      };
+    });
   }
 }
 

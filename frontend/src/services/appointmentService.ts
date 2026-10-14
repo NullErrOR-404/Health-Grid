@@ -62,331 +62,6 @@ export interface AppointmentMetrics {
 
 const LOCAL_STORAGE_KEY = 'healthgrid_appointments_cache_v1';
 
-// Baseline reference appointments for immediate rendering and offline resilience
-const INITIAL_BASELINE_APPOINTMENTS: Appointment[] = [
-  {
-    id: 'apt-001',
-    appointment_id: 'APPT250929001',
-    patient_health_id: 'HG001245',
-    patient_name: 'Sameer Ahmed',
-    patient_phone: '+91 98765 43210',
-    patient_age: 20,
-    patient_gender: 'Male',
-    patient_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-    doctor_name: 'Dr. Mohamed',
-    department: 'General Medicine',
-    appointment_date: '2025-09-29',
-    appointment_time: '09:00 AM',
-    appointment_type: 'Consultation',
-    status: 'Checked In',
-    checked_in_at: '2025-09-29T08:52:00Z',
-    source: 'Online Booking',
-    reason_for_visit: 'Persistent low-grade fever with mild headache for 3 days.',
-    notes: 'Patient arrived 8 min early. Temperature 99.1°F recorded at triage.'
-  },
-  {
-    id: 'apt-002',
-    appointment_id: 'APPT250929002',
-    patient_health_id: 'HG001244',
-    patient_name: 'Lakshmi Priya',
-    patient_phone: '+91 98765 43211',
-    patient_age: 34,
-    patient_gender: 'Female',
-    patient_avatar: '',
-    doctor_name: 'Dr. Revathi',
-    department: 'Cardiology',
-    appointment_date: '2025-09-29',
-    appointment_time: '09:30 AM',
-    appointment_type: 'Follow-up',
-    status: 'Waiting',
-    checked_in_at: '2025-09-29T09:25:00Z',
-    source: 'Online Booking',
-    reason_for_visit: 'Follow-up on post-angioplasty medication adherence and BP evaluation.',
-    notes: 'ECG report from last month attached in documents.'
-  },
-  {
-    id: 'apt-003',
-    appointment_id: 'APPT250929003',
-    patient_health_id: 'HG001243',
-    patient_name: 'Rajesh Kumar',
-    patient_phone: '+91 98765 43212',
-    patient_age: 45,
-    patient_gender: 'Male',
-    patient_avatar: '',
-    doctor_name: 'Dr. Arjun',
-    department: 'Diabetology',
-    appointment_date: '2025-09-29',
-    appointment_time: '10:00 AM',
-    appointment_type: 'Consultation',
-    status: 'Waiting',
-    checked_in_at: '2025-09-29T09:50:00Z',
-    source: 'Online Booking',
-    reason_for_visit: 'Fasting blood glucose fluctuations and periodic dizziness.',
-    notes: 'HbA1c test requested by nurse.'
-  },
-  {
-    id: 'apt-004',
-    appointment_id: 'APPT250929004',
-    patient_health_id: 'HG001242',
-    patient_name: 'Meena R',
-    patient_phone: '+91 98765 43213',
-    patient_age: 28,
-    patient_gender: 'Female',
-    patient_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-    doctor_name: 'Dr. Priya',
-    department: 'Gynaecology',
-    appointment_date: '2025-09-29',
-    appointment_time: '10:30 AM',
-    appointment_type: 'Consultation',
-    status: 'In Consultation',
-    checked_in_at: '2025-09-29T10:15:00Z',
-    source: 'Walk-in',
-    reason_for_visit: 'Routine trimester prenatal checkup and ultrasound scan review.',
-    notes: 'Currently in consultation room with Dr. Priya.'
-  },
-  {
-    id: 'apt-005',
-    appointment_id: 'APPT250929005',
-    patient_health_id: 'HG001241',
-    patient_name: 'Arun Prakash',
-    patient_phone: '+91 98765 43214',
-    patient_age: 62,
-    patient_gender: 'Male',
-    patient_avatar: '',
-    doctor_name: 'Dr. Karthik',
-    department: 'Orthopaedics',
-    appointment_date: '2025-09-29',
-    appointment_time: '11:00 AM',
-    appointment_type: 'Follow-up',
-    status: 'Waiting',
-    checked_in_at: '2025-09-29T10:45:00Z',
-    source: 'Online Booking',
-    reason_for_visit: 'Right knee mobility stiffness post physiotherapy exercises.',
-    notes: 'X-ray knee AP/Lateral scheduled.'
-  },
-  {
-    id: 'apt-006',
-    appointment_id: 'APPT250929006',
-    patient_health_id: 'HG001240',
-    patient_name: 'Fathima Begum',
-    patient_phone: '+91 98765 43215',
-    patient_age: 50,
-    patient_gender: 'Female',
-    patient_avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
-    doctor_name: 'Dr. Mohamed',
-    department: 'General Medicine',
-    appointment_date: '2025-09-29',
-    appointment_time: '11:30 AM',
-    appointment_type: 'Consultation',
-    status: 'Scheduled',
-    checked_in_at: null,
-    source: 'Online Booking',
-    reason_for_visit: 'Chronic fatigue and seasonal allergic rhinitis evaluation.',
-    notes: 'Confirmed via automated SMS reminder.'
-  },
-  {
-    id: 'apt-007',
-    appointment_id: 'APPT250929007',
-    patient_health_id: 'HG001239',
-    patient_name: 'Vignesh S',
-    patient_phone: '+91 98765 43216',
-    patient_age: 36,
-    patient_gender: 'Male',
-    patient_avatar: '',
-    doctor_name: 'Dr. Nivetha',
-    department: 'Dermatology',
-    appointment_date: '2025-09-29',
-    appointment_time: '12:00 PM',
-    appointment_type: 'Consultation',
-    status: 'Scheduled',
-    checked_in_at: null,
-    source: 'Online Booking',
-    reason_for_visit: 'Dry erythematous patches on bilateral elbows and scalp.',
-    notes: 'Patient requested topical prescription advice.'
-  },
-  {
-    id: 'apt-008',
-    appointment_id: 'APPT250929008',
-    patient_health_id: 'HG001238',
-    patient_name: 'Kavitha N',
-    patient_phone: '+91 98765 43217',
-    patient_age: 40,
-    patient_gender: 'Female',
-    patient_avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150',
-    doctor_name: 'Dr. Arjun',
-    department: 'Endocrinology',
-    appointment_date: '2025-09-29',
-    appointment_time: '12:30 PM',
-    appointment_type: 'Follow-up',
-    status: 'Confirmed',
-    checked_in_at: null,
-    source: 'Online Booking',
-    reason_for_visit: 'Thyroid profile adjustment and TSH evaluation.',
-    notes: 'Reports ready on LIS portal.'
-  },
-  {
-    id: 'apt-009',
-    appointment_id: 'APPT250929009',
-    patient_health_id: 'HG001237',
-    patient_name: 'Suresh Babu',
-    patient_phone: '+91 98765 43218',
-    patient_age: 55,
-    patient_gender: 'Male',
-    patient_avatar: '',
-    doctor_name: 'Dr. Priya',
-    department: 'Nephrology',
-    appointment_date: '2025-09-29',
-    appointment_time: '01:00 PM',
-    appointment_type: 'Consultation',
-    status: 'Confirmed',
-    checked_in_at: null,
-    source: 'Online Booking',
-    reason_for_visit: 'Serum creatinine monitoring and dietary salt review.',
-    notes: 'Hydration advisory given during last visit.'
-  },
-  {
-    id: 'apt-010',
-    appointment_id: 'APPT250929010',
-    patient_health_id: 'HG001236',
-    patient_name: 'Divya R',
-    patient_phone: '+91 98765 43219',
-    patient_age: 31,
-    patient_gender: 'Female',
-    patient_avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=150',
-    doctor_name: 'Dr. Karthik',
-    department: 'Pulmonology',
-    appointment_date: '2025-09-29',
-    appointment_time: '01:30 PM',
-    appointment_type: 'Consultation',
-    status: 'Scheduled',
-    checked_in_at: null,
-    source: 'Online Booking',
-    reason_for_visit: 'Nocturnal cough and seasonal wheezing exacerbation.',
-    notes: 'Spirometry test pre-booked.'
-  },
-  {
-    id: 'apt-011',
-    appointment_id: 'APPT250929011',
-    patient_health_id: 'HG-PP27BNQ',
-    patient_name: 'Mohamed Sameen',
-    patient_phone: '+91 93841 80516',
-    patient_age: 20,
-    patient_gender: 'Male',
-    patient_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-    doctor_name: 'Dr. Mohamed',
-    department: 'General Medicine',
-    appointment_date: '2025-09-29',
-    appointment_time: '02:00 PM',
-    appointment_type: 'Consultation',
-    status: 'Confirmed',
-    checked_in_at: null,
-    source: 'Mobile App',
-    reason_for_visit: 'Comprehensive preventive annual health screening and blood test consultation.',
-    notes: 'Booked directly via HealthGrid Citizen Mobile App.'
-  },
-  {
-    id: 'apt-012',
-    appointment_id: 'APPT250929012',
-    patient_health_id: 'HG001245',
-    patient_name: 'Anitha S',
-    patient_phone: '+91 98765 43220',
-    patient_age: 29,
-    patient_gender: 'Female',
-    patient_avatar: '',
-    doctor_name: 'Dr. Revathi',
-    department: 'Cardiology',
-    appointment_date: '2025-09-29',
-    appointment_time: '08:30 AM',
-    appointment_type: 'Consultation',
-    status: 'Cancelled',
-    checked_in_at: null,
-    source: 'Online Booking',
-    cancellation_reason: 'Patient rescheduled due to travel conflict.',
-    reason_for_visit: 'Palpitations after aerobic exercise.',
-    notes: 'Cancelled 2 hours before slot.'
-  },
-  {
-    id: 'apt-013',
-    appointment_id: 'APPT250929013',
-    patient_health_id: 'HG001243',
-    patient_name: 'Prakash Raj',
-    patient_phone: '+91 98765 43221',
-    patient_age: 48,
-    patient_gender: 'Male',
-    patient_avatar: '',
-    doctor_name: 'Dr. Mohamed',
-    department: 'General Medicine',
-    appointment_date: '2025-09-29',
-    appointment_time: '08:45 AM',
-    appointment_type: 'Consultation',
-    status: 'No Show',
-    checked_in_at: null,
-    source: 'Online Booking',
-    cancellation_reason: 'Did not arrive within 30 min of scheduled time.',
-    reason_for_visit: 'Routine lipid panel review.',
-    notes: 'Two reminder calls unanswered.'
-  },
-  {
-    id: 'apt-014',
-    appointment_id: 'APPT250930001',
-    patient_health_id: 'HG001245',
-    patient_name: 'Sameer Ahmed',
-    patient_phone: '+91 98765 43210',
-    patient_age: 20,
-    patient_gender: 'Male',
-    patient_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-    doctor_name: 'Dr. Mohamed',
-    department: 'General Medicine',
-    appointment_date: '2025-09-30',
-    appointment_time: '10:00 AM',
-    appointment_type: 'Follow-up',
-    status: 'Scheduled',
-    checked_in_at: null,
-    source: 'Online Booking',
-    reason_for_visit: 'Follow-up review of blood culture results.',
-    notes: 'Scheduled for tomorrow.'
-  },
-  {
-    id: 'apt-015',
-    appointment_id: 'APPT251001001',
-    patient_health_id: 'HG-PP27BNQ',
-    patient_name: 'Mohamed Sameen',
-    patient_phone: '+91 93841 80516',
-    patient_age: 20,
-    patient_gender: 'Male',
-    patient_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-    doctor_name: 'Dr. Arjun',
-    department: 'Diabetology',
-    appointment_date: '2025-10-01',
-    appointment_time: '11:00 AM',
-    appointment_type: 'Consultation',
-    status: 'Scheduled',
-    checked_in_at: null,
-    source: 'Mobile App',
-    reason_for_visit: 'Dietary metabolism counseling and fitness biometric review.',
-    notes: 'Booked on citizen profile.'
-  },
-  {
-    id: 'apt-016',
-    appointment_id: 'APPT250928001',
-    patient_health_id: 'HG001244',
-    patient_name: 'Lakshmi Priya',
-    patient_phone: '+91 98765 43211',
-    patient_age: 34,
-    patient_gender: 'Female',
-    patient_avatar: '',
-    doctor_name: 'Dr. Revathi',
-    department: 'Cardiology',
-    appointment_date: '2025-09-28',
-    appointment_time: '02:00 PM',
-    appointment_type: 'Consultation',
-    status: 'Completed',
-    checked_in_at: '2025-09-28T13:50:00Z',
-    source: 'Online Booking',
-    reason_for_visit: 'Cardiac stress test interpretation.',
-    notes: 'Completed. Normal sinus rhythm.'
-  }
-];
 
 class AppointmentService {
   private appointments: Appointment[] = [];
@@ -402,13 +77,16 @@ class AppointmentService {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
-        this.appointments = JSON.parse(stored);
+        const parsed: Appointment[] = JSON.parse(stored);
+        // Cleanse any legacy mock appointments
+        this.appointments = Array.isArray(parsed)
+          ? parsed.filter((a) => !a.patient_health_id?.startsWith('HG001') && !a.patient_health_id?.startsWith('HG-001'))
+          : [];
       } else {
-        this.appointments = [...INITIAL_BASELINE_APPOINTMENTS];
-        this.saveCache();
+        this.appointments = [];
       }
     } catch {
-      this.appointments = [...INITIAL_BASELINE_APPOINTMENTS];
+      this.appointments = [];
     }
   }
 
@@ -475,8 +153,10 @@ class AppointmentService {
         return this.appointments;
       }
 
-      if (data && data.length > 0) {
-        this.appointments = data as Appointment[];
+      if (data) {
+        this.appointments = (data as Appointment[]).filter((a) =>
+          !a.patient_health_id?.startsWith('HG001') && !a.patient_health_id?.startsWith('HG-001')
+        );
         this.notify();
       }
       return this.appointments;
@@ -501,24 +181,23 @@ class AppointmentService {
   }
 
   public calculateMetrics(items: Appointment[] = this.appointments): AppointmentMetrics {
-    // If we have our core set, scale to match the exact visual reference proportions (Total 148, 102 Checked In, 28 Waiting, 18 Cancelled)
-    const liveCheckedIn = items.filter((a) => a.status === 'Checked In' || a.status === 'In Consultation').length;
-    const liveWaiting = items.filter((a) => a.status === 'Waiting').length;
-    const liveCancelled = items.filter((a) => a.status === 'Cancelled' || a.status === 'No Show').length;
+    const total = items.length;
+    const checkedIn = items.filter((a) => a.status === 'Checked In' || a.status === 'In Consultation').length;
+    const waiting = items.filter((a) => a.status === 'Waiting').length;
+    const cancelledNoShow = items.filter((a) => a.status === 'Cancelled' || a.status === 'No Show').length;
 
-    const total = 148;
-    const checkedIn = Math.max(102, liveCheckedIn > 0 ? 100 + liveCheckedIn : 102);
-    const waiting = Math.max(28, liveWaiting > 0 ? 25 + liveWaiting : 28);
-    const cancelledNoShow = Math.max(18, liveCancelled > 0 ? 16 + liveCancelled : 18);
+    const checkedInPercentage = total > 0 ? Math.round((checkedIn / total) * 100) : 0;
+    const waitingPercentage = total > 0 ? Math.round((waiting / total) * 100) : 0;
+    const cancelledNoShowPercentage = total > 0 ? Math.round((cancelledNoShow / total) * 100) : 0;
 
     return {
       total,
       checkedIn,
-      checkedInPercentage: 69,
+      checkedInPercentage,
       waiting,
-      waitingPercentage: 19,
+      waitingPercentage,
       cancelledNoShow,
-      cancelledNoShowPercentage: 12,
+      cancelledNoShowPercentage,
     };
   }
 

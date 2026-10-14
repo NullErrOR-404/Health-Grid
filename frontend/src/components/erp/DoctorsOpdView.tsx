@@ -833,54 +833,62 @@ export const DoctorsOpdView: React.FC<DoctorsOpdViewProps> = ({
 
                     {/* Patient Queue List (Numbered Badges 1-5) */}
                     <div className="space-y-2">
-                      {todayPatients.slice(0, 5).map((pat, idx) => (
-                        <div
-                          key={pat.id || idx}
-                          className="p-2 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            {/* Numbered badge */}
-                            <div className="w-5 h-5 rounded-full bg-teal-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                              {idx + 1}
-                            </div>
-                            <img
-                              src={
-                                pat.patient_avatar ||
-                                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100'
-                              }
-                              alt={pat.patient_name}
-                              className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-200"
-                            />
-                            <div>
-                              <div className="text-xs font-bold text-slate-900 leading-tight">
-                                {pat.patient_name}
-                              </div>
-                              <div className="text-[10px] text-slate-400 leading-tight mt-0.5">
-                                UHID: {pat.patient_health_id} | {pat.patient_age} {pat.patient_gender}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="text-[10px] font-mono text-slate-500 mb-0.5">
-                              {pat.appointment_time}
-                            </div>
-                            <span
-                              className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                                pat.status === 'Completed'
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : pat.status === 'In Consultation'
-                                  ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                                  : pat.status === 'Waiting'
-                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                  : 'bg-slate-100 text-slate-600'
-                              }`}
-                            >
-                              {pat.status}
-                            </span>
-                          </div>
+                      {todayPatients.length === 0 ? (
+                        <div className="py-6 text-center text-slate-400">
+                          <Users className="w-7 h-7 mx-auto mb-1.5 text-slate-300" />
+                          <p className="text-xs font-semibold text-slate-600">No OPD consultations queued</p>
+                          <p className="text-[10px] text-slate-400">Tokens populate automatically upon patient check-in</p>
                         </div>
-                      ))}
+                      ) : (
+                        todayPatients.slice(0, 5).map((pat, idx) => (
+                          <div
+                            key={pat.id || idx}
+                            className="p-2 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              {/* Numbered badge */}
+                              <div className="w-5 h-5 rounded-full bg-teal-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                                {idx + 1}
+                              </div>
+                              <img
+                                src={
+                                  pat.patient_avatar ||
+                                  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100'
+                                }
+                                alt={pat.patient_name}
+                                className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-200"
+                              />
+                              <div>
+                                <div className="text-xs font-bold text-slate-900 leading-tight">
+                                  {pat.patient_name}
+                                </div>
+                                <div className="text-[10px] text-slate-400 leading-tight mt-0.5">
+                                  UHID: {pat.patient_health_id} | {pat.patient_age} {pat.patient_gender}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-[10px] font-mono text-slate-500 mb-0.5">
+                                {pat.appointment_time}
+                              </div>
+                              <span
+                                className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                  pat.status === 'Completed'
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : pat.status === 'In Consultation'
+                                    ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                                    : pat.status === 'Waiting'
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    : 'bg-slate-100 text-slate-600'
+                                }`}
+                              >
+                                {pat.status}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}
@@ -892,35 +900,43 @@ export const DoctorsOpdView: React.FC<DoctorsOpdViewProps> = ({
                       All Appointments for {selectedDoctor.name} ({todayPatients.length})
                     </div>
                     <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
-                      {todayPatients.map((pat, idx) => (
-                        <div
-                          key={pat.id || idx}
-                          className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold text-[10px] flex items-center justify-center">
-                              {idx + 1}
-                            </span>
-                            <div>
-                              <div className="text-xs font-bold text-slate-900">{pat.patient_name}</div>
-                              <div className="text-[10px] text-slate-400">
-                                {pat.patient_health_id} • {pat.appointment_time}
+                      {todayPatients.length === 0 ? (
+                        <div className="py-8 text-center text-slate-400">
+                          <Calendar className="w-7 h-7 mx-auto mb-1.5 text-slate-300" />
+                          <p className="text-xs font-semibold text-slate-600">No scheduled patients today</p>
+                          <p className="text-[10px] text-slate-400">Live appointments booked with {selectedDoctor.name} appear here</p>
+                        </div>
+                      ) : (
+                        todayPatients.map((pat, idx) => (
+                          <div
+                            key={pat.id || idx}
+                            className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold text-[10px] flex items-center justify-center">
+                                {idx + 1}
+                              </span>
+                              <div>
+                                <div className="text-xs font-bold text-slate-900">{pat.patient_name}</div>
+                                <div className="text-[10px] text-slate-400">
+                                  {pat.patient_health_id} • {pat.appointment_time}
+                                </div>
                               </div>
                             </div>
+                            <span
+                              className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                pat.status === 'Completed'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : pat.status === 'In Consultation'
+                                  ? 'bg-sky-100 text-sky-800'
+                                  : 'bg-amber-100 text-amber-800'
+                              }`}
+                            >
+                              {pat.status}
+                            </span>
                           </div>
-                          <span
-                            className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                              pat.status === 'Completed'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : pat.status === 'In Consultation'
-                                ? 'bg-sky-100 text-sky-800'
-                                : 'bg-amber-100 text-amber-800'
-                            }`}
-                          >
-                            {pat.status}
-                          </span>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
                 )}

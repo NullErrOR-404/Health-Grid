@@ -213,9 +213,14 @@ class IpdBedService {
   public async getBeds(): Promise<IpdBed[]> {
     try {
       const { data, error } = await supabase.from('ipd_beds').select('*').order('bed_number');
-      if (!error && data && data.length > 0) {
-        this.localBeds = data;
-        return data;
+      if (!error && data) {
+        this.localBeds = data.map((b: IpdBed) => {
+          if (b.current_patient_health_id?.startsWith('HG001') || b.current_patient_health_id?.startsWith('HG-001')) {
+            return { ...b, status: 'Available', current_patient_health_id: null, current_patient_name: null };
+          }
+          return b;
+        });
+        return this.localBeds;
       }
     } catch (e) {
       console.warn('Error fetching beds from Supabase, using local:', e);
@@ -245,9 +250,11 @@ class IpdBedService {
         query = query.eq('status', statusFilter);
       }
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        this.localAdmissions = data;
-        return data;
+      if (!error && data) {
+        this.localAdmissions = data.filter((a: IpdAdmission) =>
+          !a.patient_health_id?.startsWith('HG001') && !a.patient_health_id?.startsWith('HG-001')
+        );
+        return this.localAdmissions;
       }
     } catch (e) {
       console.warn('Error fetching admissions from Supabase, using local:', e);
@@ -710,48 +717,37 @@ class IpdBedService {
     return this.localTransfers;
   }
 
-  // 16. Metrics Calculation
+  // 16. Metrics Calculation (Pure live cloud data)
   public calculateMetrics(beds: IpdBed[]): IpdMetrics {
-    // If scaled to reference hospital census (250 total beds)
-    // Reference metrics: Total 250, Occupied 198 (79%), Available 42 (17%), Maintenance 10 (4%)
-    const sampleTotal = beds.length;
-    if (sampleTotal === 0) {
+    const totalBeds = beds.length;
+    if (totalBeds === 0) {
       return {
-        totalBeds: 250,
-        occupiedBeds: 198,
-        availableBeds: 42,
-        maintenanceBeds: 10,
-        occupiedPercentage: 79,
-        availablePercentage: 17,
-        maintenancePercentage: 4,
+        totalBeds: 0,
+        occupiedBeds: 0,
+        availableBeds: 0,
+        maintenanceBeds: 0,
+        occupiedPercentage: 0,
+        availablePercentage: 0,
+        maintenancePercentage: 0,
       };
     }
 
-    const occupiedCount = beds.filter((b) => b.status === 'Occupied').length;
-    const maintenanceCount = beds.filter((b) => b.status === 'Maintenance').length;
-    const cleaningCount = beds.filter((b) => b.status === 'Cleaning').length;
+    const occupiedBeds = beds.filter((b) => b.status === 'Occupied').length;
+    const maintenanceBeds = beds.filter((b) => b.status === 'Maintenance' || b.status === 'Cleaning').length;
+    const availableBeds = beds.filter((b) => b.status === 'Available').length;
 
-    // Delta from initial seed baseline of 13 occupied, 1 maintenance
-    const occupiedDelta = occupiedCount - 13;
-    const maintDelta = maintenanceCount - 1;
-
-    const totalCapacity = 250;
-    const occupiedBeds = Math.max(0, 198 + occupiedDelta);
-    const maintenanceBeds = Math.max(0, 10 + maintDelta + cleaningCount);
-    const availableBeds = Math.max(0, totalCapacity - occupiedBeds - maintenanceBeds);
-
-    const occupiedPct = Math.round((occupiedBeds / totalCapacity) * 100);
-    const availablePct = Math.round((availableBeds / totalCapacity) * 100);
-    const maintenancePct = Math.round((maintenanceBeds / totalCapacity) * 100);
+    const occupiedPercentage = Math.round((occupiedBeds / totalBeds) * 100);
+    const availablePercentage = Math.round((availableBeds / totalBeds) * 100);
+    const maintenancePercentage = Math.round((maintenanceBeds / totalBeds) * 100);
 
     return {
-      totalBeds: totalCapacity,
+      totalBeds,
       occupiedBeds,
       availableBeds,
       maintenanceBeds,
-      occupiedPercentage: occupiedPct,
-      availablePercentage: availablePct,
-      maintenancePercentage: maintenancePct,
+      occupiedPercentage,
+      availablePercentage,
+      maintenancePercentage,
     };
   }
 }
