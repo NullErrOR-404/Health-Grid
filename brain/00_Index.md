@@ -95,6 +95,7 @@ graph TD
     DEC --> ADR52[[ADR-052-Collapsible-Clinical-Canvas-Deep-Research-and-Ambient-Scribe]]
     DEC --> ADR53[[ADR-053-Multi-Doctor-Polypharmacy-and-Cross-Prescription-Conflict-Shield]]
     DEC --> ADR54[[ADR-054-Comprehensive-RBAC-Persona-Gating-and-Zero-Trace-Data-Isolation]]
+    DEC --> ADR55[[ADR-055-Situational-AI-Quick-Actions-and-Pure-Zero-Fallback-Architecture]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
     MOD --> CLIN[[Clinician_Portal_Operating_System]]
@@ -198,6 +199,7 @@ graph TD
 - [[ADR-052-Collapsible-Clinical-Canvas-Deep-Research-and-Ambient-Scribe]]: Collapsible Dynamic Clinical Canvas & Generative Health Artifacts (Claude Artifacts style workspace), Autonomous Deep Clinical Research Engine with GRADE certainty evaluation and Indian (ICMR/IP) vs International (WHO/KDIGO) guideline arbitration, and Duplex Voice Tele-Clinic with Ambient Clinical Scribe (Gemini Live / Advanced Voice style) featuring DPDP Act 2023 patient consent notification, dual-channel speaker diarization, and SHA-256 digital signature locking.
 - [[ADR-053-Multi-Doctor-Polypharmacy-and-Cross-Prescription-Conflict-Shield]]: Multi-Doctor Polypharmacy & Cross-Prescription Conflict Shield (360° Omnipresent Safety Engine) cross-analyzing prescriptions across disparate hospital networks to detect silent duplicate molecules (brand masking), contraindicated drug-drug collisions (Blood Thinner + NSAID, ACEi + NSAID, Statin + Macrolide), cumulative organ burden indexes, dual-persona reconciliation (patient-reported taking status with immutable prescriber provenance), SBAR Doctor Discussion Briefs, and audited clinician override modal with SHA-256 digital signatures.
 - [[ADR-054-Comprehensive-RBAC-Persona-Gating-and-Zero-Trace-Data-Isolation]]: Comprehensive RBAC persona gating and zero-trace data isolation across Citizens, Clinicians, and Hospital Administrators. Elimination of inadvertent mock fallbacks (`Sameer Ahmed`, `dr.mohamed`), zero DOM mounting on unauthorized visits via 403 Security Interceptor Shield (`AccessDeniedModal`), dynamic user-scoped storage keying (`healthgrid_clinician_store_${id}`, user cabinets), statutory role clamping on public registration, and doctor-only gating on clinical SOAP note digital signing.
+- [[ADR-055-Situational-AI-Quick-Actions-and-Pure-Zero-Fallback-Architecture]]: Situational AI Quick Actions and Pure Zero-Fallback Architecture. Replaced unsolicited choosing options on every turn with strict situational gating (branching clinical history questions, explicit patient requests, acute emergencies). Eliminated hardcoded fallback options generator, suppressed follow-up chips during casual chat, eradicated all emojis from option buttons, and enforced clean Lucide SVG icon design across Web and Mobile.
 
 ---
 

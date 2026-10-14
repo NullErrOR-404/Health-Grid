@@ -5334,18 +5334,21 @@ ${sbar.recommendation}`;
                           <span>{lang === 'en' ? 'Clinical Next Steps (1-Tap):' : 'அடுத்த கட்ட மருத்துவ வழிகாட்டல்:'}</span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {msg.followUpChips.map((chip, cIdx) => (
-                            <button
-                              key={cIdx}
-                              type="button"
-                              disabled={isThinking}
-                              onClick={() => handleSendMessage(chip.query)}
-                              className="px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 hover:border-teal-300 transition-all active:scale-95 cursor-pointer flex items-center gap-1 shadow-2xs"
-                            >
-                              <span>{chip.label}</span>
-                              <ArrowRight className="w-3 h-3 text-teal-600 opacity-60" />
-                            </button>
-                          ))}
+                          {msg.followUpChips.map((chip, cIdx) => {
+                            const cleanLabel = chip.label.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+                            return (
+                              <button
+                                key={cIdx}
+                                type="button"
+                                disabled={isThinking}
+                                onClick={() => handleSendMessage(chip.query)}
+                                className="px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 hover:border-teal-300 transition-all active:scale-95 cursor-pointer flex items-center gap-1 shadow-2xs"
+                              >
+                                <span>{cleanLabel || chip.label}</span>
+                                <ArrowRight className="w-3 h-3 text-teal-600 opacity-60 shrink-0" />
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -5377,6 +5380,8 @@ ${sbar.recommendation}`;
                                 const isStore = clean.includes('kendra') || clean.includes('jan aushadhi') || clean.includes('medicine');
                                 const isVideo = clean.includes('video') || clean.includes('vision');
                                 const isVitals = clean.includes('vital') || clean.includes('telemetry');
+                                const isDiagnosis = clean.includes('diagnosis') || clean.includes('முடிவு');
+                                const textWithoutEmojis = opt.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
 
                                 let colorStyles = 'bg-[#0B7A75]/5 hover:bg-[#0B7A75]/15 text-[#0B7A75] border-[#0B7A75]/25 hover:border-[#0B7A75]/50';
                                 if (isEmergency) {
@@ -5394,11 +5399,15 @@ ${sbar.recommendation}`;
                                     key={oIdx}
                                     type="button"
                                     disabled={isThinking}
-                                    onClick={() => handleOptionSelect(opt)}
+                                    onClick={() => handleOptionSelect(textWithoutEmojis || opt)}
                                     className={`group px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 flex items-center gap-1.5 shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer disabled:opacity-50 disabled:pointer-events-none text-left ${colorStyles}`}
                                   >
-                                    <span>{opt}</span>
-                                    <ArrowRight className="w-3 h-3 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                                    {isEmergency && <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
+                                    {isStore && <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+                                    {isVideo && <Video className="w-3.5 h-3.5 text-blue-600 shrink-0" />}
+                                    {isDiagnosis && <Stethoscope className="w-3.5 h-3.5 text-teal-600 shrink-0" />}
+                                    <span>{textWithoutEmojis || opt}</span>
+                                    <ArrowRight className="w-3 h-3 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
                                   </button>
                                 );
                               })}
@@ -5429,6 +5438,7 @@ ${sbar.recommendation}`;
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                               {msg.suggestedOptions.items.map((opt, oIdx) => {
                                 const isChecked = (selectedMultiOptions[msg.id] || []).includes(opt);
+                                const textWithoutEmojis = opt.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
                                 return (
                                   <button
                                     key={oIdx}
@@ -5446,7 +5456,7 @@ ${sbar.recommendation}`;
                                     ) : (
                                       <Square className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                     )}
-                                    <span className="truncate">{opt}</span>
+                                    <span className="truncate">{textWithoutEmojis || opt}</span>
                                   </button>
                                 );
                               })}

@@ -18,7 +18,7 @@ Back to [[00_Index]]
 
 - **Git Branch**: `main`
 - **Latest Commit**: `99a3e4c` (`feat(security): enterprise zero-trust hardening, serverless AI gateways, RLS isolation, 2FA, and backup verification`)
-- **Latest Documentation Milestone**: ADR-054 Comprehensive RBAC Persona Gating, Zero-Trace Data Isolation, and Frontend Abstraction Architecture ([[ADR-054-Comprehensive-RBAC-Persona-Gating-and-Zero-Trace-Data-Isolation]])
+- **Latest Documentation Milestone**: ADR-055 Situational AI Quick Actions & Pure Zero-Fallback Architecture ([[ADR-055-Situational-AI-Quick-Actions-and-Pure-Zero-Fallback-Architecture]])
 - **Authoritative Vercel Deployment**: `https://healthgrid-ekycbskao-sameen14nmofficial-8826s-projects.vercel.app` (Serving Bundle: `index-Dykgwxhl.js` • Built from commit `6d4b855`)
 - **Synchronized Production Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK • Live • `index-Dykgwxhl.js`)
@@ -30,6 +30,14 @@ Back to [[00_Index]]
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+
+- [x] Situational AI Quick Actions & Pure Zero-Fallback Architecture ([[ADR-055-Situational-AI-Quick-Actions-and-Pure-Zero-Fallback-Architecture]]):
+  - **Situational Choosing Protocol (`aiService.ts`)**: Replaced unconditional prompt mandates with strict situational gating. The model generates options only when actively asking branching diagnostic questions or when explicitly requested; never on greetings, pleasantries, educational answers, or finalized plans.
+  - **Pure Zero-Fallback Engine (`aiService.ts`)**: Completely eliminated the hardcoded options fallback generator. If the LLM does not emit options, `suggestedOptions` strictly remains `undefined`, eliminating generic button spam.
+  - **Zero-Emoji SVG Design (`ChatbotPage.tsx`, `clinicalChatEngine.ts`)**: Removed all emojis from options and follow-up chips; replaced with clean Lucide SVG icons (`AlertCircle`, `Pill`, `Video`, `Stethoscope`, `Sparkles`, `ArrowRight`, `CheckSquare`, `Square`).
+  - **Suppressed Redundant Follow-up Chips**: `followUpChips` are suppressed during casual greetings and when `suggestedOptions` is already active, preventing dual rows of action pills.
+  - **Mobile Synchronization (`mobileAiService.ts`)**: Aligned mobile DocBot prompt with situational choosing chips and zero-emoji directives.
+  - **Verification**: `npm run build` passed cleanly with 0 errors across 2,667 modules in 2.91s.
 
 - [x] Comprehensive RBAC Persona Gating, Zero-Trace Data Isolation, and Frontend Abstraction Architecture ([[ADR-054-Comprehensive-RBAC-Persona-Gating-and-Zero-Trace-Data-Isolation]]):
   - **Elimination of Mock Fallbacks (`authService.ts`)**: Removed fallback `{ id: 'usr-patient-1245', name: 'Sameer Ahmed', ... }` in `getUser()` and `getCurrentUser()`. Unauthenticated users now strictly return `null`, restoring genuine guest states and active route guards.

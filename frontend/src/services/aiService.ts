@@ -867,7 +867,7 @@ CORE BEHAVIORAL DIRECTIVES (STRICT MANDATORY INVARIANTS):
     2. Conduct targeted history taking following the SOCRATES method (Site, Onset/duration, Character, Radiation, Associated symptoms, Timing/triggers, Relieving factors, Severity).
     3. Ask ONLY 1 to 2 targeted diagnostic follow-up questions to systematically narrow down the cause (e.g. onset duration if unknown, relation to food/exertion, sharp vs. dull ache, accompanying fever or nausea).
     4. Briefly reassure them that systematically narrowing this down step-by-step is how good doctors find the exact root cause.
-    5. CRITICAL: Provide dynamic interactive quick-reply chips in <<<OPTIONS:type=single_tap|multi_select>>> so the patient can simply tap their answer, and ALWAYS include "🩺 Give me your initial diagnosis now" so the patient can choose to conclude whenever they wish!
+    5. SITUATIONAL QUICK-REPLY CHIPS: When asking clarifying clinical questions during active history taking, provide 2-4 contextual options in <<<OPTIONS:type=single_tap|multi_select>>> so the patient can tap their answer easily. You may include "Give me your initial diagnosis now" as a conclusion choice so the patient can conclude whenever they wish. Do NOT use emojis in option labels.
   * CONCLUDED PHASE (Sufficient Clinical Saturation, Certainty >= 75%, Turn >= 3, or Patient Requested Diagnosis):
     1. Deliver a clear, evidence-based differential assessment: state the primary probable cause and 1-2 possible differentials, explaining the logical reason connecting their specific symptoms, timeline, and triggers.
     2. Provide practical immediate relief steps (rest, hydration, temperature management, or safe PMBJP Jan Aushadhi generic medicines with authentic pricing).
@@ -980,15 +980,24 @@ INDIC VERNACULAR & REGIONAL DIALECT COMPREHENSION:
    - Only address the patient by name if an explicit, verified patient name is stated in the PATIENT MEDICAL VAULT CONTEXT below.
    - If no patient name is provided, address the patient warmly and respectfully without assuming any name.
 
-DYNAMIC INTERACTIVE CHOOSING OPTIONS PROTOCOL (MANDATORY):
-At the very end of your response, you MUST provide 2 to 4 actionable, contextual follow-up options for the patient inside this exact envelope:
+SITUATIONAL INTERACTIVE CHOOSING OPTIONS PROTOCOL (STRICT SITUATIONAL GATING):
+Output <<<OPTIONS>>> ONLY when interactive choices are genuinely necessary:
+1. REQUIRED SITUATIONS (WHEN TO EMIT <<<OPTIONS>>>):
+   - You are asking the patient a specific branching question during clinical history taking (e.g. symptom duration, severity, triggers, or accompanying symptoms).
+   - The patient explicitly asks for choices, alternatives, or next steps (e.g. "what are my choices?", "what should I do next?").
+   - Acute emergency decisions where immediate action choices are critical (e.g. Call 108 Ambulance vs Nearest 24/7 Casualty).
+2. STRICTLY PROHIBITED (DO NOT OUTPUT <<<OPTIONS>>>):
+   - Casual greetings, pleasantries, or friendly check-ins (e.g. "hi", "how are you", "vanakkam").
+   - Non-medical conversations, general Q&A, coding, philosophy, or creative dialogue.
+   - Informational, educational, or explanatory answers where no clarifying question was asked to the patient.
+   - Concluded clinical summaries or final advice where the plan is already clear and no further choices are needed.
+3. FORMAT (WHEN TRIGGERED):
 <<<OPTIONS:type=single_tap>>>
 Option 1 | Option 2 | Option 3
 <<<END_OPTIONS>>>
-
-- During history taking (EXPLORING or NARROWING), always include: "🩺 Give me your initial diagnosis now" as one of the options so the patient has total freedom to conclude early!
-- Use type=multi_select when asking about accompanying symptoms or triage checkups (e.g. <<<OPTIONS:type=multi_select>>>).
-- Use type=single_tap for quick action pills or single choice responses.
+- Use type=multi_select when asking the patient to select multiple symptoms or red flags.
+- Use type=single_tap for single-choice answers or next steps.
+- STRICT INVARIANT: DO NOT USE ANY EMOJIS in option labels. Use clean, plain text only.
 
 ${toolData ? `LIVE AUTONOMOUS AGENTIC TOOL EXECUTION RESULTS (Use this verified real-time data to answer the patient accurately):\n${toolData}\n` : ''}
 
@@ -1913,7 +1922,7 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     userQuery: string,
     emotionalState?: EmotionalAssessment['state'],
     dossier?: LivingClinicalDossier
-  ): { cleanedContent: string; suggestedOptions: InteractiveOptions; triageWizard?: TriageWizard } {
+  ): { cleanedContent: string; suggestedOptions?: InteractiveOptions; triageWizard?: TriageWizard } {
     let cleaned = text
       .replace(/<think>[\s\S]*?<\/think>/gi, '')
       .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')
@@ -1927,10 +1936,11 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
     if (match) {
       const isMulti = /type=multi_select/i.test(match[0]);
       const mode = (isMulti ? 'multi_select' : 'single_tap') as 'single_tap' | 'multi_select';
+      const emojiRegex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
       const items = match[1]
         .replace(/<<<END_OPTIONS>>>/gi, '')
         .split(/[|\n]/)
-        .map(i => i.replace(/^[-•*0-9.]+\s*/, '').replace(/[*_~`]/g, '').trim())
+        .map(i => i.replace(/^[-•*0-9.]+\s*/, '').replace(/[*_~`]/g, '').replace(emojiRegex, '').trim())
         .filter(i => i.length >= 2 && i.length <= 80 && !i.startsWith('<<<'));
 
       if (items.length > 0) {
@@ -1980,58 +1990,11 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       .join('\n')
       .trim();
 
-    // 7. Dynamic Fallback Options Engine (ensures interactive choices are ALWAYS present)
-    if (!suggestedOptions || suggestedOptions.items.length === 0) {
-      const qLower = userQuery.toLowerCase();
-      const cLower = cleaned.toLowerCase();
-
-      if (cLower.includes('emergency') || cLower.includes('108') || cLower.includes('heart attack') || cLower.includes('chest pain')) {
-        suggestedOptions = {
-          type: 'single_tap',
-          items: ['Call 108 Emergency Ambulance', 'Locate nearest 24/7 cardiac casualty', 'What first aid should I do right now?'],
-        };
-      } else if (qLower.includes('child') || qLower.includes('baby') || qLower.includes('infant') || emotionalState === 'parental_worry') {
-        suggestedOptions = {
-          type: 'multi_select',
-          items: ['Fever over 101°F', 'Baby refusing fluids', 'Vomiting or loose stools', 'Sleeping more than usual'],
-        };
-      } else if (qLower.includes('fever') || qLower.includes('headache') || qLower.includes('cough') || qLower.includes('kaichal') || qLower.includes('pain')) {
-        suggestedOptions = {
-          type: 'multi_select',
-          items: ['Started in last 24 hours', 'Mild body shivering', 'Throat irritation or cough', 'Already took home remedy'],
-        };
-      } else if (qLower.includes('price') || qLower.includes('cost') || qLower.includes('tablet') || qLower.includes('medicine') || emotionalState === 'financial_stress') {
-        suggestedOptions = {
-          type: 'single_tap',
-          items: ['Find nearest Jan Aushadhi Kendra', 'Check food and timing instructions', 'Show generic equivalent price'],
-        };
-      } else if (qLower.includes('stomach') || qLower.includes('vomit') || qLower.includes('motion') || qLower.includes('gas') || qLower.includes('acidity')) {
-        suggestedOptions = {
-          type: 'single_tap',
-          items: ['How to prepare WHO-ORS at home?', 'Safe diet for stomach recovery', 'Locate nearest 24/7 government PHC'],
-        };
-      } else if (isCasualGreetingOrSocial(userQuery)) {
-        suggestedOptions = {
-          type: 'single_tap',
-          items: ['How does HealthGrid work?', 'Check generic medicine savings', 'Ask about a symptom'],
-        };
-      } else {
-        suggestedOptions = {
-          type: 'single_tap',
-          items: ['Tell me more', 'Check generic medicine savings', '🩺 Start Guided Checkup'],
-        };
-      }
-    }
-
-    // 7.5 Synced Brain Gate: Offer "🩺 Give me your initial diagnosis now" during history taking so patient has complete conclusion control
-    if (dossier && (dossier.investigativePhase === 'EXPLORING' || dossier.investigativePhase === 'NARROWING') && dossier.chiefComplaint) {
-      const diagOption = '🩺 Give me your initial diagnosis now';
-      if (!suggestedOptions) {
-        suggestedOptions = {
-          type: 'single_tap',
-          items: [diagOption, 'Find nearest clinic', 'Tell me more'],
-        };
-      } else if (!suggestedOptions.items.some(it => it.toLowerCase().includes('diagnosis') || it.toLowerCase().includes('முடிவு'))) {
+    // 7. Pure Zero-Fallback Policy: If the model did NOT emit <<<OPTIONS>>>, do not fabricate fallback options.
+    // Options appear strictly when the model decides interactive choices are necessary.
+    if (suggestedOptions && dossier && (dossier.investigativePhase === 'EXPLORING' || dossier.investigativePhase === 'NARROWING') && dossier.chiefComplaint) {
+      const diagOption = 'Give me your initial diagnosis now';
+      if (!suggestedOptions.items.some(it => it.toLowerCase().includes('diagnosis') || it.toLowerCase().includes('முடிவு'))) {
         if (suggestedOptions.items.length >= 4) {
           suggestedOptions.items[suggestedOptions.items.length - 1] = diagOption;
         } else {
@@ -2125,9 +2088,12 @@ Deliver your final response directly to the patient with warm bedside manner. Ke
       sbarHandover = clinicalChatEngine.generateSbarHandover(userQuery?.slice(0, 100) || 'Primary symptoms', content.slice(0, 160), content.slice(0, 120));
     }
 
-    // 5. Generate Contextual Bilingual Follow-Up Chips
+    // 5. Generate Contextual Bilingual Follow-Up Chips (Situational Only: suppress during casual chat or if suggestedOptions already exist)
+    const isCasual = userQuery ? isCasualGreetingOrSocial(userQuery) : false;
     const isTamil = /[\u0B80-\u0BFF]/.test(content) || (userQuery ? /[\u0B80-\u0BFF]/.test(userQuery) : false);
-    const followUpChips = clinicalChatEngine.generateBilingualFollowUpChips(content, isTamil ? 'ta' : 'en');
+    const followUpChips = (!isCasual && !suggestedOptions)
+      ? clinicalChatEngine.generateBilingualFollowUpChips(content, isTamil ? 'ta' : 'en')
+      : [];
 
     // 6. Autonomous Visual Reference Card Navigation (Two-Tier Model)
     const visualNavCard = userQuery ? agenticTools.detectVisualModuleIntent(userQuery) : null;

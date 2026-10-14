@@ -383,60 +383,49 @@ class ClinicalChatEngine {
   }
 
   /**
-   * 5. Context-aware bilingual follow-up chips
+   * 5. Context-aware bilingual follow-up chips (Pure SVG, Zero Emojis, Situational Only)
    */
   public generateBilingualFollowUpChips(lastResponse: string, lang: 'en' | 'ta'): Array<{ label: string; query: string }> {
     const text = lastResponse.toLowerCase();
 
+    // Medication & prescription follow-up
     if (text.includes('medicine') || text.includes('prescription') || text.includes('tablet') || text.includes('dose') || text.includes('மருந்து')) {
       return [
         {
-          label: lang === 'en' ? '💊 Find Jan Aushadhi generic price' : '💊 ஜன் ஔஷதி மலிவு விலை பார்க்க',
+          label: lang === 'en' ? 'Find Jan Aushadhi generic price' : 'ஜன் ஔஷதி மலிவு விலை பார்க்க',
           query: lang === 'en' ? 'Show me the Jan Aushadhi generic equivalent and price comparison for these medicines.' : 'இந்த மருந்துகளுக்கான ஜன் ஔஷதி விலை விவரங்களை காட்டவும்.',
         },
         {
-          label: lang === 'en' ? '⚠️ Check food & drug interactions' : '⚠️ உணவு & மருந்து முரண்பாடு சரிபார்க்க',
+          label: lang === 'en' ? 'Check food & drug interactions' : 'உணவு & மருந்து முரண்பாடு சரிபார்க்க',
           query: lang === 'en' ? 'Are there any food interactions or specific timings for these medicines?' : 'இந்த மருந்துகளை எப்போது சாப்பிட வேண்டும், உணவு கட்டுப்பாடுகள் என்ன?',
         },
         {
-          label: lang === 'en' ? '📋 Generate Doctor Handover (SBAR)' : '📋 மருத்துவரிடம் காட்ட SBAR குறிப்பு தயார் செய்',
+          label: lang === 'en' ? 'Generate Doctor Handover (SBAR)' : 'மருத்துவரிடம் காட்ட SBAR குறிப்பு தயார் செய்',
           query: lang === 'en' ? 'Please generate a doctor SBAR handover brief that I can show at the hospital.' : 'மருத்துவரிடம் காண்பிக்க SBAR மருத்துவக் குறிப்பை உருவாக்கவும்.',
         },
       ];
     }
 
+    // Acute infection, fever, or respiratory symptoms
     if (text.includes('fever') || text.includes('infection') || text.includes('cold') || text.includes('cough') || text.includes('காய்ச்சல்')) {
       return [
         {
-          label: lang === 'en' ? '🌡️ How to safely manage high fever?' : '🌡️ காய்ச்சலை எவ்வாறு குறைப்பது?',
+          label: lang === 'en' ? 'How to safely manage high fever?' : 'காய்ச்சலை எவ்வாறு குறைப்பது?',
           query: lang === 'en' ? 'What are safe home measures and red flags to watch for with this fever?' : 'காய்ச்சலைக் குறைக்க பாதுகாப்பான வழிகள் மற்றும் ஆபத்து அறிகுறிகள் யாவை?',
         },
         {
-          label: lang === 'en' ? '🏥 Check nearest 24/7 hospital OPD' : '🏥 அருகிலுள்ள அரசு மருத்துவமனை OPD பார்க்க',
+          label: lang === 'en' ? 'Check nearest 24/7 hospital OPD' : 'அருகிலுள்ள அரசு மருத்துவமனை OPD பார்க்க',
           query: lang === 'en' ? 'Where is the nearest government hospital OPD or casualty center?' : 'அருகிலுள்ள அரசு மருத்துவமனை அல்லது அவசர சிகிச்சை பிரிவு எங்குள்ளது?',
         },
         {
-          label: lang === 'en' ? '📋 Summary for doctor visit' : '📋 மருத்துவருக்கு காட்ட குறிப்பு',
+          label: lang === 'en' ? 'Summary for doctor visit' : 'மருத்துவருக்கு காட்ட குறிப்பு',
           query: lang === 'en' ? 'Prepare a concise summary of my symptoms for my doctor appointment.' : 'மருத்துவரிடம் காண்பிக்க எனது அறிகுறிகளின் சுருக்கத்தை உருவாக்கவும்.',
         },
       ];
     }
 
-    // Default intelligent clinical chips
-    return [
-      {
-        label: lang === 'en' ? '🔍 Explain in simple terms' : '🔍 எளிய தமிழில் விளக்குங்கள்',
-        query: lang === 'en' ? 'Could you explain this condition and guidance in simple plain language without medical jargon?' : 'மருத்துவ வார்த்தைகள் இன்றி எளிய முறையில் விளக்கவும்.',
-      },
-      {
-        label: lang === 'en' ? '⚠️ Red flag signs to watch for' : '⚠️ எப்போது மருத்துவமனை செல்ல வேண்டும்?',
-        query: lang === 'en' ? 'What are the warning signs that indicate I must immediately visit emergency casualty?' : 'உடனடியாக அவசர சிகிச்சை பிரிவுக்கு செல்ல வேண்டிய எச்சரிக்கை அறிகுறிகள் யாவை?',
-      },
-      {
-        label: lang === 'en' ? '💊 Check generic savings' : '💊 மலிவு விலை மருந்துகளை பார்க்க',
-        query: lang === 'en' ? 'Are there Jan Aushadhi generic alternatives available for this condition?' : 'இதற்கான அரசு ஜன் ஔஷதி மாற்று மருந்துகள் உள்ளனவா?',
-      },
-    ];
+    // If no specific clinical trigger matched, do not force generic chips
+    return [];
   }
 }
 
