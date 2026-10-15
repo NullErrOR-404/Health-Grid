@@ -29,6 +29,7 @@ const MedicineStorePage = lazy(() => import('./components/MedicineStorePage').th
 const HospitalErpDashboard = lazy(() => import('./components/erp/HospitalErpDashboard').then(m => ({ default: m.HospitalErpDashboard })));
 const ClinicianPortalLayout = lazy(() => import('./components/clinician/ClinicianPortalLayout').then(m => ({ default: m.ClinicianPortalLayout })));
 const MedicationCabinetWorkspace = lazy(() => import('./components/MedicationCabinetWorkspace').then(m => ({ default: m.MedicationCabinetWorkspace })));
+const GeoLandingPage = lazy(() => import('./components/geo/GeoLandingPage').then(m => ({ default: m.GeoLandingPage })));
 
 // Lazy-loaded On-Demand Modals
 const AmbulanceModal = lazy(() => import('./components/AmbulanceModal').then(m => ({ default: m.AmbulanceModal })));
@@ -79,11 +80,13 @@ const ViewLoadingFallback = () => (
   </div>
 );
 
-export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'hospital-erp' | 'clinician-portal' | 'cabinet';
+export type AppView = 'landing' | 'chat' | 'profile' | 'maps' | 'privacy' | 'terms' | 'thank-you' | 'not-found' | 'medicines' | 'hospital-erp' | 'clinician-portal' | 'cabinet' | 'geo-landing';
 
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
   const [currentView, setCurrentView] = useState<AppView>('landing');
+  const [geoServiceType, setGeoServiceType] = useState<'emergency-care' | 'jan-aushadhi'>('emergency-care');
+  const [geoDistrictSlug, setGeoDistrictSlug] = useState<string>('chennai');
   const [activeErpHospital, setActiveErpHospital] = useState<HospitalEntity | undefined>(undefined);
   const [activeErpAdmin, setActiveErpAdmin] = useState<string>('');
   const [accessDeniedPortal, setAccessDeniedPortal] = useState<RestrictedPortalType | null>(null);
@@ -210,6 +213,14 @@ export default function App() {
         } else {
           setAccessDeniedPortal('HOSPITAL_ERP');
         }
+      } else if (pathname.startsWith('/emergency-care') || pathname.startsWith('/jan-aushadhi')) {
+        setAccessDeniedPortal(null);
+        const parts = pathname.split('/').filter(Boolean);
+        const service = parts[0] === 'jan-aushadhi' ? 'jan-aushadhi' : 'emergency-care';
+        const district = parts[1] || 'chennai';
+        setGeoServiceType(service);
+        setGeoDistrictSlug(district);
+        setCurrentView('geo-landing');
       } else if (hash === '#prescription' || hash === '#/prescription' || hash === '#scan-prescription') {
         setAccessDeniedPortal(null);
         setCurrentView('landing');
@@ -1038,6 +1049,34 @@ export default function App() {
           onNavigateChat={() => navigateToView('chat')}
           onNavigateMaps={() => navigateToView('maps')}
           onOpenAmbulance={() => requireAuth(() => setIsAmbulanceOpen(true), lang === 'en' ? 'Ambulance Dispatch' : '108 ஆம்புலன்ஸ்')}
+        />
+      </Suspense>
+    );
+  }
+
+  // Render Programmatic Geo Landing Page for Regional Search Dominance
+  if (currentView === 'geo-landing') {
+    return (
+      <Suspense fallback={<ViewLoadingFallback />}>
+        <GeoLandingPage
+          districtSlug={geoDistrictSlug}
+          serviceType={geoServiceType}
+          onNavigateHome={() => navigateToView('landing')}
+          onOpenChat={() => {
+            if (!authService.getCurrentUser()) {
+              requireAuth(() => navigateToView('chat'), lang === 'en' ? 'DocBot AI TeleClinic & Chat' : 'DocBot AI மருத்துவ ஆலோசனை');
+            } else {
+              navigateToView('chat');
+            }
+          }}
+          onOpenMedicines={() => navigateToView('medicines')}
+          onOpenErp={() => {
+            if (authService.canAccessHospitalErp()) {
+              navigateToView('hospital-erp');
+            } else {
+              setAccessDeniedPortal('HOSPITAL_ERP');
+            }
+          }}
         />
       </Suspense>
     );

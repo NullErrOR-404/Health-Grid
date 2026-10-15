@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node ../scripts/generate-seo-assets.js",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"

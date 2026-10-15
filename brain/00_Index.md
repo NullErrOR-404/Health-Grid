@@ -100,6 +100,7 @@ graph TD
     DEC --> ADR59[[ADR-059-Unified-Cross-System-OPD-Workflow-AI-Jist-and-Patient-RAG]]
     DEC --> ADR60[[ADR-060-Strict-Auth-Gating-Dynamic-Feature-Visibility-and-Zero-Mock-Identity]]
     DEC --> ADR61[[ADR-061-SuperAdmin-Roles-Provisioning-and-Zero-Friction-IPD-Access]]
+    DEC --> ADR62[[ADR-062-Vercel-SEO-Edge-GEO-Performance-and-Programmatic-Dominance]]
 
     MOD --> APPT[[Appointments_System_Architecture]]
     MOD --> CLIN[[Clinician_Portal_Operating_System]]

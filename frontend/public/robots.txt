@@ -1,60 +1,64 @@
-# HealthGrid Robots.txt (2026 Production & GEO Hardening)
-# Comprehensive SEO & Generative Engine Optimization (GEO) Protocol
+# HealthGrid Autonomous Healthcare Operating System (2026 Production Protocol)
+# Strict Search Engine Crawling & Generative Engine Optimization (GEO) Directives
 
-# Standard Search Engines (Google, Bing, DuckDuckGo)
 User-agent: *
 Allow: /
-Allow: /#services
-Allow: /#emergency
-Allow: /maps
+Allow: /emergency-care/
+Allow: /jan-aushadhi/
 Allow: /chat
 Allow: /medicines
+Allow: /maps
+Allow: /hospital-erp
 Allow: /bulletins
 Allow: /privacy
 Allow: /terms
 Allow: /thank-you
+Disallow: /profile
+Disallow: /api/
+Disallow: /auth/
+Disallow: /cabinet
 
-# Generative Engine Crawlers (GEO for Perplexity, ChatGPT, Claude, Gemini, Copilot)
+# Dedicated Generative Engine LLM Crawlers (Perplexity, ChatGPT, Claude, Gemini, Applebot)
 User-agent: GPTBot
 Allow: /
+Allow: /emergency-care/
+Allow: /jan-aushadhi/
 Allow: /medicines
 Allow: /maps
 Allow: /bulletins
-Allow: /chat
 
 User-agent: ClaudeBot
 Allow: /
+Allow: /emergency-care/
+Allow: /jan-aushadhi/
 Allow: /medicines
 Allow: /maps
 Allow: /bulletins
-Allow: /chat
 
 User-agent: PerplexityBot
 Allow: /
+Allow: /emergency-care/
+Allow: /jan-aushadhi/
 Allow: /medicines
 Allow: /maps
 Allow: /bulletins
-Allow: /chat
 
 User-agent: Google-Extended
 Allow: /
+Allow: /emergency-care/
+Allow: /jan-aushadhi/
 Allow: /medicines
 Allow: /maps
-Allow: /bulletins
 
 User-agent: Applebot-Extended
 Allow: /
+Allow: /emergency-care/
+Allow: /jan-aushadhi/
 Allow: /medicines
 Allow: /maps
 
 User-agent: Amazonbot
 Allow: /
 
-# Disallow private patient EHR vaults and internal auth endpoints
-Disallow: /profile
-Disallow: /auth/
-Disallow: /api/
-Disallow: /erp/
-
-# Authoritative Production Sitemap
+# Authoritative Canonical Sitemap
 Sitemap: https://healthgrid-app.vercel.app/sitemap.xml

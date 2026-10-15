@@ -1,67 +1,760 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-  <!-- HealthGrid 2026 Production & GEO-Optimized Canonical Sitemap -->
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://healthgrid-app.vercel.app/</loc>
-    <lastmod>2026-10-07</lastmod>
+    <loc>https://healthgrid-app.vercel.app</loc>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app" />
   </url>
   <url>
     <loc>https://healthgrid-app.vercel.app/chat</loc>
-    <lastmod>2026-10-07</lastmod>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/chat" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/chat?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/chat" />
   </url>
   <url>
     <loc>https://healthgrid-app.vercel.app/medicines</loc>
-    <lastmod>2026-10-07</lastmod>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/medicines" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/medicines?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/medicines" />
   </url>
   <url>
     <loc>https://healthgrid-app.vercel.app/maps</loc>
-    <lastmod>2026-10-07</lastmod>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/maps" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/maps?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/maps" />
   </url>
   <url>
-    <loc>https://healthgrid-app.vercel.app/#emergency</loc>
-    <lastmod>2026-10-07</lastmod>
+    <loc>https://healthgrid-app.vercel.app/hospital-erp</loc>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.90</priority>
-  </url>
-  <url>
-    <loc>https://healthgrid-app.vercel.app/#services</loc>
-    <lastmod>2026-10-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    <priority>0.88</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/hospital-erp" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/hospital-erp?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/hospital-erp" />
   </url>
   <url>
     <loc>https://healthgrid-app.vercel.app/bulletins</loc>
-    <lastmod>2026-10-07</lastmod>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/bulletins" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/bulletins?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/bulletins" />
   </url>
   <url>
     <loc>https://healthgrid-app.vercel.app/privacy</loc>
-    <lastmod>2026-10-07</lastmod>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.70</priority>
+    <priority>0.60</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/privacy" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/privacy?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/privacy" />
   </url>
   <url>
     <loc>https://healthgrid-app.vercel.app/terms</loc>
-    <lastmod>2026-10-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.70</priority>
-  </url>
-  <url>
-    <loc>https://healthgrid-app.vercel.app/thank-you</loc>
-    <lastmod>2026-10-07</lastmod>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/terms" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/terms?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/terms" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/chennai</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/chennai" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/chennai?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/chennai" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/chennai</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/chennai" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/chennai?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/chennai" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/coimbatore</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/coimbatore" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/coimbatore?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/coimbatore" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/coimbatore</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/coimbatore" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/coimbatore?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/coimbatore" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/madurai</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/madurai" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/madurai?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/madurai" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/madurai</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/madurai" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/madurai?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/madurai" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/tiruchirappalli</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/tiruchirappalli" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/tiruchirappalli?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/tiruchirappalli" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/tiruchirappalli</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruchirappalli" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruchirappalli?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruchirappalli" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/salem</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/salem" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/salem?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/salem" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/salem</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/salem" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/salem?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/salem" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/tirunelveli</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/tirunelveli" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/tirunelveli?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/tirunelveli" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/tirunelveli</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/tirunelveli" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/tirunelveli?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/tirunelveli" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/vellore</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/vellore" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/vellore?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/vellore" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/vellore</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/vellore" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/vellore?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/vellore" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/thanjavur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/thanjavur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/thanjavur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/thanjavur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/thanjavur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/thanjavur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/thanjavur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/thanjavur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/erode</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/erode" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/erode?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/erode" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/erode</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/erode" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/erode?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/erode" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/kanyakumari</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/kanyakumari" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/kanyakumari?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/kanyakumari" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/kanyakumari</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/kanyakumari" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/kanyakumari?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/kanyakumari" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/dindigul</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/dindigul" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/dindigul?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/dindigul" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/dindigul</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/dindigul" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/dindigul?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/dindigul" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/cuddalore</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/cuddalore" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/cuddalore?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/cuddalore" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/cuddalore</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/cuddalore" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/cuddalore?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/cuddalore" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/kanchipuram</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/kanchipuram" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/kanchipuram?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/kanchipuram" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/kanchipuram</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/kanchipuram" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/kanchipuram?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/kanchipuram" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/tiruvallur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/tiruvallur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/tiruvallur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/tiruvallur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/tiruvallur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruvallur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruvallur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruvallur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/tiruvannamalai</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/tiruvannamalai" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/tiruvannamalai?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/tiruvannamalai" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/tiruvannamalai</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruvannamalai" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruvannamalai?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruvannamalai" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/viluppuram</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/viluppuram" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/viluppuram?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/viluppuram" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/viluppuram</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/viluppuram" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/viluppuram?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/viluppuram" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/kallakurichi</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/kallakurichi" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/kallakurichi?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/kallakurichi" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/kallakurichi</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/kallakurichi" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/kallakurichi?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/kallakurichi" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/chengalpattu</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/chengalpattu" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/chengalpattu?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/chengalpattu" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/chengalpattu</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/chengalpattu" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/chengalpattu?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/chengalpattu" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/ranipet</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/ranipet" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/ranipet?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/ranipet" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/ranipet</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/ranipet" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/ranipet?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/ranipet" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/tirupathur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/tirupathur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/tirupathur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/tirupathur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/tirupathur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/tirupathur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/tirupathur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/tirupathur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/dharmapuri</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/dharmapuri" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/dharmapuri?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/dharmapuri" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/dharmapuri</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/dharmapuri" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/dharmapuri?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/dharmapuri" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/krishnagiri</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/krishnagiri" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/krishnagiri?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/krishnagiri" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/krishnagiri</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/krishnagiri" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/krishnagiri?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/krishnagiri" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/namakkal</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/namakkal" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/namakkal?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/namakkal" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/namakkal</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/namakkal" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/namakkal?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/namakkal" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/nilgiris</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/nilgiris" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/nilgiris?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/nilgiris" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/nilgiris</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/nilgiris" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/nilgiris?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/nilgiris" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/karur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/karur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/karur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/karur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/karur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/karur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/karur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/karur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/perambalur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/perambalur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/perambalur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/perambalur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/perambalur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/perambalur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/perambalur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/perambalur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/ariyalur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/ariyalur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/ariyalur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/ariyalur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/ariyalur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/ariyalur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/ariyalur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/ariyalur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/nagapattinam</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/nagapattinam" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/nagapattinam?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/nagapattinam" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/nagapattinam</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/nagapattinam" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/nagapattinam?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/nagapattinam" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/mayiladuthurai</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/mayiladuthurai" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/mayiladuthurai?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/mayiladuthurai" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/mayiladuthurai</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/mayiladuthurai" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/mayiladuthurai?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/mayiladuthurai" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/tiruvarur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/tiruvarur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/tiruvarur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/tiruvarur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/tiruvarur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruvarur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruvarur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruvarur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/pudukkottai</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/pudukkottai" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/pudukkottai?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/pudukkottai" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/pudukkottai</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/pudukkottai" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/pudukkottai?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/pudukkottai" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/sivaganga</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/sivaganga" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/sivaganga?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/sivaganga" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/sivaganga</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/sivaganga" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/sivaganga?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/sivaganga" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/ramanathapuram</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/ramanathapuram" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/ramanathapuram?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/ramanathapuram" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/ramanathapuram</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/ramanathapuram" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/ramanathapuram?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/ramanathapuram" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/virudhunagar</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/virudhunagar" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/virudhunagar?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/virudhunagar" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/virudhunagar</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/virudhunagar" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/virudhunagar?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/virudhunagar" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/thoothukudi</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/thoothukudi" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/thoothukudi?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/thoothukudi" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/thoothukudi</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/thoothukudi" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/thoothukudi?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/thoothukudi" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/tenkasi</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/tenkasi" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/tenkasi?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/tenkasi" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/tenkasi</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/tenkasi" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/tenkasi?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/tenkasi" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/tiruppur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/tiruppur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/tiruppur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/tiruppur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/tiruppur</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruppur" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruppur?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/tiruppur" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/emergency-care/theni</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/emergency-care/theni" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/emergency-care/theni?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/emergency-care/theni" />
+  </url>
+  <url>
+    <loc>https://healthgrid-app.vercel.app/jan-aushadhi/theni</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.89</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://healthgrid-app.vercel.app/jan-aushadhi/theni" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://healthgrid-app.vercel.app/jan-aushadhi/theni?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://healthgrid-app.vercel.app/jan-aushadhi/theni" />
   </url>
 </urlset>
