@@ -26,6 +26,7 @@ import type { Language } from '../types';
 import { FacilityListSkeleton } from './SkeletonLoader';
 import { CustomSelect } from './CustomSelect';
 import { CitizenBookAppointmentModal } from './CitizenBookAppointmentModal';
+import { authService } from '../services/authService';
 
 export type FacilityType = 'all' | 'hospital' | 'pharmacy' | 'clinic';
 
@@ -971,7 +972,16 @@ export const FindCareNearYou: React.FC<FindCareNearYouProps> = ({
                     {selectedPlace.type === 'hospital' && (
                       <button
                         type="button"
-                        onClick={() => setIsBookModalOpen(true)}
+                        onClick={() => {
+                          const user = authService.getCurrentUser();
+                          if (!user) {
+                            window.dispatchEvent(new CustomEvent('healthgrid:require-login', {
+                              detail: { notice: lang === 'en' ? 'Sign in to book a hospital OPD slot' : 'மருத்துவமனை சந்திப்பை முன்பதிவு செய்ய உள்நுழையவும்' }
+                            }));
+                            return;
+                          }
+                          setIsBookModalOpen(true);
+                        }}
                         className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-black py-2 px-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-teal-600/20 cursor-pointer"
                       >
                         <Calendar className="w-3.5 h-3.5" />

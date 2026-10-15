@@ -17,8 +17,8 @@ Back to [[00_Index]]
 ## Current System State
 
 - **Git Branch**: `main`
-- **Latest Commit**: `HEAD` (feat(workflow): unified cross-system OPD execution flow, pre-consultation AI jist, and patient RAG explainer - ADR-059)
-- **Latest Documentation Milestone**: ADR-059 Unified Cross-System OPD Workflow, Pre-Consultation AI Jist & Patient RAG Explainer ([[ADR-059-Unified-Cross-System-OPD-Workflow-AI-Jist-and-Patient-RAG]])
+- **Latest Commit**: `HEAD` (feat(auth): strict auth gating, dynamic feature visibility, and zero-mock identity - ADR-060)
+- **Latest Documentation Milestone**: ADR-060 Strict Auth Gating, Dynamic Feature Visibility & Zero-Mock Identity ([[ADR-060-Strict-Auth-Gating-Dynamic-Feature-Visibility-and-Zero-Mock-Identity]])
 - **Authoritative Vercel Deployment**: `https://healthgrid-cp8iz6jkr-sameen14nmofficial-8826s-projects.vercel.app`
 - **Synchronized Production Aliases**:
   - `https://healthgrid-nu.vercel.app` (200 OK • Live)
@@ -30,6 +30,14 @@ Back to [[00_Index]]
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 
 ## Recent Completed Tasks
+
+- [x] Strict Auth Gating, Dynamic Feature Visibility & Zero-Mock Identity ([[ADR-060-Strict-Auth-Gating-Dynamic-Feature-Visibility-and-Zero-Mock-Identity]]):
+  - **Strict Route Interception (`App.tsx`)**: Direct visits to `/chat`, `/cabinet`, and `/profile` intercepted by `requireAuth()` and redirected to landing page with `LoginModal` displayed with contextual login prompts.
+  - **Chatbot Input Locking & Zero-Mock State (`ChatbotPage.tsx`)**: Frosted security lock overlay banner covers the input bar when unauthenticated with a prominent "Sign In" button; input and send button disabled. `activeAppointmentDraft` is strictly initialized to `null` (zero unprompted appointment summary cards). Eradicated hardcoded mock sessions for "Sameer Ahmed" (`HG001245`), "Dr. Mohamed", and "2025-09-29".
+  - **Eradication of Hardcoded Fallback Identities (`ProfilePage.tsx`, `CitizenBookAppointmentModal.tsx`)**: Removed hardcoded `'Mohamed Sameen'` and `'HG-PP27BNQ'` fallbacks from profile state initialization and appointment booking modals. Empty profiles now strictly show `[]` arrays without mock inpatient stays or appointments.
+  - **Dynamic Navigation Filtering (`Navbar.tsx`)**: In the "More" services dropdown and mobile drawer, personal actions (`Medication Cabinet & Shield`, `Book Hospital OPD Slot`, `Consult Doctor (OPD Token)`, and mobile quick tiles) are wrapped in `{currentUser && ( ... )}` and completely hidden from guests. Changed default user initial from `'M'` to `'U'`.
+  - **Landing Page Action Interception**: Clicking "Speak to Doctor" (`ActionCards.tsx`) or "Book OPD Appointment" (`FindCareNearYou.tsx`) now checks auth and dispatches `healthgrid:require-login`.
+  - **Verification**: Verified clean production build (`npm run build`, 0 errors) and automated browser testing confirming route redirects and lock overlays.
 
 - [x] Unified Cross-System OPD Workflow, Pre-Consultation AI Jist & Patient RAG Explainer ([[ADR-059-Unified-Cross-System-OPD-Workflow-AI-Jist-and-Patient-RAG]]):
   - **Citizen Direct OPD Booking (`CitizenBookAppointmentModal.tsx`)**: Full citizen booking modal allowing patient (`Mohamed Sameen S` / `HG-PP27BNQ`) to select facility (`Government Medical College & Hospital - HG-H002`), doctor (`Dr. Mohamed`), department (`General Medicine`), date, time slot (`10:00 AM`), and chief complaint. Emits instant verified digital OPD pass with token, QR code, and sovereign Health ID.

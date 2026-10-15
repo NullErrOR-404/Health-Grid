@@ -25,7 +25,7 @@ export const StartConsultationModal: React.FC<StartConsultationModalProps> = ({
   if (!isOpen) return null;
 
   const patient = unifiedPatientStore.getPatientById(patientId);
-  const patientHealthId = patient?.healthId || 'HG-PP27BNQ';
+  const patientHealthId = patient?.healthId || '';
   
   // Look up matching appointment if exists
   const allAppts = appointmentService.getAppointments();

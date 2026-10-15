@@ -68,11 +68,11 @@ export const CitizenBookAppointmentModal: React.FC<CitizenBookAppointmentModalPr
   });
   const [appointmentTime, setAppointmentTime] = useState('10:00 AM');
   const [reasonForVisit, setReasonForVisit] = useState('');
-  const [patientName, setPatientName] = useState(currentUser?.name || 'Mohamed Sameen S');
-  const [patientPhone, setPatientPhone] = useState(currentUser?.phone || '+91 98765 43210');
-  const [patientAge, setPatientAge] = useState(currentUser?.age || 30);
-  const [patientGender, setPatientGender] = useState((currentUser as any)?.gender || 'Male');
-  const [patientHealthId, setPatientHealthId] = useState(currentUser?.healthId || 'HG-PP27BNQ');
+  const [patientName, setPatientName] = useState(currentUser?.name || '');
+  const [patientPhone, setPatientPhone] = useState(currentUser?.phone || '');
+  const [patientAge, setPatientAge] = useState(currentUser?.age || 25);
+  const [patientGender, setPatientGender] = useState((currentUser as any)?.gender || 'Other');
+  const [patientHealthId, setPatientHealthId] = useState(currentUser?.healthId || '');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmedAppointment, setConfirmedAppointment] = useState<Appointment | null>(null);
@@ -92,11 +92,15 @@ export const CitizenBookAppointmentModal: React.FC<CitizenBookAppointmentModalPr
       setConfirmedAppointment(null);
       const user = authService.getCurrentUser();
       if (user) {
-        setPatientName(user.name);
-        setPatientPhone(user.phone || '+91 98765 43210');
-        setPatientAge(user.age || 30);
-        setPatientGender((user as any)?.gender || 'Male');
-        setPatientHealthId(user.healthId || 'HG-PP27BNQ');
+        setPatientName(user.name || '');
+        setPatientPhone(user.phone || '');
+        setPatientAge(user.age || 25);
+        setPatientGender((user as any)?.gender || 'Other');
+        setPatientHealthId(user.healthId || '');
+      } else {
+        setPatientName('');
+        setPatientPhone('');
+        setPatientHealthId('');
       }
     }
   }, [isOpen]);

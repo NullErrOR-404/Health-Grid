@@ -230,7 +230,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [isSlipModalOpen, setIsSlipModalOpen] = useState(false);
 
   useEffect(() => {
-    const activeHealthId = profileData.healthId || 'HG-PP27BNQ';
+    const activeHealthId = profileData.healthId;
+    if (!activeHealthId) {
+      setActiveInpatientStay(null);
+      setPatientAppointments([]);
+      return;
+    }
     ipdBedService.getAdmissionForHealthId(activeHealthId).then((adm) => {
       setActiveInpatientStay(adm);
     });
@@ -425,10 +430,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         }
 
         if (isMounted) {
-          if (!initialData.healthId) {
-            initialData.healthId = 'HG-PP27BNQ';
-            initialData.name = initialData.name || 'Mohamed Sameen';
-          }
           setProfileData(initialData);
           setEditProfileForm(initialData);
         }

@@ -58,7 +58,8 @@ import {
   BellRing,
   XCircle,
   CalendarClock,
-  Radio
+  Radio,
+  Lock
 } from 'lucide-react';
 import type { Language } from '../types';
 import { medicationSafetyService } from '../services/medicationSafetyService';
@@ -273,6 +274,7 @@ interface ChatbotPageProps {
   onOpenBabyShots?: () => void;
   onNavigateMedicines?: () => void;
   initialQuery?: string;
+  onOpenLogin?: () => void;
 }
 
 const createFreshSession = (title = 'New Consultation'): ChatSession => ({
@@ -283,202 +285,16 @@ const createFreshSession = (title = 'New Consultation'): ChatSession => ({
 });
 
 const createInitialReferenceSessions = (): ChatSession[] => {
-  const defaultBookingSession: ChatSession = {
-    id: 'chat-book-appointment',
-    title: 'Book appointment',
-    dateGroup: 'Today',
-    messages: [
-      {
-        id: 'msg-u-1',
-        sender: 'user',
-        text: 'I want to book an appointment',
-        time: '10:24 AM',
-      },
-      {
-        id: 'msg-a-1',
-        sender: 'ai',
-        text: 'Sure! I can help you book an appointment.\nPlease tell me a few details so I can find the best available slots for you.',
-        time: '10:24 AM',
-        appointmentStepper: {
-          id: 'stepper-ref-1',
-          hospitalId: 'HG-H002',
-          hospitalName: 'Govt Medical College & Hospital (GMCH)',
-          patientType: 'myself',
-          department: 'General Medicine',
-          condition: 'Fever & headache for 3 days',
-          preferredDate: '2025-09-29',
-          timeSlot: 'Morning',
-          isSubmitted: true,
-        },
-      },
-      {
-        id: 'msg-a-2',
-        sender: 'ai',
-        text: 'Here are the available doctors for General Medicine on Mon, 29 Sep 2025 (Morning). You can select a doctor and confirm your appointment.',
-        time: '10:24 AM',
-        doctorCarousel: {
-          department: 'General Medicine',
-          date: '2025-09-29',
-          timeSlot: 'Morning',
-          hospitalName: 'Govt Medical College & Hospital (GMCH)',
-          selectedDoctorId: 'DOC001',
-          selectedSlot: '09:00 AM',
-          doctors: [
-            {
-              id: 'doc-001',
-              doctorCode: 'DOC001',
-              name: 'Dr. Mohamed',
-              department: 'General Medicine',
-              specialization: 'Internal Medicine & Chronic Care',
-              qualification: 'MBBS, MD',
-              opdRoom: 'Room 101',
-              experienceYears: 12,
-              rating: 4.8,
-              reviewsCount: 320,
-              avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200',
-              availableSlots: ['09:00 AM', '09:30 AM', '10:00 AM'],
-              selectedSlot: '09:00 AM',
-            },
-            {
-              id: 'doc-002',
-              doctorCode: 'DOC002',
-              name: 'Dr. Revathi',
-              department: 'General Medicine',
-              specialization: 'Preventive Cardiology',
-              qualification: 'MBBS, MD',
-              opdRoom: 'Room 201',
-              experienceYears: 8,
-              rating: 4.6,
-              reviewsCount: 210,
-              avatarUrl: 'https://images.unsplash.com/photo-1594824813583-7740e53a3eb2?auto=format&fit=crop&q=80&w=200',
-              availableSlots: ['10:00 AM', '10:30 AM', '11:00 AM'],
-            },
-            {
-              id: 'doc-003',
-              doctorCode: 'DOC003',
-              name: 'Dr. Arjun',
-              department: 'General Medicine',
-              specialization: 'Adult Primary Care',
-              qualification: 'MBBS, DNB',
-              opdRoom: 'Room 105',
-              experienceYears: 10,
-              rating: 4.7,
-              reviewsCount: 284,
-              avatarUrl: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200',
-              availableSlots: ['09:30 AM', '10:00 AM', '10:30 AM'],
-            },
-          ],
-        },
-      },
-      {
-        id: 'msg-a-3',
-        sender: 'ai',
-        text: '🎉 Your appointment has been booked! Your official hospital OPD digital pass and live queue tracker are ready below.',
-        time: '10:25 AM',
-        confirmedBookingPass: {
-          id: 'appt-demo-001',
-          appointment_id: 'APPT250929004',
-          patient_name: 'Sameer Ahmed',
-          patient_phone: '+91 98765 43210',
-          patient_health_id: 'HG001245',
-          patient_age: 20,
-          patient_gender: 'Male',
-          doctor_name: 'Dr. Mohamed',
-          department: 'General Medicine',
-          appointment_date: '2025-09-29',
-          appointment_time: '09:00 AM',
-          appointment_type: 'Consultation',
-          source: 'DocBot AI Chatbot',
-          status: 'Scheduled',
-          reason_for_visit: 'Fever & headache for 3 days',
-          notes: 'Room 101. Govt Medical College & Hospital (GMCH)',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        liveQueueTracker: {
-          id: 'queue-demo-001',
-          appointmentId: 'APPT250929004',
-          tokenNumber: 4,
-          tokenDisplay: '04',
-          patientName: 'Sameer Ahmed',
-          doctorName: 'Dr. Mohamed',
-          department: 'General Medicine',
-          opdRoom: 'Room 101',
-          hospitalName: 'Govt Medical College & Hospital (GMCH)',
-          currentServingToken: 2,
-          patientsAhead: 2,
-          estimatedWaitMinutes: 12,
-          queueStatus: 'Active',
-          lastUpdated: '10:25:00 AM',
-          alertPingActive: false,
-        },
-      },
-    ],
-  };
-
-  const medicineSession: ChatSession = {
-    id: 'chat-med-info',
-    title: 'Medicine information',
-    dateGroup: 'Today',
-    messages: [
-      {
-        id: 'msg-u-med',
-        sender: 'user',
-        text: 'What is the price of Paracetamol and Metformin?',
-        time: '09:15 AM',
-      },
-      {
-        id: 'msg-a-med',
-        sender: 'ai',
-        text: 'Under the PMBJP Pradhan Mantri Bharatiya Jan Aushadhi Pariyojana, generic Paracetamol 650mg is available for ₹4.50 (MRP ₹34.00, 87% savings) and Metformin 500mg is available for ₹7.50 (MRP ₹45.00, 83% savings) at certified Jan Aushadhi Kendras.',
-        time: '09:15 AM',
-        matchedMedicineCard: INITIAL_CACHE_CATALOG[0],
-      },
-    ],
-  };
-
-  const labSession: ChatSession = {
-    id: 'chat-lab-test',
-    title: 'Lab test results',
-    dateGroup: 'Previous 7 Days',
-    messages: [
-      {
-        id: 'msg-u-lab',
-        sender: 'user',
-        text: 'Can you review my recent Complete Blood Count (CBC) and Lipid panel?',
-        time: '04:20 PM',
-      },
-      {
-        id: 'msg-a-lab',
-        sender: 'ai',
-        text: 'Your hemoglobin is normal at 14.2 g/dL. Total cholesterol is 185 mg/dL (optimal <200). HDL is 48 mg/dL and LDL is 112 mg/dL. All baseline parameters are within clinical safety thresholds.',
-        time: '04:20 PM',
-      },
-    ],
-  };
-
-  const chestPainSession: ChatSession = {
-    id: 'chat-chest-pain',
-    title: 'Chest pain guidance',
-    dateGroup: 'Previous 7 Days',
-    messages: [
-      {
-        id: 'msg-u-chest',
-        sender: 'user',
-        text: 'Mild burning chest discomfort after heavy dinner, no radiation or breathlessness.',
-        time: '11:30 AM',
-      },
-      {
-        id: 'msg-a-chest',
-        sender: 'ai',
-        text: 'This presentation is most consistent with gastroesophageal reflux (GERD/acidity). Avoid lying flat immediately after eating. If pain radiates to jaw, left arm, or causes cold sweats or breathlessness, call 108 emergency immediately.',
-        time: '11:30 AM',
-      },
-    ],
-  };
-
-  return [defaultBookingSession, medicineSession, labSession, chestPainSession];
+  return [
+    {
+      id: 'chat-new-consultation',
+      title: 'New Consultation',
+      dateGroup: 'Today',
+      messages: [],
+    },
+  ];
 };
+
 
 export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   lang,
@@ -491,12 +307,13 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   onOpenBabyShots: _onOpenBabyShots,
   onNavigateMedicines,
   initialQuery,
+  onOpenLogin,
 }) => {
   // Zero-Disk Pure Cloud Storage: Sessions live strictly in memory and Supabase PostgreSQL RLS tables.
   // Initialized with authentic reference consultations matching ChatUi ref.
   const [sessions, setSessions] = useState<ChatSession[]>(() => createInitialReferenceSessions());
 
-  const [activeSessionId, setActiveSessionId] = useState<string>('chat-book-appointment');
+  const [activeSessionId, setActiveSessionId] = useState<string>('chat-new-consultation');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
@@ -543,7 +360,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     setIsCanvasOpen(true);
   };
 
-  // Active In-Chat Appointment Automation State (ChatUi ref)
+  // Active In-Chat Appointment Automation State (ChatUi ref) - strictly null until user triggers booking
   const [activeAppointmentDraft, setActiveAppointmentDraft] = useState<{
     hospitalId: string;
     hospitalName: string;
@@ -556,32 +373,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     selectedDoctor?: DoctorSlotCard;
     selectedSlot?: string;
     isConfirmed?: boolean;
-  }>({
-    hospitalId: 'HG-H002',
-    hospitalName: 'Govt Medical College & Hospital (GMCH)',
-    patientType: 'myself',
-    department: 'General Medicine',
-    condition: 'Fever & headache for 3 days',
-    preferredDate: '2025-09-29',
-    timeSlot: 'Morning',
-    selectedDoctor: {
-      id: 'doc-001',
-      doctorCode: 'DOC001',
-      name: 'Dr. Mohamed',
-      department: 'General Medicine',
-      specialization: 'Internal Medicine & Chronic Care',
-      qualification: 'MBBS, MD',
-      opdRoom: 'Room 101',
-      experienceYears: 12,
-      rating: 4.8,
-      reviewsCount: 320,
-      avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200',
-      availableSlots: ['09:00 AM', '09:30 AM', '10:00 AM'],
-      selectedSlot: '09:00 AM',
-    },
-    selectedSlot: '09:00 AM',
-    isConfirmed: false,
-  });
+  } | null>(null);
 
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
   const [isHospitalPickerOpen, setIsHospitalPickerOpen] = useState(false);
@@ -641,14 +433,14 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
     return {
       id: `queue-${appt.appointment_id || Date.now()}`,
-      appointmentId: appt.appointment_id || 'APPT250929004',
+      appointmentId: appt.appointment_id || `APPT-${Date.now()}`,
       tokenNumber: tokenNum,
       tokenDisplay,
-      patientName: appt.patient_name || 'Patient',
-      doctorName: appt.doctor_name || 'Dr. Mohamed',
+      patientName: appt.patient_name || (lang === 'en' ? 'Citizen' : 'நோயாளி'),
+      doctorName: appt.doctor_name || (lang === 'en' ? 'Attending Doctor' : 'மருத்துவர்'),
       department: appt.department || 'General Medicine',
       opdRoom,
-      hospitalName: 'Govt Medical College & Hospital (GMCH)',
+      hospitalName: (appt as any).hospital_name || 'Govt Medical College & Hospital (GMCH)',
       currentServingToken,
       patientsAhead,
       estimatedWaitMinutes,
@@ -955,13 +747,14 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const handleConfirmAppointment = async () => {
     try {
+      if (!activeAppointmentDraft) return;
       const currentAuth = authService.getCurrentUser();
 
       const patientName = activeAppointmentDraft.patientType === 'family' && activeAppointmentDraft.beneficiaryName
         ? activeAppointmentDraft.beneficiaryName
         : currentAuth?.name || (lang === 'en' ? 'Outpatient Citizen' : 'வெளிநோயாளி');
       
-      const doctorName = activeAppointmentDraft.selectedDoctor?.name || 'Dr. Mohamed';
+      const doctorName = activeAppointmentDraft.selectedDoctor?.name || (lang === 'en' ? 'Attending Doctor' : 'மருத்துவர்');
       const dept = activeAppointmentDraft.department || 'General Medicine';
       const date = activeAppointmentDraft.preferredDate || new Date().toISOString().slice(0, 10);
       const time = activeAppointmentDraft.selectedSlot || '09:00 AM';
@@ -978,13 +771,13 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
         appointment_type: 'Consultation',
         source: 'DocBot AI Chatbot',
         reason_for_visit: condition,
-        notes: `Hospital: ${activeAppointmentDraft.hospitalName}. Room: ${activeAppointmentDraft.selectedDoctor?.opdRoom || 'Room 101'}. Booked via HealthGrid DocBot AI.`,
+        notes: `Hospital: ${activeAppointmentDraft.hospitalName}. Room: ${activeAppointmentDraft.selectedDoctor?.opdRoom || 'OPD Room'}. Booked via HealthGrid DocBot AI.`,
       });
 
-      setActiveAppointmentDraft((prev) => ({
+      setActiveAppointmentDraft((prev) => (prev ? {
         ...prev,
         isConfirmed: true,
-      }));
+      } : null));
 
       const confirmedMsg: ChatMessage = {
         id: `a-conf-${Date.now()}`,
@@ -1022,6 +815,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const handleFindAvailableDoctors = (stepperData?: AppointmentStepperData) => {
     const draft = stepperData || activeAppointmentDraft;
+    if (!draft) return;
     const allDocs = doctorOpdService.getDoctors();
     const deptNorm = (draft.department || 'General Medicine').toLowerCase();
     
@@ -1074,7 +868,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
     const firstSlot = firstDoc?.availableSlots[0] || '09:00 AM';
 
     setActiveAppointmentDraft((prev) => ({
-      ...prev,
+      ...(prev || {}),
       ...draft,
       selectedDoctor: firstDoc,
       selectedSlot: firstSlot,
@@ -1114,6 +908,9 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   };
 
   const handleTriggerAppointmentBooking = (userQueryText?: string) => {
+    if (!ensureAuth(undefined, lang === 'en' ? 'Sign in or register to book an appointment' : 'சந்திப்பை முன்பதிவு செய்ய உள்நுழையவும்')) {
+      return;
+    }
     const userPrompt = userQueryText || (lang === 'en' ? 'I want to book an appointment' : 'நான் மருத்துவ சந்திப்பை முன்பதிவு செய்ய விரும்புகிறேன்');
     const userMsg: ChatMessage = {
       id: `u-${Date.now()}`,
@@ -1128,8 +925,8 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       patientType: (activeBeneficiary ? 'family' : 'myself') as 'myself' | 'family',
       beneficiaryName: activeBeneficiary?.name,
       department: 'General Medicine',
-      condition: activeAppointmentDraft.condition || 'Fever & headache for 3 days',
-      preferredDate: '2025-09-29',
+      condition: activeAppointmentDraft?.condition || (userQueryText && userQueryText.length > 5 ? userQueryText : (lang === 'en' ? 'General Outpatient Consultation' : 'பொது மருத்துவ ஆலோசனை')),
+      preferredDate: new Date().toISOString().slice(0, 10),
       timeSlot: 'Morning' as 'Morning' | 'Afternoon' | 'Evening',
       isConfirmed: false,
     };
@@ -1179,11 +976,11 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
   };
 
   const handleViewReports = () => {
-    setIsVitalsModalOpen(true);
+    ensureAuth(() => setIsVitalsModalOpen(true), lang === 'en' ? 'Sign in to view your diagnostic reports' : 'உங்கள் மருத்துவ அறிக்கைகளைக் காண உள்நுழையவும்');
   };
 
   const handleTalkToDoctor = () => {
-    setIsLiveVisionOpen(true);
+    ensureAuth(() => setIsLiveVisionOpen(true), lang === 'en' ? 'Sign in to consult doctor via Live Vision' : 'நேரலை மருத்துவ ஆலோசனையைப் பெற உள்நுழையவும்');
   };
 
   const [carouselIndices, setCarouselIndices] = useState<Record<string, number>>({});
@@ -1203,7 +1000,18 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
       'Neurology'
     ];
 
-    const isSubmitted = stepper.isSubmitted || activeAppointmentDraft.isConfirmed;
+    const isSubmitted = stepper.isSubmitted || (activeAppointmentDraft ? activeAppointmentDraft.isConfirmed : false);
+    const curDraft = activeAppointmentDraft || {
+      hospitalId: stepper.hospitalId,
+      hospitalName: stepper.hospitalName,
+      patientType: stepper.patientType || 'myself',
+      beneficiaryName: stepper.beneficiaryName,
+      department: stepper.department || 'General Medicine',
+      condition: stepper.condition || '',
+      preferredDate: stepper.preferredDate || new Date().toISOString().slice(0, 10),
+      timeSlot: stepper.timeSlot || 'Morning',
+      isConfirmed: stepper.isSubmitted || false,
+    };
 
     return (
       <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-white border border-teal-200/90 shadow-sm space-y-4 animate-in fade-in duration-200">
@@ -1218,7 +1026,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 {lang === 'en' ? 'Selected Facility' : 'தேர்ந்தெடுக்கப்பட்ட மருத்துவமனை'}
               </div>
               <div className="text-xs font-bold text-slate-900 truncate">
-                {activeAppointmentDraft.hospitalName || stepper.hospitalName}
+                {curDraft.hospitalName || stepper.hospitalName}
               </div>
             </div>
           </div>
@@ -1245,7 +1053,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                     type="button"
                     onClick={() => {
                       setActiveAppointmentDraft((prev) => ({
-                        ...prev,
+                        ...(prev || curDraft),
                         hospitalId: hosp.code,
                         hospitalName: hosp.name,
                       }));
@@ -1253,7 +1061,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                       setToastMessage(lang === 'en' ? `Switched to ${hosp.name}` : `${hosp.name} தேர்ந்தெடுக்கப்பட்டது`);
                     }}
                     className={`w-full text-left px-2.5 py-2 rounded-lg text-xs transition-colors flex items-center justify-between ${
-                      activeAppointmentDraft.hospitalId === hosp.code
+                      curDraft.hospitalId === hosp.code
                         ? 'bg-teal-50 text-teal-900 font-bold'
                         : 'text-slate-700 hover:bg-slate-100 font-medium'
                     }`}
@@ -1281,13 +1089,13 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               disabled={isSubmitted}
               onClick={() => {
                 setActiveAppointmentDraft((prev) => ({
-                  ...prev,
+                  ...(prev || curDraft),
                   patientType: 'myself',
                   beneficiaryName: undefined,
                 }));
               }}
               className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                activeAppointmentDraft.patientType === 'myself'
+                curDraft.patientType === 'myself'
                   ? 'bg-teal-50 border-teal-600 text-teal-950 ring-1 ring-teal-500/30'
                   : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
@@ -1301,13 +1109,13 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               disabled={isSubmitted}
               onClick={() => {
                 setActiveAppointmentDraft((prev) => ({
-                  ...prev,
+                  ...(prev || curDraft),
                   patientType: 'family',
-                  beneficiaryName: activeBeneficiary?.name || prev.beneficiaryName || 'Family Member',
+                  beneficiaryName: activeBeneficiary?.name || prev?.beneficiaryName || curDraft.beneficiaryName || 'Family Member',
                 }));
               }}
               className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                activeAppointmentDraft.patientType === 'family'
+                curDraft.patientType === 'family'
                   ? 'bg-teal-50 border-teal-600 text-teal-950 ring-1 ring-teal-500/30'
                   : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
@@ -1317,15 +1125,15 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
             </button>
           </div>
 
-          {activeAppointmentDraft.patientType === 'family' && (
+          {curDraft.patientType === 'family' && (
             <div className="pt-1.5">
               <input
                 type="text"
                 disabled={isSubmitted}
-                value={activeAppointmentDraft.beneficiaryName || ''}
+                value={curDraft.beneficiaryName || ''}
                 onChange={(e) =>
                   setActiveAppointmentDraft((prev) => ({
-                    ...prev,
+                    ...(prev || curDraft),
                     beneficiaryName: e.target.value,
                   }))
                 }
@@ -1344,12 +1152,12 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               <span>{lang === 'en' ? 'Select Department' : 'மருத்துவத் துறையைத் தேர்வு செய்க'}</span>
             </span>
             <span className="text-[10px] text-teal-700 font-bold">
-              {activeAppointmentDraft.department}
+              {curDraft.department}
             </span>
           </label>
           <div className="flex flex-wrap gap-1.5">
             {departments.slice(0, 5).map((dept) => {
-              const isSelected = activeAppointmentDraft.department.toLowerCase() === dept.toLowerCase();
+              const isSelected = curDraft.department.toLowerCase() === dept.toLowerCase();
               return (
                 <button
                   key={dept}
@@ -1357,7 +1165,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                   disabled={isSubmitted}
                   onClick={() => {
                     setActiveAppointmentDraft((prev) => ({
-                      ...prev,
+                      ...(prev || curDraft),
                       department: dept,
                     }));
                   }}
@@ -1392,7 +1200,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                       type="button"
                       onClick={() => {
                         setActiveAppointmentDraft((prev) => ({
-                          ...prev,
+                          ...(prev || curDraft),
                           department: dept,
                         }));
                         setIsDepartmentPickerOpen(false);
@@ -1448,10 +1256,10 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           <input
             type="text"
             disabled={isSubmitted}
-            value={activeAppointmentDraft.condition}
+            value={curDraft.condition}
             onChange={(e) =>
               setActiveAppointmentDraft((prev) => ({
-                ...prev,
+                ...(prev || curDraft),
                 condition: e.target.value,
               }))
             }
@@ -1468,17 +1276,17 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               <span>{lang === 'en' ? 'Preferred Date' : 'விரும்பிய தேதி'}</span>
             </span>
             <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
-              {formatDisplayDate(activeAppointmentDraft.preferredDate)}
+              {formatDisplayDate(curDraft.preferredDate)}
             </span>
           </label>
           <div className="flex items-center gap-2">
             <input
               type="date"
               disabled={isSubmitted}
-              value={activeAppointmentDraft.preferredDate}
+              value={curDraft.preferredDate}
               onChange={(e) =>
                 setActiveAppointmentDraft((prev) => ({
-                  ...prev,
+                  ...(prev || curDraft),
                   preferredDate: e.target.value,
                 }))
               }
@@ -1491,7 +1299,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 const iso = tomorrow.toISOString().slice(0, 10);
-                setActiveAppointmentDraft((prev) => ({ ...prev, preferredDate: iso }));
+                setActiveAppointmentDraft((prev) => ({ ...(prev || curDraft), preferredDate: iso }));
               }}
               className="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold shrink-0 cursor-pointer"
             >
@@ -1512,7 +1320,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               { slot: 'Afternoon', labelEn: 'Afternoon', time: '12 PM - 4 PM', icon: '🌤️' },
               { slot: 'Evening', labelEn: 'Evening', time: '4 PM - 8 PM', icon: '🌙' },
             ].map((item) => {
-              const isSelected = activeAppointmentDraft.timeSlot === item.slot;
+              const isSelected = curDraft.timeSlot === item.slot;
               return (
                 <button
                   key={item.slot}
@@ -1520,7 +1328,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
                   disabled={isSubmitted}
                   onClick={() =>
                     setActiveAppointmentDraft((prev) => ({
-                      ...prev,
+                      ...(prev || curDraft),
                       timeSlot: item.slot as any,
                     }))
                   }
@@ -1577,9 +1385,17 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
     const handleSelectSlot = (slot: string) => {
       setActiveAppointmentDraft((prev) => ({
-        ...prev,
+        ...(prev || {}),
+        hospitalId: prev?.hospitalId || 'HG-H002',
+        hospitalName: prev?.hospitalName || 'Govt Medical College & Hospital (GMCH)',
+        patientType: prev?.patientType || 'myself',
+        department: prev?.department || curDoc.department,
+        condition: prev?.condition || (lang === 'en' ? 'General Consultation' : 'பொது ஆலோசனை'),
+        preferredDate: prev?.preferredDate || new Date().toISOString().slice(0, 10),
+        timeSlot: prev?.timeSlot || 'Morning',
         selectedDoctor: curDoc,
         selectedSlot: slot,
+        isConfirmed: false,
       }));
       setToastMessage(
         lang === 'en'
@@ -1669,8 +1485,8 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           <div className="flex flex-wrap gap-2">
             {curDoc.availableSlots.map((slot) => {
               const isSelected =
-                activeAppointmentDraft.selectedDoctor?.doctorCode === curDoc.doctorCode &&
-                activeAppointmentDraft.selectedSlot === slot;
+                activeAppointmentDraft?.selectedDoctor?.doctorCode === curDoc.doctorCode &&
+                activeAppointmentDraft?.selectedSlot === slot;
 
               return (
                 <button
@@ -1695,18 +1511,18 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
           <div className="text-[11px] text-slate-500">
             {lang === 'en' ? 'Selected:' : 'தேர்வு:'}{' '}
             <strong className="text-teal-900">
-              {activeAppointmentDraft.selectedDoctor?.name === curDoc.name
-                ? `${curDoc.name} (${activeAppointmentDraft.selectedSlot || '09:00 AM'})`
+              {activeAppointmentDraft?.selectedDoctor?.name === curDoc.name
+                ? `${curDoc.name} (${activeAppointmentDraft?.selectedSlot || '09:00 AM'})`
                 : 'Tap a slot above'}
             </strong>
           </div>
 
-          {activeAppointmentDraft.isConfirmed ? (
+          {activeAppointmentDraft?.isConfirmed ? (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-bold">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
               <span>{lang === 'en' ? 'Confirmed' : 'உறுதி செய்யப்பட்டது'}</span>
             </span>
-          ) : activeAppointmentDraft.selectedDoctor?.doctorCode === curDoc.doctorCode ? (
+          ) : activeAppointmentDraft?.selectedDoctor?.doctorCode === curDoc.doctorCode ? (
             <button
               type="button"
               onClick={handleConfirmAppointment}
@@ -1720,7 +1536,7 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
               type="button"
               onClick={() => {
                 const defaultSlot = curDoc.availableSlots[0] || '09:00 AM';
-                handleSelectSlot(activeAppointmentDraft.selectedSlot || defaultSlot);
+                handleSelectSlot(activeAppointmentDraft?.selectedSlot || defaultSlot);
               }}
               className="px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs"
             >
@@ -1734,9 +1550,10 @@ export const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const renderAppointmentSummaryCard = () => {
     const draft = activeAppointmentDraft;
+    if (!draft) return null;
     const patientName = draft.patientType === 'family' && draft.beneficiaryName
       ? draft.beneficiaryName
-      : currentUser?.name || 'Myself';
+      : currentUser?.name || (lang === 'en' ? 'Myself' : 'எனக்கு');
 
     const doctor = draft.selectedDoctor;
 
@@ -3449,6 +3266,10 @@ ${sbar.recommendation}`;
 
   // Submit Prompt to AGI Doctor
   const handleSendMessage = async (textToSend?: string) => {
+    if (!ensureAuth(undefined, lang === 'en' ? 'Sign in or register to chat with DocBot AI' : 'DocBot AI மருத்துவ ஆலோசனையைப் பெற தயவுசெய்து உள்நுழையவும்')) {
+      return;
+    }
+
     if (isRecording) {
       speechEngine.stopListening();
       setIsRecording(false);
@@ -3632,10 +3453,10 @@ ${sbar.recommendation}`;
       const nlp = NlpBookingParser.parse(query);
 
       // Look up patient's existing active appointments
-      const patientHealthId = currentBeneficiary?.healthId || currentUser?.healthId || 'HG001245';
-      const patientAppts = appointmentService.getAppointmentsForPatient(patientHealthId);
+      const patientHealthId = currentBeneficiary?.healthId || currentUser?.healthId;
+      const patientAppts = patientHealthId ? appointmentService.getAppointmentsForPatient(patientHealthId) : [];
       const activeAppts = patientAppts.filter((a) => a.status !== 'Cancelled');
-      const latestActiveAppt = activeAppts[0] || appointmentService.getAppointments().find((a) => a.status !== 'Cancelled');
+      const latestActiveAppt = activeAppts[0];
 
       let cancelCardData: CancelCardData | undefined = undefined;
       if (nlp.hasCancelIntent && latestActiveAppt) {
@@ -3698,12 +3519,12 @@ ${sbar.recommendation}`;
       let generatedCarousel: DoctorCarouselData | undefined = undefined;
 
       if (nlp.hasBookingIntent && !cancelCardData && !rescheduleCardData && !response.triageWizard) {
-        const dept = nlp.department || (nlp.doctor ? nlp.doctor.department : activeAppointmentDraft.department) || 'General Medicine';
-        const date = nlp.preferredDate || activeAppointmentDraft.preferredDate || new Date().toISOString().slice(0, 10);
-        const period = nlp.timeSlot || activeAppointmentDraft.timeSlot || 'Morning';
-        const cond = nlp.condition || activeAppointmentDraft.condition || query;
-        const hospId = nlp.hospitalId || activeAppointmentDraft.hospitalId || 'HG-H002';
-        const hospName = nlp.hospitalName || activeAppointmentDraft.hospitalName || 'Govt Medical College & Hospital (GMCH)';
+        const dept = nlp.department || (nlp.doctor ? nlp.doctor.department : activeAppointmentDraft?.department) || 'General Medicine';
+        const date = nlp.preferredDate || activeAppointmentDraft?.preferredDate || new Date().toISOString().slice(0, 10);
+        const period = nlp.timeSlot || activeAppointmentDraft?.timeSlot || 'Morning';
+        const cond = nlp.condition || activeAppointmentDraft?.condition || query;
+        const hospId = nlp.hospitalId || activeAppointmentDraft?.hospitalId || 'HG-H002';
+        const hospName = nlp.hospitalName || activeAppointmentDraft?.hospitalName || 'Govt Medical College & Hospital (GMCH)';
 
         if (nlp.doctor) {
           const docSlotTimes =
@@ -3753,9 +3574,10 @@ ${sbar.recommendation}`;
           const carouselDocs = [docCard, ...otherDocs];
 
           setActiveAppointmentDraft((prev) => ({
-            ...prev,
             hospitalId: hospId,
             hospitalName: hospName,
+            patientType: prev?.patientType || (currentBeneficiary ? 'family' : 'myself'),
+            beneficiaryName: prev?.beneficiaryName || currentBeneficiary?.name,
             department: dept,
             condition: cond,
             preferredDate: date,
@@ -3776,13 +3598,16 @@ ${sbar.recommendation}`;
           };
         } else {
           setActiveAppointmentDraft((prev) => ({
-            ...prev,
             hospitalId: hospId,
             hospitalName: hospName,
+            patientType: prev?.patientType || (currentBeneficiary ? 'family' : 'myself'),
+            beneficiaryName: prev?.beneficiaryName || currentBeneficiary?.name,
             department: dept,
             condition: cond,
             preferredDate: date,
             timeSlot: period,
+            selectedDoctor: prev?.selectedDoctor,
+            selectedSlot: prev?.selectedSlot,
             isConfirmed: false,
           }));
 
@@ -3790,8 +3615,8 @@ ${sbar.recommendation}`;
             id: `stepper-${Date.now()}`,
             hospitalId: hospId,
             hospitalName: hospName,
-            patientType: activeAppointmentDraft.patientType || (currentBeneficiary ? 'family' : 'myself'),
-            beneficiaryName: currentBeneficiary?.name || activeAppointmentDraft.beneficiaryName,
+            patientType: activeAppointmentDraft?.patientType || (currentBeneficiary ? 'family' : 'myself'),
+            beneficiaryName: currentBeneficiary?.name || activeAppointmentDraft?.beneficiaryName,
             department: dept,
             condition: cond,
             preferredDate: date,
@@ -5878,80 +5703,120 @@ ${sbar.recommendation}`;
             )}
 
             {/* Input Capsule (Matching Chatbot UI.png) */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (isThinking || isSendingRef.current) return;
-                handleSendMessage();
-              }}
-              className="rounded-full border flex items-center gap-2 p-1.5 sm:p-2 shadow-xs transition-all bg-white border-slate-300 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100"
-            >
-              {/* Paperclip Attachment Button (Prescription / Lab PDF) */}
-              <button
-                type="button"
-                onClick={() => {
-                  fileInputRef.current?.click();
+            <div className="relative">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!currentUser) {
+                    ensureAuth(undefined, lang === 'en' ? 'Sign in to consult DocBot AI' : 'DocBot AI ஆலோசனையைப் பெற உள்நுழையவும்');
+                    return;
+                  }
+                  if (isThinking || isSendingRef.current) return;
+                  handleSendMessage();
                 }}
-                className="p-2.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-                title="Attach Prescription or Lab Slip"
-              >
-                <Paperclip className="w-4 h-4 rotate-45" />
-              </button>
-
-              {/* Multimodal Camera / Symptom Photo Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  photoInputRef.current?.click();
-                }}
-                className={`p-2.5 rounded-full transition-colors cursor-pointer ${
-                  attachedPhoto
-                    ? 'text-teal-700 bg-teal-100 ring-2 ring-teal-300'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                className={`rounded-full border flex items-center gap-2 p-1.5 sm:p-2 shadow-xs transition-all bg-white border-slate-300 ${
+                  !currentUser
+                    ? 'opacity-60 pointer-events-none'
+                    : 'focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100'
                 }`}
-                title="Attach or snap photo of physical symptom (skin rash, eye redness, throat, wound)"
               >
-                <Camera className="w-4 h-4" />
-              </button>
+                {/* Paperclip Attachment Button (Prescription / Lab PDF) */}
+                <button
+                  type="button"
+                  disabled={!currentUser}
+                  onClick={() => {
+                    fileInputRef.current?.click();
+                  }}
+                  className="p-2.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                  title="Attach Prescription or Lab Slip"
+                >
+                  <Paperclip className="w-4 h-4 rotate-45" />
+                </button>
 
-              {/* Text Input Field */}
-              <input
-                ref={chatInputRef}
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder={
-                  isRecording
-                    ? (lang === 'en' ? 'Listening... speak symptoms now...' : 'கேட்கிறது... இப்போது பேசவும்...')
-                    : (lang === 'en' ? 'Ask a health question in English or Tamil (or tap mic to speak)...' : 'தமிழில் அல்லது English-ல் மருத்துவக் கேள்வி கேட்கவும்...')
-                }
-                className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-800 placeholder-slate-400 px-1"
-              />
+                {/* Multimodal Camera / Symptom Photo Button */}
+                <button
+                  type="button"
+                  disabled={!currentUser}
+                  onClick={() => {
+                    photoInputRef.current?.click();
+                  }}
+                  className={`p-2.5 rounded-full transition-colors cursor-pointer ${
+                    attachedPhoto
+                      ? 'text-teal-700 bg-teal-100 ring-2 ring-teal-300'
+                      : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  }`}
+                  title="Attach or snap photo of physical symptom (skin rash, eye redness, throat, wound)"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
 
-              {/* Microphone Button with Active Pulsing Ring Animation */}
-              <button
-                type="button"
-                onClick={handleToggleVoiceInput}
-                className={`p-2.5 rounded-full transition-all cursor-pointer ${
-                  isRecording
-                    ? 'bg-rose-500 text-white animate-pulse shadow-lg ring-4 ring-rose-200'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                }`}
-                title={isRecording ? (lang === 'en' ? 'Stop listening' : 'நிறுத்து') : (lang === 'en' ? 'Voice Input (Click to Speak)' : 'குரல் உள்ளீடு')}
-              >
-                <Mic className={`w-4 h-4 ${isRecording ? 'animate-bounce text-white' : ''}`} />
-              </button>
+                {/* Text Input Field */}
+                <input
+                  ref={chatInputRef}
+                  type="text"
+                  disabled={!currentUser}
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder={
+                    !currentUser
+                      ? (lang === 'en' ? 'Sign in to consult DocBot AI...' : 'DocBot AI-யுடன் பேச உள்நுழையவும்...')
+                      : isRecording
+                      ? (lang === 'en' ? 'Listening... speak symptoms now...' : 'கேட்கிறது... இப்போது பேசவும்...')
+                      : (lang === 'en' ? 'Ask a health question in English or Tamil (or tap mic to speak)...' : 'தமிழில் அல்லது English-ல் மருத்துவக் கேள்வி கேட்கவும்...')
+                  }
+                  className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-800 placeholder-slate-400 px-1 disabled:cursor-not-allowed"
+                />
 
-              {/* Circular Send Button (Matching Chatbot UI.png) */}
-              <button
-                type="submit"
-                disabled={isThinking}
-                className="p-2.5 rounded-full bg-[#057A55] hover:bg-[#046A4A] disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-xs transition-transform active:scale-95 cursor-pointer"
-                title="Send Message"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+                {/* Microphone Button with Active Pulsing Ring Animation */}
+                <button
+                  type="button"
+                  disabled={!currentUser}
+                  onClick={handleToggleVoiceInput}
+                  className={`p-2.5 rounded-full transition-all cursor-pointer ${
+                    isRecording
+                      ? 'bg-rose-500 text-white animate-pulse shadow-lg ring-4 ring-rose-200'
+                      : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  }`}
+                  title={isRecording ? (lang === 'en' ? 'Stop listening' : 'நிறுத்து') : (lang === 'en' ? 'Voice Input (Click to Speak)' : 'குரல் உள்ளீடு')}
+                >
+                  <Mic className={`w-4 h-4 ${isRecording ? 'animate-bounce text-white' : ''}`} />
+                </button>
+
+                {/* Circular Send Button (Matching Chatbot UI.png) */}
+                <button
+                  type="submit"
+                  disabled={!currentUser || isThinking}
+                  className="p-2.5 rounded-full bg-[#057A55] hover:bg-[#046A4A] disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-xs transition-transform active:scale-95 cursor-pointer"
+                  title="Send Message"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+
+              {/* Security Lock Banner Overlay for Unauthenticated Visitors */}
+              {!currentUser && (
+                <div className="absolute inset-0 z-20 rounded-full bg-slate-900/75 backdrop-blur-xs flex items-center justify-between px-3.5 sm:px-6 text-white border border-slate-700/60 shadow-md animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-teal-500/20 text-teal-300 flex items-center justify-center shrink-0 border border-teal-400/30">
+                      <Lock className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs font-semibold truncate text-slate-100">
+                      {lang === 'en' ? 'Log in to consult DocBot AI & book appointments' : 'DocBot AI மருத்துவ ஆலோசனை பெற உள்நுழையவும்'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onOpenLogin) onOpenLogin();
+                      else setIsLoginOpen(true);
+                    }}
+                    className="px-3.5 sm:px-4 py-1.5 rounded-full bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold shrink-0 transition-transform active:scale-95 cursor-pointer shadow-xs ml-2"
+                  >
+                    {lang === 'en' ? 'Sign In' : 'உள்நுழைக'}
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Quick Actions Tray (Matching ChatUi ref.png) */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 no-scrollbar text-xs">
@@ -6079,7 +5944,7 @@ ${sbar.recommendation}`;
                       {lang === 'en' ? 'Selected Appointment' : 'தேர்ந்தெடுக்கப்பட்ட சந்திப்பு'}
                     </div>
                     <div className="text-xs font-bold text-slate-900 truncate">
-                      {activeAppointmentDraft.department} • {activeAppointmentDraft.selectedDoctor?.name || 'Dr. Mohamed'} ({activeAppointmentDraft.selectedSlot || '09:00 AM'})
+                      {activeAppointmentDraft.department} • {activeAppointmentDraft.selectedDoctor?.name || (lang === 'en' ? 'Attending Doctor' : 'மருத்துவர்')} ({activeAppointmentDraft.selectedSlot || '09:00 AM'})
                     </div>
                   </div>
                   <button

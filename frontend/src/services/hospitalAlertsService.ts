@@ -52,19 +52,7 @@ class HospitalAlertsService {
       if (raw) {
         this.alerts = JSON.parse(raw);
       } else {
-        // Initial clean state with welcome announcement
-        this.alerts = [
-          {
-            id: 'alt-init-1',
-            type: 'CHECK_IN',
-            patientName: 'Mohamed Sameen S',
-            healthId: 'HG-PP27BNQ',
-            message: 'Mohamed Sameen S (HG-PP27BNQ) verified via HealthGrid Sovereign Identity',
-            time: '10:00 AM',
-            timestamp: Date.now() - 3600000,
-            read: true,
-          },
-        ];
+        this.alerts = [];
       }
     } catch {
       this.alerts = [];

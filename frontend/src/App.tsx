@@ -162,7 +162,14 @@ export default function App() {
         setCurrentView('thank-you');
       } else if (pathname === '/chat' || hash === '#chat' || hash === '#/chat') {
         setAccessDeniedPortal(null);
-        setCurrentView('chat');
+        if (!authService.getCurrentUser()) {
+          setCurrentView('landing');
+          requireAuth(() => {
+            setCurrentView('chat');
+          }, lang === 'en' ? 'DocBot AI TeleClinic & Chat' : 'DocBot AI மருத்துவ ஆலோசனை');
+        } else {
+          setCurrentView('chat');
+        }
       } else if (pathname === '/profile' || hash === '#profile' || hash === '#/profile') {
         setAccessDeniedPortal(null);
         if (!authService.getCurrentUser()) {
@@ -181,7 +188,14 @@ export default function App() {
         setCurrentView('medicines');
       } else if (pathname === '/cabinet' || pathname === '/medications' || hash === '#cabinet' || hash === '#/cabinet' || hash === '#medications') {
         setAccessDeniedPortal(null);
-        setCurrentView('cabinet');
+        if (!authService.getCurrentUser()) {
+          setCurrentView('landing');
+          requireAuth(() => {
+            setCurrentView('cabinet');
+          }, lang === 'en' ? 'Medication Cabinet & Safety Shield' : 'மருந்து பாதுகாப்பு பெட்டகம்');
+        } else {
+          setCurrentView('cabinet');
+        }
       } else if (pathname === '/clinician' || pathname === '/clinician-portal' || pathname === '/doctor' || pathname === '/my-queue' || hash === '#clinician' || hash === '#clinician-portal' || hash === '#doctor' || hash === '#my-queue' || hash === '#/clinician' || hash === '#/clinician-portal') {
         if (authService.canAccessClinicianPortal()) {
           setAccessDeniedPortal(null);
@@ -372,7 +386,28 @@ export default function App() {
   };
 
   const navigateToView = (view: AppView) => {
-    if (view === 'clinician-portal') {
+    if (view === 'chat') {
+      if (!authService.getCurrentUser()) {
+        requireAuth(() => {
+          navigateToView('chat');
+        }, lang === 'en' ? 'DocBot AI TeleClinic & Chat' : 'DocBot AI மருத்துவ ஆலோசனை');
+        return;
+      }
+    } else if (view === 'cabinet') {
+      if (!authService.getCurrentUser()) {
+        requireAuth(() => {
+          navigateToView('cabinet');
+        }, lang === 'en' ? 'Medication Cabinet & Safety Shield' : 'மருந்து பாதுகாப்பு பெட்டகம்');
+        return;
+      }
+    } else if (view === 'profile') {
+      if (!authService.getCurrentUser()) {
+        requireAuth(() => {
+          navigateToView('profile');
+        }, lang === 'en' ? 'Patient Medical Vault' : 'மருத்துவ ஏடு');
+        return;
+      }
+    } else if (view === 'clinician-portal') {
       if (!authService.canAccessClinicianPortal()) {
         setAccessDeniedPortal('CLINICIAN');
         if (window.location.pathname !== '/clinician') {
@@ -400,14 +435,13 @@ export default function App() {
   const handleOpenVoiceChat = (sampleQuery?: string) => {
     if (sampleQuery && sampleQuery.trim()) {
       setChatInitialQuery(sampleQuery.trim());
-      requireAuth(() => {
-        setChatInitialQuery(sampleQuery.trim());
-        navigateToView('chat');
-      }, lang === 'en' ? 'AI Consultation' : 'மருத்துவ ஆலோசனை');
-      return;
     }
-    // Direct click to chat: allow interactive preview
-    navigateToView('chat');
+    requireAuth(() => {
+      if (sampleQuery && sampleQuery.trim()) {
+        setChatInitialQuery(sampleQuery.trim());
+      }
+      navigateToView('chat');
+    }, lang === 'en' ? 'DocBot AI TeleClinic & Chat' : 'DocBot AI மருத்துவ ஆலோசனை');
   };
 
   // Render High-Security Frosted Screen when Route is Blocked by RBAC (Zero clinical DOM mounted)
@@ -539,7 +573,7 @@ export default function App() {
                 }, 250);
               }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
             }}
-            onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
+            onOpenPatientIntake={() => requireAuth(() => setIsPatientIntakeOpen(true), lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை டோக்கன்')}
           />
         </header>
 
@@ -557,6 +591,7 @@ export default function App() {
               onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
               onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
               onNavigateMedicines={() => navigateToView('medicines')}
+              onOpenLogin={() => setIsLoginOpen(true)}
             />
           </Suspense>
         </main>
@@ -690,7 +725,7 @@ export default function App() {
                 }, 250);
               }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
             }}
-            onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
+            onOpenPatientIntake={() => requireAuth(() => setIsPatientIntakeOpen(true), lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை டோக்கன்')}
           />
         </header>
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -759,7 +794,7 @@ export default function App() {
                 }, 250);
               }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
             }}
-            onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
+            onOpenPatientIntake={() => requireAuth(() => setIsPatientIntakeOpen(true), lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை டோக்கன்')}
           />
         </header>
 
@@ -911,7 +946,7 @@ export default function App() {
                 navigateToView('profile');
               }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
             }}
-            onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
+            onOpenPatientIntake={() => requireAuth(() => setIsPatientIntakeOpen(true), lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை டோக்கன்')}
           />
         </header>
 
@@ -1133,7 +1168,7 @@ export default function App() {
               }, 250);
             }, lang === 'en' ? 'Profile Settings' : 'அமைப்புகள்');
           }}
-          onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
+          onOpenPatientIntake={() => requireAuth(() => setIsPatientIntakeOpen(true), lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை டோக்கன்')}
         />
       </header>
 
@@ -1158,7 +1193,7 @@ export default function App() {
           onOpenDiseaseMap={() => requireAuth(() => setIsDiseaseMapOpen(true), lang === 'en' ? 'Disease Map' : 'நோய் வரைபடம்')}
           onOpenBabyShots={() => requireAuth(() => setIsBabyShotsOpen(true), lang === 'en' ? 'Immunization Schedule' : 'தடுப்பூசி அட்டவணை')}
           onNavigateMedicines={() => navigateToView('medicines')}
-          onOpenPatientIntake={() => setIsPatientIntakeOpen(true)}
+          onOpenPatientIntake={() => requireAuth(() => setIsPatientIntakeOpen(true), lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை டோக்கன்')}
         />
 
         {/* Community Health Heatmap & Quick Health Insights Section */}

@@ -163,7 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const userInitial = currentUser?.name
     ? currentUser.name.charAt(0).toUpperCase()
-    : 'M';
+    : 'U';
 
   const userDisplayName = currentUser?.name
     ? currentUser.name.startsWith('Dr.') 
@@ -321,35 +321,39 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <FileText className="w-4 h-4 text-blue-600" />
                       <span>{lang === 'en' ? 'Scan Prescription' : 'சீட்டு ஸ்கேன்'}</span>
                     </button>
-                    <button 
-                      type="button"
-                      onClick={() => { 
-                        setMoreDropdownOpen(false);
-                        window.history.pushState({}, '', '/cabinet');
-                        window.dispatchEvent(new PopStateEvent('popstate'));
-                      }} 
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <ShieldAlert className="w-4 h-4 text-emerald-600" />
-                      <span>{lang === 'en' ? 'Medication Cabinet & Shield' : 'மருந்து கவசம் & பெட்டி'}</span>
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => { setIsBookAppointmentOpen(true); setMoreDropdownOpen(false); }} 
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-teal-800 bg-teal-50/70 hover:bg-teal-100 rounded-xl transition-colors cursor-pointer font-bold border border-teal-200/60"
-                    >
-                      <Calendar className="w-4 h-4 text-teal-600" />
-                      <span>{lang === 'en' ? 'Book Hospital OPD Slot' : 'மருத்துவமனை சந்திப்பு முன்பதிவு'}</span>
-                    </button>
-                    {onOpenPatientIntake && (
-                      <button 
-                        type="button"
-                        onClick={() => { onOpenPatientIntake(); setMoreDropdownOpen(false); }} 
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded-xl transition-colors cursor-pointer"
-                      >
-                        <Stethoscope className="w-4 h-4 text-teal-600" />
-                        <span>{lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை (டோக்கன்)'}</span>
-                      </button>
+                    {currentUser && (
+                      <>
+                        <button 
+                          type="button"
+                          onClick={() => { 
+                            setMoreDropdownOpen(false);
+                            window.history.pushState({}, '', '/cabinet');
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                          }} 
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded-xl transition-colors cursor-pointer"
+                        >
+                          <ShieldAlert className="w-4 h-4 text-emerald-600" />
+                          <span>{lang === 'en' ? 'Medication Cabinet & Shield' : 'மருந்து கவசம் & பெட்டி'}</span>
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => { setIsBookAppointmentOpen(true); setMoreDropdownOpen(false); }} 
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-teal-800 bg-teal-50/70 hover:bg-teal-100 rounded-xl transition-colors cursor-pointer font-bold border border-teal-200/60"
+                        >
+                          <Calendar className="w-4 h-4 text-teal-600" />
+                          <span>{lang === 'en' ? 'Book Hospital OPD Slot' : 'மருத்துவமனை சந்திப்பு முன்பதிவு'}</span>
+                        </button>
+                        {onOpenPatientIntake && (
+                          <button 
+                            type="button"
+                            onClick={() => { onOpenPatientIntake(); setMoreDropdownOpen(false); }} 
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded-xl transition-colors cursor-pointer"
+                          >
+                            <Stethoscope className="w-4 h-4 text-teal-600" />
+                            <span>{lang === 'en' ? 'Consult Doctor (OPD Token)' : 'மருத்துவர் ஆலோசனை (டோக்கன்)'}</span>
+                          </button>
+                        )}
+                      </>
                     )}
                     {isDoctor && (
                       <button 
@@ -1091,79 +1095,84 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
 
-              {/* Medication Cabinet & Safety Shield Quick Tile */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  window.history.pushState({}, '', '/cabinet');
-                  window.dispatchEvent(new PopStateEvent('popstate'));
-                }}
-                className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-teal-50 to-emerald-50 hover:bg-teal-100/80 border border-teal-200/80 text-teal-900 transition-colors text-left cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
-                    <ShieldAlert className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold">{lang === 'en' ? 'Medication Cabinet & Safety Shield' : 'மருந்து கவசம் & பெட்டி'}</div>
-                    <div className="text-[10px] text-teal-700 font-medium">{lang === 'en' ? 'Cross-doctor conflict radar & drug safety' : 'மருத்துவர் முரண்பாடு ரேடார் & பாதுகாப்பு'}</div>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-teal-500" />
-              </button>
-
-              {/* My Hospital Appointments Quick Tile */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  if (onNavigateProfile) {
-                    onNavigateProfile();
-                  } else {
-                    window.history.pushState({}, '', '/profile');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
-                  }
-                }}
-                className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-50/80 hover:bg-teal-100/80 border border-teal-200/80 text-teal-900 transition-colors text-left cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
-                    <CalendarDays className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold">{lang === 'en' ? 'My Hospital Appointments' : 'என் மருத்துவமனை சந்திப்புகள்'}</div>
-                    <div className="text-[10px] text-teal-700 font-medium">{lang === 'en' ? 'View live passes & queue status' : 'நேரலை சீட்டுகள் மற்றும் வரிசை நிலை'}</div>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-teal-700" />
-              </button>
-
-              {/* OPD Patient Intake if provided */}
-              {onOpenPatientIntake && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onOpenPatientIntake();
-                  }}
-                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-50/80 hover:bg-teal-100/80 border border-teal-200/80 text-teal-900 transition-colors text-left cursor-pointer"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
-                      <Stethoscope className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs">
-                        {lang === 'en' ? 'Hospital OPD Citizen Intake' : 'மருத்துவமனை வெளிநோயாளி பதிவு'}
+              {/* Authenticated-Only Personal Actions Quick Tiles */}
+              {currentUser && (
+                <>
+                  {/* Medication Cabinet & Safety Shield Quick Tile */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      window.history.pushState({}, '', '/cabinet');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-teal-50 to-emerald-50 hover:bg-teal-100/80 border border-teal-200/80 text-teal-900 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
+                        <ShieldAlert className="w-4 h-4" />
                       </div>
-                      <div className="text-[10px] text-teal-700">
-                        {lang === 'en' ? 'Instant digital triage & queue token' : 'உடனடி டிஜிட்டல் வரிசை டோக்கன்'}
+                      <div>
+                        <div className="text-xs font-bold">{lang === 'en' ? 'Medication Cabinet & Safety Shield' : 'மருந்து கவசம் & பெட்டி'}</div>
+                        <div className="text-[10px] text-teal-700 font-medium">{lang === 'en' ? 'Cross-doctor conflict radar & drug safety' : 'மருத்துவர் முரண்பாடு ரேடார் & பாதுகாப்பு'}</div>
                       </div>
                     </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-teal-600" />
-                </button>
+                    <ChevronRight className="w-4 h-4 text-teal-500" />
+                  </button>
+
+                  {/* My Hospital Appointments Quick Tile */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      if (onNavigateProfile) {
+                        onNavigateProfile();
+                      } else {
+                        window.history.pushState({}, '', '/profile');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                      }
+                    }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-50/80 hover:bg-teal-100/80 border border-teal-200/80 text-teal-900 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
+                        <CalendarDays className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">{lang === 'en' ? 'My Hospital Appointments' : 'என் மருத்துவமனை சந்திப்புகள்'}</div>
+                        <div className="text-[10px] text-teal-700 font-medium">{lang === 'en' ? 'View live passes & queue status' : 'நேரலை சீட்டுகள் மற்றும் வரிசை நிலை'}</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-teal-700" />
+                  </button>
+
+                  {/* OPD Patient Intake if provided */}
+                  {onOpenPatientIntake && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        onOpenPatientIntake();
+                      }}
+                      className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-50/80 hover:bg-teal-100/80 border border-teal-200/80 text-teal-900 transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
+                          <Stethoscope className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs">
+                            {lang === 'en' ? 'Hospital OPD Citizen Intake' : 'மருத்துவமனை வெளிநோயாளி பதிவு'}
+                          </div>
+                          <div className="text-[10px] text-teal-700">
+                            {lang === 'en' ? 'Instant digital triage & queue token' : 'உடனடி டிஜிட்டல் வரிசை டோக்கன்'}
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-teal-600" />
+                    </button>
+                  )}
+                </>
               )}
 
               {/* Privacy and DPDP Badge */}
