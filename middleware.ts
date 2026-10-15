@@ -1,11 +1,11 @@
-// Vercel Edge Middleware for Geolocation Injection, Regional Routing, and Zero-Flash Hydration
+// Vercel Edge Middleware for Geolocation Injection, Regional Routing, and Zero-Flash SPA Hydration
 export const config = {
   matcher: [
     /*
      * Match all request paths except:
      * - api routes (/api/*)
      * - _vercel internals
-     * - static files with extensions (css, js, png, svg, ico, webmanifest, etc.)
+     * - static files with extensions (css, js, png, svg, ico, webmanifest, xml, txt)
      */
     '/((?!api|_vercel|assets|.*\\..*).*)',
   ],
@@ -29,7 +29,6 @@ const TN_CITY_MAP: Record<string, string> = {
 };
 
 export default function middleware(request: Request) {
-  const url = new URL(request.url);
   const headers = new Headers(request.headers);
 
   // Extract Vercel Edge Geolocation telemetry
@@ -41,22 +40,18 @@ export default function middleware(request: Request) {
 
   const matchedCity = TN_CITY_MAP[rawCity] || 'chennai';
 
-  // Inject enriched geolocation headers for SSR / Client Hydration
-  headers.set('x-healthgrid-geo-country', country);
-  headers.set('x-healthgrid-geo-region', region);
-  headers.set('x-healthgrid-geo-city', matchedCity);
-  headers.set('x-healthgrid-geo-lat', latitude);
-  headers.set('x-healthgrid-geo-lng', longitude);
+  // Target destination: Rewrite SPA routes seamlessly to /index.html
+  const rewriteUrl = new URL('/index.html', request.url).toString();
 
-  // Forward request with injected geo context
-  const response = new Response(null, {
+  return new Response(null, {
     headers: {
-      'x-middleware-next': '1',
-      'x-healthgrid-geo-city': matchedCity,
+      'x-middleware-rewrite': rewriteUrl,
+      'x-healthgrid-geo-country': country,
       'x-healthgrid-geo-region': region,
+      'x-healthgrid-geo-city': matchedCity,
+      'x-healthgrid-geo-lat': latitude,
+      'x-healthgrid-geo-lng': longitude,
       'Set-Cookie': `hg_geo_city=${matchedCity}; Path=/; Max-Age=604800; SameSite=Lax`,
     },
   });
-
-  return response;
 }
