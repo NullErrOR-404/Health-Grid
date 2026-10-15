@@ -1,14 +1,5 @@
-// Vercel Edge Middleware for Geolocation Injection, Regional Routing, and Zero-Flash SPA Hydration
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - api routes (/api/*)
-     * - _vercel internals
-     * - static files with extensions (css, js, png, svg, ico, webmanifest, xml, txt)
-     */
-    '/((?!api|_vercel|assets|.*\\..*).*)',
-  ],
+  runtime: 'edge',
 };
 
 const TN_CITY_MAP: Record<string, string> = {
@@ -28,10 +19,8 @@ const TN_CITY_MAP: Record<string, string> = {
   nagercoil: 'kanyakumari',
 };
 
-export default function middleware(request: Request) {
+export default function handler(request: Request) {
   const headers = new Headers(request.headers);
-
-  // Extract Vercel Edge Geolocation telemetry
   const country = headers.get('x-vercel-ip-country') || 'IN';
   const region = headers.get('x-vercel-ip-country-region') || 'TN';
   const rawCity = (headers.get('x-vercel-ip-city') || 'chennai').toLowerCase();
@@ -40,18 +29,23 @@ export default function middleware(request: Request) {
 
   const matchedCity = TN_CITY_MAP[rawCity] || 'chennai';
 
-  // Target destination: Rewrite SPA routes seamlessly to /index.html
-  const rewriteUrl = new URL('/index.html', request.url).toString();
+  const payload = {
+    country,
+    region,
+    city: matchedCity,
+    latitude,
+    longitude,
+  };
 
-  return new Response(null, {
+  return new Response(JSON.stringify(payload), {
+    status: 200,
     headers: {
-      'x-middleware-rewrite': rewriteUrl,
-      'x-healthgrid-geo-country': country,
-      'x-healthgrid-geo-region': region,
-      'x-healthgrid-geo-city': matchedCity,
-      'x-healthgrid-geo-lat': latitude,
-      'x-healthgrid-geo-lng': longitude,
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400',
       'Set-Cookie': `hg_geo_city=${matchedCity}; Path=/; Max-Age=604800; SameSite=Lax`,
+      'x-healthgrid-geo-city': matchedCity,
+      'x-healthgrid-geo-region': region,
+      'Access-Control-Allow-Origin': '*',
     },
   });
 }
