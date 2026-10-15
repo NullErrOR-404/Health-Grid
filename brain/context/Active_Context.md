@@ -17,9 +17,9 @@ Back to [[00_Index]]
 ## Current System State
 
 - **Git Branch**: `main`
-- **Latest Commit**: `HEAD` (`c171df0` `fix(vercel): remove cleanUrls and trailingSlash to restore SPA routing for programmatic routes`)
+- **Latest Commit**: `HEAD` (`f4f2844` `docs(seo): update ADR-062 and Active_Context with synchronized 4-alias edge deployment and SPA routing fix`)
 - **Latest Documentation Milestone**: ADR-062 Vercel SEO, Edge GEO-Performance & Programmatic Dominance Architecture ([[ADR-062-Vercel-SEO-Edge-GEO-Performance-and-Programmatic-Dominance]])
-- **Authoritative Vercel Deployment**: `https://healthgrid-5da4dukwx-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `7085439747`, Active Bundle: `/assets/index-B3KmFU-K.js`)
+- **Authoritative Vercel Deployment**: `https://healthgrid-15glx6b0x-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `7085587966`, Active Bundle: `/assets/index-B3KmFU-K.js`)
 - **Synchronized Production Aliases**:
   - `https://healthgrid-app.vercel.app` (200 OK • Live • Serving `/assets/index-B3KmFU-K.js`)
   - `https://healthgrid-nu.vercel.app` (200 OK • Live • Serving `/assets/index-B3KmFU-K.js`)
