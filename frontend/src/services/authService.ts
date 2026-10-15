@@ -32,6 +32,7 @@ export interface AuthUser {
   age?: number;
   bloodGroup?: string;
   healthId?: string;
+  isSuperAdmin?: boolean;
 }
 
 export const generateImmutableHealthId = (userId?: string): string => {
@@ -97,6 +98,8 @@ export interface HospitalAuthSession {
   token: string;
   adminName: string;
   timestamp: number;
+  role?: string;
+  isSuperAdmin?: boolean;
 }
 
 const STORAGE_KEY = 'healthgrid_auth_user';
@@ -363,11 +366,37 @@ class AuthService {
   }
 
   getUser(): AuthUser | null {
-    return this.currentUser;
+    return this.getCurrentUser();
   }
 
   getCurrentUser(): AuthUser | null {
-    return this.currentUser;
+    if (this.currentUser) return this.currentUser;
+
+    const hosp = this.getHospitalSession();
+    if (hosp) {
+      const isSuper = Boolean(
+        hosp.isSuperAdmin ||
+        hosp.role?.toLowerCase().includes('super') ||
+        hosp.adminName?.toLowerCase().includes('gmch') ||
+        hosp.hospital?.code === 'HG-H002'
+      );
+
+      const syntheticUser: AuthUser = {
+        id: isSuper ? '00000000-0000-0000-0000-000000000001' : `hosp-staff-${hosp.hospital.code}`,
+        name: hosp.adminName || (isSuper ? 'GMCH Medical Superintendent (Super Admin)' : `${hosp.hospital.name} Administrator`),
+        email: isSuper ? 'admin@gmch.gov.in' : `${hosp.hospital.code.toLowerCase()}@healthgrid.in`,
+        phone: '+91 94440 12345',
+        role: isSuper ? 'SUPER_ADMIN' : 'HOSPITAL_STAFF',
+        hospitalName: hosp.hospital.name,
+        healthId: isSuper ? 'HG-SUPERADMIN-01' : `HG-STAFF-${hosp.hospital.code}`,
+        isSuperAdmin: isSuper,
+        token: hosp.token,
+      };
+      this.currentUser = syntheticUser;
+      return syntheticUser;
+    }
+
+    return null;
   }
 
   isAuthenticated(): boolean {
@@ -643,7 +672,35 @@ class AuthService {
 
   setHospitalSession(session: HospitalAuthSession): void {
     try {
-      localStorage.setItem(HOSPITAL_STORAGE_KEY, JSON.stringify(session));
+      const isSuper = Boolean(
+        session.isSuperAdmin ||
+        session.role?.toLowerCase().includes('super') ||
+        session.adminName?.toLowerCase().includes('gmch') ||
+        session.hospital?.code === 'HG-H002'
+      );
+
+      const enrichedSession: HospitalAuthSession = {
+        ...session,
+        isSuperAdmin: isSuper,
+        role: isSuper ? 'SUPER_ADMIN' : (session.role || 'HOSPITAL_STAFF'),
+      };
+
+      localStorage.setItem(HOSPITAL_STORAGE_KEY, JSON.stringify(enrichedSession));
+
+      const hospUser: AuthUser = {
+        id: isSuper ? '00000000-0000-0000-0000-000000000001' : `hosp-staff-${session.hospital.code}`,
+        name: session.adminName || (isSuper ? 'GMCH Medical Superintendent (Super Admin)' : `${session.hospital.name} Administrator`),
+        email: isSuper ? 'admin@gmch.gov.in' : `${session.hospital.code.toLowerCase()}@healthgrid.in`,
+        phone: '+91 94440 12345',
+        role: isSuper ? 'SUPER_ADMIN' : 'HOSPITAL_STAFF',
+        hospitalName: session.hospital.name,
+        healthId: isSuper ? 'HG-SUPERADMIN-01' : `HG-STAFF-${session.hospital.code}`,
+        isSuperAdmin: isSuper,
+        token: session.token,
+      };
+
+      this.currentUser = hospUser;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...hospUser, token: undefined }));
       this.notifyListeners();
     } catch (e) {
       console.warn('Could not save hospital session:', e);
@@ -653,6 +710,10 @@ class AuthService {
   clearHospitalSession(): void {
     try {
       localStorage.removeItem(HOSPITAL_STORAGE_KEY);
+      if (this.currentUser?.role === 'SUPER_ADMIN' || this.currentUser?.role === 'HOSPITAL_STAFF') {
+        this.currentUser = null;
+        localStorage.removeItem(STORAGE_KEY);
+      }
       this.notifyListeners();
     } catch {}
   }
@@ -660,6 +721,28 @@ class AuthService {
   /**
    * Universal Role-Based Access Control (RBAC) Validators
    */
+  isSuperAdmin(user?: AuthUser | null): boolean {
+    const target = user !== undefined ? user : this.getCurrentUser();
+    if (!target) {
+      const hosp = this.getHospitalSession();
+      if (hosp) {
+        return Boolean(
+          hosp.isSuperAdmin ||
+          hosp.role?.toLowerCase().includes('super') ||
+          hosp.adminName?.toLowerCase().includes('gmch') ||
+          hosp.hospital?.code === 'HG-H002'
+        );
+      }
+      return false;
+    }
+    return Boolean(
+      target.isSuperAdmin ||
+      target.role === 'SUPER_ADMIN' ||
+      target.email === 'admin@gmch.gov.in' ||
+      target.name?.toLowerCase().includes('gmch')
+    );
+  }
+
   isDoctor(user?: AuthUser | null): boolean {
     const target = user !== undefined ? user : this.currentUser;
     return Boolean(target && (target.role === 'DOCTOR' || target.role === 'HEALTHCARE_PROFESSIONAL'));
@@ -673,11 +756,11 @@ class AuthService {
   }
 
   canAccessClinicianPortal(user?: AuthUser | null): boolean {
-    return this.isDoctor(user);
+    return this.isDoctor(user) || this.isSuperAdmin(user);
   }
 
   canAccessHospitalErp(user?: AuthUser | null): boolean {
-    return this.isHospitalStaff(user);
+    return this.isHospitalStaff(user) || this.isSuperAdmin(user);
   }
 }
 

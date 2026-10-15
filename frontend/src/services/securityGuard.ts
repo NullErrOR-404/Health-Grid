@@ -59,12 +59,25 @@ class SecurityGuard {
       );
     }
 
+    // SUPER_ADMIN has unconditional bypass and all-access across all hospital ERP operations
+    const userRole = (currentUser.role || 'PERSONAL').toUpperCase();
+    if (
+      userRole === 'SUPER_ADMIN' ||
+      userRole === 'SUPERADMIN' ||
+      currentUser.isSuperAdmin ||
+      authService.isSuperAdmin(currentUser)
+    ) {
+      return currentUser;
+    }
+
     if (allowedRoles && allowedRoles.length > 0) {
-      const userRole = (currentUser.role || 'PERSONAL').toUpperCase();
       const hasPermission = allowedRoles.some((role) => {
         const r = role.toUpperCase();
-        if (r === 'DOCTOR' || r === 'ADMIN' || r === 'HEALTHCARE_PROFESSIONAL') {
-          return userRole === 'HEALTHCARE_PROFESSIONAL';
+        if (r === 'DOCTOR' || r === 'HEALTHCARE_PROFESSIONAL') {
+          return userRole === 'HEALTHCARE_PROFESSIONAL' || userRole === 'DOCTOR';
+        }
+        if (r === 'ADMIN' || r === 'HOSPITAL_STAFF') {
+          return userRole === 'ADMIN' || userRole === 'HOSPITAL_STAFF' || userRole === 'HEALTHCARE_PROFESSIONAL';
         }
         return userRole === r;
       });

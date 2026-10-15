@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   HeartPulse,
   Search,
@@ -23,6 +23,7 @@ import {
   Droplets,
   CreditCard,
   Shield,
+  ShieldCheck,
   ShoppingCart,
   Boxes,
   Wrench,
@@ -52,6 +53,8 @@ import { AppointmentsView } from './AppointmentsView';
 import { EmergencyView } from './EmergencyView';
 import { DoctorsOpdView } from './DoctorsOpdView';
 import { ReportsAnalyticsView } from './ReportsAnalyticsView';
+import { RolesManagementView } from './RolesManagementView';
+import { authService } from '../../services/authService';
 import { lenisService } from '../../services/lenisService';
 import { WalkInModal } from './modals/WalkInModal';
 import { OpdRegistrationModal } from './modals/OpdRegistrationModal';
@@ -164,7 +167,15 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const navSections = [
+  const isSuperAdmin = useMemo(() => {
+    return (
+      authService.isSuperAdmin() ||
+      adminName?.toLowerCase().includes('gmch') ||
+      currentHospital.code === 'HG-H002'
+    );
+  }, [adminName, currentHospital.code]);
+
+  const navSections = useMemo(() => [
     {
       category: 'MAIN',
       items: [{ id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard }],
@@ -208,7 +219,15 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
         { id: 'Settings', label: 'Settings', icon: Settings },
       ],
     },
-  ];
+    ...(isSuperAdmin
+      ? [
+          {
+            category: 'SECURITY & GOVERNANCE',
+            items: [{ id: 'Roles', label: 'Roles', icon: ShieldCheck }],
+          },
+        ]
+      : []),
+  ], [isSuperAdmin]);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col font-sans select-none antialiased">
@@ -377,18 +396,27 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
             )}
           </div>
 
-          {/* Dr. Mohamed / Hospital Switcher Profile Chip */}
+          {/* Admin / Hospital Switcher Profile Chip */}
           <div className="relative">
             <button
               onClick={() => setIsHospitalSwitcherOpen(!isHospitalSwitcherOpen)}
-              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white text-left transition-all"
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white text-left transition-all cursor-pointer"
             >
-              <div className="w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                DM
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shadow-xs text-white ${
+                  isSuperAdmin ? 'bg-purple-600 shadow-purple-600/30' : 'bg-teal-600 shadow-teal-600/30'
+                }`}
+              >
+                {isSuperAdmin ? 'SA' : (adminName ? adminName.slice(0, 2).toUpperCase() : 'HA')}
               </div>
               <div className="hidden sm:block">
-                <div className="text-xs font-bold text-slate-900 leading-tight">
-                  Dr. Mohamed
+                <div className="text-xs font-bold text-slate-900 leading-tight flex items-center gap-1.5">
+                  <span>{adminName || 'Hospital Admin'}</span>
+                  {isSuperAdmin && (
+                    <span className="text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded-md tracking-wider">
+                      SUPERADMIN
+                    </span>
+                  )}
                 </div>
                 <div className="text-[10px] text-slate-500 leading-none">
                   {currentHospital.name}, {currentHospital.city}
@@ -653,10 +681,18 @@ export const HospitalErpDashboard: React.FC<HospitalErpDashboardProps> = ({
           </div>
         )}
 
+        {visitedTabs.has('Roles') && (
+          <div className={activeMenu === 'Roles' ? "flex-1 flex flex-col min-w-0" : "hidden"}>
+            <RolesManagementView
+              triggerToast={triggerToast}
+            />
+          </div>
+        )}
+
         {/* Executive Overview Dashboard (Shown for 'Dashboard' or unassigned modules) */}
         <main
           className={`flex-1 overflow-y-auto p-4 lg:p-7 space-y-6 ${
-            !['Patient Management', 'OPD Management', 'OPD / Consultations', 'IPD & Bed Management', 'Appointments', 'Emergency', 'Emergency / Casualty', 'Doctors & OPD', 'Reports & Analytics'].includes(activeMenu)
+            !['Patient Management', 'OPD Management', 'OPD / Consultations', 'IPD & Bed Management', 'Appointments', 'Emergency', 'Emergency / Casualty', 'Doctors & OPD', 'Reports & Analytics', 'Roles'].includes(activeMenu)
               ? 'block'
               : 'hidden'
           }`}
