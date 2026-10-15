@@ -17,15 +17,15 @@ Back to [[00_Index]]
 ## Current System State
 
 - **Git Branch**: `main`
-- **Latest Commit**: `HEAD` (feat(seo): edge geo-routing, programmatic seo matrix, and schema graph - ADR-062)
+- **Latest Commit**: `HEAD` (`c171df0` `fix(vercel): remove cleanUrls and trailingSlash to restore SPA routing for programmatic routes`)
 - **Latest Documentation Milestone**: ADR-062 Vercel SEO, Edge GEO-Performance & Programmatic Dominance Architecture ([[ADR-062-Vercel-SEO-Edge-GEO-Performance-and-Programmatic-Dominance]])
-- **Authoritative Vercel Deployment**: `Pending sync after commit`
+- **Authoritative Vercel Deployment**: `https://healthgrid-5da4dukwx-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `7085439747`, Active Bundle: `/assets/index-B3KmFU-K.js`)
 - **Synchronized Production Aliases**:
-  - `https://healthgrid-nu.vercel.app` (200 OK • Live)
-  - `https://healthgrid-app.vercel.app` (200 OK • Live)
-  - `https://healthgrid-live.vercel.app` (200 OK • Live)
-  - `https://healthgrid-network.vercel.app` (200 OK • Live)
-- **Active Edge Serverless Gateways**: `/api/ai/chat`, `/api/ai/vision`, `/api/ai/ocr`, `/api/ai/tts`, `/api/webhooks/verify`, `/api/og`
+  - `https://healthgrid-app.vercel.app` (200 OK • Live • Serving `/assets/index-B3KmFU-K.js`)
+  - `https://healthgrid-nu.vercel.app` (200 OK • Live • Serving `/assets/index-B3KmFU-K.js`)
+  - `https://healthgrid-live.vercel.app` (200 OK • Live • Serving `/assets/index-B3KmFU-K.js`)
+  - `https://healthgrid-network.vercel.app` (200 OK • Live • Serving `/assets/index-B3KmFU-K.js`)
+- **Active Edge Serverless Gateways**: `/api/ai/chat`, `/api/ai/vision`, `/api/ai/ocr`, `/api/ai/tts`, `/api/webhooks/verify`, `/api/geo`, `/api/og`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
 

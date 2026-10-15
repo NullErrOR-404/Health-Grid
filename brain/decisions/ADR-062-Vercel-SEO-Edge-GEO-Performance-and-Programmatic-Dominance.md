@@ -47,16 +47,18 @@ Implemented an automated prebuild script hooked into `npm run build`:
 - Preloaded hero robot mascot (`/desk_robot_hero.png`) with `fetchpriority="high"`.
 - Enforced zero Cumulative Layout Shift (CLS < 0.01) across dynamic view mount points.
 
-### 4. Vercel Edge Middleware (`middleware.ts`)
-Deployed edge-runtime middleware at the root:
-- Extracts `x-vercel-ip-country`, `x-vercel-ip-country-region`, `x-vercel-ip-city`, `x-vercel-ip-latitude`, and `x-vercel-ip-longitude`.
+### 4. Vercel Edge Geolocation Engine (`api/geo.ts`)
+Deployed edge-runtime API function (`export const config = { runtime: 'edge' }`):
+- Extracts client IP telemetry headers (`x-vercel-ip-country`, `x-vercel-ip-country-region`, `x-vercel-ip-city`, `x-vercel-ip-latitude`, `x-vercel-ip-longitude`).
 - Normalizes city aliases (e.g. Madras -> Chennai, Kovai -> Coimbatore, Trichy -> Tiruchirappalli, Nellai -> Tirunelveli).
-- Injects `x-healthgrid-geo-*` headers and sets client-side cookie `hg_geo_city` for seamless regional personalization without client redirect flashes.
+- Returns JSON payload, sets `x-healthgrid-geo-*` response headers, and writes `hg_geo_city` cookie (`Max-Age=604800; SameSite=Lax`) for seamless regional personalization.
+- Running as a dedicated edge function avoids interfering with Vercel's SPA catch-all rewrite (`/((?!api/).*) -> /index.html`), ensuring clean, uninterrupted client-side routing.
 
-### 5. Multi-Tier CDN Caching & Hardened `vercel.json`
+### 5. Multi-Tier CDN Caching & Clean SPA Rewrites (`vercel.json`)
 - `/assets/(.*)`: `public, max-age=31536000, immutable` (Zero redundant network fetches for hashed chunks).
 - Images & Media: `public, max-age=604800, stale-while-revalidate=86400`.
-- Sitemap & Robots: `public, max-age=3600, stale-while-revalidate=86400`.
+- Split Content-Types: `robots.txt` served with `text/plain; charset=utf-8`, and `sitemap.xml` with `application/xml; charset=utf-8`.
+- Pure SPA rewrites without conflicting `"cleanUrls": true` or `"trailingSlash": false` flags, preserving instantaneous client-side hydration for deep virtual routes (`/emergency-care/:district`, `/jan-aushadhi/:district`, `/hospital-erp`).
 - Defense-in-depth OWASP CSP, strict HSTS (`max-age=63072000; includeSubDomains; preload`), `X-Frame-Options: SAMEORIGIN`, and `X-Content-Type-Options: nosniff`.
 
 ### 6. Programmatic SEO Engine & Dynamic OG Generator
@@ -67,5 +69,11 @@ Deployed edge-runtime middleware at the root:
 ## Verification & Status
 
 1. **Prebuild & Compilation**: Clean execution of `node ../scripts/generate-seo-assets.js` generating 84 validated sitemap URLs and hardened robots.txt.
-2. **Production Build**: `tsc -b && vite build` built cleanly in 3.21s with zero errors across 2,675 modules.
-3. **Status**: Accepted and active across all production environments.
+2. **Production Build**: `tsc -b && vite build` built cleanly in 3.90s with zero errors across 2,675 modules.
+3. **Edge & API Verification**: `/api/geo` verified returning live IP telemetry with `hg_geo_city` cookies; `/api/og` verified rendering custom SVG preview cards (`image/svg+xml`).
+4. **4-Alias Production Synchronization**:
+   - `https://healthgrid-app.vercel.app` (HTTP 200 OK • Serving bundle `index-B3KmFU-K.js`)
+   - `https://healthgrid-nu.vercel.app` (HTTP 200 OK • Serving bundle `index-B3KmFU-K.js`)
+   - `https://healthgrid-live.vercel.app` (HTTP 200 OK • Serving bundle `index-B3KmFU-K.js`)
+   - `https://healthgrid-network.vercel.app` (HTTP 200 OK • Serving bundle `index-B3KmFU-K.js`)
+5. **Status**: Accepted and active across all production environments.
