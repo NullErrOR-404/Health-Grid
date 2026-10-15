@@ -19,12 +19,12 @@ Back to [[00_Index]]
 - **Git Branch**: `main`
 - **Latest Commit**: `HEAD` (feat(erp): superadmin roles provisioning, zero-friction IPD bed admission, and dynamic accounts - ADR-061)
 - **Latest Documentation Milestone**: ADR-061 SuperAdmin Roles Provisioning, Zero-Friction IPD Bed Admission & Dynamic Account Management ([[ADR-061-SuperAdmin-Roles-Provisioning-and-Zero-Friction-IPD-Access]])
-- **Authoritative Vercel Deployment**: `https://healthgrid-cp8iz6jkr-sameen14nmofficial-8826s-projects.vercel.app`
+- **Authoritative Vercel Deployment**: `https://healthgrid-aqtahm5sf-sameen14nmofficial-8826s-projects.vercel.app` (Deployment ID: `dpl_3yUMNLw8whgjVEsdqJ4o6qDrAVKo`, Commit `6ea97f5`, Active Bundle: `/assets/index-BOF3Tnbh.js`)
 - **Synchronized Production Aliases**:
-  - `https://healthgrid-nu.vercel.app` (200 OK • Live)
-  - `https://healthgrid-app.vercel.app` (200 OK • Live)
-  - `https://healthgrid-live.vercel.app` (200 OK • Live)
-  - `https://healthgrid-network.vercel.app` (200 OK • Live)
+  - `https://healthgrid-nu.vercel.app` (200 OK • Live • Serving `/assets/index-BOF3Tnbh.js`)
+  - `https://healthgrid-app.vercel.app` (200 OK • Live • Serving `/assets/index-BOF3Tnbh.js`)
+  - `https://healthgrid-live.vercel.app` (200 OK • Live • Serving `/assets/index-BOF3Tnbh.js`)
+  - `https://healthgrid-network.vercel.app` (200 OK • Live • Serving `/assets/index-BOF3Tnbh.js`)
 - **Active Edge Serverless Gateways**: `/api/ai/chat`, `/api/ai/vision`, `/api/ai/ocr`, `/api/ai/tts`, `/api/webhooks/verify`
 - **Local Dev Server**: `http://localhost:5173/` (Vite v8.3.1)
 - **Mobile Project**: `C:\HealthGrid\mobile` (React Native 0.86.3, Expo SDK 57, New Architecture enabled)
